@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getDashboardData } from '@repo/database/dashboard'
 import { getTenantRequest } from '@repo/auth/tenant'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tenant = await getTenantRequest('view_dashboard')
+    const tenant = await getTenantRequest(request, 'view_dashboard')
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

@@ -4,9 +4,9 @@ import { getTenantManagerRequest } from '@repo/auth/tenant'
 
 const actions = new Set<OnboardingAction>(['confirm-profile', 'complete', 'skip', 'reopen'])
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 
@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

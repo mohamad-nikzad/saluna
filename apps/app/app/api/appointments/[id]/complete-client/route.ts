@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

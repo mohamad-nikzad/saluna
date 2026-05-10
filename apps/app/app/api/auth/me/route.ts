@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@repo/auth/auth'
+import { getCurrentUserFromRequest } from '@repo/auth/auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser()
-    
+    const user = await getCurrentUserFromRequest(request)
+
     if (!user) {
       return NextResponse.json(
         { error: 'وارد نشده‌اید' },

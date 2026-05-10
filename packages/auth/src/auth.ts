@@ -49,11 +49,31 @@ export async function getCurrentUser(): Promise<User | null> {
 
   if (!token) return null
 
+  return getUserFromToken(token)
+}
+
+export async function getUserFromToken(token: string): Promise<User | null> {
   const userId = await verifySession(token)
   if (!userId) return null
 
   const user = await getUserById(userId)
   return user || null
+}
+
+function extractBearerToken(request: Request): string | null {
+  const header = request.headers.get('authorization') ?? request.headers.get('Authorization')
+  if (!header) return null
+  const match = header.match(/^Bearer\s+(.+)$/i)
+  return match ? match[1].trim() : null
+}
+
+export async function getCurrentUserFromRequest(request: Request): Promise<User | null> {
+  const bearer = extractBearerToken(request)
+  if (bearer) {
+    const fromBearer = await getUserFromToken(bearer)
+    if (fromBearer) return fromBearer
+  }
+  return getCurrentUser()
 }
 
 export async function login(

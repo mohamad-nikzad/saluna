@@ -14,7 +14,7 @@ import { getTenantManagerRequest, getTenantRequest } from '@repo/auth/tenant'
 
 export async function GET(request: Request) {
   try {
-    const tenant = await getTenantRequest()
+    const tenant = await getTenantRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   let createdPlaceholderId: string | null = null
   let placeholderSalonId: string | null = null
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
     placeholderSalonId = user.salonId

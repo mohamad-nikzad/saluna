@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getAllClients, createClient, setClientTags, isClientProvidedEntityId } from '@repo/database/clients'
 import { getTenantManagerRequest } from '@repo/auth/tenant'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

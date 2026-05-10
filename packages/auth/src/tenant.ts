@@ -1,4 +1,4 @@
-import { getCurrentUser } from './auth'
+import { getCurrentUser, getCurrentUserFromRequest } from './auth'
 import type { UserRole } from '@repo/salon-core/types'
 import { forbidden, unauthorized } from './authz'
 
@@ -36,8 +36,8 @@ const rolePermissions: Record<UserRole, ReadonlySet<TenantPermission>> = {
   staff: new Set(['view_own_appointments']),
 }
 
-export async function getTenantUser(): Promise<TenantUser | null> {
-  const user = await getCurrentUser()
+export async function getTenantUser(request?: Request): Promise<TenantUser | null> {
+  const user = request ? await getCurrentUserFromRequest(request) : await getCurrentUser()
   if (!user) return null
 
   return {
@@ -74,9 +74,13 @@ export async function requireTenantManager(): Promise<TenantUser> {
 }
 
 export async function getTenantRequest(
-  permission?: TenantPermission
+  arg1?: TenantPermission | Request,
+  arg2?: TenantPermission
 ): Promise<TenantRequest> {
-  const user = await getTenantUser()
+  const request = arg1 instanceof Request ? arg1 : undefined
+  const permission = (arg1 instanceof Request ? arg2 : arg1) as TenantPermission | undefined
+
+  const user = await getTenantUser(request)
   if (!user) {
     return { ok: false, response: unauthorized() }
   }
@@ -86,6 +90,6 @@ export async function getTenantRequest(
   return { ok: true, user }
 }
 
-export function getTenantManagerRequest(): Promise<TenantRequest> {
-  return getTenantRequest('manage_settings')
+export function getTenantManagerRequest(request?: Request): Promise<TenantRequest> {
+  return request ? getTenantRequest(request, 'manage_settings') : getTenantRequest('manage_settings')
 }

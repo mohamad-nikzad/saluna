@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getBusinessSettings, updateBusinessSettings } from '@repo/database/settings'
 import { getTenantManagerRequest, getTenantRequest } from '@repo/auth/tenant'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tenant = await getTenantRequest()
+    const tenant = await getTenantRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

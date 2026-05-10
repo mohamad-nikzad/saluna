@@ -3,11 +3,11 @@ import { getClientSummary } from '@repo/database/clients'
 import { getTenantManagerRequest } from '@repo/auth/tenant'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tenant = await getTenantManagerRequest()
+    const tenant = await getTenantManagerRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

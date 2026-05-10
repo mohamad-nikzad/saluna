@@ -219,7 +219,7 @@ describe('tenant isolation route checks', () => {
   it('lists clients only for the authenticated salon', async () => {
     mocks.getAllClients.mockResolvedValue([{ id: 'client-a', name: 'Client A' }])
 
-    const response = await listClients()
+    const response = await listClients(new Request('http://localhost/api/clients'))
 
     expect(response.status).toBe(200)
     expect(mocks.getAllClients).toHaveBeenCalledWith('salon-a')

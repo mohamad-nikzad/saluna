@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'اعلان فشاری پیکربندی نشده است' }, { status: 503 })
     }
 
-    const tenant = await getTenantRequest()
+    const tenant = await getTenantRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const tenant = await getTenantRequest()
+    const tenant = await getTenantRequest(request)
     if (!tenant.ok) return tenant.response
     const { user } = tenant
 

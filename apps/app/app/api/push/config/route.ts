@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { isWebPushConfigured } from '@/lib/push'
 import { getTenantRequest } from '@repo/auth/tenant'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tenant = await getTenantRequest()
+    const tenant = await getTenantRequest(request)
     if (!tenant.ok) return tenant.response
 
     const configured = isWebPushConfigured()
