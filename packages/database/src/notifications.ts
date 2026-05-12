@@ -7,6 +7,7 @@ export {
   markNotificationRead,
   updateNotificationPreferences,
   type AppNotification,
+  type CreateNotificationDeliveryInput,
   type CreateNotificationInput,
   type ListNotificationsInput,
   type NotificationChannel,

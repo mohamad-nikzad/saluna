@@ -81,6 +81,12 @@ export function createNotificationsApi(client: ApiClient) {
         }
       )
     },
+    createTest(opts: { signal?: AbortSignal } = {}) {
+      return client.request<NotificationResponse>(endpoints.notificationTest, {
+        method: 'POST',
+        signal: opts.signal,
+      })
+    },
   }
 }
 

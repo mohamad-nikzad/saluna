@@ -13,6 +13,11 @@ export type NotificationChannel =
   | 'sms'
   | 'android_regional_push'
 export type NotificationDeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped'
+export type CreateNotificationDeliveryInput = {
+  provider?: string | null
+  providerMessageId?: string | null
+  error?: string | null
+}
 
 export type AppNotification = {
   id: string
@@ -240,13 +245,17 @@ export async function updateNotificationPreferences(
 export async function dispatchNotification(
   notificationId: string,
   channel: NotificationChannel,
-  status: NotificationDeliveryStatus = 'sent'
+  status: NotificationDeliveryStatus = 'sent',
+  input: CreateNotificationDeliveryInput = {}
 ): Promise<void> {
   const db = getDb()
   await db.insert(notificationDeliveries).values({
     notificationId,
     channel,
     status,
+    provider: input.provider ?? null,
+    providerMessageId: input.providerMessageId ?? null,
+    error: input.error ?? null,
     sentAt: status === 'sent' ? new Date() : null,
   })
 }

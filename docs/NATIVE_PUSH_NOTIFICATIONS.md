@@ -191,38 +191,38 @@ Acceptance:
 
 Goal: make QA possible without creating real appointment data every time.
 
-- Add `POST /api/notifications/test` for development/staging only.
-- Gate the route with an env flag such as `ENABLE_NOTIFICATION_TEST=1`.
-- Create a test notification for the current user using the same in-app/local
+- [x] Add `POST /api/notifications/test` for development/staging only.
+- [x] Gate the route with an env flag such as `ENABLE_NOTIFICATION_TEST=1`.
+- [x] Create a test notification for the current user using the same in-app/local
   sync path as production notifications.
 
 Acceptance:
 
-- Test route is unavailable in production by default.
-- Test notification appears in the inbox.
-- Local alert can be verified from the test notification when enabled.
+- [x] Test route is unavailable in production by default.
+- [x] Test notification appears in the inbox.
+- [x] Local alert can be verified from the test notification when enabled.
 
-### Phase 6 — SMS Provider Adapter Later
+### Phase 6 — SMS Provider Adapter Later (Done)
 
 Goal: prepare for SMS without committing to a provider now.
 
-- Keep SMS disabled until a provider is chosen.
-- Add an SMS adapter interface when we are ready to integrate:
-  - `sendSmsNotification(...)`
-  - returns `skipped` when no provider is configured.
-  - records provider response/error in `notification_deliveries`.
-- Add env placeholders only when implementing the adapter:
-  - `SMS_PROVIDER=`
-  - `SMS_API_URL=`
-  - `SMS_API_KEY=`
-  - `SMS_SENDER=`
-  - `SMS_ENABLED=false`
-- Do not hard-code an Iranian provider in the notification core.
+- [x] Keep SMS disabled until a provider is chosen.
+- [x] Add an SMS adapter interface when we are ready to integrate:
+  - [x] `sendSmsNotification(...)`
+  - [x] returns `skipped` when no provider is configured.
+  - [x] records provider response/error in `notification_deliveries`.
+- [x] Add env placeholders only when implementing the adapter:
+  - [x] `SMS_PROVIDER=`
+  - [x] `SMS_API_URL=`
+  - [x] `SMS_API_KEY=`
+  - [x] `SMS_SENDER=`
+  - [x] `SMS_ENABLED=false`
+- [x] Do not hard-code an Iranian provider in the notification core.
 
 Acceptance:
 
-- With no provider configured, SMS delivery is skipped cleanly.
-- With a provider configured later, appointment-created notifications can be sent
+- [x] With no provider configured, SMS delivery is skipped cleanly.
+- [x] With a provider configured later, appointment-created notifications can be sent
   through SMS without changing appointment routes or native inbox APIs.
 
 ### Phase 7 — Android Regional Push Later
@@ -253,7 +253,7 @@ Acceptance:
 - Phase 4: manual native QA for local notification display, duplicate
   suppression, preference handling, and tap routing.
 - Phase 5: verify test route env gating.
-- Phase 6: test SMS adapter returns `skipped` when no provider is configured.
+- Phase 6: [x] test SMS adapter returns `skipped` when no provider is configured.
 - Always regression check existing PWA web push for web subscribers.
 
 ## Out of Scope

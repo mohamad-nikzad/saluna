@@ -1,6 +1,6 @@
 import {
   createNotificationForUser as createNotificationRecordForUser,
-  dispatchNotification,
+  dispatchNotification as recordNotificationDelivery,
   getNotificationPreferences,
   listNotificationsForUser,
   markAllNotificationsRead,
@@ -8,20 +8,25 @@ import {
   updateNotificationPreferences,
   type CreateNotificationInput,
 } from '@repo/database/notifications'
+import { sendSmsNotification } from './sms'
 
 export async function createNotificationForUser(input: CreateNotificationInput) {
   const notification = await createNotificationRecordForUser(input)
-  await dispatchNotification(notification.id, 'in_app')
+  await recordNotificationDelivery(notification.id, 'in_app')
+
+  const smsDelivery = await sendSmsNotification(notification)
+  await recordNotificationDelivery(notification.id, 'sms', smsDelivery.status, {
+    provider: smsDelivery.provider,
+    providerMessageId: smsDelivery.providerMessageId,
+    error: smsDelivery.error,
+  })
+
   return notification
 }
 
+export const dispatchNotification = recordNotificationDelivery
+export { sendSmsNotification }
 export {
-  dispatchNotification,
-  getNotificationPreferences,
-  listNotificationsForUser,
-  markAllNotificationsRead,
-  markNotificationRead,
-  updateNotificationPreferences,
   type AppNotification,
   type CreateNotificationInput,
   type ListNotificationsInput,
@@ -31,3 +36,10 @@ export {
   type NotificationType,
   type UpdateNotificationPreferencesInput,
 } from '@repo/database/notifications'
+export {
+  getNotificationPreferences,
+  listNotificationsForUser,
+  markAllNotificationsRead,
+  markNotificationRead,
+  updateNotificationPreferences,
+}

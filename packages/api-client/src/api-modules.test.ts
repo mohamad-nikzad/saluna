@@ -353,6 +353,12 @@ describe('api modules', () => {
       path: '/api/notifications/read-all',
       method: 'POST',
     })
+
+    await api.createTest()
+    expectLastCall(calls, {
+      path: '/api/notifications/test',
+      method: 'POST',
+    })
   })
 
   it('wraps notification preference routes', async () => {
