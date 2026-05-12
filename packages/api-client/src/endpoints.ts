@@ -16,5 +16,7 @@ export const endpoints = {
   services: '/api/services',
   appointments: '/api/appointments',
   appointmentsAvailability: '/api/appointments/availability',
+  notifications: '/api/notifications',
+  notificationPreferences: '/api/notification-preferences',
   businessSettings: '/api/settings/business',
 } as const

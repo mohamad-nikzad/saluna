@@ -64,6 +64,13 @@
       "when": 1777656326722,
       "tag": "0008_shiny_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778577031786,
+      "tag": "0009_dazzling_meltdown",
+      "breakpoints": true
     }
   ]
 }

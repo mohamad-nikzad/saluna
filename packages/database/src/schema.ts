@@ -6,6 +6,7 @@ import {
   integer,
   serial,
   timestamp,
+  jsonb,
   index,
   uniqueIndex,
   primaryKey,
@@ -303,3 +304,71 @@ export const pushSubscriptions = pgTable('push_subscriptions', {
   auth: text('auth').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salons.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type').notNull().$type<'appointment_created'>(),
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    route: text('route').notNull(),
+    data: jsonb('data').notNull().$type<Record<string, unknown>>().default({}),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('notifications_salon_id_user_id_created_at_idx').on(t.salonId, t.userId, t.createdAt),
+    index('notifications_salon_id_user_id_read_at_idx').on(t.salonId, t.userId, t.readAt),
+  ]
+)
+
+export const notificationDeliveries = pgTable(
+  'notification_deliveries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    notificationId: uuid('notification_id')
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    channel: text('channel')
+      .notNull()
+      .$type<'in_app' | 'local_sync' | 'sms' | 'android_regional_push'>(),
+    status: text('status').notNull().$type<'pending' | 'sent' | 'failed' | 'skipped'>(),
+    provider: text('provider'),
+    providerMessageId: text('provider_message_id'),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('notification_deliveries_notification_id_idx').on(t.notificationId),
+    index('notification_deliveries_channel_status_idx').on(t.channel, t.status),
+  ]
+)
+
+export const notificationPreferences = pgTable(
+  'notification_preferences',
+  {
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salons.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    appointmentAlertsEnabled: boolean('appointment_alerts_enabled').notNull().default(true),
+    localAlertsEnabled: boolean('local_alerts_enabled').notNull().default(true),
+    smsAlertsEnabled: boolean('sms_alerts_enabled').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.salonId, t.userId] }),
+    index('notification_preferences_user_id_idx').on(t.userId),
+  ]
+)

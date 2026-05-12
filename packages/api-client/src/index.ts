@@ -77,5 +77,21 @@ export type {
   UpdateAppointmentResponse,
   UpdateAppointmentStatusResponse,
 } from './appointments'
+export {
+  createNotificationPreferencesApi,
+  createNotificationsApi,
+} from './notifications'
+export type {
+  AppNotification,
+  MarkAllNotificationsReadResponse,
+  NotificationPreferences,
+  NotificationPreferencesApi,
+  NotificationPreferencesResponse,
+  NotificationResponse,
+  NotificationsApi,
+  NotificationsResponse,
+  NotificationType,
+  UpdateNotificationPreferencesInput,
+} from './notifications'
 export { endpoints } from './endpoints'
 export { ApiError, NetworkError } from './errors'

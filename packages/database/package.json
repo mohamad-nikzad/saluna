@@ -9,6 +9,7 @@
     "./clients": "./src/clients.ts",
     "./dashboard": "./src/dashboard.ts",
     "./onboarding": "./src/onboarding.ts",
+    "./notifications": "./src/notifications.ts",
     "./push": "./src/push.ts",
     "./retention": "./src/retention.ts",
     "./services": "./src/services.ts",

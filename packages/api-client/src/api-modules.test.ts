@@ -4,6 +4,10 @@ import { createBusinessSettingsApi } from './business-settings'
 import { createApiClient } from './client'
 import { createClientsApi } from './clients'
 import { createDashboardApi } from './dashboard'
+import {
+  createNotificationPreferencesApi,
+  createNotificationsApi,
+} from './notifications'
 import { createOnboardingApi } from './onboarding'
 import { createRetentionApi } from './retention'
 import { createServicesApi } from './services'
@@ -324,6 +328,52 @@ describe('api modules', () => {
         name: 'Nika',
         phone: '09123456789',
         notes: 'Prefers mornings',
+      },
+    })
+  })
+
+  it('wraps notification routes', async () => {
+    const { client, calls } = createMockedFetchClient({ notifications: [] })
+    const api = createNotificationsApi(client)
+
+    await api.list()
+    expectLastCall(calls, { path: '/api/notifications' })
+
+    await api.list({ unreadOnly: true })
+    expectLastCall(calls, { path: '/api/notifications?unreadOnly=true' })
+
+    await api.markRead('notification-1')
+    expectLastCall(calls, {
+      path: '/api/notifications/notification-1/read',
+      method: 'POST',
+    })
+
+    await api.markAllRead()
+    expectLastCall(calls, {
+      path: '/api/notifications/read-all',
+      method: 'POST',
+    })
+  })
+
+  it('wraps notification preference routes', async () => {
+    const { client, calls } = createMockedFetchClient({ preferences: {} })
+    const api = createNotificationPreferencesApi(client)
+
+    await api.get()
+    expectLastCall(calls, { path: '/api/notification-preferences' })
+
+    await api.update({
+      appointmentAlertsEnabled: false,
+      localAlertsEnabled: true,
+      smsAlertsEnabled: false,
+    })
+    expectLastCall(calls, {
+      path: '/api/notification-preferences',
+      method: 'PATCH',
+      body: {
+        appointmentAlertsEnabled: false,
+        localAlertsEnabled: true,
+        smsAlertsEnabled: false,
       },
     })
   })
