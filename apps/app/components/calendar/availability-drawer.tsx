@@ -50,14 +50,8 @@ import {
   availabilitySearchSchema,
   type AvailabilitySearchInput,
 } from '@repo/salon-core/forms/appointment'
+import { ServicePicker } from '@/components/services/service-picker'
 import { fetchJsonOrThrow, HttpError, useNetworkStatus } from '@/lib/pwa-client'
-
-const CATEGORY_LABELS: Record<string, string> = {
-  hair: 'مو',
-  nails: 'ناخن',
-  skincare: 'پوست',
-  spa: 'اسپا',
-}
 
 const ANY_STAFF_VALUE = '__any__'
 
@@ -163,17 +157,6 @@ export function AvailabilityDrawer({
   const activeServices = useMemo(
     () => services.filter((service) => service.active),
     [services]
-  )
-  const servicesByCategory = useMemo(
-    () =>
-      activeServices.reduce<Record<string, Service[]>>((acc, service) => {
-        if (!acc[service.category]) {
-          acc[service.category] = []
-        }
-        acc[service.category].push(service)
-        return acc
-      }, {}),
-    [activeServices]
   )
   const eligibleStaff = useMemo(
     () => (serviceId ? eligibleStaffForService(staffRoleOnly, serviceId) : []),
@@ -339,25 +322,12 @@ export function AvailabilityDrawer({
           <FieldGroup className="gap-4">
             <Field>
               <FieldLabel>خدمت</FieldLabel>
-              <Select value={serviceId || undefined} onValueChange={handleServiceChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="انتخاب خدمت" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(servicesByCategory).map(([category, categoryServices]) => (
-                    <div key={category}>
-                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                        {CATEGORY_LABELS[category] || category}
-                      </div>
-                      {categoryServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name} · {toPersianDigits(service.duration)} دقیقه
-                        </SelectItem>
-                      ))}
-                    </div>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ServicePicker
+                services={activeServices}
+                value={serviceId || undefined}
+                onChange={handleServiceChange}
+                showPrice={false}
+              />
               {errors.serviceId && <FieldError>{errors.serviceId.message}</FieldError>}
             </Field>
 

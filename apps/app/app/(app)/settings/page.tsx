@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useForm } from 'react-hook-form'
@@ -10,8 +10,6 @@ import {
   Moon,
   Sun,
   Users,
-  Plus,
-  Pencil,
   ChevronLeft,
   LayoutDashboard,
   ListChecks,
@@ -33,10 +31,9 @@ import {
 import { Spinner } from '@repo/ui/spinner'
 import { SettingsSkeleton } from '@/components/skeletons/settings-skeleton'
 import { StaffPushSettings } from '@/components/pwa/staff-push-settings'
-import { ServiceDrawer } from '@/components/services/service-drawer'
+import { ServiceCatalogManager } from '@/components/services/service-catalog-manager'
 import { Badge } from '@repo/ui/badge'
-import type { Service } from '@repo/salon-core/types'
-import { SERVICE_CATEGORIES } from '@repo/salon-core/types'
+import type { Service, ServiceCategory, ServiceFamily } from '@repo/salon-core/types'
 import { displayPhone } from '@repo/salon-core/phone'
 import { parseLocalizedInt, toPersianDigits } from '@repo/salon-core/persian-digits'
 import { businessSettingsSchema, type BusinessSettingsPayload } from '@repo/salon-core/forms/settings'
@@ -49,10 +46,9 @@ export default function SettingsPage() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  const [showServiceDrawer, setShowServiceDrawer] = useState(false)
-  const [selectedService, setSelectedService] = useState<Service | null>(null)
-
   const [services, setServices] = useState<Service[]>([])
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
+  const [serviceFamilies, setServiceFamilies] = useState<ServiceFamily[]>([])
   const [managerDataReady, setManagerDataReady] = useState(false)
   const {
     handleSubmit: handleBusinessHoursSubmit,
@@ -73,6 +69,18 @@ export default function SettingsPage() {
   const workingEnd = watchBusinessHours('workingEnd') ?? '19:00'
   const slotMin = watchBusinessHours('slotDurationMinutes') ?? 30
 
+  const refreshCatalog = useCallback(async () => {
+    if (!dc) return
+    const [nextCategories, nextFamilies, nextServices] = await Promise.all([
+      dc.services.categories.list({ includeInactive: true }),
+      dc.services.families.list({ includeInactive: true }),
+      dc.services.list({ includeInactive: true }),
+    ])
+    setServiceCategories(nextCategories)
+    setServiceFamilies(nextFamilies)
+    setServices(nextServices)
+  }, [dc])
+
   useEffect(() => {
     if (!dc || user?.role !== 'manager') {
       setManagerDataReady(true)
@@ -87,10 +95,17 @@ export default function SettingsPage() {
       if (cancelled || !s) return
       resetBusinessHours(s)
     })
-    void dc.services
-      .list({ includeInactive: true })
-      .then((list) => {
-        if (!cancelled) setServices(list)
+    void Promise.all([
+      dc.services.categories.list({ includeInactive: true }),
+      dc.services.families.list({ includeInactive: true }),
+      dc.services.list({ includeInactive: true }),
+    ])
+      .then(([categories, families, list]) => {
+        if (!cancelled) {
+          setServiceCategories(categories)
+          setServiceFamilies(families)
+          setServices(list)
+        }
       })
       .finally(() => {
         if (!cancelled) setManagerDataReady(true)
@@ -294,58 +309,15 @@ export default function SettingsPage() {
         )}
 
         {isManager && (
-          <Card className="border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">خدمات</CardTitle>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="gap-1 touch-manipulation"
-                onClick={() => {
-                  setSelectedService(null)
-                  setShowServiceDrawer(true)
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                جدید
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {services.length === 0 ? (
-                <p className="text-sm text-muted-foreground">هنوز خدمتی ثبت نشده.</p>
-              ) : (
-                services.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center gap-3 rounded-xl border border-border/50 px-3 py-2.5"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-sm">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {SERVICE_CATEGORIES[s.category]?.label ?? s.category} · {toPersianDigits(s.duration)} دقیقه
-                      </p>
-                    </div>
-                    {!s.active && (
-                      <Badge variant="secondary" className="text-[10px] shrink-0">
-                        غیرفعال
-                      </Badge>
-                    )}
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="touch-manipulation shrink-0"
-                      onClick={() => {
-                        setSelectedService(s)
-                        setShowServiceDrawer(true)
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+          <ServiceCatalogManager
+            services={services}
+            categories={serviceCategories}
+            families={serviceFamilies}
+            onChanged={() => {
+              void refreshCatalog()
+              bumpOfflineData()
+            }}
+          />
         )}
 
         <Card className="border-border/50">
@@ -391,21 +363,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {isManager && (
-        <ServiceDrawer
-          open={showServiceDrawer}
-          onOpenChange={(o) => {
-            setShowServiceDrawer(o)
-            if (!o) setSelectedService(null)
-          }}
-          service={selectedService}
-          onSuccess={() => {
-            setShowServiceDrawer(false)
-            setSelectedService(null)
-            bumpOfflineData()
-          }}
-        />
-      )}
     </div>
   )
 }

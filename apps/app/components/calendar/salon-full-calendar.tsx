@@ -19,6 +19,7 @@ import {
   formatPersianTimeHm,
 } from '@repo/salon-core/jalali-display'
 import { cn } from '@repo/ui/utils'
+import { formatCompactServiceLabel } from '@/components/services/service-catalog-groups'
 
 function staffColorToCssVar(staffColor: string): string {
   return `var(--calendar-${normalizeCalendarColorId(staffColor)})`
@@ -108,7 +109,7 @@ export function SalonFullCalendar({
     () =>
       appointments.map((apt) => ({
         id: apt.id,
-        title: `${apt.client.isPlaceholder ? 'موقت · ' : ''}${apt.client.name} — ${apt.service.name}`,
+        title: `${apt.client.isPlaceholder ? 'موقت · ' : ''}${apt.client.name} — ${formatCompactServiceLabel(apt.service)}`,
         start: `${apt.date}T${apt.startTime}:00`,
         end: `${apt.date}T${apt.endTime}:00`,
         allDay: false,

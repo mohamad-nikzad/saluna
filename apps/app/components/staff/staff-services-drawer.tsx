@@ -17,12 +17,13 @@ import { FormRootError } from '@repo/ui/form'
 import { Checkbox } from '@repo/ui/checkbox'
 import { Switch } from '@repo/ui/switch'
 import { Spinner } from '@repo/ui/spinner'
-import { User, Service, SERVICE_CATEGORIES } from '@repo/salon-core/types'
+import { User, Service } from '@repo/salon-core/types'
 import { staffServiceIdsSchema, type StaffServiceIdsInput } from '@repo/salon-core/forms/staff'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { cn } from '@repo/ui/utils'
 import { DataClientHttpError } from '@repo/data-client'
 import { useManagerDataClient } from '@/components/manager-data-client-provider'
+import { groupServicesByCatalog } from '@/components/services/service-catalog-groups'
 
 interface StaffServicesDrawerProps {
   open: boolean
@@ -57,17 +58,7 @@ export function StaffServicesDrawer({
 
   const activeServices = useMemo(() => services.filter((s) => s.active), [services])
 
-  const servicesByCategory = useMemo(() => {
-    const acc: Record<string, Service[]> = {}
-    for (const s of activeServices) {
-      if (!acc[s.category]) acc[s.category] = []
-      acc[s.category].push(s)
-    }
-    for (const k of Object.keys(acc)) {
-      acc[k].sort((a, b) => a.name.localeCompare(b.name, 'fa'))
-    }
-    return acc
-  }, [activeServices])
+  const serviceGroups = useMemo(() => groupServicesByCatalog(activeServices), [activeServices])
 
   useEffect(() => {
     if (!open || !staff) return
@@ -177,31 +168,39 @@ export function StaffServicesDrawer({
 
             {!unrestricted && (
               <div className="flex w-full min-w-0 max-w-full flex-col gap-4 overflow-hidden rounded-lg border border-border bg-card p-3">
-                {Object.entries(servicesByCategory).map(([category, list]) => (
-                  <div key={category} className="min-w-0">
-                    <p className="mb-2 text-xs font-medium text-muted-foreground">
-                      {SERVICE_CATEGORIES[category as keyof typeof SERVICE_CATEGORIES]?.label ||
-                        category}
+                {serviceGroups.map((category) => (
+                  <div key={category.categoryId} className="min-w-0">
+                    <p className="mb-2 text-xs font-semibold text-foreground">
+                      {category.categoryName}
                     </p>
-                    <div className="flex flex-col gap-1">
-                      {list.map((svc) => (
-                        <label
-                          key={svc.id}
-                          className={cn(
-                            'flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-md px-2 py-2.5 text-sm transition-colors',
-                            'hover:bg-accent/40'
-                          )}
-                        >
-                          <span className="min-w-0 flex-1 leading-snug">
-                            {svc.name}
-                            <span className="text-muted-foreground text-xs"> · {toPersianDigits(svc.duration)} دقیقه</span>
-                          </span>
-                          <Checkbox
-                            className="mt-0.5 shrink-0"
-                            checked={selected.has(svc.id)}
-                            onCheckedChange={(v) => toggleService(svc.id, v === true)}
-                          />
-                        </label>
+                    <div className="flex flex-col gap-3">
+                      {category.families.map((family) => (
+                        <div key={family.familyId} className="min-w-0">
+                          <p className="mb-1 px-2 text-[11px] font-medium text-muted-foreground">
+                            {family.familyName}
+                          </p>
+                          <div className="flex flex-col gap-1">
+                            {family.services.map((svc) => (
+                              <label
+                                key={svc.id}
+                                className={cn(
+                                  'flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-md px-2 py-2.5 text-sm transition-colors',
+                                  'hover:bg-accent/40'
+                                )}
+                              >
+                                <span className="min-w-0 flex-1 leading-snug">
+                                  {svc.name}
+                                  <span className="text-muted-foreground text-xs"> · {toPersianDigits(svc.duration)} دقیقه</span>
+                                </span>
+                                <Checkbox
+                                  className="mt-0.5 shrink-0"
+                                  checked={selected.has(svc.id)}
+                                  onCheckedChange={(v) => toggleService(svc.id, v === true)}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>

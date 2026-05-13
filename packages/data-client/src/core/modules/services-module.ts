@@ -1,4 +1,4 @@
-import type { Service } from '@repo/salon-core'
+import type { Service, ServiceCategory, ServiceFamily } from '@repo/salon-core'
 import { readCacheTimestamp, writeCacheTimestamp } from '../cache-meta'
 import type { HttpTransportPort } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
@@ -17,6 +17,15 @@ function listKey(includeInactive: boolean) {
 
 type ServicesResponse = { services: Service[] }
 type ServiceOneResponse = { service: Service }
+type ServiceCategoriesResponse = { categories: ServiceCategory[] }
+type ServiceCategoryOneResponse = { category: ServiceCategory }
+type ServiceFamiliesResponse = { families: ServiceFamily[] }
+type ServiceFamilyOneResponse = { family: ServiceFamily }
+type ImportStarterServiceTemplatesResponse = {
+  categories: ServiceCategory[]
+  families: ServiceFamily[]
+  services: Service[]
+}
 
 export type ServiceCreateInput = {
   name: string
@@ -50,6 +59,23 @@ export type ServiceUpdateInput = Partial<
   >
 >
 
+export type ServiceCategoryCreateInput = {
+  name: string
+  active?: boolean
+}
+
+export type ServiceCategoryUpdateInput = Partial<Pick<ServiceCategory, 'name' | 'active'>>
+
+export type ServiceFamilyCreateInput = {
+  categoryId: string
+  name: string
+  active?: boolean
+}
+
+export type ServiceFamilyUpdateInput = Partial<
+  Pick<ServiceFamily, 'categoryId' | 'name' | 'active'>
+>
+
 export interface ServicesModuleDeps {
   mutationQueue?: MutationQueuePort | null
   isOnline?: OnlineStatusReader
@@ -64,6 +90,17 @@ export interface ServicesModule {
   subscribe(fn: (services: Service[]) => void): () => void
   create(input: ServiceCreateInput): Promise<Service>
   update(id: string, input: ServiceUpdateInput): Promise<Service>
+  categories: {
+    list(options?: { includeInactive?: boolean }): Promise<ServiceCategory[]>
+    create(input: ServiceCategoryCreateInput): Promise<ServiceCategory>
+    update(id: string, input: ServiceCategoryUpdateInput): Promise<ServiceCategory>
+  }
+  families: {
+    list(options?: { includeInactive?: boolean }): Promise<ServiceFamily[]>
+    create(input: ServiceFamilyCreateInput): Promise<ServiceFamily>
+    update(id: string, input: ServiceFamilyUpdateInput): Promise<ServiceFamily>
+  }
+  importStarterTemplates(): Promise<ImportStarterServiceTemplatesResponse>
 }
 
 export function createServicesModule(
@@ -90,6 +127,14 @@ export function createServicesModule(
   async function invalidateLists() {
     await storage.delete(COLLECTION, 'list')
     await storage.delete(COLLECTION, 'list:all')
+  }
+
+  async function invalidateCatalogLists() {
+    await invalidateLists()
+    await storage.delete(COLLECTION, 'categories:list')
+    await storage.delete(COLLECTION, 'categories:list:all')
+    await storage.delete(COLLECTION, 'families:list')
+    await storage.delete(COLLECTION, 'families:list:all')
   }
 
   async function fetchList(includeInactive: boolean): Promise<Service[]> {
@@ -344,6 +389,96 @@ export function createServicesModule(
 
       void emitSubscribers()
       return next
+    },
+
+    categories: {
+      async list(options) {
+        const includeInactive = Boolean(options?.includeInactive)
+        const key = includeInactive ? 'categories:list:all' : 'categories:list'
+        const hit = await storage.get<ServiceCategory[]>(COLLECTION, key)
+        if (hit !== undefined) return hit
+        try {
+          const data = await transport.json<ServiceCategoriesResponse>('GET', '/api/service-categories', {
+            query: includeInactive ? { all: '1' } : undefined,
+          })
+          const categories = data.categories ?? []
+          await storage.set(COLLECTION, key, categories)
+          await writeCacheTimestamp(storage, COLLECTION, key)
+          return categories
+        } catch {
+          return []
+        }
+      },
+
+      async create(input) {
+        const data = await transport.json<ServiceCategoryOneResponse>('POST', '/api/service-categories', {
+          body: { name: input.name, active: input.active !== false },
+        })
+        await invalidateCatalogLists()
+        void emitSubscribers()
+        return data.category
+      },
+
+      async update(id, input) {
+        const data = await transport.json<ServiceCategoryOneResponse>('PATCH', `/api/service-categories/${id}`, {
+          body: input,
+        })
+        await invalidateCatalogLists()
+        void emitSubscribers()
+        return data.category
+      },
+    },
+
+    families: {
+      async list(options) {
+        const includeInactive = Boolean(options?.includeInactive)
+        const key = includeInactive ? 'families:list:all' : 'families:list'
+        const hit = await storage.get<ServiceFamily[]>(COLLECTION, key)
+        if (hit !== undefined) return hit
+        try {
+          const data = await transport.json<ServiceFamiliesResponse>('GET', '/api/service-families', {
+            query: includeInactive ? { all: '1' } : undefined,
+          })
+          const families = data.families ?? []
+          await storage.set(COLLECTION, key, families)
+          await writeCacheTimestamp(storage, COLLECTION, key)
+          return families
+        } catch {
+          return []
+        }
+      },
+
+      async create(input) {
+        const data = await transport.json<ServiceFamilyOneResponse>('POST', '/api/service-families', {
+          body: {
+            categoryId: input.categoryId,
+            name: input.name,
+            active: input.active !== false,
+          },
+        })
+        await invalidateCatalogLists()
+        void emitSubscribers()
+        return data.family
+      },
+
+      async update(id, input) {
+        const data = await transport.json<ServiceFamilyOneResponse>('PATCH', `/api/service-families/${id}`, {
+          body: input,
+        })
+        await invalidateCatalogLists()
+        void emitSubscribers()
+        return data.family
+      },
+    },
+
+    async importStarterTemplates() {
+      const data = await transport.json<ImportStarterServiceTemplatesResponse>(
+        'POST',
+        '/api/services/import-starter-templates'
+      )
+      await invalidateCatalogLists()
+      void emitSubscribers()
+      return data
     },
   }
 }

@@ -33,7 +33,6 @@ import {
   Service,
   Client,
   AppointmentWithDetails,
-  SERVICE_CATEGORIES,
   APPOINTMENT_STATUS,
 } from '@repo/salon-core/types'
 import {
@@ -57,6 +56,8 @@ import {
 } from '@repo/salon-core/forms/appointment'
 import { ClientPicker } from '@/components/calendar/client-picker'
 import { useManagerDataClient } from '@/components/manager-data-client-provider'
+import { formatCompactServiceLabel } from '@/components/services/service-catalog-groups'
+import { ServicePicker } from '@/components/services/service-picker'
 import { DataClientHttpError } from '@repo/data-client'
 import { useNetworkStatus } from '@/lib/pwa-client'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
@@ -570,21 +571,13 @@ export function AppointmentDetailDrawer({
     }
   }
 
-  const servicesByCategory = services.reduce(
-    (acc, service) => {
-      if (!acc[service.category]) {
-        acc[service.category] = []
-      }
-      acc[service.category].push(service)
-      return acc
-    },
-    {} as Record<string, Service[]>
-  )
-
   if (!appointment) return null
 
   const statusInfo = APPOINTMENT_STATUS[appointment.status]
   const isEditingCurrentAppointment = isEditing && editingAppointmentId === appointment.id
+  const editableServices = services.filter(
+    (service) => service.active || service.id === serviceId,
+  )
 
   return (
     <Drawer open={!!appointment} onOpenChange={handleOpenChange}>
@@ -596,7 +589,7 @@ export function AppointmentDetailDrawer({
           <DrawerDescription>
             {isEditingCurrentAppointment
               ? 'جزئیات نوبت را ویرایش کنید. نوبت‌های هم‌زمان فقط با پرسنل و مشتری متفاوت نسبت به نوبت‌های هم‌پوشان مجاز است.'
-              : appointment.service.name}
+              : formatCompactServiceLabel(appointment.service)}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -714,31 +707,11 @@ export function AppointmentDetailDrawer({
 
                 <Field>
                   <FieldLabel>خدمت</FieldLabel>
-                  <Select
+                  <ServicePicker
+                    services={editableServices}
                     value={serviceId || undefined}
-                    onValueChange={handleEditServiceChange}
-                    required
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="انتخاب خدمت" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(servicesByCategory).map(([category, categoryServices]) => (
-                        <div key={category}>
-                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                              {SERVICE_CATEGORIES[category as keyof typeof SERVICE_CATEGORIES]?.label ||
-                              category}
-                          </div>
-                          {categoryServices.map((service) => (
-                            <SelectItem key={service.id} value={service.id}>
-                              {service.name} · پیشنهاد {toPersianDigits(service.duration)} دقیقه —{' '}
-                              {formatTomans(service.price)}
-                            </SelectItem>
-                          ))}
-                        </div>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={handleEditServiceChange}
+                  />
                 </Field>
               </div>
 
@@ -844,6 +817,11 @@ export function AppointmentDetailDrawer({
             </div>
 
             <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="h-4 w-4 shrink-0 rounded-sm" style={{ backgroundColor: appointment.service.color }} />
+                <span>{formatCompactServiceLabel(appointment.service)}</span>
+              </div>
+
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>{formatJalaliFullDate(appointment.date)}</span>

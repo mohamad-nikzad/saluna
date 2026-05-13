@@ -47,6 +47,7 @@ import {
 } from '@repo/salon-core/appointment-time'
 import { ClientPicker } from '@/components/calendar/client-picker'
 import { useManagerDataClient } from '@/components/manager-data-client-provider'
+import { ServicePicker } from '@/components/services/service-picker'
 import { DataClientHttpError } from '@repo/data-client'
 import { useNetworkStatus } from '@/lib/pwa-client'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
@@ -59,13 +60,6 @@ import {
   appointmentFormSchema,
   type AppointmentFormInput,
 } from '@repo/salon-core/forms/appointment'
-
-const CATEGORY_LABELS: Record<string, string> = {
-  hair: 'مو',
-  nails: 'ناخن',
-  skincare: 'پوست',
-  spa: 'اسپا',
-}
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120]
 
@@ -141,6 +135,10 @@ export function AppointmentDrawer({
     watch('endTime') ?? endTimeFromDuration(startTime, durationMinutes)
   const useTemporaryClient = Boolean(watch('useTemporaryClient'))
   const temporaryClientName = watch('temporaryClientName') ?? ''
+  const activeServices = useMemo(
+    () => services.filter((service) => service.active),
+    [services],
+  )
 
   useEffect(() => {
     setLocalClients(clients)
@@ -325,17 +323,6 @@ export function AppointmentDrawer({
     }
   })
 
-  const servicesByCategory = services.reduce(
-    (acc, service) => {
-      if (!acc[service.category]) {
-        acc[service.category] = []
-      }
-      acc[service.category].push(service)
-      return acc
-    },
-    {} as Record<string, Service[]>,
-  )
-
   /** Managers are often unrestricted; autofill only among real staff to avoid false ambiguity. */
   const staffRoleOnly = useMemo(
     () => staff.filter((m) => m.role === 'staff'),
@@ -381,10 +368,6 @@ export function AppointmentDrawer({
       setValue('staffId', '', { shouldDirty: true, shouldValidate: true })
     }
   }, [setValue, staffSlotOk, staffId])
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
-  }
 
   const durationLabel = `${toPersianDigits(durationMinutes)} دقیقه`
   const endTimeLabel = toPersianDigits(endTime)
@@ -536,32 +519,11 @@ export function AppointmentDrawer({
                   control={control}
                   name="serviceId"
                   render={({ field }) => (
-                    <Select
+                    <ServicePicker
+                      services={activeServices}
                       value={field.value || undefined}
-                      onValueChange={handleServiceChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="انتخاب خدمت" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(servicesByCategory).map(
-                          ([category, categoryServices]) => (
-                            <div key={category}>
-                              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                                {CATEGORY_LABELS[category] || category}
-                              </div>
-                              {categoryServices.map((service) => (
-                                <SelectItem key={service.id} value={service.id}>
-                                  {service.name} · پیشنهاد{' '}
-                                  {toPersianDigits(service.duration)} دقیقه —{' '}
-                                  {formatPrice(service.price)}
-                                </SelectItem>
-                              ))}
-                            </div>
-                          ),
-                        )}
-                      </SelectContent>
-                    </Select>
+                      onChange={handleServiceChange}
+                    />
                   )}
                 />
                 {errors.serviceId && (

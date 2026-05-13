@@ -330,7 +330,7 @@ export async function importStarterServiceTemplates(salonId: string): Promise<{
 
       for (const serviceTemplate of familyTemplate.services) {
         const existingService = (await getAllServices(salonId, true)).find(
-          (item) => item.familyId === family.id && item.name === serviceTemplate.name
+          (item) => item.name === serviceTemplate.name
         )
         if (existingService) {
           importedServices.push(existingService)

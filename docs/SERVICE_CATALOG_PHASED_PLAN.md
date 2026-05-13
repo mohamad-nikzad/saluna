@@ -194,11 +194,20 @@ Status: complete.
 
 ### Phase 5: Web Booking And Staff UI
 
+Status: complete.
+
 - Update web appointment create/edit drawers to use a searchable grouped service picker.
 - Update web availability drawer to use the same picker and still submit one `serviceId`.
 - Update web staff service assignment to group variants under category and family.
 - Display selected services as `category / variant`, such as `ناخن / کاشت با پودر`.
 - Done when booking, availability lookup, appointment edit, and staff capability assignment work with the new catalog UI on web.
+
+#### Phase 5 Completion Notes
+
+- Web appointment create and edit flows now use one searchable grouped picker across category, family, and service variant names.
+- Availability lookup uses the same grouped picker while preserving the existing single `serviceId` submission contract.
+- Staff service assignment now groups active service variants under category and family while keeping variant-level capability checks.
+- Calendar and appointment detail surfaces display compact labels such as `ناخن / کاشت با پودر`.
 
 ### Phase 6: Native Parity
 
