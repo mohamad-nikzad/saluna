@@ -38,7 +38,7 @@ export function BottomNav() {
             item.href === '/clients'
               ? pathname === '/clients' || pathname.startsWith('/clients/')
               : item.href === '/settings'
-                ? ['/settings', '/dashboard', '/retention', '/staff', '/onboarding'].some((path) =>
+                ? ['/settings', '/dashboard', '/retention', '/staff', '/services', '/onboarding'].some((path) =>
                     pathname.startsWith(path)
                   )
               : pathname.startsWith(item.href)

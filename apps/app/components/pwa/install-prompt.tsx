@@ -25,6 +25,7 @@ const VALUE_MOMENT_PATHS = [
   '/clients',
   '/dashboard',
   '/retention',
+  '/services',
   '/settings',
 ]
 

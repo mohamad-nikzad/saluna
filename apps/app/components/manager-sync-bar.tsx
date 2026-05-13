@@ -40,7 +40,8 @@ function reviewHref(item: SyncReviewItem): string {
   if (item.href) return item.href
   if (item.entityType === 'client') return `/clients/${item.entityId}`
   if (item.entityType === 'appointment') return '/calendar'
-  if (item.entityType === 'service' || item.entityType === 'business_settings') return '/settings'
+  if (item.entityType === 'service') return '/services'
+  if (item.entityType === 'business_settings') return '/settings'
   if (item.entityType === 'staff_services' || item.entityType === 'staff_schedule') return '/staff'
   return '/calendar'
 }

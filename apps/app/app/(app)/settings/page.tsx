@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useForm } from 'react-hook-form'
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   LayoutDashboard,
   ListChecks,
+  Scissors,
   UserRoundSearch,
 } from 'lucide-react'
 import { Button } from '@repo/ui/button'
@@ -31,13 +32,7 @@ import {
 import { Spinner } from '@repo/ui/spinner'
 import { SettingsSkeleton } from '@/components/skeletons/settings-skeleton'
 import { StaffPushSettings } from '@/components/pwa/staff-push-settings'
-import { ServiceCatalogManager } from '@/components/services/service-catalog-manager'
 import { Badge } from '@repo/ui/badge'
-import type {
-  Service,
-  ServiceCategory,
-  ServiceFamily,
-} from '@repo/salon-core/types'
 import { displayPhone } from '@repo/salon-core/phone'
 import {
   parseLocalizedInt,
@@ -56,11 +51,6 @@ export default function SettingsPage() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  const [services, setServices] = useState<Service[]>([])
-  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(
-    [],
-  )
-  const [serviceFamilies, setServiceFamilies] = useState<ServiceFamily[]>([])
   const [managerDataReady, setManagerDataReady] = useState(false)
   const {
     handleSubmit: handleBusinessHoursSubmit,
@@ -81,18 +71,6 @@ export default function SettingsPage() {
   const workingEnd = watchBusinessHours('workingEnd') ?? '19:00'
   const slotMin = watchBusinessHours('slotDurationMinutes') ?? 30
 
-  const refreshCatalog = useCallback(async () => {
-    if (!dc) return
-    const [nextCategories, nextFamilies, nextServices] = await Promise.all([
-      dc.services.categories.list({ includeInactive: true }),
-      dc.services.families.list({ includeInactive: true }),
-      dc.services.list({ includeInactive: true }),
-    ])
-    setServiceCategories(nextCategories)
-    setServiceFamilies(nextFamilies)
-    setServices(nextServices)
-  }, [dc])
-
   useEffect(() => {
     if (!dc || user?.role !== 'manager') {
       setManagerDataReady(true)
@@ -102,33 +80,16 @@ export default function SettingsPage() {
     void dc.businessSettings.get().then((s) => {
       if (cancelled || !s) return
       resetBusinessHours(s)
+    }).finally(() => {
+      if (!cancelled) setManagerDataReady(true)
     })
     const unsubBiz = dc.businessSettings.subscribe((s) => {
       if (cancelled || !s) return
       resetBusinessHours(s)
     })
-    void Promise.all([
-      dc.services.categories.list({ includeInactive: true }),
-      dc.services.families.list({ includeInactive: true }),
-      dc.services.list({ includeInactive: true }),
-    ])
-      .then(([categories, families, list]) => {
-        if (!cancelled) {
-          setServiceCategories(categories)
-          setServiceFamilies(families)
-          setServices(list)
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setManagerDataReady(true)
-      })
-    const unsubSvc = dc.services.subscribe((list) => {
-      if (!cancelled) setServices(list)
-    })
     return () => {
       cancelled = true
       unsubBiz()
-      unsubSvc()
     }
   }, [dc, resetBusinessHours, user?.role])
 
@@ -250,6 +211,19 @@ export default function SettingsPage() {
                 className="w-full justify-between touch-manipulation"
                 asChild
               >
+                <Link href="/services">
+                  <span className="flex items-center gap-2">
+                    <Scissors className="h-4 w-4" />
+                    خدمات و قیمت‌ها
+                  </span>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between touch-manipulation"
+                asChild
+              >
                 <Link href="/staff">
                   <span className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -349,19 +323,6 @@ export default function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {isManager && (
-          <ServiceCatalogManager
-            services={services}
-            categories={serviceCategories}
-            families={serviceFamilies}
-            starterImportKey={`saloora:starter-services-used:${user.salonId}`}
-            onChanged={() => {
-              void refreshCatalog()
-              bumpOfflineData()
-            }}
-          />
         )}
 
         <Card className="border-border/50">
