@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import type { AppNotification } from '@repo/api-client';
+import type { NotificationResponse } from 'expo-notifications';
 import { useAuth } from '../components/auth-provider';
 import { notificationPreferencesApi, notificationsApi } from './api';
 
 const ANDROID_CHANNEL_ID = 'saloora-local-sync';
 const SEEN_STORAGE_PREFIX = 'native:local-alerted-notification-ids:';
+
+type NotificationsModule = typeof import('expo-notifications');
 
 type NotificationSyncContextValue = {
   syncUnreadNotifications: (source?: string) => Promise<void>;
@@ -18,17 +21,50 @@ const NotificationSyncContext = React.createContext<NotificationSyncContextValue
   syncUnreadNotifications: async () => {},
 });
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+let notificationsModule: NotificationsModule | null | undefined;
+let notificationsModulePromise: Promise<NotificationsModule | null> | null = null;
+let hasConfiguredNotificationHandler = false;
 
 function isNativeNotificationAvailable() {
   return Platform.OS === 'android' || Platform.OS === 'ios';
+}
+
+function isExpoGoAndroid() {
+  return Platform.OS === 'android' && Constants.appOwnership === 'expo';
+}
+
+async function loadNotificationsModule(): Promise<NotificationsModule | null> {
+  if (!isNativeNotificationAvailable() || isExpoGoAndroid()) return null;
+  if (notificationsModule !== undefined) return notificationsModule;
+  if (notificationsModulePromise) return notificationsModulePromise;
+
+  notificationsModulePromise = import('expo-notifications')
+    .then((module) => {
+      notificationsModule = module;
+      return notificationsModule;
+    })
+    .catch(() => {
+      notificationsModule = null;
+      return notificationsModule;
+    })
+    .finally(() => {
+      notificationsModulePromise = null;
+    });
+
+  return notificationsModulePromise;
+}
+
+function configureNotificationHandler(notifications: NotificationsModule) {
+  if (hasConfiguredNotificationHandler) return;
+  notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: false,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+  hasConfiguredNotificationHandler = true;
 }
 
 function storageKeyForUser(userId: string) {
@@ -41,21 +77,19 @@ function getNotificationRoute(notification: AppNotification): string {
     : '/(tabs)/calendar';
 }
 
-function getRouteFromResponse(response: Notifications.NotificationResponse): string | null {
+function getRouteFromResponse(response: NotificationResponse): string | null {
   const route = response.notification.request.content.data?.route;
   return typeof route === 'string' && route.startsWith('/') ? route : null;
 }
 
-function getNotificationIdFromResponse(
-  response: Notifications.NotificationResponse
-): string | null {
+function getNotificationIdFromResponse(response: NotificationResponse): string | null {
   const notificationId = response.notification.request.content.data?.notificationId;
   return typeof notificationId === 'string' && notificationId.length > 0 ? notificationId : null;
 }
 
-function clearLastNotificationResponse() {
+function clearLastNotificationResponse(notifications: NotificationsModule) {
   try {
-    Notifications.clearLastNotificationResponse();
+    notifications.clearLastNotificationResponse();
   } catch {
     // Some dev runtimes do not expose response clearing; routing still works.
   }
@@ -79,27 +113,27 @@ async function writeSeenIds(userId: string, ids: Set<string>) {
   await AsyncStorage.setItem(storageKeyForUser(userId), JSON.stringify(trimmed));
 }
 
-async function ensureNotificationPermissions() {
-  if (!isNativeNotificationAvailable()) return false;
+async function ensureNotificationPermissions(notifications: NotificationsModule) {
+  if (!isNativeNotificationAvailable() || isExpoGoAndroid()) return false;
 
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+    await notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
       name: 'Saloora local alerts',
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: notifications.AndroidImportance.DEFAULT,
       sound: undefined,
       vibrationPattern: [0, 250, 250, 250],
     });
   }
 
-  const existing = await Notifications.getPermissionsAsync();
+  const existing = await notifications.getPermissionsAsync();
   if (
     existing.granted ||
-    existing.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    existing.ios?.status === notifications.IosAuthorizationStatus.PROVISIONAL
   ) {
     return true;
   }
 
-  const requested = await Notifications.requestPermissionsAsync({
+  const requested = await notifications.requestPermissionsAsync({
     ios: {
       allowAlert: true,
       allowBadge: true,
@@ -107,12 +141,15 @@ async function ensureNotificationPermissions() {
     },
   });
   return (
-    requested.granted || requested.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    requested.granted || requested.ios?.status === notifications.IosAuthorizationStatus.PROVISIONAL
   );
 }
 
-async function scheduleLocalAlert(notification: AppNotification) {
-  await Notifications.scheduleNotificationAsync({
+async function scheduleLocalAlert(
+  notifications: NotificationsModule,
+  notification: AppNotification
+) {
+  await notifications.scheduleNotificationAsync({
     identifier: `notification:${notification.id}`,
     content: {
       title: notification.title,
@@ -135,8 +172,10 @@ export function NativeNotificationProvider({ children }: { children: React.React
 
   const syncUnreadNotifications = React.useCallback(
     async (_source = 'manual') => {
-      if (!user || !isNativeNotificationAvailable()) return;
+      const nativeNotifications = await loadNotificationsModule();
+      if (!user || !nativeNotifications) return;
       if (inFlightRef.current) return inFlightRef.current;
+      configureNotificationHandler(nativeNotifications);
 
       const run = (async () => {
         const [{ preferences }, { notifications }] = await Promise.all([
@@ -157,10 +196,12 @@ export function NativeNotificationProvider({ children }: { children: React.React
         await writeSeenIds(user.id, seenIds);
 
         if (!preferences.localAlertsEnabled) return;
-        const canAlert = await ensureNotificationPermissions();
+        const canAlert = await ensureNotificationPermissions(nativeNotifications);
         if (!canAlert) return;
 
-        await Promise.all(newlySeen.map((notification) => scheduleLocalAlert(notification)));
+        await Promise.all(
+          newlySeen.map((notification) => scheduleLocalAlert(nativeNotifications, notification))
+        );
       })();
 
       inFlightRef.current = run;
@@ -181,7 +222,7 @@ export function NativeNotificationProvider({ children }: { children: React.React
   }, [syncUnreadNotifications, user]);
 
   React.useEffect(() => {
-    if (!user || !isNativeNotificationAvailable()) return;
+    if (!user || !isNativeNotificationAvailable() || isExpoGoAndroid()) return;
     const subscription = AppState.addEventListener('change', (nextState) => {
       const wasBackgrounded =
         lastActiveStateRef.current === 'background' || lastActiveStateRef.current === 'inactive';
@@ -194,34 +235,44 @@ export function NativeNotificationProvider({ children }: { children: React.React
   }, [syncUnreadNotifications, user]);
 
   React.useEffect(() => {
-    if (!isNativeNotificationAvailable()) return;
+    let isMounted = true;
+    let subscription: { remove: () => void } | null = null;
 
-    const openFromResponse = (response: Notifications.NotificationResponse) => {
-      const route = getRouteFromResponse(response);
-      if (!route) return;
-      const notificationId = getNotificationIdFromResponse(response);
-      if (notificationId) {
-        void notificationsApi.markRead(notificationId).catch(() => undefined);
+    void loadNotificationsModule().then((notifications) => {
+      if (!isMounted || !notifications) return;
+      configureNotificationHandler(notifications);
+
+      const openFromResponse = (response: NotificationResponse) => {
+        const route = getRouteFromResponse(response);
+        if (!route) return;
+        const notificationId = getNotificationIdFromResponse(response);
+        if (notificationId) {
+          void notificationsApi.markRead(notificationId).catch(() => undefined);
+        }
+        router.push(route as never);
+      };
+
+      let latestResponse: NotificationResponse | null = null;
+      try {
+        latestResponse = notifications.getLastNotificationResponse();
+      } catch {
+        latestResponse = null;
       }
-      router.push(route as never);
-    };
+      if (latestResponse) {
+        openFromResponse(latestResponse);
+        clearLastNotificationResponse(notifications);
+      }
 
-    let latestResponse: Notifications.NotificationResponse | null = null;
-    try {
-      latestResponse = Notifications.getLastNotificationResponse();
-    } catch {
-      latestResponse = null;
-    }
-    if (latestResponse) {
-      openFromResponse(latestResponse);
-      clearLastNotificationResponse();
-    }
-
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      openFromResponse(response);
-      clearLastNotificationResponse();
+      subscription = notifications.addNotificationResponseReceivedListener((response) => {
+        openFromResponse(response);
+        clearLastNotificationResponse(notifications);
+      });
     });
-    return () => subscription.remove();
+
+    return () => {
+      isMounted = false;
+      subscription?.remove();
+    };
   }, [router]);
 
   const value = React.useMemo(() => ({ syncUnreadNotifications }), [syncUnreadNotifications]);
