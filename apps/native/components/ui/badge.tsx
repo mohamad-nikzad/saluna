@@ -15,6 +15,7 @@ export type BadgeProps = ViewProps & {
 
 function Badge({ variant = 'default', children, style, textStyle, ...props }: BadgeProps) {
   const { theme } = useTheme();
+  const label = typeof children === 'string' ? children.replace(/\s+/g, '\u00A0') : null;
   const variantStyle = {
     default: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
     secondary: { backgroundColor: theme.colors.secondary, borderColor: theme.colors.secondary },
@@ -49,13 +50,15 @@ function Badge({ variant = 'default', children, style, textStyle, ...props }: Ba
         style,
       ]}
       {...props}>
-      {typeof children === 'string' ? (
+      {label != null ? (
         <AppText
           color={textColor}
+          ellipsizeMode="clip"
+          numberOfLines={1}
           variant="caption"
           weight="medium"
           style={[{ flexShrink: 0 }, textStyle]}>
-          {children}
+          {label}
         </AppText>
       ) : (
         children
