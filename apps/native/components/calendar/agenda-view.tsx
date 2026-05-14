@@ -4,6 +4,7 @@ import { CalendarX } from 'lucide-react-native';
 import { formatJalaliFullDate, parseGregorianToJalali } from '@repo/salon-core/jalali';
 import { formatPersianTime, toPersianDigits } from '@repo/salon-core/persian-digits';
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time';
+import { formatCompactServiceLabel } from '@repo/salon-core/service-catalog';
 import { APPOINTMENT_STATUS, type AppointmentWithDetails } from '@repo/salon-core/types';
 import { useTheme, withAlpha } from '../../theme';
 import {
@@ -302,7 +303,7 @@ function AgendaRow({
               fontSize: 11,
               color: theme.colors.mutedForeground,
             }}>
-            {appointment.service.name} · {appointment.staff.name}
+            {formatCompactServiceLabel(appointment.service)} · {appointment.staff.name}
           </Text>
         </View>
 

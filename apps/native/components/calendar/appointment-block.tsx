@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { AppointmentWithDetails } from '@repo/salon-core/types';
 import { formatPersianTime } from '@repo/salon-core/persian-digits';
 import { APPOINTMENT_STATUS } from '@repo/salon-core/types';
+import { formatCompactServiceLabel } from '@repo/salon-core/service-catalog';
 import { useTheme, withAlpha } from '../../theme';
 import { FONTS, staffBorder, staffHex, staffSoftBg, statusPalette } from './helpers';
 
@@ -38,7 +39,8 @@ export function AppointmentBlock({
   const themedStatus = appointmentStatus(status);
 
   const statusLabel = APPOINTMENT_STATUS[status]?.label ?? '';
-  const a11yLabel = `${appointment.client.name}، ${appointment.service.name}، ${appointment.staff.name}، ${formatPersianTime(appointment.startTime)} تا ${formatPersianTime(appointment.endTime)}، ${statusLabel}`;
+  const serviceLabel = formatCompactServiceLabel(appointment.service);
+  const a11yLabel = `${appointment.client.name}، ${serviceLabel}، ${appointment.staff.name}، ${formatPersianTime(appointment.startTime)} تا ${formatPersianTime(appointment.endTime)}، ${statusLabel}`;
 
   return (
     <Pressable
@@ -97,7 +99,7 @@ export function AppointmentBlock({
                   : theme.colors.mutedForeground,
                 marginTop: 1,
               }}>
-              {appointment.service.name}
+              {serviceLabel}
             </Text>
             {!compact && heightPx >= 60 ? (
               <Text

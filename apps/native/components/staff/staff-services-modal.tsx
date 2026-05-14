@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { Check, X } from 'lucide-react-native';
-import { type Service, SERVICE_CATEGORIES, type User } from '@repo/salon-core/types';
+import { type Service, type User } from '@repo/salon-core/types';
 import { toPersianDigits } from '@repo/salon-core/persian-digits';
+import { groupServicesByCatalog } from '@repo/salon-core/service-catalog';
 import { ApiError, NetworkError } from '@repo/api-client';
 import { Button } from '../ui/button';
 import { Spinner } from '../ui/spinner';
@@ -36,14 +37,10 @@ export function StaffServicesModal({
   }, [open, staff]);
 
   const activeServices = React.useMemo(() => services.filter((s) => s.active), [services]);
-  const byCategory = React.useMemo(() => {
-    const map: Record<string, Service[]> = {};
-    for (const s of activeServices) {
-      (map[s.category] ?? (map[s.category] = [])).push(s);
-    }
-    for (const k of Object.keys(map)) map[k].sort((a, b) => a.name.localeCompare(b.name, 'fa'));
-    return map;
-  }, [activeServices]);
+  const serviceGroups = React.useMemo(
+    () => groupServicesByCatalog(activeServices),
+    [activeServices]
+  );
 
   const unrestricted = selected == null;
 
@@ -107,9 +104,16 @@ export function StaffServicesModal({
     },
     categoryWrap: { gap: t.spacing.lg },
     categoryLabel: {
+      color: t.colors.foreground,
+      fontSize: t.fontSize.sm,
+      fontFamily: t.fonts.sansSemiBold,
+      marginBottom: t.spacing.xs,
+    },
+    familyLabel: {
       color: t.colors.mutedForeground,
       fontSize: t.fontSize.xs,
       fontFamily: t.fonts.sansMedium,
+      marginTop: t.spacing.sm,
       marginBottom: t.spacing.xs,
     },
     serviceRow: {
@@ -222,39 +226,45 @@ export function StaffServicesModal({
 
             {!unrestricted ? (
               <View style={styles.categoryWrap}>
-                {Object.entries(byCategory).map(([cat, list]) => (
-                  <View key={cat}>
-                    <Text style={styles.categoryLabel}>
-                      {SERVICE_CATEGORIES[cat as keyof typeof SERVICE_CATEGORIES]?.label ?? cat}
-                    </Text>
-                    {list.map((svc) => {
-                      const on = selected?.has(svc.id) ?? false;
-                      return (
-                        <Pressable
-                          key={svc.id}
-                          onPress={() => toggleService(svc.id)}
-                          style={styles.serviceRow}>
-                          <View
-                            style={[styles.checkbox, on ? styles.checkboxOn : styles.checkboxOff]}>
-                            {on ? (
-                              <Check
-                                size={14}
-                                color={theme.colors.primaryForeground}
-                                strokeWidth={3}
-                              />
-                            ) : null}
-                          </View>
-                          <View style={styles.serviceBody}>
-                            <Text style={styles.serviceName} numberOfLines={1}>
-                              {svc.name}
-                            </Text>
-                            <Text style={styles.serviceMeta}>
-                              {toPersianDigits(svc.duration)} دقیقه
-                            </Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
+                {serviceGroups.map((category) => (
+                  <View key={category.categoryId}>
+                    <Text style={styles.categoryLabel}>{category.categoryName}</Text>
+                    {category.families.map((family) => (
+                      <View key={family.familyId}>
+                        <Text style={styles.familyLabel}>{family.familyName}</Text>
+                        {family.services.map((svc) => {
+                          const on = selected?.has(svc.id) ?? false;
+                          return (
+                            <Pressable
+                              key={svc.id}
+                              onPress={() => toggleService(svc.id)}
+                              style={styles.serviceRow}>
+                              <View
+                                style={[
+                                  styles.checkbox,
+                                  on ? styles.checkboxOn : styles.checkboxOff,
+                                ]}>
+                                {on ? (
+                                  <Check
+                                    size={14}
+                                    color={theme.colors.primaryForeground}
+                                    strokeWidth={3}
+                                  />
+                                ) : null}
+                              </View>
+                              <View style={styles.serviceBody}>
+                                <Text style={styles.serviceName} numberOfLines={1}>
+                                  {svc.name}
+                                </Text>
+                                <Text style={styles.serviceMeta}>
+                                  {toPersianDigits(svc.duration)} دقیقه
+                                </Text>
+                              </View>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    ))}
                   </View>
                 ))}
               </View>

@@ -211,11 +211,21 @@ Status: complete.
 
 ### Phase 6: Native Parity
 
+Status: complete.
+
 - Update native service management components to match the grouped catalog model.
 - Update native appointment create/edit and availability modals to use the grouped picker.
 - Update native staff service assignment to group variants under category and family.
 - Reuse shared grouping and display-label helpers where possible.
 - Done when native can perform the same catalog, booking, availability, and staff assignment flows as web.
+
+#### Phase 6 Completion Notes
+
+- Native Settings now manages the grouped catalog with بخش, گروه, and خدمت flows, including starter-template import.
+- Native service create/edit now saves variants against `familyId` and supports description, active state, kind, duration, price, and calendar color.
+- Native appointment create/edit and availability flows use searchable grouped service pickers by category and family while still submitting one `serviceId`.
+- Native staff service assignment groups active variants under category and family and preserves the unrestricted all-services mode.
+- Shared catalog grouping and compact label helpers live in salon-core and are reused by native booking, staff assignment, and appointment display surfaces.
 
 ### Phase 7: Reporting And Historical Accuracy
 

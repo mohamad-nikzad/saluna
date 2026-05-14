@@ -12,6 +12,7 @@ import { formatJalaliFullDate } from '@repo/salon-core/jalali';
 import { formatPersianTime, toPersianDigits } from '@repo/salon-core/persian-digits';
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time';
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill';
+import { groupServicesByCatalog } from '@repo/salon-core/service-catalog';
 import type { Service, User } from '@repo/salon-core/types';
 import { ApiError } from '@repo/api-client';
 import { Button } from '../ui/button';
@@ -22,13 +23,6 @@ import { appointmentsApi } from '../../lib/api';
 import { useTheme, useThemeStyles, withAlpha } from '../../theme';
 
 const ANY_STAFF_VALUE = '__any__';
-const CATEGORY_LABELS: Record<string, string> = {
-  hair: 'مو',
-  nails: 'ناخن',
-  skincare: 'پوست',
-  spa: 'اسپا',
-};
-
 type DayAvailabilityResponse = Extract<AvailabilityResponse, { mode: 'day' }>;
 type NearestAvailabilityResponse = Extract<AvailabilityResponse, { mode: 'nearest' }>;
 
@@ -105,18 +99,16 @@ export function AvailabilityModal({
   const staffRoleOnly = React.useMemo(() => staff.filter((m) => m.role === 'staff'), [staff]);
   const activeServices = React.useMemo(() => services.filter((s) => s.active), [services]);
   const serviceGroups: SelectGroup[] = React.useMemo(() => {
-    const byCat = activeServices.reduce<Record<string, Service[]>>((acc, s) => {
-      (acc[s.category] = acc[s.category] ?? []).push(s);
-      return acc;
-    }, {});
-    return Object.entries(byCat).map(([cat, list]) => ({
-      label: CATEGORY_LABELS[cat] ?? cat,
-      options: list.map((s) => ({
-        value: s.id,
-        label: s.name,
-        detail: `${toPersianDigits(s.duration)} دقیقه`,
-      })),
-    }));
+    return groupServicesByCatalog(activeServices).flatMap((category) =>
+      category.families.map((family) => ({
+        label: `${category.categoryName} / ${family.familyName}`,
+        options: family.services.map((service) => ({
+          value: service.id,
+          label: service.name,
+          detail: `${toPersianDigits(service.duration)} دقیقه`,
+        })),
+      }))
+    );
   }, [activeServices]);
 
   const eligibleStaff = React.useMemo(
@@ -356,6 +348,8 @@ export function AvailabilityModal({
           value={serviceId}
           onChange={handleServiceChange}
           groups={serviceGroups}
+          searchable
+          searchPlaceholder="جستجوی بخش، گروه یا خدمت..."
         />
       </View>
 

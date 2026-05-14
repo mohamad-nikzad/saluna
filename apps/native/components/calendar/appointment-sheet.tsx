@@ -18,6 +18,7 @@ import { appointmentsApi } from '../../lib/api';
 import { useAuth } from '../auth-provider';
 import { formatJalaliFullDate } from '@repo/salon-core/jalali';
 import { formatPersianTime, toPersianDigits } from '@repo/salon-core/persian-digits';
+import { formatCompactServiceLabel } from '@repo/salon-core/service-catalog';
 import { useTheme, withAlpha } from '../../theme';
 import { FONTS, hmToMinutes, staffBorder, staffHex, staffSoftBg, statusPalette } from './helpers';
 
@@ -281,7 +282,7 @@ function SheetContent({
         <DetailRow
           icon={<Scissors size={16} color={theme.colors.foreground} strokeWidth={1.8} />}
           label="خدمت"
-          value={appointment.service.name}
+          value={formatCompactServiceLabel(appointment.service)}
           hint={
             appointment.service.duration
               ? `${toPersianDigits(appointment.service.duration)} دقیقه`

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Check, ChevronDown } from 'lucide-react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Check, ChevronDown, Search } from 'lucide-react-native';
 import { useTheme, useThemeStyles, withAlpha } from '../../theme';
 import { AppSheet } from './app-sheet';
 import { ModalHeader } from './modal-header';
@@ -26,6 +26,8 @@ export type SelectProps = {
   options?: SelectOption[];
   groups?: SelectGroup[];
   disabled?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 };
 
 export function Select({
@@ -36,8 +38,11 @@ export function Select({
   options,
   groups,
   disabled,
+  searchable,
+  searchPlaceholder = 'جستجو...',
 }: SelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
   const { theme } = useTheme();
   const styles = useThemeStyles((t) => ({
     trigger: {
@@ -65,6 +70,26 @@ export function Select({
       paddingHorizontal: t.spacing.md,
       paddingBottom: t.spacing.md,
     },
+    searchWrap: {
+      marginHorizontal: t.spacing.md,
+      marginBottom: t.spacing.sm,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: t.spacing.sm,
+      borderRadius: t.radius.md,
+      borderWidth: t.sizes.hairline,
+      borderColor: t.colors.input,
+      backgroundColor: t.colors.background,
+      paddingHorizontal: t.spacing.md,
+    },
+    searchInput: {
+      flex: 1,
+      minHeight: t.sizes.controlLg,
+      color: t.colors.foreground,
+      fontFamily: t.fonts.sans,
+      fontSize: t.fontSize.base,
+      textAlign: 'right' as const,
+    },
     groupLabel: {
       fontSize: t.fontSize.sm,
       color: t.colors.mutedForeground,
@@ -80,8 +105,38 @@ export function Select({
     return options ?? [];
   }, [options, groups]);
 
+  const normalizedQuery = query.trim().toLocaleLowerCase('fa');
+  const optionMatches = React.useCallback(
+    (option: SelectOption, groupLabel?: string) => {
+      if (!normalizedQuery) return true;
+      return `${groupLabel ?? ''} ${option.label} ${option.detail ?? ''}`
+        .toLocaleLowerCase('fa')
+        .includes(normalizedQuery);
+    },
+    [normalizedQuery]
+  );
+
+  const visibleGroups = React.useMemo(() => {
+    if (!groups) return undefined;
+    return groups
+      .map((group) => ({
+        ...group,
+        options: group.options.filter((option) => optionMatches(option, group.label)),
+      }))
+      .filter((group) => group.options.length > 0);
+  }, [groups, optionMatches]);
+
+  const visibleOptions = React.useMemo(
+    () => (options ?? []).filter((option) => optionMatches(option)),
+    [optionMatches, options]
+  );
+
   const selected = allOptions.find((o) => o.value === value);
   const displayText = selected?.label ?? placeholder;
+
+  React.useEffect(() => {
+    if (!open) setQuery('');
+  }, [open]);
 
   return (
     <>
@@ -105,10 +160,22 @@ export function Select({
 
       <AppSheet visible={open} onClose={() => setOpen(false)}>
         {title ? <ModalHeader title={title} onClose={() => setOpen(false)} borderless /> : null}
+        {searchable ? (
+          <View style={styles.searchWrap}>
+            <Search size={theme.sizes.iconSm} color={theme.iconColors.muted} strokeWidth={1.7} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={searchPlaceholder}
+              placeholderTextColor={theme.colors.mutedForeground}
+              style={styles.searchInput}
+            />
+          </View>
+        ) : null}
         <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
           <View style={styles.listInner}>
             {groups
-              ? groups.map((g, gi) => (
+              ? (visibleGroups ?? []).map((g, gi) => (
                   <View key={gi}>
                     {g.label ? <Text style={styles.groupLabel}>{g.label}</Text> : null}
                     {g.options.map((opt) => (
@@ -125,7 +192,7 @@ export function Select({
                     ))}
                   </View>
                 ))
-              : (options ?? []).map((opt) => (
+              : visibleOptions.map((opt) => (
                   <OptionRow
                     key={opt.value}
                     option={opt}

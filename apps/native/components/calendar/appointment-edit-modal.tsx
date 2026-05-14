@@ -21,6 +21,7 @@ import {
   eligibleServicesForStaff,
   eligibleStaffForService,
 } from '@repo/salon-core/staff-service-autofill';
+import { groupServicesByCatalog } from '@repo/salon-core/service-catalog';
 import { parseLocalizedInt, toPersianDigits } from '@repo/salon-core/persian-digits';
 import { ApiError } from '@repo/api-client';
 import { Button } from '../ui/button';
@@ -32,13 +33,6 @@ import { FormJalaliDateField, FormRootError, FormTextField, FormTimeField } from
 import { appointmentsApi } from '../../lib/api';
 import { ClientPicker } from './client-picker';
 import { useTheme, useThemeStyles } from '../../theme';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  hair: 'مو',
-  nails: 'ناخن',
-  skincare: 'پوست',
-  spa: 'اسپا',
-};
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120];
 const CHECKBOX_SIZE = 18;
@@ -306,7 +300,7 @@ export function AppointmentEditModal({
         shouldValidate: true,
       });
     },
-    [durationMinutes, setValue],
+    [durationMinutes, setValue]
   );
 
   const handleServiceChange = (id: string) => {
@@ -376,19 +370,17 @@ export function AppointmentEditModal({
   }));
 
   const serviceGroups: SelectGroup[] = React.useMemo(() => {
-    const byCat = services.reduce<Record<string, Service[]>>((acc, s) => {
-      if (!s.active) return acc;
-      (acc[s.category] = acc[s.category] ?? []).push(s);
-      return acc;
-    }, {});
-    return Object.entries(byCat).map(([cat, list]) => ({
-      label: CATEGORY_LABELS[cat] ?? cat,
-      options: list.map((s) => ({
-        value: s.id,
-        label: s.name,
-        detail: `پیشنهاد ${toPersianDigits(s.duration)} دقیقه — ${formatPrice(s.price)}`,
-      })),
-    }));
+    return groupServicesByCatalog(services.filter((service) => service.active)).flatMap(
+      (category) =>
+        category.families.map((family) => ({
+          label: `${category.categoryName} / ${family.familyName}`,
+          options: family.services.map((service) => ({
+            value: service.id,
+            label: service.name,
+            detail: `پیشنهاد ${toPersianDigits(service.duration)} دقیقه — ${formatPrice(service.price)}`,
+          })),
+        }))
+    );
   }, [services]);
 
   const submitDisabled =
@@ -527,6 +519,8 @@ export function AppointmentEditModal({
               value={field.value ?? ''}
               onChange={handleServiceChange}
               groups={serviceGroups}
+              searchable
+              searchPlaceholder="جستجوی بخش، گروه یا خدمت..."
             />
           )}
         />

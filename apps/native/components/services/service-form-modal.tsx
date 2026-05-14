@@ -3,8 +3,8 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react-native';
-import type { Service } from '@repo/salon-core/types';
-import { SERVICE_CATEGORIES, STAFF_COLORS } from '@repo/salon-core/types';
+import type { Service, ServiceCategory, ServiceFamily } from '@repo/salon-core/types';
+import { STAFF_COLORS } from '@repo/salon-core/types';
 import {
   serviceFormSchema,
   type ServiceFormInput,
@@ -20,20 +20,31 @@ import { FormRootError, FormSelectField, FormSwitchField, FormTextField } from '
 import { servicesApi } from '../../lib/api';
 import { useTheme, useThemeStyles, withAlpha } from '../../theme';
 
-const categoryOptions = (
-  Object.keys(SERVICE_CATEGORIES) as (keyof typeof SERVICE_CATEGORIES)[]
-).map((key) => ({ value: key, label: SERVICE_CATEGORIES[key].label }));
-
 const colorOptions = STAFF_COLORS.map((c) => ({ value: c, label: c }));
+const kindOptions = [
+  { value: 'standard', label: 'معمولی' },
+  { value: 'combo', label: 'ترکیبی' },
+];
 
 export type ServiceFormModalProps = {
   open: boolean;
   service: Service | null;
+  categories: ServiceCategory[];
+  families: ServiceFamily[];
+  defaultFamilyId?: string | null;
   onClose: () => void;
   onSaved: () => void;
 };
 
-export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFormModalProps) {
+export function ServiceFormModal({
+  open,
+  service,
+  categories,
+  families,
+  defaultFamilyId,
+  onClose,
+  onSaved,
+}: ServiceFormModalProps) {
   const { theme } = useTheme();
   const isEdit = Boolean(service);
   const {
@@ -48,11 +59,14 @@ export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFor
     resolver: zodResolver(serviceFormSchema),
     defaultValues: {
       name: '',
+      familyId: defaultFamilyId ?? '',
       category: 'hair',
       duration: 60,
       price: 0,
       color: STAFF_COLORS[0],
       active: true,
+      description: '',
+      kind: 'standard',
     },
   });
 
@@ -61,23 +75,29 @@ export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFor
     if (service) {
       reset({
         name: service.name,
+        familyId: service.familyId ?? '',
         category: service.category,
         duration: service.duration,
         price: service.price,
         color: service.color,
         active: service.active,
+        description: service.description ?? '',
+        kind: service.kind ?? 'standard',
       });
     } else {
       reset({
         name: '',
+        familyId: defaultFamilyId ?? families[0]?.id ?? '',
         category: 'hair',
         duration: 60,
         price: 0,
         color: STAFF_COLORS[0],
         active: true,
+        description: '',
+        kind: 'standard',
       });
     }
-  }, [open, service, reset]);
+  }, [defaultFamilyId, families, open, service, reset]);
 
   const durationRaw = watch('duration');
   const priceRaw = watch('price');
@@ -126,8 +146,26 @@ export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFor
     },
   }));
 
+  const familyOptions = React.useMemo(
+    () =>
+      families.map((family) => {
+        const categoryName =
+          family.categoryName ??
+          categories.find((category) => category.id === family.categoryId)?.name;
+        return {
+          value: family.id,
+          label: categoryName ? `${categoryName} / ${family.name}` : family.name,
+        };
+      }),
+    [categories, families]
+  );
+
   const onSubmit = handleSubmit(async (values) => {
     const payload = values as ServiceFormPayload;
+    if (!payload.familyId) {
+      setError('familyId', { message: 'گروه خدمات را انتخاب کنید.' });
+      return;
+    }
     try {
       if (service) {
         await servicesApi.update(service.id, payload);
@@ -160,16 +198,16 @@ export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFor
               control={control}
               name="name"
               label="نام خدمت"
-              placeholder="مثلاً کوتاهی مو"
+              placeholder="مثلاً کاشت با پودر"
               editable={!isSubmitting}
             />
 
             <FormSelectField
               control={control}
-              name="category"
-              label="دسته‌بندی"
-              options={categoryOptions}
-              title="انتخاب دسته"
+              name="familyId"
+              label="گروه خدمات"
+              options={familyOptions}
+              title="انتخاب گروه"
               disabled={isSubmitting}
             />
 
@@ -208,6 +246,23 @@ export function ServiceFormModal({ open, service, onClose, onSaved }: ServiceFor
               label="رنگ تقویم"
               options={colorOptions}
               title="انتخاب رنگ"
+              disabled={isSubmitting}
+            />
+
+            <FormTextField
+              control={control}
+              name="description"
+              label="توضیح کوتاه"
+              placeholder="اختیاری"
+              editable={!isSubmitting}
+            />
+
+            <FormSelectField
+              control={control}
+              name="kind"
+              label="نوع خدمت"
+              options={kindOptions}
+              title="انتخاب نوع خدمت"
               disabled={isSubmitting}
             />
 
