@@ -164,7 +164,7 @@ export function AppointmentCard({
               </Badge>
             ) : null}
           </View>
-          <Text style={styles.muted}>{appointment.service.name}</Text>
+          <Text style={styles.muted}>{appointment.bookedServiceName}</Text>
           <Text style={styles.mutedLtr}>
             {formatPersianTime(appointment.startTime)} - {formatPersianTime(appointment.endTime)} ·{' '}
             {meta}

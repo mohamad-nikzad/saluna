@@ -65,9 +65,8 @@ export default function ClientDetailScreen() {
   const [editOpen, setEditOpen] = React.useState(false);
 
   const key = user?.role === 'manager' && id ? `client-summary:${id}` : null;
-  const { data, error, loading, reload } = useAsyncResource<ClientSummary>(
-    key,
-    (signal) => clientsApi.summary(id, { signal })
+  const { data, error, loading, reload } = useAsyncResource<ClientSummary>(key, (signal) =>
+    clientsApi.summary(id, { signal })
   );
 
   const styles = useThemeStyles((t) => ({
@@ -100,7 +99,11 @@ export default function ClientDetailScreen() {
       fontSize: t.fontSize.sm,
       fontFamily: t.fonts.sans,
     },
-    headerAction: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: t.spacing.xs },
+    headerAction: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: t.spacing.xs,
+    },
     scroll: { padding: t.spacing.xl, gap: t.spacing.lg },
     actionsRow: {
       flexDirection: 'row' as const,
@@ -296,11 +299,7 @@ export default function ClientDetailScreen() {
           size="sm"
           onPress={() => setEditOpen(true)}
           style={styles.headerAction}>
-          <Pencil
-            size={theme.sizes.iconSm}
-            color={theme.colors.foreground}
-            strokeWidth={1.8}
-          />
+          <Pencil size={theme.sizes.iconSm} color={theme.colors.foreground} strokeWidth={1.8} />
           <Text style={{ color: theme.colors.foreground, fontFamily: theme.fonts.sansMedium }}>
             ویرایش
           </Text>
@@ -402,9 +401,7 @@ export default function ClientDetailScreen() {
         <View style={styles.statsRow}>
           <Card style={styles.statCard}>
             <Text style={styles.statHint}>مراجعات انجام‌شده</Text>
-            <Text style={styles.statValue}>
-              {toPersianDigits(stats.totalCompletedVisits)}
-            </Text>
+            <Text style={styles.statValue}>{toPersianDigits(stats.totalCompletedVisits)}</Text>
           </Card>
           <Card style={styles.statCard}>
             <Text style={styles.statHint}>لغو / غیبت</Text>
@@ -420,22 +417,14 @@ export default function ClientDetailScreen() {
 
         <View style={styles.twoCardsRow}>
           <Card style={styles.iconCard}>
-            <Sparkles
-              size={theme.sizes.iconSm}
-              color={theme.colors.primary}
-              strokeWidth={1.8}
-            />
+            <Sparkles size={theme.sizes.iconSm} color={theme.colors.primary} strokeWidth={1.8} />
             <View style={styles.iconCardBody}>
               <Text style={styles.iconCardLabel}>محبوب‌ترین خدمت</Text>
               <Text style={styles.iconCardValue}>{stats.favoriteServiceName ?? '—'}</Text>
             </View>
           </Card>
           <Card style={styles.iconCard}>
-            <User
-              size={theme.sizes.iconSm}
-              color={theme.colors.primary}
-              strokeWidth={1.8}
-            />
+            <User size={theme.sizes.iconSm} color={theme.colors.primary} strokeWidth={1.8} />
             <View style={styles.iconCardBody}>
               <Text style={styles.iconCardLabel}>آخرین پرسنل</Text>
               <Text style={styles.iconCardValue}>{stats.lastStaffName ?? '—'}</Text>
@@ -446,12 +435,14 @@ export default function ClientDetailScreen() {
         {upcomingAppointment ? (
           <Card style={styles.upcomingCard}>
             <Text style={styles.upcomingTitle}>نوبت پیشِ رو</Text>
-            <Text style={styles.upcomingLine}>{formatJalaliFullDate(upcomingAppointment.date)}</Text>
+            <Text style={styles.upcomingLine}>
+              {formatJalaliFullDate(upcomingAppointment.date)}
+            </Text>
             <Text style={styles.upcomingMeta}>
               {formatPersianTime(upcomingAppointment.startTime)} –{' '}
               {formatPersianTime(upcomingAppointment.endTime)} · {upcomingAppointment.staff.name}
             </Text>
-            <Text style={styles.upcomingLine}>{upcomingAppointment.service.name}</Text>
+            <Text style={styles.upcomingLine}>{upcomingAppointment.bookedServiceName}</Text>
             <Badge variant="secondary">
               {APPOINTMENT_STATUS[upcomingAppointment.status].label}
             </Badge>
@@ -472,7 +463,8 @@ export default function ClientDetailScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => router.push('/retention' as never)}>
-                    <Text style={{ color: theme.colors.primary, fontFamily: theme.fonts.sansMedium }}>
+                    <Text
+                      style={{ color: theme.colors.primary, fontFamily: theme.fonts.sansMedium }}>
                       صف پیگیری
                     </Text>
                   </Pressable>
@@ -499,7 +491,7 @@ export default function ClientDetailScreen() {
                     <Badge variant="outline">{APPOINTMENT_STATUS[apt.status].label}</Badge>
                   </View>
                   <Text style={styles.historyMeta}>
-                    {apt.service.name} · {apt.staff.name} ({formatPersianTime(apt.startTime)}–
+                    {apt.bookedServiceName} · {apt.staff.name} ({formatPersianTime(apt.startTime)}–
                     {formatPersianTime(apt.endTime)})
                   </Text>
                 </View>

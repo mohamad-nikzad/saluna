@@ -269,7 +269,7 @@ export default function ClientDetailPage() {
                 {formatPersianTime(upcomingAppointment.startTime)} – {formatPersianTime(upcomingAppointment.endTime)} ·{' '}
                 {upcomingAppointment.staff.name}
               </p>
-              <p>{upcomingAppointment.service.name}</p>
+              <p>{upcomingAppointment.bookedServiceName}</p>
               <Badge className="mt-1" variant="secondary">
                 {APPOINTMENT_STATUS[upcomingAppointment.status].label}
               </Badge>
@@ -321,7 +321,7 @@ export default function ClientDetailPage() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {apt.service.name} · {apt.staff.name}{' '}
+                      {apt.bookedServiceName} · {apt.staff.name}{' '}
                       <span dir="ltr" className="ms-1">
                         ({formatPersianTime(apt.startTime)}–{formatPersianTime(apt.endTime)})
                       </span>

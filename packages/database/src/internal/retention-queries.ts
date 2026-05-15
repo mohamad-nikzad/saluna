@@ -65,7 +65,10 @@ function buildClientRetentionHistory(
       completed,
       noShows,
       lastCompleted,
-      estimatedSpend: completed.reduce((sum, appointment) => sum + appointment.service.price, 0),
+      estimatedSpend: completed.reduce(
+        (sum, appointment) => sum + appointment.bookedServicePrice,
+        0
+      ),
     }
   })
 }
@@ -87,7 +90,7 @@ function addLifecycleCandidates(input: {
       estimatedSpend: item.estimatedSpend,
       noShowCount: item.noShows.length,
       lastVisitDate,
-      lastServiceName: item.lastCompleted?.service.name ?? null,
+      lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
     }
 
     if (item.completed.length > 0 && lastVisitDate && lastVisitDate < inactiveCutoff) {
@@ -138,7 +141,7 @@ function addVipCandidates(input: {
       estimatedSpend: item.estimatedSpend,
       noShowCount: item.noShows.length,
       lastVisitDate: item.lastCompleted?.date ?? null,
-      lastServiceName: item.lastCompleted?.service.name ?? null,
+      lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
       suggestedReason: 'جزو مشتریان ارزشمند سالن است.',
     })
   }

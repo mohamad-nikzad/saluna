@@ -34,19 +34,22 @@ export async function getClientSummary(
   const completed = allAppointments.filter((appointment) => appointment.status === 'completed')
   const cancelled = allAppointments.filter((appointment) => appointment.status === 'cancelled')
   const noShows = allAppointments.filter((appointment) => appointment.status === 'no-show')
-  const estimatedSpend = completed.reduce((sum, appointment) => sum + appointment.service.price, 0)
+  const estimatedSpend = completed.reduce(
+    (sum, appointment) => sum + appointment.bookedServicePrice,
+    0
+  )
   const lastCompleted = completed
     .slice()
     .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`))[0]
 
   const serviceCounts = new Map<string, { name: string; count: number }>()
   for (const appointment of completed) {
-    const current = serviceCounts.get(appointment.serviceId) ?? {
-      name: appointment.service.name,
+    const current = serviceCounts.get(appointment.bookedServiceName) ?? {
+      name: appointment.bookedServiceName,
       count: 0,
     }
     current.count += 1
-    serviceCounts.set(appointment.serviceId, current)
+    serviceCounts.set(appointment.bookedServiceName, current)
   }
   const favoriteService = [...serviceCounts.values()].sort((a, b) => b.count - a.count)[0]
 

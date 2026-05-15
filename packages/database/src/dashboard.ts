@@ -1,5 +1,5 @@
 import { and, count, eq, gte, lte, ne, sql } from 'drizzle-orm'
-import { appointments, clients, services, users } from './schema'
+import { appointments, clients, users } from './schema'
 import { getDb } from './client'
 import { getTodayData } from './internal/today-queries'
 
@@ -121,14 +121,10 @@ export async function getDashboardData(salonId: string) {
     db
       .select({
         serviceId: appointments.serviceId,
-        serviceName: services.name,
+        serviceName: appointments.bookedServiceName,
         count: count(),
       })
       .from(appointments)
-      .innerJoin(
-        services,
-        and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId))
-      )
       .where(
         and(
           eq(appointments.salonId, salonId),
@@ -137,7 +133,7 @@ export async function getDashboardData(salonId: string) {
           ne(appointments.status, 'cancelled')
         )
       )
-      .groupBy(appointments.serviceId, services.name)
+      .groupBy(appointments.serviceId, appointments.bookedServiceName)
       .orderBy(sql`count(*) desc`)
       .limit(5),
 
@@ -163,13 +159,9 @@ export async function getDashboardData(salonId: string) {
 
     db
       .select({
-        value: sql<number>`coalesce(sum(${services.price}), 0)`,
+        value: sql<number>`coalesce(sum(${appointments.bookedServicePrice}), 0)`,
       })
       .from(appointments)
-      .innerJoin(
-        services,
-        and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId))
-      )
       .where(
         and(
           eq(appointments.salonId, salonId),

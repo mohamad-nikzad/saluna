@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { CalendarDays, Clock } from 'lucide-react-native';
 import type { AppointmentWithDetails, TodayData } from '@repo/salon-core/types';
 import { formatJalaliFullDate } from '@repo/salon-core/jalali';
-import { formatPersianTime } from '@repo/salon-core/persian-digits';
+import { formatPersianTime, toPersianDigits } from '@repo/salon-core/persian-digits';
 import { salonCurrentHm } from '@repo/salon-core/salon-local-time';
 import { durationMinutesFromRange } from '@repo/salon-core/appointment-time';
 import { Badge } from '../ui/badge';
@@ -19,7 +19,6 @@ import {
   sortAppointments,
 } from './shared';
 import { getNextOpenSlot } from './next-open-slot';
-import { toPersianDigits } from '@repo/salon-core/persian-digits';
 import { useTheme, useThemeStyles, withAlpha } from '../../theme';
 
 function summarizeNextOpenSlot(slot: ReturnType<typeof getNextOpenSlot>) {
@@ -305,7 +304,7 @@ export function StaffTodayView({
                       </Text>
                     </View>
                     <Text style={styles.clientName}>{currentAppointment.client.name}</Text>
-                    <Text style={styles.serviceName}>{currentAppointment.service.name}</Text>
+                    <Text style={styles.serviceName}>{currentAppointment.bookedServiceName}</Text>
                   </View>
                 ) : nextAppointment ? (
                   <View style={styles.nextCard}>
@@ -317,7 +316,7 @@ export function StaffTodayView({
                       </Text>
                     </View>
                     <Text style={styles.clientName}>{nextAppointment.client.name}</Text>
-                    <Text style={styles.serviceName}>{nextAppointment.service.name}</Text>
+                    <Text style={styles.serviceName}>{nextAppointment.bookedServiceName}</Text>
                   </View>
                 ) : (
                   <View style={styles.empty}>

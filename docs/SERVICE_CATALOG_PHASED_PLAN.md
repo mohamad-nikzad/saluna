@@ -229,10 +229,19 @@ Status: complete.
 
 ### Phase 7: Reporting And Historical Accuracy
 
+Status: complete.
+
 - Use booked price snapshots for dashboard revenue and retention spend calculations.
 - Use booked service snapshot fields in appointment detail and client history where historical accuracy matters.
 - Keep current service relation available for current catalog metadata when useful.
 - Done when changing a service variant price or duration does not rewrite the meaning of old appointments.
+
+#### Phase 7 Completion Notes
+
+- Dashboard monthly revenue now sums `bookedServicePrice` from completed appointments instead of the current catalog service price.
+- Retention queue spend, VIP sorting, client profile estimated spend, favorite service, and last service use booked appointment snapshots.
+- Web/native appointment detail, today, upcoming appointment, and client history displays show booked service names and booked prices where the historical appointment meaning matters.
+- Joined `service` data remains available on appointment details for live catalog metadata such as category, color, staff eligibility, and edit flows.
 
 ### Phase 8: Later Advanced Catalog Features
 

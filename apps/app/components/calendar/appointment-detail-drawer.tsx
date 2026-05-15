@@ -813,13 +813,17 @@ export function AppointmentDetailDrawer({
                   اطلاعات ناقص
                 </Badge>
               ) : null}
-              <span className="text-sm text-muted-foreground">{formatTomans(appointment.service.price)}</span>
+              <span className="text-sm text-muted-foreground">{formatTomans(appointment.bookedServicePrice)}</span>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <span className="h-4 w-4 shrink-0 rounded-sm" style={{ backgroundColor: appointment.service.color }} />
-                <span>{formatCompactServiceLabel(appointment.service)}</span>
+                <span>
+                  {appointment.service.categoryName
+                    ? `${appointment.service.categoryName} / ${appointment.bookedServiceName}`
+                    : appointment.bookedServiceName}
+                </span>
               </div>
 
               <div className="flex items-center gap-3 text-sm">
