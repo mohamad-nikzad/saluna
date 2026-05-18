@@ -13,6 +13,17 @@ import { clients } from './routes/clients'
 import { serviceCategories } from './routes/service-categories'
 import { serviceFamilies } from './routes/service-families'
 import { serviceAddons } from './routes/service-addons'
+import { services } from './routes/services'
+import { staff } from './routes/staff'
+import { settings } from './routes/settings'
+import { notificationPreferences } from './routes/notification-preferences'
+import { onboarding } from './routes/onboarding'
+import { retention } from './routes/retention'
+import { dashboard } from './routes/dashboard'
+import { today } from './routes/today'
+import { notifications } from './routes/notifications'
+import { push } from './routes/push'
+import { appointments } from './routes/appointments'
 
 const env = getEnv()
 
@@ -44,6 +55,17 @@ const app = new Hono<AppEnv>()
   .route('/api/v1/service-categories', serviceCategories)
   .route('/api/v1/service-families', serviceFamilies)
   .route('/api/v1/service-addons', serviceAddons)
+  .route('/api/v1/services', services)
+  .route('/api/v1/staff', staff)
+  .route('/api/v1/settings', settings)
+  .route('/api/v1/notification-preferences', notificationPreferences)
+  .route('/api/v1/onboarding', onboarding)
+  .route('/api/v1/retention', retention)
+  .route('/api/v1/dashboard', dashboard)
+  .route('/api/v1/today', today)
+  .route('/api/v1/notifications', notifications)
+  .route('/api/v1/push', push)
+  .route('/api/v1/appointments', appointments)
   .onError(errorHandler)
   .notFound(notFoundHandler)
 
