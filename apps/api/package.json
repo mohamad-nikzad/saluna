@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx watch src/index.ts",
+    "dev:hono": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx watch src/index.ts",
     "build": "tsc --project tsconfig.json --noEmit",
     "start": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/index.ts",
     "lint": "eslint .",

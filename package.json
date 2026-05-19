@@ -8,6 +8,7 @@
     "dev:app": "pnpm --filter @repo/app dev",
     "dev:web": "pnpm --filter @repo/web dev",
     "dev:api": "pnpm --filter @repo/api dev",
+    "dev:hono": "turbo run dev:hono --filter=@repo/api --filter=@repo/app",
     "dev:native": "pnpm --filter @repo/native dev",
     "dev:native:prod-api": "pnpm --filter @repo/native dev:prod-api",
     "dev:mobile": "node scripts/dev-mobile.mjs",
