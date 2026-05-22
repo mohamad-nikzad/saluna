@@ -548,6 +548,108 @@ export const notificationDeliveries = pgTable(
   ]
 )
 
+export const salonPublicSettings = pgTable('salon_public_settings', {
+  salonId: uuid('salon_id')
+    .primaryKey()
+    .references(() => salons.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(false),
+  logoUrl: text('logo_url'),
+  bannerUrl: text('banner_url'),
+  bioText: text('bio_text'),
+  accentColor: text('accent_color'),
+  appointmentRequestsEnabled: boolean('appointment_requests_enabled').notNull().default(true),
+  /** Placeholder for future deposit feature. See ADR-0002. */
+  depositPolicy: jsonb('deposit_policy').$type<
+    { type: 'none' } | { type: 'fixed' | 'percent'; value: number }
+  >(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const servicePublicVisibility = pgTable(
+  'service_public_visibility',
+  {
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salons.id, { onDelete: 'cascade' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'cascade' }),
+    visible: boolean('visible').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.salonId, t.serviceId] }),
+    index('service_public_visibility_salon_id_sort_idx').on(t.salonId, t.sortOrder),
+  ]
+)
+
+export const appointmentRequests = pgTable(
+  'appointment_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salons.id, { onDelete: 'cascade' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'restrict' }),
+    /** Null at submit; set when manager approves. */
+    staffId: uuid('staff_id').references(() => users.id, { onDelete: 'set null' }),
+    requestedDate: text('requested_date').notNull(),
+    requestedStartTime: text('requested_start_time').notNull(),
+    requestedEndTime: text('requested_end_time').notNull(),
+    customerName: text('customer_name').notNull(),
+    customerPhone: text('customer_phone').notNull(),
+    notes: text('notes'),
+    /** Immutable snapshot — bound on submit, honored on approval even if the service changes. */
+    bookedServiceName: text('booked_service_name').notNull(),
+    bookedServiceDuration: integer('booked_service_duration').notNull(),
+    bookedServicePrice: integer('booked_service_price').notNull(),
+    status: text('status')
+      .notNull()
+      .$type<'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired'>()
+      .default('pending'),
+    /** Schema hook for future deposit flow. See ADR-0002. */
+    paymentStatus: text('payment_status')
+      .notNull()
+      .$type<'none' | 'pending' | 'paid'>()
+      .default('none'),
+    depositAmount: integer('deposit_amount'),
+    /** Customer's status-page token. Lifetime: forever. */
+    confirmationToken: uuid('confirmation_token').notNull().defaultRandom(),
+    reviewedByUserId: uuid('reviewed_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    rejectionReason: text('rejection_reason'),
+    appointmentId: uuid('appointment_id').references(() => appointments.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('appointment_requests_confirmation_token_unique').on(t.confirmationToken),
+    index('appointment_requests_salon_id_status_date_idx').on(
+      t.salonId,
+      t.status,
+      t.requestedDate
+    ),
+    index('appointment_requests_salon_id_customer_phone_idx').on(t.salonId, t.customerPhone),
+  ]
+)
+
+export const publicSubmitRateLimits = pgTable(
+  'public_submit_rate_limits',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ip: text('ip').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('public_submit_rate_limits_ip_created_at_idx').on(t.ip, t.createdAt)]
+)
+
 export const notificationPreferences = pgTable(
   'notification_preferences',
   {

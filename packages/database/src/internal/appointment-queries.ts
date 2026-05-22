@@ -275,11 +275,25 @@ export async function getAppointmentById(
   return appointment
 }
 
+export type CreateAppointmentOptions = {
+  createdByUserId?: string
+  /**
+   * Overrides the live service snapshot at insert time. Used by
+   * `AppointmentRequest` approval so the customer is honored at the terms
+   * they saw, even if the underlying `ServiceVariant` has since been edited.
+   */
+  serviceSnapshotOverride?: { name: string; duration: number; price: number }
+}
+
 export async function createAppointment(
   apt: AppointmentCommand,
   salonId: string,
-  createdByUserId?: string
+  optionsOrCreatedByUserId?: string | CreateAppointmentOptions
 ): Promise<Appointment> {
+  const options: CreateAppointmentOptions =
+    typeof optionsOrCreatedByUserId === 'string'
+      ? { createdByUserId: optionsOrCreatedByUserId }
+      : (optionsOrCreatedByUserId ?? {})
   const db = getDb()
   const service = await getServiceById(apt.serviceId, salonId)
   if (!service) throw new Error('service not found')
@@ -288,7 +302,8 @@ export async function createAppointment(
     serviceId: apt.serviceId,
     addonIds: apt.addonIds,
   })
-  const totals = totalSnapshotFromServiceAndAddons(service, selectedAddons)
+  const snapshotSource = options.serviceSnapshotOverride ?? service
+  const totals = totalSnapshotFromServiceAndAddons(snapshotSource, selectedAddons)
   const values: typeof appointments.$inferInsert = {
     salonId,
     clientId: apt.clientId,
@@ -297,11 +312,11 @@ export async function createAppointment(
     date: apt.date,
     startTime: apt.startTime,
     endTime: endTimeFromDuration(apt.startTime, totals.bookedTotalDuration),
-    ...snapshotFromService(service),
+    ...snapshotFromService(snapshotSource),
     ...totals,
     status: apt.status,
     notes: apt.notes,
-    createdByUserId: createdByUserId ?? null,
+    createdByUserId: options.createdByUserId ?? null,
   }
   if (isClientProvidedEntityId(apt.id)) {
     values.id = apt.id
