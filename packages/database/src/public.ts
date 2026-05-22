@@ -15,3 +15,12 @@ export type {
   AppointmentRequestStatusView,
   CancelAppointmentRequestResult,
 } from './internal/public-queries'
+export {
+  getManagerPublicSettings,
+  updateManagerPublicSettings,
+} from './internal/public-settings-queries'
+export type {
+  ManagerPublicSettingsView,
+  ManagerServiceVisibilityView,
+  ManagerPublicSettingsResult,
+} from './internal/public-settings-queries'

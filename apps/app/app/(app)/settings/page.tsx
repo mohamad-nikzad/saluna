@@ -42,6 +42,7 @@ import {
   businessSettingsSchema,
   type BusinessSettingsPayload,
 } from '@repo/salon-core/forms/settings'
+import { PublicPageSettingsSection } from '@/components/public-page-settings-section'
 
 export default function SettingsPage() {
   const { user, logout } = useAuth()
@@ -324,6 +325,8 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         )}
+
+        {isManager && <PublicPageSettingsSection />}
 
         <Card className="border-border/50">
           <CardHeader className="pb-3">
