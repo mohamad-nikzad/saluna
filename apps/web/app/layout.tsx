@@ -10,8 +10,8 @@ const vazirmatn = Vazirmatn({
 })
 
 export const metadata: Metadata = {
-  title: 'Aravira',
-  description: 'Aravira salon scheduling and management platform',
+  title: 'Saloora',
+  description: 'Saloora salon scheduling and management platform',
 }
 
 export default function RootLayout({

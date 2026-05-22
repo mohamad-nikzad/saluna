@@ -5,9 +5,11 @@ import {
   BellRing,
   CalendarDays,
   ChartNoAxesCombined,
-  ClipboardCheck,
   Scissors,
+  Sparkles,
+  UserPlus,
   UsersRound,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react'
 import { webEnv } from '@/env'
@@ -23,9 +25,9 @@ const bodyFont = Vazirmatn({
 })
 
 export const metadata: Metadata = {
-  title: 'آراویرا | مدیریت نوبت‌دهی سالن زیبایی',
+  title: 'سالورا | مدیریت هوشمند سالن زیبایی',
   description:
-    'آراویرا نرم‌افزار مدیریت نوبت‌ها، مشتریان، خدمات و پرسنل برای سالن‌های زیبایی است.',
+    'سالورا نرم‌افزار مدیریت نوبت‌ها، مشتریان، خدمات و پرسنل برای سالن‌های زیبایی است.',
 }
 
 type Feature = {
@@ -36,232 +38,241 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    title: 'تقویم دقیق نوبت‌ها',
-    text: 'روز کاری سالن را بر اساس پرسنل، ساعت و وضعیت هر نوبت مرتب ببینید.',
+    title: 'تقویم نوبت‌ها',
+    text: 'برنامه روزانه سالن بر اساس پرسنل و ساعت کاری در یک نگاه.',
     icon: CalendarDays,
   },
   {
-    title: 'مشتری‌های همیشه آماده',
-    text: 'شماره تماس، یادداشت‌ها و سابقه مراجعه هر مشتری کنار نوبت‌هایش می‌ماند.',
+    title: 'مدیریت مشتریان',
+    text: 'پروفایل، شماره تماس و سابقه مراجعه هر مشتری یک‌جا نگه‌داری می‌شود.',
     icon: UsersRound,
   },
   {
-    title: 'خدمات و پرسنل منظم',
-    text: 'برای هر خدمت زمان، قیمت و مجری مشخص کنید تا ثبت نوبت سریع‌تر شود.',
+    title: 'مدیریت پرسنل',
+    text: 'تخصص، ساعت کاری و نوبت‌های هر همکار به‌صورت جداگانه مدیریت می‌شود.',
+    icon: UserPlus,
+  },
+  {
+    title: 'خدمات و دسته‌بندی',
+    text: 'برای هر خدمت زمان، قیمت و مجری مشخص کنید تا ثبت نوبت سریع شود.',
     icon: Scissors,
+  },
+  {
+    title: 'گزارش روزانه',
+    text: 'درآمد، نوبت‌های انجام‌شده و عملکرد پرسنل را روزانه مشاهده کنید.',
+    icon: ChartNoAxesCombined,
+  },
+  {
+    title: 'بازگشت مشتری',
+    text: 'مشتریان غیرفعال را شناسایی کنید و آن‌ها را به سالن بازگردانید.',
+    icon: BellRing,
   },
 ]
 
-const rhythms = [
-  'نوبت تازه',
-  'تغییر ساعت',
-  'لغو شده',
-  'انجام شد',
-  'یادداشت مشتری',
+const stats = [
+  { value: '۳ دقیقه', label: 'ثبت یک نوبت کامل' },
+  { value: '۱۰۰٪', label: 'فارسی و راست‌چین' },
+  { value: '۲۴/۷', label: 'دسترسی از موبایل و دسکتاپ' },
 ]
 
-const schedule = [
-  { time: '۱۰:۰۰', name: 'رنگ مو', person: 'نازنین', state: 'در انتظار' },
-  { time: '۱۲:۳۰', name: 'کوتاهی و براشینگ', person: 'مهسا', state: 'قطعی' },
-  { time: '۱۵:۱۵', name: 'مانیکور', person: 'سارا', state: 'یادآوری' },
+const testimonials = [
+  {
+    name: 'نازنین رحیمی',
+    role: 'مدیر سالن نارسیس',
+    quote:
+      'از وقتی سالورا را راه‌اندازی کردیم، تماس‌های تکراری برای هماهنگی نوبت کم شده و تیم با خیال راحت‌تر کار می‌کند.',
+  },
+  {
+    name: 'سارا یوسفی',
+    role: 'متخصص رنگ و لایت',
+    quote:
+      'برنامه روزانه‌ام را روی موبایل می‌بینم و دیگر نگران تداخل نوبت‌ها نیستم. گزارش‌های ماهانه هم خیلی کمکم کرده.',
+  },
+  {
+    name: 'مهسا کریمی',
+    role: 'پذیرش سالن',
+    quote:
+      'ثبت مشتری جدید فقط چند ثانیه طول می‌کشد و همه اطلاعات لازم در یک صفحه دیده می‌شود.',
+  },
 ]
 
-const workflow = [
-  'ثبت سریع مشتری و شماره تماس',
-  'انتخاب خدمت، زمان و پرسنل',
-  'کنترل تداخل نوبت‌ها',
-  'پیگیری برنامه روزانه سالن',
+const dashboardMetrics = [
+  { label: 'مشتریان جدید', value: '۲۴', delta: '+۱۵٪', tone: 'rose' as const },
+  { label: 'درآمد امروز', value: '۱۸٬۷۵۰٬۰۰۰', delta: '+۸٪', tone: 'amber' as const },
+  { label: 'رزروهای امروز', value: '۲۸', delta: '+۱۲٪', tone: 'violet' as const },
+  { label: 'خدمات انجام‌شده', value: '۳۴', delta: '+۱۰٪', tone: 'pink' as const },
+]
+
+const upcomingAppointments = [
+  { time: '۱۰:۰۰', name: 'رنگ و مش', staff: 'نگین محمدی' },
+  { time: '۱۱:۳۰', name: 'کراتینه مو', staff: 'سارا یوسفی' },
+  { time: '۱۳:۱۵', name: 'کوتاهی مو', staff: 'مینا احمدی' },
+  { time: '۱۵:۰۰', name: 'میکاپ', staff: 'الهام کریمی' },
+]
+
+const popularServices = [
+  { name: 'رنگ و مش', value: 48 },
+  { name: 'کراتینه مو', value: 25 },
+  { name: 'کوتاهی مو', value: 15 },
+  { name: 'میکاپ', value: 12 },
 ]
 
 const loginHref = new URL('/login', webEnv.NEXT_PUBLIC_APP_URL).toString()
 const signupHref = new URL('/signup', webEnv.NEXT_PUBLIC_APP_URL).toString()
 
+const toneClass: Record<'rose' | 'amber' | 'violet' | 'pink', string> = {
+  rose: 'bg-rose-100 text-rose-600',
+  amber: 'bg-amber-100 text-amber-600',
+  violet: 'bg-violet-100 text-violet-600',
+  pink: 'bg-pink-100 text-pink-600',
+}
+
 export default function LandingPage() {
   return (
     <main
-      dir="ltr"
-      className={`${bodyFont.className} aravira-landing box-border min-h-dvh overflow-hidden bg-[#fbf7f9] text-[#1d2520]`}
+      dir="rtl"
+      className={`${bodyFont.className} saloora-landing relative box-border min-h-dvh overflow-hidden bg-[#fdf5f8] text-[#3f2730]`}
     >
       <style>{`
-        .aravira-landing {
-          max-width: 100%;
-          overflow-x: hidden;
+        .saloora-landing { max-width: 100%; overflow-x: hidden; }
+        @keyframes saloora-petal {
+          0% { transform: translate3d(0, -20px, 0) rotate(0deg); opacity: 0; }
+          15% { opacity: 0.85; }
+          100% { transform: translate3d(-60px, 540px, 0) rotate(-220deg); opacity: 0; }
         }
-
-        @keyframes aravira-petal-fall {
-          0% { transform: translate3d(0, -12px, 0) rotate(0deg); opacity: 0; }
-          12% { opacity: 0.78; }
-          100% { transform: translate3d(-78px, 520px, 0) rotate(-250deg); opacity: 0; }
-        }
-
         @media (prefers-reduced-motion: no-preference) {
-          .aravira-petal {
-            animation: aravira-petal-fall 13s linear infinite;
-          }
+          .saloora-petal { animation: saloora-petal 14s linear infinite; }
         }
       `}</style>
 
+      {/* HERO */}
       <section
         id="top"
-        className="relative isolate min-h-[88svh] overflow-hidden bg-[#172119] text-white"
+        className="relative isolate overflow-hidden"
       >
         <Image
-          src="/landing/sakura-hero.webp"
+          src="/landing/hero-bg.webp"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="absolute inset-0 -z-20 object-cover"
+          className="absolute inset-0 -z-20 hidden object-cover sm:block"
         />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(14,22,16,0.94)_0%,rgba(28,41,31,0.76)_43%,rgba(120,47,65,0.26)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-[linear-gradient(0deg,#fbf7f9_0%,rgba(251,247,249,0)_100%)]" />
+        <Image
+          src="/landing/hero-bg-mobile.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 -z-20 object-cover sm:hidden"
+        />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(253,245,248,0)_0%,rgba(253,245,248,0.45)_70%,#fdf5f8_100%)]" />
 
-        <span className="aravira-petal absolute right-[14%] top-14 h-5 w-3 rotate-45 rounded-[8px] bg-[#f6bcc9]/80" />
-        <span className="aravira-petal absolute right-[34%] top-2 h-4 w-2 rotate-12 rounded-[8px] bg-[#f9d4dc]/80 [animation-delay:2.7s]" />
-        <span className="aravira-petal absolute right-[58%] top-20 h-5 w-3 -rotate-12 rounded-[8px] bg-[#f4aebf]/70 [animation-delay:5.2s]" />
-        <span className="aravira-petal absolute right-[76%] top-8 h-4 w-2 rotate-45 rounded-[8px] bg-[#fff1f4]/80 [animation-delay:8s]" />
+        <span className="saloora-petal absolute right-[12%] top-20 h-4 w-2.5 rotate-45 rounded-[8px] bg-rose-300/70" />
+        <span className="saloora-petal absolute right-[42%] top-10 h-3 w-2 rotate-12 rounded-[8px] bg-rose-200/80 [animation-delay:3s]" />
+        <span className="saloora-petal absolute right-[68%] top-28 h-4 w-2.5 -rotate-12 rounded-[8px] bg-pink-300/70 [animation-delay:6s]" />
+        <span className="saloora-petal absolute right-[85%] top-16 h-3 w-2 rotate-45 rounded-[8px] bg-white/80 [animation-delay:9s]" />
 
-        <header className="mx-auto flex w-full max-w-7xl flex-row-reverse box-border items-center justify-between px-5 py-5 sm:px-8">
-          <a href="#top" dir="rtl" className="flex items-center gap-3" aria-label="آراویرا">
-            <span className="grid h-11 w-11 place-items-center rounded-lg border border-white/30 bg-white/12 backdrop-blur">
-              <Image
-                src="/landing/icon.svg"
-                alt=""
-                width={28}
-                height={28}
-                className="h-7 w-7"
-              />
+        <header className="relative mx-auto flex w-full max-w-7xl box-border items-center justify-between px-5 py-5 sm:px-8">
+          <a href="#top" className="flex items-center gap-2.5" aria-label="سالورا">
+            <Image
+              src="/landing/saloora-mark.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-10 w-10 sm:h-11 sm:w-11"
+              priority
+            />
+            <span className={`${displayFont.className} text-2xl leading-none text-[#7a2a40] sm:text-3xl`}>
+              سالورا
             </span>
-            <span className={`${displayFont.className} text-3xl leading-none`}>آراویرا</span>
           </a>
 
-          <nav dir="rtl" className="hidden items-center gap-7 text-sm text-white/86 md:flex">
-            <a href="#features" className="transition hover:text-white">
+          <nav className="hidden items-center gap-7 text-sm text-[#6b4955] md:flex">
+            <a href="#features" className="transition hover:text-[#7a2a40]">
               امکانات
             </a>
-            <a href="#daily-flow" className="transition hover:text-white">
-              روز کاری
+            <a href="#preview" className="transition hover:text-[#7a2a40]">
+              داشبورد
             </a>
-            <a href="#start" className="transition hover:text-white">
-              شروع
+            <a href="#testimonials" className="transition hover:text-[#7a2a40]">
+              نظرات
             </a>
           </nav>
 
           <a
             href={loginHref}
-            className="rounded-md border border-white/35 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white hover:text-[#1d2520]"
+            className="rounded-md border border-[#d68aa0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7a2a40] backdrop-blur transition hover:bg-[#7a2a40] hover:text-white"
           >
             ورود
           </a>
         </header>
 
-        <div className="mx-auto grid w-full max-w-7xl box-border items-center gap-10 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:pb-24 lg:pt-20">
-          <div dir="rtl" className="w-full min-w-0 max-w-3xl text-right lg:order-2">
-            <p className="mb-5 inline-flex rounded-md border border-white/24 bg-white/12 px-4 py-2 text-sm font-semibold text-[#ffe3ea] backdrop-blur">
-              مدیریت نوبت‌دهی برای سالن‌های زیبایی
-            </p>
-            <h1
-              className={`${displayFont.className} max-w-full text-4xl leading-[1.14] text-white sm:text-6xl lg:text-[5.25rem] lg:leading-[1.08]`}
+        <div className="relative mx-auto flex w-full max-w-4xl box-border flex-col items-center px-5 pb-24 pt-12 text-center sm:px-8 sm:pb-32 sm:pt-20">
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#e9b4c2] bg-white/70 px-4 py-1.5 text-xs font-bold text-[#7a2a40] backdrop-blur sm:text-sm">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            مدیریت هوشمند سالن زیبایی
+          </p>
+
+          <h1
+            className={`${displayFont.className} text-4xl leading-[1.25] text-[#4a1e2e] sm:text-6xl lg:text-7xl lg:leading-[1.15]`}
+          >
+            ساده، حرفه‌ای،
+            <br />
+            <span className="text-[#9b2f4a]">سالورا</span>
+          </h1>
+
+          <p className="mt-6 max-w-2xl text-base leading-8 text-[#6b4955] sm:mt-8 sm:text-lg">
+            با سالورا تقویم نوبت‌ها، مشتریان، پرسنل و خدمات سالن را در یک مسیر مرتب
+            نگه می‌دارید و روز کاری را با تمرکز بیشتری جلو می‌برید.
+          </p>
+
+          <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <a
+              href={signupHref}
+              className="rounded-md bg-[#c3425b] px-7 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.28)] transition hover:bg-[#a82b46]"
             >
-              روز شلوغ سالن، آرام مثل شکوفه گیلاس.
-            </h1>
-            <p className="mt-7 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">
-              آراویرا نوبت‌ها، مشتریان، پرسنل و خدمات سالن را در یک مسیر مرتب
-              نگه می‌دارد تا مدیر سالن با تمرکز بیشتری روز کاری را جلو ببرد.
-            </p>
-
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={signupHref}
-                className="rounded-md bg-[#c3425b] px-6 py-3 text-center text-base font-bold text-white shadow-[0_16px_40px_rgba(124,28,48,0.32)] transition hover:bg-[#ad334b]"
-              >
-                ساخت حساب مدیر
-              </a>
-              <a
-                href={loginHref}
-                className="rounded-md border border-white/32 bg-white/10 px-6 py-3 text-center text-base font-bold text-white backdrop-blur transition hover:bg-white hover:text-[#1d2520]"
-              >
-                ورود به پنل
-              </a>
-            </div>
-          </div>
-
-          <div dir="rtl" className="relative hidden min-h-[480px] lg:order-1 lg:block" aria-hidden="true">
-            <div className="absolute left-0 top-0 w-[420px] rounded-lg border border-white/24 bg-[#f7faf1]/92 p-4 text-[#1d2520] shadow-[0_30px_80px_rgba(8,12,9,0.36)] backdrop-blur">
-              <div className="mb-4 flex items-center justify-between border-b border-[#d9dfd0] pb-3">
-                <div>
-                  <p className="text-sm font-bold text-[#8c2f43]">تقویم امروز</p>
-                  <p className="mt-1 text-xs text-[#5d665c]">سه‌شنبه، سالن مرکزی</p>
-                </div>
-                <span className="rounded-md bg-[#24362a] px-3 py-1 text-xs font-bold text-white">
-                  زنده
-                </span>
-              </div>
-              <div className="space-y-3">
-                {schedule.map((item) => (
-                  <div
-                    key={item.time}
-                    className="grid grid-cols-[64px_1fr] gap-3 rounded-md border border-[#dfe5d8] bg-white p-3"
-                  >
-                    <span className="font-bold text-[#8c2f43]" dir="ltr">
-                      {item.time}
-                    </span>
-                    <div>
-                      <p className="text-sm font-extrabold">{item.name}</p>
-                      <p className="mt-1 text-xs text-[#657060]">
-                        {item.person} · {item.state}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="absolute bottom-3 right-4 w-[300px] rounded-lg border border-white/20 bg-[#24362a] p-5 text-white shadow-[0_26px_70px_rgba(8,12,9,0.35)]">
-              <p className="text-sm text-[#ffcdd7]">نبض روزانه</p>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                {rhythms.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-md border border-white/12 bg-white/8 px-3 py-2 text-sm"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+              شروع رایگان
+            </a>
+            <a
+              href="#features"
+              className="rounded-md border border-[#d68aa0] bg-white/70 px-7 py-3 text-center text-base font-bold text-[#7a2a40] backdrop-blur transition hover:bg-white"
+            >
+              مشاهده امکانات
+            </a>
           </div>
         </div>
       </section>
 
-      <section id="features" dir="rtl" className="relative bg-[#fbf7f9] px-5 py-20 sm:px-8">
+      {/* FEATURES */}
+      <section id="features" className="relative px-5 py-20 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className="text-sm font-extrabold text-[#9b3348]">برای مدیریت سالن</p>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-extrabold text-[#9b3348]">امکانات سالورا</p>
             <h2
-              className={`${displayFont.className} mt-3 text-4xl leading-tight text-[#1d2520] sm:text-5xl`}
+              className={`${displayFont.className} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}
             >
-              هر نوبت سر جای خودش می‌نشیند.
+              همه چیزهایی که سالن نیاز دارد
             </h2>
-            <p className="mt-5 text-base leading-8 text-[#606a62]">
-              از اولین تماس مشتری تا پایان خدمت، اطلاعات سالن پراکنده نمی‌ماند.
+            <p className="mt-4 text-base leading-8 text-[#6b4955]">
+              از ثبت نوبت تا پیگیری مشتری، همه ابزارهای روزانه سالن در یک پنل.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon
 
               return (
                 <article
                   key={feature.title}
-                  className="rounded-lg border border-[#ead9de] bg-white p-6 shadow-[0_18px_50px_rgba(95,45,56,0.07)]"
+                  className="group rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)] backdrop-blur transition hover:-translate-y-1 hover:border-[#e8a8ba] hover:shadow-[0_24px_60px_rgba(155,51,72,0.12)]"
                 >
-                  <div className="mb-8 grid h-12 w-12 place-items-center rounded-lg bg-[#24362a] text-[#ffdce4]">
+                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-[#fde2e9] to-[#f5b6c6] text-[#9b2f4a] transition group-hover:from-[#9b2f4a] group-hover:to-[#c3425b] group-hover:text-white">
                     <Icon className="h-6 w-6" aria-hidden="true" />
                   </div>
-                  <h3 className="text-xl font-extrabold text-[#1d2520]">{feature.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-[#626b62]">{feature.text}</p>
+                  <h3 className="text-lg font-extrabold text-[#3f2730]">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#6b4955]">{feature.text}</p>
                 </article>
               )
             })}
@@ -269,112 +280,227 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* DASHBOARD PREVIEW */}
       <section
-        id="daily-flow"
-        dir="rtl"
-        className="relative overflow-hidden bg-[#24362a] px-5 py-20 text-white sm:px-8"
+        id="preview"
+        className="relative isolate overflow-hidden px-5 py-20 sm:px-8 sm:py-24"
       >
-        <div className="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:68px_68px]" />
+        <Image
+          src="/landing/section-bg.webp"
+          alt=""
+          fill
+          sizes="100vw"
+          className="absolute inset-0 -z-10 object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#fdf5f8]/30 via-[#fdf5f8]/10 to-[#fdf5f8]/40" />
 
-        <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-extrabold text-[#ffc7d2]">روز کاری بدون سردرگمی</p>
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-extrabold text-[#9b3348]">داشبورد سالورا</p>
             <h2
-              className={`${displayFont.className} mt-3 text-4xl leading-tight sm:text-5xl`}
+              className={`${displayFont.className} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}
             >
-              مدیر، پذیرش و پرسنل یک تصویر مشترک دارند.
+              همه آنچه نیاز دارید در یک نگاه
             </h2>
-            <p className="mt-6 text-base leading-8 text-white/76">
-              وقتی ساعت‌ها، خدمات و مسئول هر نوبت روشن باشد، تماس‌های تکراری و
-              جا‌به‌جایی‌های ناگهانی کمتر وقت سالن را می‌گیرند.
+            <p className="mt-4 text-base leading-8 text-[#6b4955]">
+              برنامه روز، آمار درآمد، مشتریان و عملکرد پرسنل به‌صورت زنده.
             </p>
+          </div>
 
-            <div className="mt-9 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-white/14 bg-white/8 p-5">
-                <ClipboardCheck className="mb-4 h-6 w-6 text-[#ffc7d2]" aria-hidden="true" />
-                <p className="text-3xl font-black">۳ دقیقه</p>
-                <p className="mt-2 text-sm leading-7 text-white/70">برای ثبت یک نوبت کامل</p>
+          <div className="mt-12 overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-4 shadow-[0_30px_80px_rgba(155,51,72,0.14)] backdrop-blur-md sm:p-6 lg:p-8">
+            {/* metric cards */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {dashboardMetrics.map((m) => (
+                <div
+                  key={m.label}
+                  className="rounded-xl border border-[#f3d5dd] bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`grid h-9 w-9 place-items-center rounded-lg ${toneClass[m.tone]}`}>
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600">{m.delta}</span>
+                  </div>
+                  <p className="mt-4 text-xs text-[#8b6b73]">{m.label}</p>
+                  <p className={`${displayFont.className} mt-1 text-2xl text-[#3f2730]`}>{m.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* preview grid */}
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+              {/* schedule timeline */}
+              <div className="rounded-xl border border-[#f3d5dd] bg-white p-5">
+                <div className="flex items-center justify-between border-b border-[#f3d5dd] pb-3">
+                  <p className="text-sm font-extrabold text-[#3f2730]">رزروهای امروز</p>
+                  <span className="rounded-md bg-[#fce5ec] px-2 py-0.5 text-xs font-bold text-[#9b2f4a]">
+                    امروز
+                  </span>
+                </div>
+                <ul className="mt-4 space-y-3">
+                  {upcomingAppointments.map((a) => (
+                    <li
+                      key={a.time}
+                      className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border border-[#f8e0e7] bg-[#fdf5f8] p-3"
+                    >
+                      <span
+                        className={`${displayFont.className} text-base text-[#9b2f4a]`}
+                        dir="ltr"
+                      >
+                        {a.time}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-[#3f2730]">{a.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-[#8b6b73]">{a.staff}</p>
+                      </div>
+                      <span className="h-2 w-2 rounded-full bg-rose-400" aria-hidden="true" />
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="rounded-lg border border-white/14 bg-white/8 p-5">
-                <ChartNoAxesCombined className="mb-4 h-6 w-6 text-[#b8d1b2]" aria-hidden="true" />
-                <p className="text-3xl font-black">۱ تقویم</p>
-                <p className="mt-2 text-sm leading-7 text-white/70">برای هماهنگی کل تیم سالن</p>
+
+              {/* popular services */}
+              <div className="rounded-xl border border-[#f3d5dd] bg-white p-5">
+                <div className="flex items-center justify-between border-b border-[#f3d5dd] pb-3">
+                  <p className="text-sm font-extrabold text-[#3f2730]">سرویس‌های پرطرفدار</p>
+                  <span className="text-xs text-[#8b6b73]">این هفته</span>
+                </div>
+                <ul className="mt-4 space-y-4">
+                  {popularServices.map((s) => (
+                    <li key={s.name}>
+                      <div className="mb-1.5 flex items-center justify-between text-sm">
+                        <span className="font-bold text-[#3f2730]">{s.name}</span>
+                        <span className="font-bold text-[#9b2f4a]" dir="ltr">
+                          {s.value}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[#fce5ec]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-l from-[#c3425b] to-[#e8a8ba]"
+                          style={{ width: `${s.value}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr] md:items-stretch">
-            <div className="relative min-h-[360px] overflow-hidden rounded-lg border border-white/18">
-              <Image
-                src="/landing/salon-detail.webp"
-                alt="فضای داخلی یک سالن زیبایی"
-                fill
-                sizes="(min-width: 1024px) 35vw, 100vw"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(36,54,42,0.72)_0%,rgba(36,54,42,0.08)_68%)]" />
-              <p className="absolute bottom-5 right-5 max-w-[240px] text-lg font-extrabold leading-8">
-                سالن با برنامه روشن، تجربه آرام‌تری می‌سازد.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-white/16 bg-[#f7faf1] p-5 text-[#1d2520]">
-              <div className="flex items-center justify-between border-b border-[#dce3d4] pb-4">
-                <div>
-                  <p className="text-sm font-extrabold text-[#9b3348]">جریان ثبت نوبت</p>
-                  <p className="mt-1 text-xs text-[#657060]">از تماس تا پایان خدمت</p>
-                </div>
-                <BellRing className="h-6 w-6 text-[#9b3348]" aria-hidden="true" />
+          {/* stats */}
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 text-center backdrop-blur"
+              >
+                <p className={`${displayFont.className} text-3xl text-[#9b2f4a]`}>{s.value}</p>
+                <p className="mt-2 text-sm text-[#6b4955]">{s.label}</p>
               </div>
-
-              <ol className="mt-5 space-y-4">
-                {workflow.map((item, index) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[#c3425b] text-sm font-black text-white">
-                      {index + 1}
-                    </span>
-                    <span className="pt-1 text-sm font-bold leading-7">{item}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="start" dir="rtl" className="bg-[#f7faf1] px-5 py-20 sm:px-8">
+      {/* TESTIMONIALS */}
+      <section id="testimonials" className="relative px-5 py-20 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 border-y border-[#d8e1d0] py-14 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="max-w-3xl">
-              <p className="text-sm font-extrabold text-[#9b3348]">شروع آراویرا</p>
-              <h2
-                className={`${displayFont.className} mt-3 text-4xl leading-tight text-[#1d2520] sm:text-5xl`}
-              >
-                سالن خود را بسازید و اولین نوبت را ثبت کنید.
-              </h2>
-              <p className="mt-5 text-base leading-8 text-[#606a62]">
-                حساب مدیر، خدمات، پرسنل و ساعت کاری را اضافه کنید؛ بعد تقویم
-                سالن برای استفاده روزانه آماده است.
-              </p>
-            </div>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-extrabold text-[#9b3348]">نظرات کاربران</p>
+            <h2
+              className={`${displayFont.className} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}
+            >
+              آنچه مشتریان ما می‌گویند
+            </h2>
+          </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {testimonials.map((t) => (
+              <figure
+                key={t.name}
+                className="flex flex-col gap-5 rounded-2xl border border-[#f3d5dd] bg-white/85 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.07)] backdrop-blur"
+              >
+                <div className="flex gap-1 text-[#c3425b]" aria-hidden="true">
+                  {'★★★★★'.split('').map((s, i) => (
+                    <span key={i}>{s}</span>
+                  ))}
+                </div>
+                <blockquote className="text-sm leading-7 text-[#3f2730]">«{t.quote}»</blockquote>
+                <figcaption className="flex items-center gap-3 border-t border-[#f3d5dd] pt-4">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#fde2e9] to-[#e8a8ba] text-base font-extrabold text-[#7a2a40]">
+                    {t.name.charAt(0)}
+                  </span>
+                  <span className="min-w-0">
+                    <p className="truncate text-sm font-extrabold text-[#3f2730]">{t.name}</p>
+                    <p className="mt-0.5 truncate text-xs text-[#8b6b73]">{t.role}</p>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section id="start" className="relative px-5 pb-24 sm:px-8">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl">
+          <Image
+            src="/landing/cta-bg.webp"
+            alt=""
+            fill
+            sizes="100vw"
+            className="absolute inset-0 -z-10 object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.55)_0%,rgba(255,235,242,0.45)_100%)]" />
+
+          <div className="mx-auto max-w-3xl px-6 py-16 text-center sm:px-10 sm:py-20">
+            <h2
+              className={`${displayFont.className} text-3xl leading-tight text-[#4a1e2e] sm:text-5xl`}
+            >
+              آماده‌ای سالن خود را آنلاین کنی؟
+            </h2>
+            <p className="mt-5 text-base leading-8 text-[#6b4955] sm:text-lg">
+              همین حالا حساب مدیر بساز و اولین نوبت سالن را در سالورا ثبت کن.
+            </p>
+
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
                 href={signupHref}
-                className="rounded-md bg-[#24362a] px-7 py-3 text-center text-base font-bold text-white transition hover:bg-[#1a281f]"
+                className="w-full rounded-md bg-[#c3425b] px-8 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.32)] transition hover:bg-[#a82b46] sm:w-auto"
               >
-                ساخت حساب مدیر
+                ساخت حساب رایگان
               </a>
               <a
                 href={loginHref}
-                className="rounded-md border border-[#24362a]/25 px-7 py-3 text-center text-base font-bold text-[#24362a] transition hover:border-[#24362a] hover:bg-white"
+                className="w-full rounded-md border border-[#d68aa0] bg-white/80 px-8 py-3 text-center text-base font-bold text-[#7a2a40] backdrop-blur transition hover:bg-white sm:w-auto"
               >
-                حساب دارم
+                ورود به حساب
               </a>
             </div>
           </div>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#f3d5dd] bg-white/60 px-5 py-8 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/landing/saloora-mark.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
+            <span className={`${displayFont.className} text-xl text-[#7a2a40]`}>سالورا</span>
+          </div>
+          <p className="text-xs text-[#8b6b73]">© ۱۴۰۴ سالورا. تمام حقوق محفوظ است.</p>
+          <div className="flex items-center gap-1.5 text-xs text-[#8b6b73]">
+            <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>ساخته‌شده برای سالن‌های ایرانی</span>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
