@@ -36,8 +36,11 @@ const corsOrigin: string | ((origin: string) => string | null) =
     ? '*'
     : (origin: string) => (corsOrigins.includes(origin) ? origin : null)
 
-const conditionalLogger: MiddlewareHandler =
-  env.NODE_ENV === 'test' ? async (_c, next) => next() : logger()
+const loggerDisabled =
+  env.NODE_ENV === 'test' || process.env.DISABLE_REQUEST_LOG === '1'
+const conditionalLogger: MiddlewareHandler = loggerDisabled
+  ? async (_c, next) => next()
+  : logger()
 
 const app = new Hono<AppEnv>()
   .use(requestId())

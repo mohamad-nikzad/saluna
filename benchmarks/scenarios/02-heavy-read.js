@@ -22,12 +22,16 @@ export function setup() {
   return { cookie: loginAndGetCookie() }
 }
 
+const today = new Date()
+const startDate = today.toISOString().slice(0, 10)
+const endDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
+
 export default function (data) {
   const headers = authHeaders(data.cookie)
-  const r = http.get(`${BASE_URL}${API_PREFIX}/appointments`, {
-    headers,
-    tags: { name: 'GET /api/appointments' },
-  })
+  const r = http.get(
+    `${BASE_URL}${API_PREFIX}/appointments?startDate=${startDate}&endDate=${endDate}`,
+    { headers, tags: { name: 'GET /api/appointments' } },
+  )
   check(r, { '200': (r) => r.status === 200 })
 }
 

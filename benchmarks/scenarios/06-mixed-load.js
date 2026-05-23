@@ -27,12 +27,16 @@ export function setup() {
   return { cookie: loginAndGetCookie() }
 }
 
+const _today = new Date()
+const startDate = _today.toISOString().slice(0, 10)
+const endDate = new Date(_today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
+
 export default function (data) {
   const headers = authHeaders(data.cookie)
   group('reads', () => {
     const requests = {
       services: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/services`, params: { headers, tags: { name: 'GET /api/services' } } },
-      appointments: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/appointments`, params: { headers, tags: { name: 'GET /api/appointments' } } },
+      appointments: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/appointments?startDate=${startDate}&endDate=${endDate}`, params: { headers, tags: { name: 'GET /api/appointments' } } },
       today: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/today`, params: { headers, tags: { name: 'GET /api/today' } } },
       dashboard: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/dashboard`, params: { headers, tags: { name: 'GET /api/dashboard' } } },
       me: { method: 'GET', url: `${BASE_URL}${API_PREFIX}/auth/me`, params: { headers, tags: { name: 'GET /api/auth/me' } } },

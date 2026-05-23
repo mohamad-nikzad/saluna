@@ -82,8 +82,12 @@ echo "==> Starting Next (prod) on :${NEXT_PORT}"
 ( pnpm --filter @repo/app start:local >"$NEXT_LOG" 2>&1 ) &
 NEXT_PID=$!
 
-echo "==> Starting Hono (prod) on :${HONO_PORT}"
-( pnpm --filter @repo/api start:local >"$HONO_LOG" 2>&1 ) &
+# Hono request-logger is off by default (Next's `next start` also doesn't log
+# per request in prod). Set HONO_LOG_REQUESTS=1 to enable.
+HONO_DISABLE_LOG=1
+[[ "${HONO_LOG_REQUESTS:-0}" == "1" ]] && HONO_DISABLE_LOG=0
+echo "==> Starting Hono (prod) on :${HONO_PORT} (DISABLE_REQUEST_LOG=${HONO_DISABLE_LOG})"
+( DISABLE_REQUEST_LOG="$HONO_DISABLE_LOG" pnpm --filter @repo/api start:local >"$HONO_LOG" 2>&1 ) &
 HONO_PID=$!
 
 wait_for "${NEXT_URL}/api/auth/me" "Next" "$NEXT_LOG" || exit 1
