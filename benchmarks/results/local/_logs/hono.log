@@ -1,0 +1,8 @@
+
+> @repo/api@0.0.0 start:local /Users/mohamad/Projects/aravira-saloon/apps/api
+> NODE_ENV=production PORT=3002 ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs tsx src/index.ts
+
+[api] listening on http://:::3002
+/Users/mohamad/Projects/aravira-saloon/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @repo/api@0.0.0 start:local: `NODE_ENV=production PORT=3002 ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs tsx src/index.ts`
+Command failed with signal "SIGTERM"

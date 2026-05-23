@@ -1,0 +1,11 @@
+
+> @repo/app@0.0.0 start:local /Users/mohamad/Projects/aravira-saloon/apps/app
+> ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs next start --port 3000
+
+▲ Next.js 16.2.0
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.21:3000
+✓ Ready in 129ms
+/Users/mohamad/Projects/aravira-saloon/apps/app:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @repo/app@0.0.0 start:local: `ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs next start --port 3000`
+Command failed with signal "SIGTERM"
