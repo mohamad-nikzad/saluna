@@ -12,10 +12,8 @@ export type PublicSalonView = {
   }
   publicSettings: {
     enabled: boolean
-    logoUrl: string | null
-    bannerUrl: string | null
     bioText: string | null
-    accentColor: string | null
+    themeId: string
     appointmentRequestsEnabled: boolean
   }
   services: Service[]

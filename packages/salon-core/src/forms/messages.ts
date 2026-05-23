@@ -22,6 +22,7 @@ export const formMessages = {
   staffRequired: 'انتخاب پرسنل الزامی است',
   serviceRequired: 'انتخاب خدمت الزامی است',
   temporaryClientNameRequired: 'نام مشتری موقت الزامی است',
+  bioTooLong: 'متن معرفی نمی‌تواند بیشتر از ۲۰۰ کاراکتر باشد',
 } as const
 
 export type FormMessageKey = keyof typeof formMessages

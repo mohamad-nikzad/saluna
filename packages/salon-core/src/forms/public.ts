@@ -10,16 +10,17 @@
 import { z } from 'zod'
 
 import { addDaysYmd, salonTodayYmd } from '../salon-local-time'
-import { toLatinDigits } from '../persian-digits'
 import { normalizePhone } from '../phone'
+import { PUBLIC_THEMES } from '../public-themes'
 import { formMessages } from './messages'
 import {
   gregorianDateSchema,
-  hexColorSchema,
   optionalTrimmedTextSchema,
   requiredTextSchema,
   timeOfDaySchema,
 } from './primitives'
+
+export const PUBLIC_BIO_MAX_LENGTH = 200
 
 export const PUBLIC_REQUEST_WINDOW_DAYS = 30
 
@@ -68,34 +69,28 @@ export const publicAppointmentRequestSchema = z
 export type PublicAppointmentRequestInput = z.input<typeof publicAppointmentRequestSchema>
 export type PublicAppointmentRequestPayload = z.output<typeof publicAppointmentRequestSchema>
 
-const optionalUrlSchema = z
+const serviceVisibilitySchema = z.object({
+  serviceId: idSchema,
+  visible: z.boolean(),
+})
+
+const themeIdSchema = z.enum(
+  PUBLIC_THEMES.map((t) => t.id) as [string, ...string[]],
+)
+
+const bioSchema = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((value) => {
     if (value == null) return undefined
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : undefined
   })
-  .pipe(z.string().url(formMessages.required).optional())
-
-const serviceVisibilitySchema = z.object({
-  serviceId: idSchema,
-  visible: z.boolean(),
-  sortOrder: z.number().int().min(0),
-})
+  .pipe(z.string().max(PUBLIC_BIO_MAX_LENGTH, formMessages.bioTooLong).optional())
 
 export const publicSettingsSchema = z.object({
   enabled: z.boolean().optional(),
-  logoUrl: optionalUrlSchema,
-  bannerUrl: optionalUrlSchema,
-  bioText: optionalTrimmedTextSchema,
-  accentColor: z
-    .union([z.string(), z.null(), z.undefined()])
-    .transform((value) => {
-      if (value == null) return undefined
-      const trimmed = value.trim()
-      return trimmed.length > 0 ? toLatinDigits(trimmed) : undefined
-    })
-    .pipe(hexColorSchema.optional()),
+  bioText: bioSchema,
+  themeId: themeIdSchema.optional(),
   appointmentRequestsEnabled: z.boolean().optional(),
   services: z.array(serviceVisibilitySchema).optional(),
 })

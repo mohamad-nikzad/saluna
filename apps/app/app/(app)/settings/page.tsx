@@ -11,6 +11,7 @@ import {
   Sun,
   Users,
   ChevronLeft,
+  Globe,
   LayoutDashboard,
   ListChecks,
   Scissors,
@@ -42,7 +43,6 @@ import {
   businessSettingsSchema,
   type BusinessSettingsPayload,
 } from '@repo/salon-core/forms/settings'
-import { PublicPageSettingsSection } from '@/components/public-page-settings-section'
 
 export default function SettingsPage() {
   const { user, logout } = useAuth()
@@ -238,6 +238,19 @@ export default function SettingsPage() {
                 className="w-full justify-between touch-manipulation"
                 asChild
               >
+                <Link href="/public-page">
+                  <span className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    صفحه عمومی سالن
+                  </span>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between touch-manipulation"
+                asChild
+              >
                 <Link href="/onboarding">
                   <span className="flex items-center gap-2">
                     <ListChecks className="h-4 w-4" />
@@ -325,8 +338,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         )}
-
-        {isManager && <PublicPageSettingsSection />}
 
         <Card className="border-border/50">
           <CardHeader className="pb-3">

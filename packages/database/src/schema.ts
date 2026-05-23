@@ -553,10 +553,8 @@ export const salonPublicSettings = pgTable('salon_public_settings', {
     .primaryKey()
     .references(() => salons.id, { onDelete: 'cascade' }),
   enabled: boolean('enabled').notNull().default(false),
-  logoUrl: text('logo_url'),
-  bannerUrl: text('banner_url'),
   bioText: text('bio_text'),
-  accentColor: text('accent_color'),
+  themeId: text('theme_id').notNull().default('rose'),
   appointmentRequestsEnabled: boolean('appointment_requests_enabled').notNull().default(true),
   /** Placeholder for future deposit feature. See ADR-0002. */
   depositPolicy: jsonb('deposit_policy').$type<
@@ -575,13 +573,9 @@ export const servicePublicVisibility = pgTable(
       .notNull()
       .references(() => services.id, { onDelete: 'cascade' }),
     visible: boolean('visible').notNull().default(true),
-    sortOrder: integer('sort_order').notNull().default(0),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    primaryKey({ columns: [t.salonId, t.serviceId] }),
-    index('service_public_visibility_salon_id_sort_idx').on(t.salonId, t.sortOrder),
-  ]
+  (t) => [primaryKey({ columns: [t.salonId, t.serviceId] })]
 )
 
 export const appointmentRequests = pgTable(

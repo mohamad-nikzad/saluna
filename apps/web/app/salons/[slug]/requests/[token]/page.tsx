@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Phone } from 'lucide-react'
 import { formatJalaliFullDate } from '@repo/salon-core/jalali'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import { resolvePublicTheme } from '@repo/salon-core/public-themes'
 import {
   fetchAppointmentRequest,
   fetchPublicSalon,
@@ -36,10 +37,10 @@ export default async function RequestStatusPage({
     throw error
   }
 
-  let accent = '#c3425b'
+  let accent = resolvePublicTheme(null).primary
   try {
     const salon = await fetchPublicSalon(slug)
-    accent = salon.publicSettings.accentColor ?? accent
+    accent = resolvePublicTheme(salon.publicSettings.themeId).primary
   } catch {
     /* fall back to default accent */
   }

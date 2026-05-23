@@ -46,10 +46,8 @@ export type PublicSalonView = {
   }
   publicSettings: {
     enabled: boolean
-    logoUrl: string | null
-    bannerUrl: string | null
     bioText: string | null
-    accentColor: string | null
+    themeId: string
     appointmentRequestsEnabled: boolean
   }
   services: Service[]
@@ -97,14 +95,7 @@ export async function getPublicSalon(slug: string): Promise<PublicSalonLookupRes
       const row = byServiceId.get(service.id)
       return row ? row.visible : true
     })
-    .sort((a, b) => {
-      const aRow = byServiceId.get(a.id)
-      const bRow = byServiceId.get(b.id)
-      const aOrder = aRow ? aRow.sortOrder : Number.MAX_SAFE_INTEGER
-      const bOrder = bRow ? bRow.sortOrder : Number.MAX_SAFE_INTEGER
-      if (aOrder !== bOrder) return aOrder - bOrder
-      return a.name.localeCompare(b.name, 'fa')
-    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'fa'))
 
   return {
     ok: true,
@@ -119,10 +110,8 @@ export async function getPublicSalon(slug: string): Promise<PublicSalonLookupRes
       },
       publicSettings: {
         enabled: settingsRow.enabled,
-        logoUrl: settingsRow.logoUrl,
-        bannerUrl: settingsRow.bannerUrl,
         bioText: settingsRow.bioText,
-        accentColor: settingsRow.accentColor,
+        themeId: settingsRow.themeId,
         appointmentRequestsEnabled: settingsRow.appointmentRequestsEnabled,
       },
       services: visible,

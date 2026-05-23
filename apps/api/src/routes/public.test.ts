@@ -36,10 +36,8 @@ describe('public routes', () => {
         salon: { id: 's1', slug: 'foo', name: 'Foo', phone: null, timezone: 'Asia/Tehran', locale: 'fa' },
         publicSettings: {
           enabled: true,
-          logoUrl: null,
-          bannerUrl: null,
           bioText: null,
-          accentColor: null,
+          themeId: 'rose',
           appointmentRequestsEnabled: true,
         },
         services: [],

@@ -4,6 +4,7 @@ import { Phone } from 'lucide-react'
 import type { Service } from '@repo/salon-core/types'
 import { serviceCategoryName } from '@repo/salon-core/service-catalog'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import { resolvePublicTheme } from '@repo/salon-core/public-themes'
 import {
   fetchPublicSalon,
   PublicApiError,
@@ -46,17 +47,21 @@ export default async function PublicSalonPage({
     throw error
   }
 
-  const accent = view.publicSettings.accentColor ?? '#c3425b'
+  const theme = resolvePublicTheme(view.publicSettings.themeId)
   const groups = groupByCategory(view.services)
   const bookingEnabled = view.publicSettings.appointmentRequestsEnabled
 
   return (
     <main
       dir="rtl"
-      className="min-h-dvh bg-[#fdf5f8] text-[#3f2730]"
-      style={{ ['--salon-accent' as never]: accent }}
+      className="min-h-dvh"
+      style={{
+        backgroundColor: theme.bg,
+        color: theme.text,
+        ['--salon-accent' as never]: theme.primary,
+      }}
     >
-      <SalonHeader view={view} />
+      <SalonHeader view={view} theme={theme} />
 
       <section className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
         {!bookingEnabled ? (
@@ -67,32 +72,35 @@ export default async function PublicSalonPage({
         ) : null}
 
         {view.services.length === 0 ? (
-          <p className="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 text-center text-sm text-[#6b4955]">
+          <p className="rounded-2xl bg-white/80 p-6 text-center text-sm opacity-70">
             خدمتی برای نمایش وجود ندارد.
           </p>
         ) : (
           <div className="space-y-8">
             {groups.map((group) => (
               <section key={group.key}>
-                <h2 className="mb-3 text-base font-extrabold text-[#7a2a40]">
+                <h2
+                  className="mb-3 text-base font-extrabold"
+                  style={{ color: theme.primary }}
+                >
                   {group.label}
                 </h2>
                 <ul className="space-y-3">
                   {group.services.map((service) => (
                     <li
                       key={service.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-[#f3d5dd] bg-white/85 p-4 shadow-[0_10px_30px_rgba(155,51,72,0.06)] sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 rounded-2xl bg-white/85 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-base font-extrabold text-[#3f2730]">
+                        <p className="truncate text-base font-extrabold">
                           {service.name}
                         </p>
-                        <p className="mt-1 text-xs text-[#8b6b73]">
+                        <p className="mt-1 text-xs opacity-70">
                           {formatDuration(service.duration)} ·{' '}
                           {formatPrice(service.price)}
                         </p>
                         {service.description ? (
-                          <p className="mt-2 text-xs leading-6 text-[#6b4955]">
+                          <p className="mt-2 text-xs leading-6 opacity-80">
                             {service.description}
                           </p>
                         ) : null}
@@ -100,7 +108,7 @@ export default async function PublicSalonPage({
                       {bookingEnabled ? (
                         <Link
                           href={`/salons/${view.salon.slug}/book/${service.id}`}
-                          className="inline-flex justify-center rounded-md px-5 py-2 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(124,28,48,0.22)] transition hover:opacity-90"
+                          className="inline-flex justify-center rounded-md px-5 py-2 text-sm font-extrabold text-white shadow-md transition hover:opacity-90"
                           style={{ backgroundColor: 'var(--salon-accent)' }}
                         >
                           رزرو
@@ -118,50 +126,45 @@ export default async function PublicSalonPage({
   )
 }
 
-function SalonHeader({ view }: { view: PublicSalonView }) {
+function monogramFor(name: string): string {
+  return Array.from(name.trim())[0] ?? '?'
+}
+
+function SalonHeader({
+  view,
+  theme,
+}: {
+  view: PublicSalonView
+  theme: ReturnType<typeof resolvePublicTheme>
+}) {
   const { salon, publicSettings } = view
   return (
     <header className="relative isolate">
-      {publicSettings.bannerUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={publicSettings.bannerUrl}
-          alt=""
-          className="h-48 w-full object-cover sm:h-64"
-        />
-      ) : (
-        <div
-          className="h-32 w-full"
-          style={{
-            background:
-              'linear-gradient(180deg, color-mix(in oklch, var(--salon-accent) 30%, #fdf5f8) 0%, #fdf5f8 100%)',
-          }}
-        />
-      )}
+      <div
+        className="h-32 w-full sm:h-40"
+        style={{ background: theme.swatch }}
+      />
       <div className="mx-auto -mt-12 w-full max-w-3xl px-5 sm:px-8">
-        <div className="rounded-3xl border border-[#f3d5dd] bg-white/90 p-5 shadow-[0_18px_50px_rgba(155,51,72,0.08)] backdrop-blur sm:p-6">
+        <div
+          className="rounded-3xl border bg-white/90 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] backdrop-blur sm:p-6"
+          style={{ borderColor: 'rgba(0,0,0,0.06)' }}
+        >
           <div className="flex items-start gap-4">
-            {publicSettings.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={publicSettings.logoUrl}
-                alt=""
-                className="h-16 w-16 shrink-0 rounded-2xl border border-[#f3d5dd] bg-white object-cover sm:h-20 sm:w-20"
-              />
-            ) : (
-              <div
-                className="h-16 w-16 shrink-0 rounded-2xl sm:h-20 sm:w-20"
-                style={{ backgroundColor: 'var(--salon-accent)', opacity: 0.15 }}
-              />
-            )}
+            <div
+              className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-4 bg-white text-2xl font-extrabold shadow sm:h-20 sm:w-20 sm:text-3xl"
+              style={{ borderColor: theme.bg, color: theme.primary }}
+            >
+              {monogramFor(salon.name)}
+            </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-extrabold text-[#3f2730] sm:text-2xl">
+              <h1 className="text-xl font-extrabold sm:text-2xl">
                 {salon.name}
               </h1>
               {salon.phone ? (
                 <a
                   href={`tel:${salon.phone}`}
-                  className="mt-2 inline-flex items-center gap-1.5 text-sm text-[#7a2a40] hover:underline"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm hover:underline"
+                  style={{ color: theme.primary }}
                   dir="ltr"
                 >
                   <Phone className="h-4 w-4" aria-hidden="true" />
@@ -171,7 +174,7 @@ function SalonHeader({ view }: { view: PublicSalonView }) {
             </div>
           </div>
           {publicSettings.bioText ? (
-            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-[#6b4955]">
+            <p className="mt-4 whitespace-pre-line text-sm leading-7 opacity-80">
               {publicSettings.bioText}
             </p>
           ) : null}
