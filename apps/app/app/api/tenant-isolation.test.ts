@@ -40,7 +40,7 @@ const mocks = vi.hoisted(() => ({
   createNotificationForUser: vi.fn(),
 }))
 
-vi.mock('@repo/auth/tenant', () => ({
+vi.mock('@repo/auth/tenant-next', () => ({
   getTenantUser: mocks.getTenantUser,
   getTenantRequest: mocks.getTenantRequest,
   getTenantManagerRequest: mocks.getTenantManagerRequest,

@@ -12,6 +12,7 @@ next.user-config.*
 .env.database.dev
 .env.database.main
 .env.database.multitenant
+.env.database.local
 
 # Common ignores
 node_modules

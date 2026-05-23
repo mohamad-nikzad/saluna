@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   createNotificationForUser: vi.fn(),
 }))
 
-vi.mock('@repo/auth/tenant', () => ({
+vi.mock('@repo/auth/tenant-next', () => ({
   getTenantRequest: mocks.getTenantRequest,
 }))
 

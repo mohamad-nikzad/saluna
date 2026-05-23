@@ -36,6 +36,7 @@ const HONO_DOMAINS = [
 
 export default {
   ...config,
+  allowedDevOrigins: ['192.168.1.21'],
   async rewrites() {
     const existing = config.rewrites ? await config.rewrites() : []
     const existingBefore = Array.isArray(existing)

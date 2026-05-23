@@ -6,6 +6,7 @@
     "dev": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs next dev --port 3000",
     "dev:hono": "USE_HONO_API=1 ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs next dev --port 3000",
     "dev:lan": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs next dev --hostname 0.0.0.0 --port 3000",
+    "dev:local": "ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs next dev --hostname 0.0.0.0 --port 3000",
     "build": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs next build",
     "start": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs next start --port 3000",
     "lint": "eslint .",
