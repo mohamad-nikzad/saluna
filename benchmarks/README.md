@@ -54,6 +54,34 @@ STACK=hono-bun BASE_URL=https://your-bun-host ./benchmarks/run.sh
 STACK=hono-node BASE_URL=... ./benchmarks/run.sh 03-dashboard
 ```
 
+## Local Next vs Hono comparison (one command)
+
+Boots both stacks in **production mode** against the local Postgres, runs all
+scenarios against each, and writes a side-by-side compare.
+
+```bash
+# 1. Local DB up, schema pushed, seeded
+docker compose up -d postgres
+pnpm db:push:local && pnpm db:seed:local
+
+# 2. Build the Next app for prod
+pnpm --filter @repo/app build:local
+
+# 3. Run the compare (boots both servers, runs k6, tears down)
+pnpm bench:local:compare
+# → results/local/nextjs-api-routes-local/
+# → results/local/hono-node-local/
+# → results/local/COMPARE-nextjs-api-routes-local-vs-hono-node-local.md
+```
+
+Notes:
+- Next runs on `:3000` with prefix `/api`; Hono on `:3002` with prefix `/api/v1`.
+- Both run with `NODE_ENV=production`. `next start` uses the prod bundle;
+  Hono uses `tsx` (interpreted but no dev-only middleware). For an
+  apples-to-apples runtime, this is fine since framework overhead dominates.
+- Comparison is meaningful *relatively*. Absolute numbers don't reflect VPS prod.
+- To run a single scenario both ways: `./benchmarks/run-compare.sh 01-cheap-read`.
+
 ## Comparing two stacks
 
 ```bash

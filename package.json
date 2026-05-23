@@ -40,6 +40,7 @@
     "brand:icons": "node scripts/generate-saloora-icons.mjs",
     "bench:local": "BASE_URL=http://localhost:3000 ./benchmarks/run.sh",
     "bench:prod": "BASE_URL=https://aravira-saloon.vercel.app ./benchmarks/run.sh",
+    "bench:local:compare": "./benchmarks/run-compare.sh",
     "bench:summary": "node benchmarks/summarize.mjs",
     "bench:compare": "node benchmarks/compare.mjs"
   },
