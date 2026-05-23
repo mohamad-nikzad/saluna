@@ -1,6 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import type { PublicSettingsPayload } from '@repo/salon-core/forms/public'
 import { DEFAULT_PUBLIC_THEME_ID } from '@repo/salon-core/public-themes'
+import { DEFAULT_PUBLIC_LAYOUT_ID } from '@repo/salon-core/public-layouts'
 import type { Service } from '@repo/salon-core/types'
 
 import { getDb } from '../client'
@@ -11,6 +12,7 @@ export type ManagerPublicSettingsView = {
   enabled: boolean
   bioText: string | null
   themeId: string
+  layoutId: string
   appointmentRequestsEnabled: boolean
 }
 
@@ -30,6 +32,7 @@ const DEFAULTS: ManagerPublicSettingsView = {
   enabled: false,
   bioText: null,
   themeId: DEFAULT_PUBLIC_THEME_ID,
+  layoutId: DEFAULT_PUBLIC_LAYOUT_ID,
   appointmentRequestsEnabled: true,
 }
 
@@ -55,6 +58,7 @@ export async function getManagerPublicSettings(
         enabled: row.enabled,
         bioText: row.bioText,
         themeId: row.themeId,
+        layoutId: row.layoutId,
         appointmentRequestsEnabled: row.appointmentRequestsEnabled,
       }
     : { ...DEFAULTS }
@@ -98,6 +102,7 @@ export async function updateManagerPublicSettings(
       enabled: payload.enabled ?? base?.enabled ?? false,
       bioText: payload.bioText ?? base?.bioText ?? null,
       themeId: payload.themeId ?? base?.themeId ?? DEFAULT_PUBLIC_THEME_ID,
+      layoutId: payload.layoutId ?? base?.layoutId ?? DEFAULT_PUBLIC_LAYOUT_ID,
       appointmentRequestsEnabled:
         payload.appointmentRequestsEnabled ??
         base?.appointmentRequestsEnabled ??

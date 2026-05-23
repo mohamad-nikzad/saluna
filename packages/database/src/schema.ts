@@ -555,6 +555,7 @@ export const salonPublicSettings = pgTable('salon_public_settings', {
   enabled: boolean('enabled').notNull().default(false),
   bioText: text('bio_text'),
   themeId: text('theme_id').notNull().default('rose'),
+  layoutId: text('layout_id').notNull().default('agenda'),
   appointmentRequestsEnabled: boolean('appointment_requests_enabled').notNull().default(true),
   /** Placeholder for future deposit feature. See ADR-0002. */
   depositPolicy: jsonb('deposit_policy').$type<

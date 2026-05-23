@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { addDaysYmd, salonTodayYmd } from '../salon-local-time'
 import { normalizePhone } from '../phone'
 import { PUBLIC_THEMES } from '../public-themes'
+import { PUBLIC_LAYOUTS } from '../public-layouts'
 import { formMessages } from './messages'
 import {
   gregorianDateSchema,
@@ -78,6 +79,10 @@ const themeIdSchema = z.enum(
   PUBLIC_THEMES.map((t) => t.id) as [string, ...string[]],
 )
 
+const layoutIdSchema = z.enum(
+  PUBLIC_LAYOUTS.map((l) => l.id) as [string, ...string[]],
+)
+
 const bioSchema = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((value) => {
@@ -91,6 +96,7 @@ export const publicSettingsSchema = z.object({
   enabled: z.boolean().optional(),
   bioText: bioSchema,
   themeId: themeIdSchema.optional(),
+  layoutId: layoutIdSchema.optional(),
   appointmentRequestsEnabled: z.boolean().optional(),
   services: z.array(serviceVisibilitySchema).optional(),
 })

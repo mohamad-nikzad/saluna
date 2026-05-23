@@ -10,9 +10,12 @@ import {
   Eye,
   EyeOff,
   Globe,
+  LayoutGrid,
   Layers,
   Link2,
+  List,
   Search,
+  Sparkles,
   X,
 } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
@@ -33,6 +36,10 @@ import {
   resolvePublicTheme,
   type PublicTheme,
 } from '@repo/salon-core/public-themes'
+import {
+  DEFAULT_PUBLIC_LAYOUT_ID,
+  PUBLIC_LAYOUTS,
+} from '@repo/salon-core/public-layouts'
 import { PUBLIC_BIO_MAX_LENGTH } from '@repo/salon-core/forms/public'
 import {
   serviceCategoryName,
@@ -77,6 +84,7 @@ export default function PublicPageRoute() {
   const [requests, setRequests] = useState(true)
   const [bio, setBio] = useState('')
   const [themeId, setThemeId] = useState<string>(DEFAULT_PUBLIC_THEME_ID)
+  const [layoutId, setLayoutId] = useState<string>(DEFAULT_PUBLIC_LAYOUT_ID)
   const [services, setServices] = useState<ServiceRow[]>([])
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -89,6 +97,7 @@ export default function PublicPageRoute() {
     setRequests(data.settings.appointmentRequestsEnabled)
     setBio(data.settings.bioText ?? '')
     setThemeId(data.settings.themeId)
+    setLayoutId(data.settings.layoutId)
     setServices(
       data.services.map((row: ManagerServiceVisibilityView) => ({
         serviceId: row.service.id,
@@ -102,6 +111,8 @@ export default function PublicPageRoute() {
   }, [data])
 
   const theme = resolvePublicTheme(themeId)
+  const currentLayout =
+    PUBLIC_LAYOUTS.find((l) => l.id === layoutId) ?? PUBLIC_LAYOUTS[0]!
   const visibleCount = services.filter((s) => s.visible).length
   const url = data ? publicUrlFor(data.slug) : ''
   const salonName = data?.salonName ?? ''
@@ -142,6 +153,7 @@ export default function PublicPageRoute() {
         appointmentRequestsEnabled: requests,
         bioText: bio.trim() || null,
         themeId,
+        layoutId,
         services: services.map((s) => ({
           serviceId: s.serviceId,
           visible: s.visible,
@@ -321,6 +333,22 @@ export default function PublicPageRoute() {
 
         <div className="rounded-2xl bg-card p-3">
           <div className="mb-2 flex items-center justify-between">
+            <div className="text-xs font-semibold text-muted-foreground">چیدمان</div>
+            <div className="text-[11px] text-muted-foreground">
+              {currentLayout.name}
+            </div>
+          </div>
+          <LayoutPicker
+            value={layoutId}
+            onChange={(id) => {
+              setLayoutId(id)
+              markDirty()
+            }}
+          />
+        </div>
+
+        <div className="rounded-2xl bg-card p-3">
+          <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold text-muted-foreground">درباره</div>
             <span
               className={cn(
@@ -383,6 +411,7 @@ export default function PublicPageRoute() {
           <div className="mb-2 text-xs font-semibold text-muted-foreground">پیش‌نمایش</div>
           <LivePreview
             theme={theme}
+            layoutId={layoutId}
             salonName={salonName}
             bio={bio}
             services={services}
@@ -428,6 +457,46 @@ function ThemeStrip({ value, onChange }: { value: string; onChange: (id: string)
               )}
             </div>
             <span className="text-[10px] font-medium">{th.name}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function LayoutPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (id: string) => void
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {PUBLIC_LAYOUTS.map((lay) => {
+        const active = lay.id === value
+        const Icon = lay.id === 'agenda' ? LayoutGrid : List
+        return (
+          <button
+            key={lay.id}
+            onClick={() => onChange(lay.id)}
+            className={cn(
+              'flex flex-col gap-1.5 rounded-xl border-2 p-3 text-right transition',
+              active ? 'border-foreground bg-muted/40' : 'border-transparent bg-muted/20',
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <Icon className="h-4 w-4" />
+              {active ? (
+                <span className="grid h-4 w-4 place-items-center rounded-full bg-foreground text-background">
+                  <Check className="h-2.5 w-2.5" />
+                </span>
+              ) : null}
+            </div>
+            <span className="text-xs font-semibold">{lay.name}</span>
+            <span className="text-[10px] leading-4 text-muted-foreground">
+              {lay.description}
+            </span>
           </button>
         )
       })}
@@ -597,17 +666,23 @@ function BottomDrawer({
 
 function LivePreview({
   theme,
+  layoutId,
   salonName,
   bio,
   services,
 }: {
   theme: PublicTheme
+  layoutId: string
   salonName: string
   bio: string
   services: ServiceRow[]
 }) {
-  const visible = services.filter((s) => s.visible).slice(0, 6)
-  const totalVisible = services.filter((s) => s.visible).length
+  const allVisible = services.filter((s) => s.visible)
+  const totalVisible = allVisible.length
+  const isAgenda = layoutId !== 'inline'
+  const limit = isAgenda ? 6 : 5
+  const visible = allVisible.slice(0, limit)
+
   return (
     <div
       className="overflow-hidden rounded-2xl border shadow-sm"
@@ -627,27 +702,46 @@ function LivePreview({
           {bio || 'بدون توضیحات'}
         </p>
       </div>
-      <div className="mt-3 space-y-1.5 px-4 pb-4">
-        {visible.length === 0 && (
-          <p className="text-xs opacity-60">خدمتی نمایش داده نشده</p>
-        )}
-        {visible.map((s) => (
-          <div
-            key={s.serviceId}
-            className="flex items-center justify-between rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px]"
-          >
-            <span>{s.name}</span>
-            <span style={{ color: theme.primary }} className="font-medium">
-              {formatPrice(s.price)}
-            </span>
-          </div>
-        ))}
-        {totalVisible > 6 && (
-          <div className="text-center text-[11px] opacity-60">
-            + {toPersianDigits(totalVisible - 6)} خدمت دیگر
-          </div>
-        )}
-      </div>
+
+      {visible.length === 0 ? (
+        <p className="px-4 py-4 text-xs opacity-60">خدمتی نمایش داده نشده</p>
+      ) : isAgenda ? (
+        <div className="mt-3 grid grid-cols-2 gap-1.5 px-4 pb-4">
+          {visible.map((s) => (
+            <div
+              key={s.serviceId}
+              className="flex items-center gap-2 rounded-lg bg-white/70 p-2 text-[11px]"
+            >
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-md"
+                style={{ background: `${theme.primary}1a`, color: theme.primary }}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </span>
+              <span className="truncate font-medium">{s.name}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-3 space-y-1.5 px-4 pb-4">
+          {visible.map((s) => (
+            <div
+              key={s.serviceId}
+              className="flex items-center justify-between rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px]"
+            >
+              <span>{s.name}</span>
+              <span style={{ color: theme.primary }} className="font-medium">
+                {formatPrice(s.price)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {totalVisible > limit && (
+        <div className="px-4 pb-4 text-center text-[11px] opacity-60">
+          + {toPersianDigits(totalVisible - limit)} خدمت دیگر
+        </div>
+      )}
     </div>
   )
 }

@@ -48,6 +48,7 @@ export type PublicSalonView = {
     enabled: boolean
     bioText: string | null
     themeId: string
+    layoutId: string
     appointmentRequestsEnabled: boolean
   }
   services: Service[]
@@ -112,6 +113,7 @@ export async function getPublicSalon(slug: string): Promise<PublicSalonLookupRes
         enabled: settingsRow.enabled,
         bioText: settingsRow.bioText,
         themeId: settingsRow.themeId,
+        layoutId: settingsRow.layoutId,
         appointmentRequestsEnabled: settingsRow.appointmentRequestsEnabled,
       },
       services: visible,
