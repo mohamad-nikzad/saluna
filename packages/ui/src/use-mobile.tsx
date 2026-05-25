@@ -17,3 +17,17 @@ export function useIsMobile() {
 
   return !!isMobile
 }
+
+export function useIsTouch() {
+  const [isTouch, setIsTouch] = React.useState(false)
+
+  React.useEffect(() => {
+    const mql = window.matchMedia('(pointer: coarse)')
+    const onChange = () => setIsTouch(mql.matches)
+    onChange()
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  return isTouch
+}

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
 import { XIcon } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
+import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 
 /**
  * Full-screen modal sheet for heavy create/edit flows on mobile.
@@ -23,6 +24,7 @@ function FormSheet({
   onOpenChange: (open: boolean) => void
   children: React.ReactNode
 }) {
+  useKeyboardInset(open)
   return (
     <DrawerPrimitive.Root
       open={open}
@@ -55,6 +57,7 @@ function FormSheetContent({
         className={cn(
           'fixed inset-x-0 bottom-0 top-0 z-50 flex h-[100lvh] flex-col bg-card',
           'overscroll-contain',
+          'pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150',
           className,
         )}
         {...props}
