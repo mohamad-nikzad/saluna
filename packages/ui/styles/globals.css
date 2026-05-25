@@ -55,6 +55,32 @@
   padding-top: env(safe-area-inset-top);
 }
 
+.hero-surface {
+  background: linear-gradient(
+    150deg,
+    var(--saloora-plum) 0%,
+    var(--plum-deep) 100%
+  );
+  color: #fff;
+}
+
+.dark .hero-surface {
+  background: linear-gradient(150deg, #5c2e3d 0%, #2e1620 100%);
+}
+
+.profile-surface {
+  background: linear-gradient(150deg, var(--paper-deep) 0%, #e8b5bd 130%);
+  border: 1px solid var(--line-soft);
+}
+
+.dark .profile-surface {
+  background: linear-gradient(
+    150deg,
+    var(--paper-deep) 0%,
+    var(--secondary) 130%
+  );
+}
+
 .calendar-header-gradient {
   background: linear-gradient(
     135deg,
@@ -77,7 +103,7 @@
   --fc-neutral-bg-color: var(--muted);
   --fc-list-event-hover-bg-color: var(--accent);
   --fc-today-bg-color: color-mix(in oklch, var(--primary) 6%, transparent);
-  --fc-now-indicator-color: var(--primary);
+  --fc-now-indicator-color: var(--saloora-rose);
   --fc-highlight-color: color-mix(in oklch, var(--primary) 12%, transparent);
   font-family: var(--font-sans);
 }
@@ -134,11 +160,15 @@
 .salon-fullcalendar .fc-event {
   border-radius: calc(var(--radius) - 2px);
   border-width: 0;
-  border-right: 3px solid;
+  border-right: 4px solid;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent),
+    0 1px 3px color-mix(in oklch, var(--foreground) 14%, transparent);
   font-size: 0.68rem;
   line-height: 1.3;
   padding: 2px 5px;
   cursor: pointer;
+  color: var(--foreground);
   transition: transform 0.1s, opacity 0.1s;
 }
 
@@ -149,11 +179,39 @@
 
 .salon-fullcalendar .fc-event .fc-event-title {
   font-weight: 600;
+  color: var(--foreground);
 }
 
 .salon-fullcalendar .fc-event .fc-event-time {
-  opacity: 0.8;
   font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+/* Completed appointments read as muted / done */
+.salon-fullcalendar .fc-event--done {
+  background-color: var(--muted) !important;
+  border-right-color: var(--muted-foreground) !important;
+  opacity: 0.7;
+}
+
+.salon-fullcalendar .fc-event--done .fc-event-title,
+.salon-fullcalendar .fc-event--done .fc-event-time {
+  color: var(--muted-foreground);
+}
+
+/* Cancelled / no-show appointments */
+.salon-fullcalendar .fc-event--cancelled {
+  border-right-color: var(--destructive) !important;
+  opacity: 0.65;
+}
+
+.salon-fullcalendar .fc-event--cancelled .fc-event-title {
+  text-decoration: line-through;
+}
+
+.salon-fullcalendar .fc-event--cancelled .fc-event-time {
+  color: var(--destructive);
 }
 
 .calendar-refresh-layer::before {
@@ -225,12 +283,19 @@
 }
 
 .salon-fullcalendar .fc-timegrid-now-indicator-line {
-  border-width: 2px;
-  border-color: var(--primary);
+  border-width: 2px 0 0;
+  border-color: var(--saloora-rose);
+  opacity: 0.85;
 }
 
 .salon-fullcalendar .fc-timegrid-now-indicator-arrow {
-  border-color: var(--primary);
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border: none;
+  border-radius: 50%;
+  background: var(--saloora-rose);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--saloora-rose) 25%, transparent);
 }
 
 .salon-fullcalendar .fc-scrollgrid {
@@ -243,16 +308,291 @@
   height: 2.75rem;
 }
 
+.salon-fullcalendar .fc-timegrid-slot-lane {
+  border-top-style: dashed;
+}
+
+.salon-fullcalendar .fc-timegrid-slot-minor {
+  border-top-style: dotted;
+  border-top-color: var(--line-soft);
+}
+
 .salon-fullcalendar .fc-daygrid-day-number {
   font-size: 0.8rem;
   font-weight: 500;
   padding: 4px 6px;
 }
 
-.salon-fullcalendar .fc-list-event td {
-  border-color: var(--border);
+/* ── List / agenda: day-grouped rounded cards ────────────────── */
+.salon-fullcalendar .fc-list,
+.salon-fullcalendar .fc-list-table {
+  border: 0;
+}
+
+.salon-fullcalendar .fc-list {
+  padding-inline: 0.5rem;
+}
+
+/* List tab only: clear stacked FABs (search + add) at bottom-start */
+.salon-fullcalendar--list .fc-scroller,
+.salon-fullcalendar--list .fc-scroller-harness {
+  padding-bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.salon-fullcalendar .fc-list-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.salon-fullcalendar .fc-list-day {
+  background: transparent;
+}
+
+.salon-fullcalendar .fc-list-day > th,
+.salon-fullcalendar .fc-list-day > td {
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .salon-fullcalendar .fc-list-day-cushion {
-  background: var(--fc-neutral-bg-color);
+  background: transparent;
+  padding: 0.85rem 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* event rows form one card per day group */
+.salon-fullcalendar .fc-list-event {
+  cursor: pointer;
+}
+
+.salon-fullcalendar .fc-list-event:hover td {
+  background: transparent;
+}
+
+.salon-fullcalendar .fc-list-event > td {
+  border: 0;
+}
+
+.salon-fullcalendar .fc-list-event-time {
+  display: none;
+}
+
+.salon-fullcalendar .fc-list-event-title {
+  background: var(--card);
+  border-inline: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  padding: 0 0.75rem;
+}
+
+/* last row of a day group (and the very last row) closes the card */
+.salon-fullcalendar .fc-list-event:not(:has(+ .fc-list-event)) .fc-list-event-title,
+.salon-fullcalendar .fc-list-event:has(+ .fc-list-day) .fc-list-event-title {
+  border-bottom: 1px solid var(--border);
+  border-end-start-radius: 18px;
+  border-end-end-radius: 18px;
+}
+
+/* first row of a day group opens the card */
+.salon-fullcalendar .fc-list-day + .fc-list-event .fc-list-event-title {
+  border-start-start-radius: 18px;
+  border-start-end-radius: 18px;
+}
+
+/* ── Day / week event blocks (custom eventContent) ───────────── */
+.salon-fullcalendar .fc-timegrid-event .fc-event-main {
+  padding: 0;
+}
+
+/* ── Week-view collapsed concurrency pill ("N همزمان") ────────── */
+.salon-fullcalendar .fc-event:has(.fc-apt-cluster) {
+  background-color: color-mix(in oklch, var(--primary) 12%, var(--card)) !important;
+  border-right-color: var(--border) !important;
+  border-right-width: 1px;
+}
+
+.salon-fullcalendar .fc-apt-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  overflow: hidden;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.salon-fullcalendar .fc-apt-cluster-head {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.salon-fullcalendar .fc-apt-cluster-count {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.salon-fullcalendar .fc-apt-cluster-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.salon-fullcalendar .fc-apt-cluster-dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.salon-fullcalendar .fc-apt-cluster-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+}
+
+.salon-fullcalendar .fc-apt-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  height: 100%;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.salon-fullcalendar .fc-apt-time {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.salon-fullcalendar .fc-apt-client {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salon-fullcalendar .fc-apt-svc {
+  font-size: 0.62rem;
+  color: color-mix(in oklch, var(--foreground) 72%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salon-fullcalendar .fc-event--done .fc-apt-time,
+.salon-fullcalendar .fc-event--done .fc-apt-client,
+.salon-fullcalendar .fc-event--done .fc-apt-svc {
+  color: var(--muted-foreground);
+}
+
+.salon-fullcalendar .fc-event--cancelled .fc-apt-time {
+  color: var(--destructive);
+}
+
+.salon-fullcalendar .fc-event--cancelled .fc-apt-client,
+.salon-fullcalendar .fc-event--cancelled .fc-apt-row-client {
+  text-decoration: line-through;
+}
+
+/* ── List / agenda rows (custom eventContent) ────────────────── */
+.salon-fullcalendar .fc-list-event-graphic {
+  display: none;
+}
+
+.salon-fullcalendar .fc-list-event-title {
+  vertical-align: middle;
+}
+
+.salon-fullcalendar .fc-apt-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 0;
+}
+
+.salon-fullcalendar .fc-apt-row-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  line-height: 1.15;
+}
+
+.salon-fullcalendar .fc-apt-row-time-h {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.salon-fullcalendar .fc-apt-row-time-d {
+  font-size: 0.6rem;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.salon-fullcalendar .fc-apt-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.salon-fullcalendar .fc-apt-row-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.salon-fullcalendar .fc-apt-row-client {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salon-fullcalendar .fc-apt-row-sub {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salon-fullcalendar .fc-apt-row-chevron {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* done / cancelled list rows */
+.salon-fullcalendar .fc-event--done .fc-apt-row-time-h,
+.salon-fullcalendar .fc-event--done .fc-apt-row-client {
+  color: var(--muted-foreground);
+}
+
+.salon-fullcalendar .fc-event--cancelled .fc-apt-row-time-h {
+  color: var(--destructive);
 }

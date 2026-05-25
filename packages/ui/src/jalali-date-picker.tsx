@@ -111,7 +111,7 @@ export function JalaliDatePicker({ value, onChange, id, className }: JalaliDateP
         id={id}
         onClick={() => handleOpen(true)}
         className={cn(
-          'border-input bg-transparent flex h-9 w-full items-center justify-between rounded-md border px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+          'border-input bg-blush-soft dark:bg-input/30 flex h-9 w-full items-center justify-between rounded-md border px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none',
           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
           !value && 'text-muted-foreground',
           className,
