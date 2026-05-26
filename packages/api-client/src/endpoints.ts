@@ -21,6 +21,7 @@ export const endpoints = {
   importStarterServiceTemplates: '/api/v1/services/import-starter-templates',
   appointments: '/api/v1/appointments',
   appointmentsAvailability: '/api/v1/appointments/availability',
+  appointmentRequests: '/api/v1/appointment-requests',
   notifications: '/api/v1/notifications',
   notificationTest: '/api/v1/notifications/test',
   notificationPreferences: '/api/v1/notification-preferences',

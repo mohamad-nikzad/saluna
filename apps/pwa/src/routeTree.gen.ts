@@ -18,6 +18,7 @@ import { Route as AuthedStaffRouteImport } from './routes/_authed/staff'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthedServicesRouteImport } from './routes/_authed/services'
 import { Route as AuthedRetentionRouteImport } from './routes/_authed/retention'
+import { Route as AuthedRequestsRouteImport } from './routes/_authed/requests'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
@@ -67,6 +68,11 @@ const AuthedRetentionRoute = AuthedRetentionRouteImport.update({
   path: '/retention',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedRequestsRoute = AuthedRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
+  '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
   '/services': typeof AuthedServicesRoute
   '/settings': typeof AuthedSettingsRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
+  '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
   '/services': typeof AuthedServicesRoute
   '/settings': typeof AuthedSettingsRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/requests': typeof AuthedRequestsRoute
   '/_authed/retention': typeof AuthedRetentionRoute
   '/_authed/services': typeof AuthedServicesRoute
   '/_authed/settings': typeof AuthedSettingsRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clients'
     | '/dashboard'
+    | '/requests'
     | '/retention'
     | '/services'
     | '/settings'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clients'
     | '/dashboard'
+    | '/requests'
     | '/retention'
     | '/services'
     | '/settings'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/_authed/calendar'
     | '/_authed/clients'
     | '/_authed/dashboard'
+    | '/_authed/requests'
     | '/_authed/retention'
     | '/_authed/services'
     | '/_authed/settings'
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRetentionRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/requests': {
+      id: '/_authed/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof AuthedRequestsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/dashboard': {
       id: '/_authed/dashboard'
       path: '/dashboard'
@@ -297,6 +316,7 @@ interface AuthedRouteChildren {
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedClientsRoute: typeof AuthedClientsRouteWithChildren
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedRequestsRoute: typeof AuthedRequestsRoute
   AuthedRetentionRoute: typeof AuthedRetentionRoute
   AuthedServicesRoute: typeof AuthedServicesRoute
   AuthedSettingsRoute: typeof AuthedSettingsRoute
@@ -308,6 +328,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedClientsRoute: AuthedClientsRouteWithChildren,
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedRequestsRoute: AuthedRequestsRoute,
   AuthedRetentionRoute: AuthedRetentionRoute,
   AuthedServicesRoute: AuthedServicesRoute,
   AuthedSettingsRoute: AuthedSettingsRoute,

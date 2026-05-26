@@ -1,7 +1,9 @@
 import { Link, useRouterState } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
   CalendarDays,
   CalendarRange,
+  Inbox,
   Menu,
   Users,
   type LucideIcon,
@@ -9,6 +11,7 @@ import {
 import { cn } from '@repo/ui/utils'
 
 import { useAuth } from '#/lib/auth'
+import { api } from '#/lib/api-client'
 
 type NavItem = {
   to: string
@@ -20,6 +23,7 @@ type NavItem = {
 const managerItems: ReadonlyArray<NavItem> = [
   { to: '/today', label: 'امروز', icon: CalendarDays },
   { to: '/calendar', label: 'تقویم', icon: CalendarRange },
+  { to: '/requests', label: 'درخواست‌ها', icon: Inbox },
   { to: '/clients', label: 'مشتریان', icon: Users },
   {
     to: '/settings',
@@ -39,6 +43,16 @@ export function BottomNav() {
   const { user } = useAuth()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const items = user?.role === 'manager' ? managerItems : staffItems
+
+  const isManager = user?.role === 'manager'
+  const { data: pendingData } = useQuery({
+    queryKey: ['appointment-requests', 'pending'],
+    queryFn: ({ signal }) =>
+      api.appointmentRequests.list({ status: 'pending', signal }),
+    enabled: isManager,
+    refetchInterval: 60_000,
+  })
+  const pendingCount = pendingData?.requests.length ?? 0
 
   return (
     <nav className="shrink-0 border-t border-border/60 bg-card safe-area-pb">
@@ -63,6 +77,11 @@ export function BottomNav() {
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={isActive ? 2 : 1.7} />
+                {item.to === '/requests' && pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-1 box-content min-w-[16px] h-[16px] px-1 rounded-full border-2 border-card bg-saloora-rose text-white text-[9px] font-bold flex items-center justify-center tabular-nums">
+                    {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
               </div>
               <span className="truncate px-1">{item.label}</span>
             </Link>

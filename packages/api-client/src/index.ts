@@ -77,6 +77,18 @@ export type {
   UpdateServiceFamilyInput,
   UpdateServiceInput,
 } from './services'
+export { createAppointmentRequestsApi } from './appointment-requests'
+export type {
+  AppointmentRequestListItem,
+  AppointmentRequestPaymentStatus,
+  AppointmentRequestStatus,
+  AppointmentRequestsApi,
+  ApproveAppointmentRequestInput,
+  ApproveAppointmentRequestResponse,
+  ListAppointmentRequestsResponse,
+  RejectAppointmentRequestInput,
+  RejectAppointmentRequestResponse,
+} from './appointment-requests'
 export { createAppointmentsApi } from './appointments'
 export type {
   AppointmentAvailabilityInput,

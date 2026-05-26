@@ -1,5 +1,6 @@
 import {
   createApiClient,
+  createAppointmentRequestsApi,
   createAppointmentsApi,
   createAuthApi,
   createBusinessSettingsApi,
@@ -21,6 +22,7 @@ export const apiClient = createApiClient({
 })
 
 export const api = {
+  appointmentRequests: createAppointmentRequestsApi(apiClient),
   appointments: createAppointmentsApi(apiClient),
   auth: createAuthApi(apiClient),
   businessSettings: createBusinessSettingsApi(apiClient),

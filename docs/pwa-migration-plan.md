@@ -859,6 +859,29 @@ Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The s
 - `pnpm exec tsc --noEmit` → only the pre-existing `appointments-module.ts` TS6133 warning.
 - `pnpm build` → succeeds. `today` chunk ~34 KB (skeletons + status pill + IDB hook share with already-loaded calendar drawers/utilities).
 
+## Phase 6 — Shipped (2026-05-26)
+
+`/requests` lands as a manager-only route with status tabs (در انتظار / تأیید شده / رد شده / لغو شده / منقضی شده), pending-card approve/reject flow with staff picker, and decided-card list. Bottom-nav gains a "درخواست‌ها" item with a live pending-count badge.
+
+**Shared (`packages/api-client`):**
+- `appointment-requests.ts` (new) — `createAppointmentRequestsApi` with `list({ status? })`, `approve(id, { staffId })`, `reject(id, { reason? })`. Types (`AppointmentRequestListItem`, `AppointmentRequestStatus`, etc.) are defined locally in api-client so the browser bundle does not pull `@repo/database`.
+- `endpoints.ts` — added `appointmentRequests: '/api/v1/appointment-requests'`.
+- `index.ts` — re-exports the new factory and types.
+
+**PWA (`apps/pwa`):**
+- `src/lib/api-client.ts` — registered `appointmentRequests: createAppointmentRequestsApi(apiClient)`.
+- `src/routes/_authed/requests.tsx` — full UI port from `apps/app/app/(app)/requests/page.tsx`. Router `loader` → `ensureQueryData(['appointment-requests','pending'])`; tab-scoped lists use `useQuery` keyed `['appointment-requests', <status>]`. Approve/reject are `useMutation`s; on success both the current tab key and the pending key are invalidated so the badge updates immediately. `ApiError.message` is surfaced inline (preserves legacy parity for "تأیید درخواست انجام نشد" / "رد درخواست انجام نشد" plus server-supplied messages). Staff/services lookups are gated on `status === 'pending'`.
+- `src/components/bottom-nav.tsx` — added manager-only `/requests` item (Inbox icon) between `/calendar` and `/clients`. `useQuery` for pending-count with `refetchInterval: 60_000`; badge shows `99+` over 99, mirroring legacy.
+
+**Parity deviations:**
+- `/public-page` link in the "این درخواست‌ها از صفحه عمومی…" banner uses a plain `<a href="/public-page">` (full reload) because `/public-page` is deferred per the plan.
+- The legacy bottom-nav also matched `/onboarding` under the "بیشتر" prefix; the PWA matchPrefixes set is unchanged here (no onboarding route migrated yet).
+
+**Verified:**
+- `pnpm exec tsc --noEmit` in `apps/pwa` → only the pre-existing `appointments-module.ts` TS6133 warning.
+- `pnpm build` in `apps/pwa` → succeeds. `requests` chunk ~13 KB.
+- `@repo/api-client` vitest suite still fails on the pre-existing `/api/*` → `/api/v1/*` path expectations (stale tests from Phase 0/1; not introduced by this slice).
+
 ## Recommended First Implementation Slice
 
 Build the smallest useful vertical slice:
