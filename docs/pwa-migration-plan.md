@@ -637,6 +637,37 @@ Foundation slice landed and verified end-to-end against Hono on localhost.
 
 ## Phase 4 — In Progress
 
+### `/clients` — Shipped (2026-05-26)
+
+List page with offline-first IDB hydration, retention follow-up filter cross-query, and inline create/edit drawer (`FormSheet` + vaul).
+
+**Deps added (`apps/pwa`):**
+- `vaul` (for `FormSheet`).
+- `<Toaster />` from `@repo/ui/toaster` rendered in `__root` (so `runMutation` toasts work).
+
+**New PWA modules ported from `apps/app`:**
+- `src/lib/network-status.ts` — `useNetworkStatus`, `formatSnapshotAge`.
+- `src/lib/use-keyboard-inset.ts` — keyboard inset CSS var for `FormSheet` footer.
+- `src/lib/use-dismiss-guard.tsx` — unsaved-changes confirm dialog.
+- `src/lib/run-mutation.ts` — toast wrapper around mutation; preserves `DataClientHttpError.message`.
+- `src/lib/use-clients-indexeddb.ts` — IDB list source (`hydrateListFromServer` + `list` + `listLastSyncedAt`).
+- `src/components/form-sheet.tsx` — vaul-based full-screen sheet.
+- `src/components/offline-state.tsx` — `NetworkStatusBanner`, `OfflineStateCard`.
+- `src/components/clients/{client-visuals,clients-skeleton,client-drawer}.tsx`.
+
+**Route:**
+- `src/routes/_authed/clients.tsx` — manager-only guard; Router `loader` → `ensureQueryData(['clients'])`; `useQuery` shares the key; retention `useQuery(['retention'])` reused from `/retention`'s key; IDB hook layered on top so offline reads work after first hydrate. Drawer success path invalidates `['clients']`.
+- `api-client.ts` — added `clients: createClientsApi(apiClient)`.
+- `bottom-nav.tsx` — added `/clients` manager item (Users icon); `/retention` folded under settings prefix match.
+
+**Parity deviations:**
+- Row click opens edit drawer in place (legacy links to `/clients/$id`). Will revert when `/clients/$id` ships in the next slice.
+- Drawer's raw-fetch fallback path now uses `api.clients.create/update` (cross-origin Hono) instead of legacy `/api/clients`; data-client offline path is unchanged. Error message preservation is weaker (`api-client` errors don't expose status codes the same way), but `DataClientHttpError` still flows through `runMutation`.
+
+**Verified:**
+- `pnpm exec tsc --noEmit` → only the pre-existing `appointments-module.ts` TS6133 warning
+- `pnpm build` → succeeds; clients chunk 49.9 KB, form-sheet code lands in clients chunk
+
 ### `/retention` — Shipped (2026-05-26)
 
 **PWA (`apps/pwa`):**

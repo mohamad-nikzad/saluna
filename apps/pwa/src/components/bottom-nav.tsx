@@ -3,6 +3,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   Menu,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
@@ -19,11 +20,12 @@ type NavItem = {
 const managerItems: ReadonlyArray<NavItem> = [
   { to: '/today', label: 'امروز', icon: CalendarDays },
   { to: '/dashboard', label: 'داشبورد', icon: LayoutDashboard },
+  { to: '/clients', label: 'مشتریان', icon: Users },
   {
     to: '/settings',
     label: 'بیشتر',
     icon: Menu,
-    matchPrefixes: ['/settings', '/dashboard'],
+    matchPrefixes: ['/settings', '/dashboard', '/retention'],
   },
 ]
 

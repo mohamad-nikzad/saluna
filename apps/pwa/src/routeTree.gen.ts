@@ -17,6 +17,7 @@ import { Route as AuthedTodayRouteImport } from './routes/_authed/today'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthedRetentionRouteImport } from './routes/_authed/retention'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -57,11 +58,17 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedClientsRoute = AuthedClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/clients': typeof AuthedClientsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/retention': typeof AuthedRetentionRoute
   '/settings': typeof AuthedSettingsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/clients': typeof AuthedClientsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/retention': typeof AuthedRetentionRoute
   '/settings': typeof AuthedSettingsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authed/clients': typeof AuthedClientsRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/retention': typeof AuthedRetentionRoute
   '/_authed/settings': typeof AuthedSettingsRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/clients'
     | '/dashboard'
     | '/retention'
     | '/settings'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/clients'
     | '/dashboard'
     | '/retention'
     | '/settings'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/signup'
+    | '/_authed/clients'
     | '/_authed/dashboard'
     | '/_authed/retention'
     | '/_authed/settings'
@@ -183,10 +195,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/clients': {
+      id: '/_authed/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthedClientsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
+  AuthedClientsRoute: typeof AuthedClientsRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedRetentionRoute: typeof AuthedRetentionRoute
   AuthedSettingsRoute: typeof AuthedSettingsRoute
@@ -194,6 +214,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedClientsRoute: AuthedClientsRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedRetentionRoute: AuthedRetentionRoute,
   AuthedSettingsRoute: AuthedSettingsRoute,
