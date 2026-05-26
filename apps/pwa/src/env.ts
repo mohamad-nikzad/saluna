@@ -9,4 +9,6 @@ export const env = {
   ),
   appUrl: (import.meta.env.VITE_APP_URL as string | undefined) ?? '',
   webUrl: (import.meta.env.VITE_WEB_URL as string | undefined) ?? '',
+  pwaAssetVersion:
+    (import.meta.env.VITE_PWA_ASSET_VERSION as string | undefined) ?? '2026-05-26-v1',
 } as const

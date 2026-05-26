@@ -882,6 +882,38 @@ Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The s
 - `pnpm build` in `apps/pwa` → succeeds. `requests` chunk ~13 KB.
 - `@repo/api-client` vitest suite still fails on the pre-existing `/api/*` → `/api/v1/*` path expectations (stale tests from Phase 0/1; not introduced by this slice).
 
+## Phase 7 — Shipped (2026-05-26)
+
+PWA hardening lands: real manifest + icons/screenshots, service worker with Vite-aware caching, in-app update prompt, and the legacy iOS/Android install drawer.
+
+**Assets (`apps/pwa/public/`):**
+- Copied from `apps/app/public`: `icons/` (full set incl. maskable), `screenshots/manifest-*.png`, `offline-launch.html`, `favicon.ico`, `favicon-{16,32,196}x{...}.png`, `apple-touch-icon.png`, `icon-base.png`, `icon-{dark,light}-32x32.png`, `logo.png`.
+- Removed Vite starter `manifest.json`, `logo192.png`, `logo512.png`.
+- New `manifest.webmanifest` — static port of legacy `apps/app/app/manifest.ts` (Persian/RTL, theme/background colors, full icon set incl. maskable, screenshots, calendar/clients/today shortcuts). Asset-version query string dropped from manifest entries (was Next-only via `withPwaAssetVersion`); a future bump uses `VITE_PWA_ASSET_VERSION` injected at the SW + register layer.
+- New `sw.js` — ported from `apps/app/public/sw.js`. Same precache list, navigation cache-then-network, navigation fallback chain, static media SWR, push/notificationclick handlers. Adapted for Vite:
+  - Added `/services`, `/requests` to `NAVIGATION_FALLBACK_PATHS` and `shouldCacheNavigation` (routes that exist in the PWA but not legacy at the time).
+  - New `isHashedAssetRequest` cache-first strategy for `/assets/*` (Vite's hashed bundle output) into `ASSET_CACHE_NAME`. Hashed names guarantee cache-busting; new builds get fresh entries automatically and old caches are dropped on activate.
+  - Bypass cross-origin requests entirely (Hono is on a different origin, so the SW would never see them, but explicit guard is cheap).
+  - Static media set extended to `/brand/` and `/screenshots/` (was `/icons/`, `/landing/` in legacy).
+  - Same `/api/` opt-out preserved.
+
+**PWA (`apps/pwa`):**
+- `src/lib/pwa-assets.ts` — Vite port of `apps/app/lib/pwa-assets.ts`. Reads `import.meta.env.VITE_PWA_ASSET_VERSION` with the same `2026-05-26-v1` default.
+- `src/env.ts` — added `pwaAssetVersion` field for completeness alongside other VITE-prefixed values.
+- `src/components/pwa/service-worker-register.tsx` — Vite port of `apps/app/components/pwa/service-worker-register.tsx`. Same dev cleanup (unregister + purge caches), same update toast UX, same controllerchange/visibility/focus/10-minute interval re-check pattern. **Build-id replacement:** instead of `extractNextBuildId`, we extract the Vite hashed entry script path (`/assets/index-XXXXX.js`) from `document.scripts` at boot, then on each re-check fetch `/` (no-store) and compare against the script referenced in the fresh index.html. Mismatch → prompt for reload.
+- `src/components/pwa/install-prompt.tsx` — Vite port of `apps/app/components/pwa/install-prompt.tsx`. `usePathname` → `useRouterState({ select: s => s.location.pathname })`. All localStorage keys preserved verbatim (`aravira-pwa-first-visit`, `aravira-pwa-install-dismissed-v2`, `aravira-pwa-install-qualified-v1`, `aravira-pwa-install-auto-opened-v1`) so existing installed-user state migrates cleanly. Same value-moment paths, iOS Safari detection, and `beforeinstallprompt`/`appinstalled` handling.
+- `src/routes/__root.tsx` — mounts `<ServiceWorkerRegister />` and `<InstallPrompt />` alongside `<Toaster />`.
+- `index.html` — added theme-color (light/dark via media), color-scheme, `application-name`, apple-web-app metas, `format-detection`, description, `<link rel="manifest" href="/manifest.webmanifest">`, full favicon/apple-touch-icon link set.
+
+**Deferred:**
+- Vazirmatn font loading — still system fonts; Iran VPS / no Google Fonts constraint means self-hosting is the right path. Tracked separately.
+- Staff push-notification settings (depends on `PushManager` subscribe flow); the SW already handles `push`/`notificationclick`, so wiring `StaffPushSettings` is unblocked but unscoped here.
+- Deploy-time SPA fallback (out of scope per plan); when shipping, the static host must rewrite all `/<route>` GETs to `/index.html` so the SPA hydrates from any deep link.
+
+**Verified:**
+- `pnpm exec tsc --noEmit` in `apps/pwa` → only the pre-existing `appointments-module.ts` TS6133 warning.
+- `pnpm build` in `apps/pwa` → succeeds. `dist/` contains `manifest.webmanifest`, `sw.js`, `offline-launch.html`, full favicon/icon set, `icons/`, `screenshots/`, hashed `assets/` bundle. `index.html` references `/assets/index-<hash>.js` (the same shape the SW-register parser looks for).
+
 ## Recommended First Implementation Slice
 
 Build the smallest useful vertical slice:
