@@ -14,6 +14,7 @@ import {
   salonTodayYmd,
 } from '@repo/salon-core/salon-local-time'
 import * as schema from './schema'
+import { seedCatalogPresets } from './seed/catalog-presets'
 import {
   appointments,
   businessSettings,
@@ -1728,6 +1729,8 @@ async function main() {
       notes: 'شماره تکراری در سالن دیگر برای تست unique per salon',
     })
   }
+
+  await seedCatalogPresets(db)
 
   await seedRetentionAndFeaturesDemo(primarySalon.id)
 

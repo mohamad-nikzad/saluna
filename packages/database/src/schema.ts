@@ -12,6 +12,8 @@ import {
   primaryKey,
 } from 'drizzle-orm/pg-core'
 
+import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
+
 export const salons = pgTable(
   'salons',
   {
@@ -643,6 +645,44 @@ export const publicSubmitRateLimits = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('public_submit_rate_limits_ip_created_at_idx').on(t.ip, t.createdAt)]
+)
+
+export const catalogPresets = pgTable(
+  'catalog_presets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: text('slug').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    tree: jsonb('tree').notNull().$type<CatalogPresetTree>(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('catalog_presets_slug_unique').on(t.slug),
+    index('catalog_presets_active_sort_idx').on(t.isActive, t.sortOrder),
+  ]
+)
+
+export const presetApplications = pgTable(
+  'preset_applications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salons.id, { onDelete: 'cascade' }),
+    presetId: uuid('preset_id')
+      .notNull()
+      .references(() => catalogPresets.id, { onDelete: 'restrict' }),
+    appliedAt: timestamp('applied_at', { withTimezone: true }).notNull().defaultNow(),
+    importedVariantIds: uuid('imported_variant_ids').array().notNull().default([]),
+  },
+  (t) => [
+    index('preset_applications_salon_id_applied_at_idx').on(t.salonId, t.appliedAt),
+    index('preset_applications_preset_id_idx').on(t.presetId),
+  ]
 )
 
 export const notificationPreferences = pgTable(
