@@ -40,3 +40,25 @@ export type PresetCategoryInput = z.input<typeof presetCategorySchema>
 export type PresetCategoryPayload = z.output<typeof presetCategorySchema>
 export type CatalogPresetTreeInput = z.input<typeof presetTreeSchema>
 export type CatalogPresetTree = z.output<typeof presetTreeSchema>
+
+export const applyCatalogPresetBodySchema = z.object({
+  selection: z
+    .array(
+      z.object({
+        categoryIndex: z.number().int().nonnegative(),
+        families: z
+          .array(
+            z.object({
+              familyIndex: z.number().int().nonnegative(),
+              variantIndices: z
+                .array(z.number().int().nonnegative())
+                .min(1),
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .min(1),
+})
+
+export type ApplyCatalogPresetBody = z.infer<typeof applyCatalogPresetBodySchema>

@@ -12,6 +12,7 @@
     "./notifications": "./src/notifications.ts",
     "./push": "./src/push.ts",
     "./retention": "./src/retention.ts",
+    "./catalog-presets": "./src/catalog-presets.ts",
     "./services": "./src/services.ts",
     "./settings": "./src/settings.ts",
     "./staff": "./src/staff.ts",
