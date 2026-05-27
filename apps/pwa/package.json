@@ -1,5 +1,5 @@
 {
-  "name": "pwa",
+  "name": "@repo/pwa",
   "private": true,
   "type": "module",
   "imports": {

@@ -23,6 +23,7 @@ const HONO_DOMAINS = [
   'service-families',
   'staff',
   'settings',
+  'salon-public-settings',
   'notifications',
   'notification-preferences',
   'push',
