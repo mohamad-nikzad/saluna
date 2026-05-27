@@ -24,13 +24,13 @@ The authenticated salon request context carried by API routes — tenant user, s
 ### Service Catalog
 
 **ServiceCategory**:
-Salon-scoped catalog group for a broad area (`ناخن`, `مو`, `پوست`, `مژه`, `ابرو`, `اسپا`). DB/API: `service_categories`; TS: `ServiceCategory`.
+Salon-scoped catalog group for a broad area (`ناخن`, `مو`, `پوست`, `مژه`, `ابرو`, `اسپا`). DB/API: `service_categories`; TS: `ServiceCategory`. Persian UI: `دسته`.
 
 **ServiceFamily**:
-Salon-scoped grouping inside a `ServiceCategory` (`کاشت ناخن`, `ترمیم ناخن`, `مانیکور`, `رنگ مو`). DB/API: `service_families`; TS: `ServiceFamily`.
+Salon-scoped grouping inside a `ServiceCategory` (`کاشت ناخن`, `ترمیم ناخن`, `مانیکور`, `رنگ مو`). DB/API: `service_families`; TS: `ServiceFamily`. Persian UI: `گروه`.
 
 **ServiceVariant**:
-The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; call it "service variant" in copy that distinguishes it from category or family.
+The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; call it "service variant" in copy that distinguishes it from category or family. Persian UI: `خدمت`.
 _Avoid_: package, bundle, group, type, subtype, item, offering, option
 
 **Standard ServiceVariant**:
@@ -44,6 +44,15 @@ A reference from a `Combo ServiceVariant` to a standard `ServiceVariant`. Docume
 
 **ServiceAddon**:
 An optional salon-defined extra selected alongside a `ServiceVariant` at booking.
+
+### Catalog Presets
+
+**CatalogPreset**:
+A ready-made tree of `PresetCategory` → `PresetFamily` → `PresetVariant` rows that a manager imports during onboarding to skip building the catalog by hand. UI copy: `قالب خدمات`. Not sellable, not tenant-scoped — defined by the product, picked by the salon.
+_Avoid_: package, bundle, template service, service group
+
+**PresetCategory / PresetFamily / PresetVariant**:
+The rows inside a `CatalogPreset` that map 1:1 to `ServiceCategory` / `ServiceFamily` / `ServiceVariant` when the preset is applied.
 
 ### Snapshots
 
