@@ -36,6 +36,16 @@ type ImportStarterServiceTemplatesResponse = {
   services: Service[]
 }
 
+export type ApplyCatalogPresetSelection = Array<{
+  categoryIndex: number
+  families: Array<{ familyIndex: number; variantIndices: number[] }>
+}>
+
+type ApplyCatalogPresetResponse = {
+  importedCategoryIds: string[]
+  importedVariantIds: string[]
+}
+
 export type ServiceCreateInput = {
   name: string
   familyId?: string
@@ -151,6 +161,10 @@ export interface ServicesModule {
     update(id: string, input: ServiceFamilyUpdateInput): Promise<ServiceFamily>
   }
   importStarterTemplates(): Promise<ImportStarterServiceTemplatesResponse>
+  applyCatalogPreset(
+    presetId: string,
+    selection: ApplyCatalogPresetSelection,
+  ): Promise<ApplyCatalogPresetResponse>
 }
 
 export function createServicesModule(
@@ -886,6 +900,17 @@ export function createServicesModule(
       const data = await transport.json<ImportStarterServiceTemplatesResponse>(
         'POST',
         '/api/services/import-starter-templates',
+      )
+      await invalidateCatalogLists()
+      void emitSubscribers()
+      return data
+    },
+
+    async applyCatalogPreset(presetId, selection) {
+      const data = await transport.json<ApplyCatalogPresetResponse>(
+        'POST',
+        `/api/catalog-presets/${presetId}/apply`,
+        { body: { selection } },
       )
       await invalidateCatalogLists()
       void emitSubscribers()

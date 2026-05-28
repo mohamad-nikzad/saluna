@@ -67,6 +67,25 @@ import {
   staffCreateSchema,
   type StaffCreateFormInput,
 } from '@repo/salon-core/forms/staff'
+import {
+  CatalogPresetPicker,
+  type ApplyPresetSelection,
+} from '@/components/catalog-preset-picker'
+
+async function applyCatalogPresetRequest(
+  presetId: string,
+  selection: ApplyPresetSelection,
+) {
+  const response = await fetch(`/api/catalog-presets/${presetId}/apply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ selection }),
+  })
+  const data = await response.json()
+  if (!response.ok) throw new Error(data.error || 'افزودن قالب انجام نشد')
+  return data
+}
 
 type OnboardingStepKey =
   | 'profileConfirmed'
@@ -444,6 +463,7 @@ function ServiceStep({
   isDone: boolean
   onCreated: () => void
 }) {
+  const [mode, setMode] = useState<'picker' | 'manual'>('picker')
   const {
     register,
     handleSubmit,
@@ -510,12 +530,31 @@ function ServiceStep({
           {isDone && <Badge variant="secondary">حداقل خدمت ثبت شده</Badge>}
         </div>
         <p className="text-sm leading-6 text-muted-foreground">
-          بدون خدمت، تقویم نمی‌تواند مدت زمان و قیمت نوبت را محاسبه کند.
+          {mode === 'picker'
+            ? 'یک قالب آماده را انتخاب کنید تا دسته، گروه و خدمت‌ها یکجا ساخته شوند.'
+            : 'بدون خدمت، تقویم نمی‌تواند مدت زمان و قیمت نوبت را محاسبه کند.'}
         </p>
       </CardHeader>
       <CardContent>
+        {mode === 'picker' ? (
+          <CatalogPresetPicker
+            apply={applyCatalogPresetRequest}
+            onApplied={() => onCreated()}
+            onManual={() => setMode('manual')}
+          />
+        ) : (
         <form onSubmit={onSubmit} noValidate>
           <FieldGroup className="gap-4">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-fit gap-1"
+              onClick={() => setMode('picker')}
+            >
+              <ArrowRight className="h-4 w-4" />
+              بازگشت به قالب‌های آماده
+            </Button>
             <Field>
               <FieldLabel htmlFor="onboarding-service-name">
                 نام خدمت
@@ -630,6 +669,7 @@ function ServiceStep({
             </Button>
           </FieldGroup>
         </form>
+        )}
       </CardContent>
     </Card>
   )
