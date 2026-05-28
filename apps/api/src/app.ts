@@ -10,6 +10,7 @@ import { getEnv } from './env'
 import { errorHandler, notFoundHandler } from './middleware/error'
 import { health } from './routes/health'
 import { clients } from './routes/clients'
+import { catalogPresets } from './routes/catalog-presets'
 import { serviceCategories } from './routes/service-categories'
 import { serviceFamilies } from './routes/service-families'
 import { serviceAddons } from './routes/service-addons'
@@ -59,6 +60,7 @@ const app = new Hono<AppEnv>()
   .use(bodyLimit({ maxSize: 2 * 1024 * 1024 }))
   .route('/health', health)
   .route('/api/v1/clients', clients)
+  .route('/api/v1/catalog-presets', catalogPresets)
   .route('/api/v1/service-categories', serviceCategories)
   .route('/api/v1/service-families', serviceFamilies)
   .route('/api/v1/service-addons', serviceAddons)

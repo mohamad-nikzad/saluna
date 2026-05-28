@@ -80,6 +80,7 @@ import type {
 } from '@repo/api-client'
 
 import { api } from '#/lib/api-client'
+import { CatalogPresetPicker } from '#/components/catalog-preset-picker'
 import {
   useBumpOfflineData,
   useManagerDataClient,
@@ -442,6 +443,7 @@ function ServiceStep({
   const dc = useManagerDataClient()
   const bumpOfflineData = useBumpOfflineData()
   const queryClient = useQueryClient()
+  const [mode, setMode] = useState<'picker' | 'manual'>('picker')
 
   const {
     register,
@@ -519,12 +521,36 @@ function ServiceStep({
           {isDone && <Badge variant="secondary">حداقل خدمت ثبت شده</Badge>}
         </div>
         <p className="text-sm leading-6 text-muted-foreground">
-          بدون خدمت، تقویم نمی‌تواند مدت زمان و قیمت نوبت را محاسبه کند.
+          {mode === 'picker'
+            ? 'یک قالب آماده را انتخاب کنید تا دسته، گروه و خدمت‌ها یکجا ساخته شوند.'
+            : 'بدون خدمت، تقویم نمی‌تواند مدت زمان و قیمت نوبت را محاسبه کند.'}
         </p>
       </CardHeader>
       <CardContent>
+        {mode === 'picker' ? (
+          <CatalogPresetPicker
+            onApplied={async () => {
+              bumpOfflineData()
+              await queryClient.invalidateQueries({
+                queryKey: managerServicesQueryKey,
+              })
+              onCreated()
+            }}
+            onManual={() => setMode('manual')}
+          />
+        ) : (
         <form onSubmit={onSubmit} noValidate>
           <FieldGroup className="gap-4">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-fit gap-1"
+              onClick={() => setMode('picker')}
+            >
+              <ArrowRight className="h-4 w-4" />
+              بازگشت به قالب‌های آماده
+            </Button>
             <Field>
               <FieldLabel htmlFor="onboarding-service-name">
                 نام خدمت
@@ -639,6 +665,7 @@ function ServiceStep({
             </Button>
           </FieldGroup>
         </form>
+        )}
       </CardContent>
     </Card>
   )

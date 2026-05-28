@@ -5,6 +5,7 @@ import type {
   ServiceCategory,
   ServiceFamily,
 } from '@repo/salon-core'
+import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
 import { readCacheTimestamp, writeCacheTimestamp } from '../cache-meta'
 import type { HttpTransportPort } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
@@ -40,6 +41,19 @@ export type ApplyCatalogPresetSelection = Array<{
   categoryIndex: number
   families: Array<{ familyIndex: number; variantIndices: number[] }>
 }>
+
+export type CatalogPresetListItem = {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  tree: CatalogPresetTree
+  sortOrder: number
+  disabled: boolean
+  disabledReason: 'collision' | null
+}
+
+type CatalogPresetsResponse = { presets: CatalogPresetListItem[] }
 
 type ApplyCatalogPresetResponse = {
   importedCategoryIds: string[]
@@ -161,6 +175,7 @@ export interface ServicesModule {
     update(id: string, input: ServiceFamilyUpdateInput): Promise<ServiceFamily>
   }
   importStarterTemplates(): Promise<ImportStarterServiceTemplatesResponse>
+  listCatalogPresets(): Promise<CatalogPresetListItem[]>
   applyCatalogPreset(
     presetId: string,
     selection: ApplyCatalogPresetSelection,
@@ -904,6 +919,14 @@ export function createServicesModule(
       await invalidateCatalogLists()
       void emitSubscribers()
       return data
+    },
+
+    async listCatalogPresets() {
+      const data = await transport.json<CatalogPresetsResponse>(
+        'GET',
+        '/api/catalog-presets',
+      )
+      return data.presets ?? []
     },
 
     async applyCatalogPreset(presetId, selection) {

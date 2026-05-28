@@ -7,6 +7,7 @@ import {
   Clock3,
   FolderPlus,
   Layers3,
+  LayoutTemplate,
   Pencil,
   Plus,
   PackageCheck,
@@ -22,6 +23,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@repo/ui/collapsible'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@repo/ui/sheet'
 import { Spinner } from '@repo/ui/spinner'
 import type {
   Service,
@@ -30,6 +38,7 @@ import type {
 } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { useManagerDataClient } from '#/lib/manager-data-client'
+import { CatalogPresetPicker } from '#/components/catalog-preset-picker'
 import { ServiceCategoryDrawer } from './service-category-drawer'
 import { ServiceDrawer } from './service-drawer'
 import { ServiceFamilyDrawer } from './service-family-drawer'
@@ -103,6 +112,10 @@ export function ServiceCatalogManager({
     {},
   )
   const [openFamilies, setOpenFamilies] = useState<Record<string, boolean>>({})
+  const [presetSheetOpen, setPresetSheetOpen] = useState(false)
+  const [highlightedCategoryIds, setHighlightedCategoryIds] = useState<
+    string[]
+  >([])
   const [starterImportUsed, setStarterImportUsed] = useState(
     () =>
       typeof window !== 'undefined' &&
@@ -205,6 +218,26 @@ export function ServiceCatalogManager({
     )
     setServiceDrawerOpen(true)
   }
+
+  const onPresetApplied = (result: { importedCategoryIds: string[] }) => {
+    setPresetSheetOpen(false)
+    setHighlightedCategoryIds(result.importedCategoryIds)
+    setOpenCategories((current) => {
+      const next = { ...current }
+      for (const id of result.importedCategoryIds) next[id] = true
+      return next
+    })
+    onChanged()
+  }
+
+  useEffect(() => {
+    if (highlightedCategoryIds.length === 0) return
+    const timer = window.setTimeout(
+      () => setHighlightedCategoryIds([]),
+      4000,
+    )
+    return () => window.clearTimeout(timer)
+  }, [highlightedCategoryIds])
 
   const noCatalog =
     categories.length === 0 && families.length === 0 && services.length === 0
@@ -316,6 +349,15 @@ export function ServiceCatalogManager({
                 شروع با لیست آماده
               </Button>
             ) : null}
+            <Button
+              size="sm"
+              variant="outline"
+              className="justify-center gap-1 touch-manipulation"
+              onClick={() => setPresetSheetOpen(true)}
+            >
+              <LayoutTemplate className="h-4 w-4" />
+              افزودن از قالب آماده
+            </Button>
           </div>
         </div>
         <div className="space-y-2 px-2 pb-2 sm:space-y-3 sm:px-4 sm:pb-4">
@@ -387,7 +429,11 @@ export function ServiceCatalogManager({
                       [category.id]: open,
                     }))
                   }
-                  className="overflow-hidden rounded-lg border border-border/60 bg-background"
+                  className={`overflow-hidden rounded-lg border bg-background transition-shadow ${
+                    highlightedCategoryIds.includes(category.id)
+                      ? 'border-primary ring-2 ring-primary/40'
+                      : 'border-border/60'
+                  }`}
                 >
                   <div className="flex items-center gap-2 border-b border-border/40 bg-muted/30 px-1.5 py-1.5 sm:px-2 sm:py-2.5">
                     <CollapsibleTrigger asChild>
@@ -670,6 +716,24 @@ export function ServiceCatalogManager({
           onChanged()
         }}
       />
+
+      <Sheet open={presetSheetOpen} onOpenChange={setPresetSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[90vh] overflow-y-auto"
+          dir="rtl"
+        >
+          <SheetHeader className="text-right">
+            <SheetTitle>افزودن از قالب آماده</SheetTitle>
+            <SheetDescription>
+              یک قالب را انتخاب کنید و خدمت‌های دلخواه را به سالن اضافه کنید.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-6">
+            <CatalogPresetPicker onApplied={onPresetApplied} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   )
 }

@@ -22,6 +22,7 @@ export type {
   ServiceCreateInput,
   ServiceUpdateInput,
   ApplyCatalogPresetSelection,
+  CatalogPresetListItem,
 } from './core/modules/services-module'
 export type { BusinessSettingsModule, BusinessSettingsUpdateInput } from './core/modules/business-settings-module'
 export { BUSINESS_SETTINGS_ENTITY_ID } from './core/modules/business-settings-module'
