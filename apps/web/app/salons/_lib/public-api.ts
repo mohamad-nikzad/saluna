@@ -85,7 +85,7 @@ export async function fetchPublicSalon(
   slug: string,
   init?: RequestInit,
 ): Promise<PublicSalonView> {
-  const res = await fetch(apiUrl(`/api/public/salons/${slug}`), {
+  const res = await fetch(apiUrl(`/api/v1/public/salons/${slug}`), {
     cache: 'no-store',
     ...init,
   })
@@ -97,7 +97,7 @@ export async function fetchPublicAvailability(
   params: { serviceId: string; date: string },
   init?: RequestInit,
 ): Promise<PublicAvailabilityDayResponse> {
-  const url = new URL(apiUrl(`/api/public/salons/${slug}/availability`))
+  const url = new URL(apiUrl(`/api/v1/public/salons/${slug}/availability`))
   url.searchParams.set('serviceId', params.serviceId)
   url.searchParams.set('date', params.date)
   url.searchParams.set('mode', 'day')
@@ -117,7 +117,7 @@ export async function submitAppointmentRequest(
     notes?: string
   },
 ): Promise<{ token: string }> {
-  const res = await fetch(apiUrl(`/api/public/salons/${slug}/appointment-requests`), {
+  const res = await fetch(apiUrl(`/api/v1/public/salons/${slug}/appointment-requests`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -131,7 +131,7 @@ export async function fetchAppointmentRequest(
   init?: RequestInit,
 ): Promise<AppointmentRequestStatusView> {
   const res = await fetch(
-    apiUrl(`/api/public/salons/${slug}/appointment-requests/${token}`),
+    apiUrl(`/api/v1/public/salons/${slug}/appointment-requests/${token}`),
     { cache: 'no-store', ...init },
   )
   return parseJson<AppointmentRequestStatusView>(res)
@@ -142,7 +142,7 @@ export async function cancelAppointmentRequest(
   token: string,
 ): Promise<void> {
   const res = await fetch(
-    apiUrl(`/api/public/salons/${slug}/appointment-requests/${token}/cancel`),
+    apiUrl(`/api/v1/public/salons/${slug}/appointment-requests/${token}/cancel`),
     { method: 'POST' },
   )
   await parseJson<{ ok: true }>(res)
