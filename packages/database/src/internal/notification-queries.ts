@@ -6,12 +6,21 @@ import {
   notifications,
 } from '../schema'
 
-export type NotificationType = 'appointment_created'
+export type NotificationType =
+  | 'appointment_created'
+  | 'appointment_request_pending'
+  | 'appointment_request_approved'
+  | 'appointment_request_rejected'
+  | 'appointment_reminder'
 export type NotificationChannel =
   | 'in_app'
   | 'local_sync'
   | 'sms'
   | 'android_regional_push'
+  | 'telegram'
+  | 'bale'
+  | 'rubika'
+  | 'whatsapp'
 export type NotificationDeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped'
 export type CreateNotificationDeliveryInput = {
   provider?: string | null

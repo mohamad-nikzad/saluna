@@ -643,7 +643,13 @@ export const notifications = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    type: text('type').notNull().$type<'appointment_created'>(),
+    type: text('type').notNull().$type<
+      | 'appointment_created'
+      | 'appointment_request_pending'
+      | 'appointment_request_approved'
+      | 'appointment_request_rejected'
+      | 'appointment_reminder'
+    >(),
     title: text('title').notNull(),
     body: text('body').notNull(),
     route: text('route').notNull(),
@@ -666,7 +672,16 @@ export const notificationDeliveries = pgTable(
       .references(() => notifications.id, { onDelete: 'cascade' }),
     channel: text('channel')
       .notNull()
-      .$type<'in_app' | 'local_sync' | 'sms' | 'android_regional_push'>(),
+      .$type<
+        | 'in_app'
+        | 'local_sync'
+        | 'sms'
+        | 'android_regional_push'
+        | 'telegram'
+        | 'bale'
+        | 'rubika'
+        | 'whatsapp'
+      >(),
     status: text('status').notNull().$type<'pending' | 'sent' | 'failed' | 'skipped'>(),
     provider: text('provider'),
     providerMessageId: text('provider_message_id'),
@@ -693,6 +708,11 @@ export const salonPublicSettings = pgTable('salon_public_settings', {
   depositPolicy: jsonb('deposit_policy').$type<
     { type: 'none' } | { type: 'fixed' | 'percent'; value: number }
   >(),
+  enabledMessagingProviders: text('enabled_messaging_providers')
+    .array()
+    .notNull()
+    .default([])
+    .$type<Array<'telegram' | 'bale' | 'rubika' | 'whatsapp'>>(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -834,4 +854,50 @@ export const notificationPreferences = pgTable(
     primaryKey({ columns: [t.salonId, t.userId] }),
     index('notification_preferences_user_id_idx').on(t.userId),
   ]
+)
+
+export const userMessagingAccounts = pgTable(
+  'user_messaging_accounts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    provider: text('provider')
+      .notNull()
+      .$type<'telegram' | 'bale' | 'rubika' | 'whatsapp'>(),
+    externalId: text('external_id').notNull(),
+    displayName: text('display_name'),
+    enabled: boolean('enabled').notNull().default(true),
+    linkedAt: timestamp('linked_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('user_messaging_accounts_provider_external_id_unique').on(
+      t.provider,
+      t.externalId
+    ),
+    uniqueIndex('user_messaging_accounts_user_id_provider_unique').on(t.userId, t.provider),
+    index('user_messaging_accounts_user_id_idx').on(t.userId),
+  ]
+)
+
+export const messagingLinkTokens = pgTable(
+  'messaging_link_tokens',
+  {
+    token: uuid('token').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    provider: text('provider')
+      .notNull()
+      .$type<'telegram' | 'bale' | 'rubika' | 'whatsapp'>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+  },
+  (t) => [index('messaging_link_tokens_user_provider_idx').on(t.userId, t.provider)]
 )

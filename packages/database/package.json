@@ -11,6 +11,7 @@
     "./dashboard": "./src/dashboard.ts",
     "./onboarding": "./src/onboarding.ts",
     "./notifications": "./src/notifications.ts",
+    "./messaging": "./src/messaging.ts",
     "./push": "./src/push.ts",
     "./retention": "./src/retention.ts",
     "./catalog-presets": "./src/catalog-presets.ts",

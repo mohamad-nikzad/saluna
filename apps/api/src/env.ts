@@ -18,6 +18,11 @@ const envSchema = z.object({
         .map((s) => s.trim())
         .filter(Boolean),
     ),
+  MESSAGING_LINK_TOKEN_TTL_MINUTES: z
+    .string()
+    .default('15')
+    .transform((v) => Number.parseInt(v, 10))
+    .pipe(z.number().int().positive()),
 })
 
 export type Env = z.infer<typeof envSchema>

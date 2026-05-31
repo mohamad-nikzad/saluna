@@ -15,6 +15,13 @@
       "when": 1780223606576,
       "tag": "0001_parched_hairball",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780241311005,
+      "tag": "0002_silly_thunderball",
+      "breakpoints": true
     }
   ]
 }
