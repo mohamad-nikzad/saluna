@@ -9,9 +9,9 @@ import {
   fetchAppointmentRequest,
   fetchPublicSalon,
   PublicApiError,
-  type AppointmentRequestStatus,
 } from '@/lib/public-api'
 import { formatDuration, formatHm, formatPrice } from '@/lib/format'
+import { headlineFor } from '@/lib/request-status'
 import { setNoStoreCache } from '@/lib/cache-headers'
 import Base from '@/layouts/Base.astro'
 import { CancelRequestButton } from '@/components/react/CancelRequestButton'
@@ -21,56 +21,22 @@ const { slug, token } = Astro.params
 setNoStoreCache(Astro)
 
 let view
+let accent = resolvePublicTheme(null).primary
+
 try {
-  view = await fetchAppointmentRequest(slug!, token!)
+  const [requestView, salon] = await Promise.all([
+    fetchAppointmentRequest(slug!, token!),
+    fetchPublicSalon(slug!).catch(() => null),
+  ])
+  view = requestView
+  if (salon) {
+    accent = resolvePublicTheme(salon.publicSettings.themeId).primary
+  }
 } catch (e) {
   if (e instanceof PublicApiError && e.status === 404) {
     return new Response(null, { status: 404 })
   }
   throw e
-}
-
-let accent = resolvePublicTheme(null).primary
-try {
-  const salon = await fetchPublicSalon(slug!)
-  accent = resolvePublicTheme(salon.publicSettings.themeId).primary
-} catch {
-  /* default accent */
-}
-
-function headlineFor(status: AppointmentRequestStatus) {
-  switch (status) {
-    case 'pending':
-      return {
-        title: 'درخواست شما ثبت شد.',
-        body: 'سالن درخواست شما را بررسی می‌کند و در صورت تأیید با شما تماس می‌گیرد.',
-        tone: 'border border-amber-200 bg-amber-50 text-amber-900',
-      }
-    case 'approved':
-      return {
-        title: 'درخواست شما تأیید شد.',
-        body: 'نوبت شما در تقویم سالن ثبت شده است. در زمان مقرر به سالن مراجعه کنید.',
-        tone: 'border border-emerald-200 bg-emerald-50 text-emerald-900',
-      }
-    case 'rejected':
-      return {
-        title: 'درخواست شما تأیید نشد.',
-        body: 'برای هماهنگی زمان دیگر می‌توانید مستقیماً با سالن تماس بگیرید.',
-        tone: 'border border-rose-200 bg-rose-50 text-rose-900',
-      }
-    case 'cancelled':
-      return {
-        title: 'درخواست شما لغو شد.',
-        body: 'این درخواست توسط شما یا سالن لغو شده است.',
-        tone: 'border border-slate-200 bg-slate-50 text-slate-800',
-      }
-    case 'expired':
-      return {
-        title: 'درخواست شما در زمان مقرر بررسی نشد.',
-        body: 'لطفاً برای رزرو با سالن تماس بگیرید.',
-        tone: 'border border-slate-200 bg-slate-50 text-slate-800',
-      }
-  }
 }
 
 const headline = headlineFor(view.status)

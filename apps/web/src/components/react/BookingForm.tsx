@@ -19,6 +19,35 @@ type Props = {
 const inputClass =
   'min-w-0 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-black/25'
 
+function SubmitButton({
+  canSubmit,
+  isSubmitting,
+  theme,
+  variant,
+}: {
+  canSubmit: boolean
+  isSubmitting: boolean
+  theme: PublicTheme
+  variant: 'stacked' | 'row'
+}) {
+  const className =
+    variant === 'row'
+      ? 'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-extrabold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-50'
+      : 'inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-extrabold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-50'
+
+  return (
+    <button
+      type="submit"
+      disabled={!canSubmit || isSubmitting}
+      className={className}
+      style={{ backgroundColor: theme.primary }}
+    >
+      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+      ارسال درخواست رزرو
+    </button>
+  )
+}
+
 export function BookingForm({ slug, service, picked, theme, variant }: Props) {
   const { submit, isSubmitting, error, setError } = useRequestSubmit(slug)
   const [name, setName] = useState('')
@@ -44,18 +73,6 @@ export function BookingForm({ slug, service, picked, theme, variant }: Props) {
     })
   }
 
-  const submitButton = (
-    <button
-      type="submit"
-      disabled={!canSubmit || isSubmitting}
-      className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-extrabold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-50"
-      style={{ backgroundColor: theme.primary }}
-    >
-      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-      ارسال درخواست رزرو
-    </button>
-  )
-
   if (variant === 'row') {
     return (
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -77,7 +94,12 @@ export function BookingForm({ slug, service, picked, theme, variant }: Props) {
             dir="ltr"
             className={`${inputClass} flex-1`}
           />
-          {submitButton}
+          <SubmitButton
+            canSubmit={canSubmit}
+            isSubmitting={isSubmitting}
+            theme={theme}
+            variant="row"
+          />
         </div>
         {error ? <p className="text-xs text-rose-600">{error}</p> : null}
       </form>
@@ -120,15 +142,12 @@ export function BookingForm({ slug, service, picked, theme, variant }: Props) {
         />
       </label>
       {error ? <p className="text-xs text-rose-600">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={!canSubmit || isSubmitting}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-extrabold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ backgroundColor: theme.primary }}
-      >
-        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-        ارسال درخواست رزرو
-      </button>
+      <SubmitButton
+        canSubmit={canSubmit}
+        isSubmitting={isSubmitting}
+        theme={theme}
+        variant="stacked"
+      />
     </form>
   )
 }

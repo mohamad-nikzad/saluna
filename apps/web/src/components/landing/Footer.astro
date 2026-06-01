@@ -1,0 +1,27 @@
+---
+import { displayClass } from '@/content/landing'
+import Icon from './Icon.astro'
+---
+
+<footer class="border-t border-[#f3d5dd] bg-white/60 px-5 py-8 sm:px-8">
+  <div
+    class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row"
+  >
+    <div class="flex items-center gap-2.5">
+      <img
+        src="/landing/saloora-mark.png"
+        alt=""
+        width="32"
+        height="32"
+        decoding="async"
+        class="h-8 w-8"
+      />
+      <span class={`${displayClass} text-xl text-[#7a2a40]`}>سالورا</span>
+    </div>
+    <p class="text-xs text-[#8b6b73]">© ۱۴۰۴ سالورا. تمام حقوق محفوظ است.</p>
+    <div class="flex items-center gap-1.5 text-xs text-[#8b6b73]">
+      <Icon name="wallet" class="h-3.5 w-3.5" />
+      <span>ساخته‌شده برای سالن‌های ایرانی</span>
+    </div>
+  </div>
+</footer>

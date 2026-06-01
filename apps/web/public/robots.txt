@@ -1,3 +1,4 @@
+# Dev placeholder — production URL written at build by robots-sitemap integration
 User-agent: *
 Allow: /
 

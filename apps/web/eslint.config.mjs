@@ -1,11 +1,11 @@
 import baseConfig from '@repo/eslint-config/base'
-import nextConfig from '@repo/eslint-config/next'
+import reactConfig from '@repo/eslint-config/react'
 import eslintPluginAstro from 'eslint-plugin-astro'
 
 const config = [
   ...baseConfig,
   ...eslintPluginAstro.configs.recommended,
-  ...nextConfig.map((block) => ({
+  ...reactConfig.map((block) => ({
     ...block,
     files: block.files ?? ['**/*.{ts,tsx,js,jsx}'],
   })),
@@ -13,12 +13,15 @@ const config = [
     ignores: ['dist/**', '.astro/**', 'node_modules/**'],
   },
   {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    files: ['**/*.{ts,tsx}'],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'react-hooks/purity': 'off',
-      'react-hooks/refs': 'off',
+    },
+  },
+  {
+    files: ['**/*.d.ts'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
   {
@@ -30,12 +33,6 @@ const config = [
           patterns: ['../../apps/*', '../*/app/*'],
         },
       ],
-    },
-  },
-  {
-    files: ['**/*.astro'],
-    rules: {
-      '@next/next/no-img-element': 'off',
     },
   },
 ]

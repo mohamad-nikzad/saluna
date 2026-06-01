@@ -13,17 +13,7 @@ import {
   useDayAvailability,
 } from './hooks/useDayAvailability'
 import { usePublicDates } from './hooks/usePublicDates'
-
-export type PublicLayoutProps = {
-  slug: string
-  services: Service[]
-  dates: string[]
-  theme: PublicTheme
-  bookingEnabled: boolean
-  salonName: string
-  phone: string | null
-  bio: string | null
-}
+import type { PublicLayoutProps } from './public-layout-props'
 
 export function InlineLayout(props: PublicLayoutProps) {
   const { slug, services, dates, theme, bookingEnabled, salonName, phone, bio } =

@@ -5,28 +5,7 @@ import node from '@astrojs/node'
 import react from '@astrojs/react'
 import sitemap from '@astrojs/sitemap'
 
-/** @returns {Promise<string[]>} */
-async function loadSalonUrls() {
-  const base = process.env.PUBLIC_API_URL
-  const site = process.env.PUBLIC_APP_URL ?? 'http://localhost:3001'
-  if (!base) return []
-  try {
-    const res = await fetch(`${base}/api/v1/public/salons?limit=1000`)
-    if (!res.ok) return []
-    const list = await res.json()
-    if (!Array.isArray(list)) return []
-    return list.map((s) => `${site}/salons/${s.slug}`)
-  } catch {
-    return []
-  }
-}
-
-const salonCustomPages = await loadSalonUrls()
-
-const publicApiUrl =
-  process.env.PUBLIC_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:3002'
+const publicApiUrl = process.env.PUBLIC_API_URL ?? 'http://localhost:3002'
 
 /** @type {string} */
 let apiConnectOrigin
@@ -75,7 +54,6 @@ export default defineConfig({
     service: { entrypoint: 'astro/assets/services/sharp' },
     responsiveStyles: true,
   },
-  prefetch: { prefetchAll: true, defaultStrategy: 'viewport' },
   security: {
     csp: {
       directives: [`connect-src 'self' ${apiConnectOrigin}`],
@@ -118,7 +96,7 @@ export default defineConfig({
         context: 'client',
         access: 'public',
         url: true,
-        default: 'http://localhost:3000',
+        default: 'http://localhost:3002',
       }),
     },
   },

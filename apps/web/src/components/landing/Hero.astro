@@ -1,0 +1,140 @@
+---
+import { displayClass } from '@/content/landing'
+import Icon from './Icon.astro'
+
+interface Props {
+  loginHref: string
+  signupHref: string
+}
+const { loginHref, signupHref } = Astro.props
+---
+
+<style>
+  @keyframes saloora-petal {
+    0% {
+      transform: translate3d(0, -20px, 0) rotate(0deg);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.85;
+    }
+    100% {
+      transform: translate3d(-60px, 540px, 0) rotate(-220deg);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .saloora-petal {
+      animation: saloora-petal 14s linear infinite;
+    }
+  }
+</style>
+
+<section id="top" class="relative isolate overflow-hidden">
+  <img
+    src="/landing/hero-bg.webp"
+    alt=""
+    width="1920"
+    height="1080"
+    fetchpriority="high"
+    decoding="async"
+    class="absolute inset-0 -z-20 hidden h-full w-full object-cover sm:block"
+  />
+  <img
+    src="/landing/hero-bg-mobile.webp"
+    alt=""
+    width="750"
+    height="1334"
+    fetchpriority="high"
+    decoding="async"
+    class="absolute inset-0 -z-20 h-full w-full object-cover sm:hidden"
+  />
+  <div
+    class="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(253,245,248,0)_0%,rgba(253,245,248,0.45)_70%,#fdf5f8_100%)]"
+  >
+  </div>
+
+  <span
+    class="saloora-petal absolute right-[12%] top-20 h-4 w-2.5 rotate-45 rounded-[8px] bg-rose-300/70"
+  ></span>
+  <span
+    class="saloora-petal absolute right-[42%] top-10 h-3 w-2 rotate-12 rounded-[8px] bg-rose-200/80 [animation-delay:3s]"
+  ></span>
+  <span
+    class="saloora-petal absolute right-[68%] top-28 h-4 w-2.5 -rotate-12 rounded-[8px] bg-pink-300/70 [animation-delay:6s]"
+  ></span>
+  <span
+    class="saloora-petal absolute right-[85%] top-16 h-3 w-2 rotate-45 rounded-[8px] bg-white/80 [animation-delay:9s]"
+  ></span>
+
+  <header
+    class="relative mx-auto flex w-full max-w-7xl box-border items-center justify-between px-5 py-5 sm:px-8"
+  >
+    <a href="#top" class="flex items-center gap-2.5" aria-label="سالورا">
+      <img
+        src="/landing/saloora-mark.png"
+        alt=""
+        width="44"
+        height="44"
+        fetchpriority="high"
+        decoding="async"
+        class="h-10 w-10 sm:h-11 sm:w-11"
+      />
+      <span class={`${displayClass} text-2xl leading-none text-[#7a2a40] sm:text-3xl`}>
+        سالورا
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-7 text-sm text-[#6b4955] md:flex">
+      <a href="#features" class="transition hover:text-[#7a2a40]"> امکانات </a>
+      <a href="#preview" class="transition hover:text-[#7a2a40]"> داشبورد </a>
+      <a href="#testimonials" class="transition hover:text-[#7a2a40]"> نظرات </a>
+    </nav>
+
+    <a
+      href={loginHref}
+      class="rounded-md border border-[#d68aa0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7a2a40] backdrop-blur transition hover:bg-[#7a2a40] hover:text-white"
+    >
+      ورود
+    </a>
+  </header>
+
+  <div
+    class="relative mx-auto flex w-full max-w-4xl box-border flex-col items-center px-5 pb-24 pt-12 text-center sm:px-8 sm:pb-32 sm:pt-20"
+  >
+    <p
+      class="mb-6 inline-flex items-center gap-2 rounded-full border border-[#e9b4c2] bg-white/70 px-4 py-1.5 text-xs font-bold text-[#7a2a40] backdrop-blur sm:text-sm"
+    >
+      <Icon name="sparkles" class="h-4 w-4" />
+      مدیریت هوشمند سالن زیبایی
+    </p>
+
+    <h1
+      class={`${displayClass} text-4xl leading-[1.25] text-[#4a1e2e] sm:text-6xl lg:text-7xl lg:leading-[1.15]`}
+    >
+      ساده، حرفه‌ای،
+      <br />
+      <span class="text-[#9b2f4a]">سالورا</span>
+    </h1>
+
+    <p class="mt-6 max-w-2xl text-base leading-8 text-[#6b4955] sm:mt-8 sm:text-lg">
+      با سالورا تقویم نوبت‌ها، مشتریان، پرسنل و خدمات سالن را در یک مسیر مرتب نگه
+      می‌دارید و روز کاری را با تمرکز بیشتری جلو می‌برید.
+    </p>
+
+    <div class="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+      <a
+        href={signupHref}
+        class="rounded-md bg-[#c3425b] px-7 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.28)] transition hover:bg-[#a82b46]"
+      >
+        شروع رایگان
+      </a>
+      <a
+        href="#features"
+        class="rounded-md border border-[#d68aa0] bg-white/70 px-7 py-3 text-center text-base font-bold text-[#7a2a40] backdrop-blur transition hover:bg-white"
+      >
+        مشاهده امکانات
+      </a>
+    </div>
+  </div>
+</section>

@@ -49,6 +49,10 @@ const islandProps = {
   phone: view.salon.phone,
   bio: view.publicSettings.bioText,
 }
+
+const layoutComponents = { inline: InlineLayout, agenda: AgendaLayout } as const
+const LayoutComponent =
+  layoutComponents[layoutPick.id as keyof typeof layoutComponents] ?? AgendaLayout
 ---
 
 <SalonLayout
@@ -59,11 +63,5 @@ const islandProps = {
   jsonLd={jsonLd}
 >
   <SalonShell view={view} />
-  {
-    layoutPick.id === 'inline' ? (
-      <InlineLayout client:load {...islandProps} />
-    ) : (
-      <AgendaLayout client:load {...islandProps} />
-    )
-  }
+  <LayoutComponent client:load {...islandProps} />
 </SalonLayout>

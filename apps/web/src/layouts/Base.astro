@@ -1,7 +1,6 @@
 ---
 import '../styles/globals.css'
 import { Font } from 'astro:assets'
-import { ClientRouter } from 'astro:transitions'
 import Head from '../components/Head.astro'
 
 interface Props {
@@ -31,7 +30,6 @@ const { title, description, canonical, ogImage, jsonLd, preloadLalezar = false }
       ogImage={ogImage}
       jsonLd={jsonLd}
     />
-    <ClientRouter />
   </head>
   <body class="font-sans antialiased">
     <slot />

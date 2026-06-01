@@ -14,7 +14,7 @@ import {
   useDayAvailability,
 } from './hooks/useDayAvailability'
 import { toPublicDates, type PublicDate } from './hooks/usePublicDates'
-import type { PublicLayoutProps } from './InlineLayout'
+import type { PublicLayoutProps } from './public-layout-props'
 
 const ALL = 'همه'
 

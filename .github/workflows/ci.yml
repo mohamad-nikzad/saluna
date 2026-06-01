@@ -35,5 +35,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Build (web)
+        run: pnpm --filter @repo/web build
+        env:
+          PUBLIC_APP_URL: http://localhost:3001
+          PUBLIC_API_URL: http://localhost:3002
+
       - name: Boundaries (web)
         run: pnpm --filter @repo/web boundaries

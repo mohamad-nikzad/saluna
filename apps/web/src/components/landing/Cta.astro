@@ -1,0 +1,50 @@
+---
+import { displayClass } from '@/content/landing'
+
+interface Props {
+  loginHref: string
+  signupHref: string
+}
+const { loginHref, signupHref } = Astro.props
+---
+
+<section id="start" class="relative px-5 pb-24 sm:px-8">
+  <div class="relative mx-auto max-w-7xl overflow-hidden rounded-3xl">
+    <img
+      src="/landing/cta-bg.webp"
+      alt=""
+      width="1920"
+      height="1080"
+      decoding="async"
+      class="absolute inset-0 -z-10 h-full w-full object-cover"
+    />
+    <div
+      class="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.55)_0%,rgba(255,235,242,0.45)_100%)]"
+    >
+    </div>
+
+    <div class="mx-auto max-w-3xl px-6 py-16 text-center sm:px-10 sm:py-20">
+      <h2 class={`${displayClass} text-3xl leading-tight text-[#4a1e2e] sm:text-5xl`}>
+        آماده‌ای سالن خود را آنلاین کنی؟
+      </h2>
+      <p class="mt-5 text-base leading-8 text-[#6b4955] sm:text-lg">
+        همین حالا حساب مدیر بساز و اولین نوبت سالن را در سالورا ثبت کن.
+      </p>
+
+      <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <a
+          href={signupHref}
+          class="w-full rounded-md bg-[#c3425b] px-8 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.32)] transition hover:bg-[#a82b46] sm:w-auto"
+        >
+          ساخت حساب رایگان
+        </a>
+        <a
+          href={loginHref}
+          class="w-full rounded-md border border-[#d68aa0] bg-white/80 px-8 py-3 text-center text-base font-bold text-[#7a2a40] backdrop-blur transition hover:bg-white sm:w-auto"
+        >
+          ورود به حساب
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

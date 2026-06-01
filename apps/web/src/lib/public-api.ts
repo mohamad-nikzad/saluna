@@ -58,6 +58,9 @@ export type AppointmentRequestStatusView = {
 
 type ApiError = { error: string }
 
+const DEFAULT_ERROR_MESSAGE = 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'
+const EMPTY_SUCCESS_MESSAGE = 'پاسخی از سرور دریافت نشد.'
+
 export class PublicApiError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -66,19 +69,43 @@ export class PublicApiError extends Error {
   }
 }
 
+function isApiError(value: unknown): value is ApiError {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'error' in value &&
+    typeof value.error === 'string'
+  )
+}
+
 function apiUrl(path: string): string {
   return new URL(path, PUBLIC_API_URL).toString()
 }
 
 async function parseJson<T>(res: Response): Promise<T> {
   const text = await res.text()
-  const body = text ? (JSON.parse(text) as T | ApiError) : ({} as T)
+
   if (!res.ok) {
-    const message =
-      (body as ApiError)?.error ?? 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'
-    throw new PublicApiError(message, res.status)
+    if (!text) {
+      throw new PublicApiError(DEFAULT_ERROR_MESSAGE, res.status)
+    }
+    try {
+      const body: unknown = JSON.parse(text)
+      throw new PublicApiError(
+        isApiError(body) ? body.error : DEFAULT_ERROR_MESSAGE,
+        res.status,
+      )
+    } catch (error) {
+      if (error instanceof PublicApiError) throw error
+      throw new PublicApiError(DEFAULT_ERROR_MESSAGE, res.status)
+    }
   }
-  return body as T
+
+  if (!text) {
+    throw new PublicApiError(EMPTY_SUCCESS_MESSAGE, res.status)
+  }
+
+  return JSON.parse(text) as T
 }
 
 export async function fetchPublicSalon(
