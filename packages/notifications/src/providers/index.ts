@@ -17,3 +17,8 @@ export {
   type TelegramConfig,
 } from './telegram'
 export { registerMessagingProvider } from './registry'
+
+export {
+  REPLY_KEYBOARD_LABELS,
+  persistentReplyKeyboard,
+} from './telegram-keyboard'

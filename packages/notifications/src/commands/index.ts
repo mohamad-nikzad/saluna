@@ -76,3 +76,12 @@ export {
   type CallbackInput,
   type CallbackOutcome,
 } from './approval'
+
+export {
+  handleHelpCommand,
+  handlePendingCommand,
+  handleTodayCommand,
+  type BotTextInput,
+  type BotTextMessage,
+  type BotTextResult,
+} from './bot-text'

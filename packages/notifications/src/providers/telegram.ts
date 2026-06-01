@@ -1,3 +1,11 @@
+import { Api } from 'grammy'
+import type {
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+  ReplyKeyboardMarkup,
+  ReplyKeyboardRemove,
+} from 'grammy/types'
+
 import type {
   MessagingButton,
   MessagingDeliveryResult,
@@ -11,20 +19,31 @@ export type TelegramConfig = {
   webhookSecret: string
 }
 
-type InlineKeyboardButton = { text: string } & ({ url: string } | { callback_data: string })
-type InlineKeyboard = { inline_keyboard: Array<Array<InlineKeyboardButton>> }
-
 let resolveConfig: () => TelegramConfig | null = () => null
+let cachedApi: { token: string; api: Api } | null = null
 
 export function initTelegramMessaging(getConfig: () => TelegramConfig | null): void {
   resolveConfig = getConfig
+  cachedApi = null
 }
 
 function getTelegramConfig(): TelegramConfig | null {
   return resolveConfig()
 }
 
-function toInlineKeyboard(rows: MessagingButton[][] | undefined): InlineKeyboard | undefined {
+function getApi(config: TelegramConfig): Api {
+  if (cachedApi && cachedApi.token === config.botToken) return cachedApi.api
+  // Route through global fetch so tests can mock it and Node's modern fetch is preferred.
+  const api = new Api(config.botToken, {
+    fetch: ((url, init) => globalThis.fetch(url as RequestInfo, init)) as typeof fetch,
+  })
+  cachedApi = { token: config.botToken, api }
+  return api
+}
+
+function toInlineKeyboard(
+  rows: MessagingButton[][] | undefined
+): InlineKeyboardMarkup | undefined {
   if (!rows || rows.length === 0) return undefined
   return {
     inline_keyboard: rows.map((row) =>
@@ -37,64 +56,39 @@ function toInlineKeyboard(rows: MessagingButton[][] | undefined): InlineKeyboard
   }
 }
 
-async function postToTelegram(
-  config: TelegramConfig,
-  method: string,
-  payload: Record<string, unknown>
-): Promise<{ ok: boolean; status: number; body: unknown; text: string }> {
-  const response = await fetch(`https://api.telegram.org/bot${config.botToken}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  const text = await response.text()
-  let body: unknown = null
-  try {
-    body = text ? JSON.parse(text) : null
-  } catch {
-    body = null
+function describeError(err: unknown): string {
+  if (err instanceof Error) {
+    const anyErr = err as Error & { description?: string; payload?: unknown }
+    if (anyErr.description) return anyErr.description
+    return err.message
   }
-  return { ok: response.ok, status: response.status, body, text }
+  return 'telegram_send_error'
 }
 
 export async function sendTelegramMessage(input: {
   chatId: string
   text: string
   buttons?: MessagingButton[][]
+  replyMarkup?: ReplyKeyboardMarkup | ReplyKeyboardRemove
 }): Promise<MessagingDeliveryResult> {
   const config = getTelegramConfig()
   if (!config) {
     return { status: 'skipped', error: 'telegram_not_configured' }
   }
-  const payload: Record<string, unknown> = {
-    chat_id: input.chatId,
-    text: input.text,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-  }
-  const keyboard = toInlineKeyboard(input.buttons)
-  if (keyboard) payload.reply_markup = keyboard
-
+  const api = getApi(config)
+  const inline = toInlineKeyboard(input.buttons)
+  const reply_markup = inline ?? input.replyMarkup
   try {
-    const res = await postToTelegram(config, 'sendMessage', payload)
-    if (!res.ok) {
-      console.error('[messaging.send.failed]', {
-        provider: 'telegram',
-        status: res.status,
-        body: res.text.slice(0, 1024),
-      })
-      return {
-        status: 'failed',
-        error: res.text.slice(0, 1024) || `telegram_http_${res.status}`,
-      }
-    }
-    const messageId = extractMessageId(res.body)
-    return { status: 'sent', providerMessageId: messageId }
+    const message = await api.sendMessage(input.chatId, input.text, {
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+      ...(reply_markup ? { reply_markup } : {}),
+    })
+    return { status: 'sent', providerMessageId: String(message.message_id) }
   } catch (err) {
-    return {
-      status: 'failed',
-      error: err instanceof Error ? err.message : 'telegram_send_error',
-    }
+    const error = describeError(err).slice(0, 1024)
+    console.error('[messaging.send.failed]', { provider: 'telegram', error })
+    return { status: 'failed', error }
   }
 }
 
@@ -106,24 +100,22 @@ export async function editTelegramMessageText(input: {
 }): Promise<void> {
   const config = getTelegramConfig()
   if (!config) return
-  const payload: Record<string, unknown> = {
-    chat_id: input.chatId,
-    message_id: input.messageId,
-    text: input.text,
-    parse_mode: 'HTML',
-  }
-  if (input.buttons && input.buttons.length > 0) {
-    const keyboard = toInlineKeyboard(input.buttons)
-    if (keyboard) payload.reply_markup = keyboard
-  } else if (input.buttons === null) {
-    payload.reply_markup = { inline_keyboard: [] }
-  }
-  const res = await postToTelegram(config, 'editMessageText', payload).catch(() => null)
-  if (res && !res.ok) {
+  const api = getApi(config)
+  const reply_markup =
+    input.buttons && input.buttons.length > 0
+      ? toInlineKeyboard(input.buttons)
+      : input.buttons === null
+        ? { inline_keyboard: [] as InlineKeyboardButton[][] }
+        : undefined
+  try {
+    await api.editMessageText(input.chatId, input.messageId, input.text, {
+      parse_mode: 'HTML',
+      ...(reply_markup ? { reply_markup } : {}),
+    })
+  } catch (err) {
     console.error('[messaging.edit.failed]', {
       provider: 'telegram',
-      status: res.status,
-      body: res.text.slice(0, 1024),
+      error: describeError(err).slice(0, 1024),
     })
   }
 }
@@ -134,17 +126,12 @@ export async function answerTelegramCallback(input: {
 }): Promise<void> {
   const config = getTelegramConfig()
   if (!config) return
-  const payload: Record<string, unknown> = { callback_query_id: input.callbackQueryId }
-  if (input.text) payload.text = input.text
-  await postToTelegram(config, 'answerCallbackQuery', payload).catch(() => {})
-}
-
-function extractMessageId(body: unknown): string | null {
-  if (!body || typeof body !== 'object') return null
-  const result = (body as { result?: unknown }).result
-  if (!result || typeof result !== 'object') return null
-  const id = (result as { message_id?: unknown }).message_id
-  return typeof id === 'number' ? String(id) : null
+  const api = getApi(config)
+  try {
+    await api.answerCallbackQuery(input.callbackQueryId, input.text ? { text: input.text } : {})
+  } catch {
+    // best-effort
+  }
 }
 
 export function createTelegramProvider(
@@ -165,42 +152,26 @@ export function createTelegramProvider(
       return `https://t.me/${username}?start=${token}`
     },
     async send(input: MessagingSendInput): Promise<MessagingDeliveryResult> {
-      const text = input.title
-        ? `<b>${escapeHtml(input.title)}</b>\n${escapeHtml(input.body)}`
-        : escapeHtml(input.body)
       const config = getConfig()
       if (!config) {
         return { status: 'skipped', error: 'telegram_not_configured' }
       }
-      const payload: Record<string, unknown> = {
-        chat_id: input.externalId,
-        text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-      }
-      const keyboard = toInlineKeyboard(input.buttons)
-      if (keyboard) payload.reply_markup = keyboard
-
+      const text = input.title
+        ? `<b>${escapeHtml(input.title)}</b>\n${escapeHtml(input.body)}`
+        : escapeHtml(input.body)
+      const api = getApi(config)
+      const inline = toInlineKeyboard(input.buttons)
       try {
-        const res = await postToTelegram(config, 'sendMessage', payload)
-        if (!res.ok) {
-          console.error('[messaging.send.failed]', {
-            provider: 'telegram',
-            status: res.status,
-            body: res.text.slice(0, 1024),
-          })
-          return {
-            status: 'failed',
-            error: res.text.slice(0, 1024) || `telegram_http_${res.status}`,
-          }
-        }
-        const messageId = extractMessageId(res.body)
-        return { status: 'sent', providerMessageId: messageId }
+        const message = await api.sendMessage(input.externalId, text, {
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+          ...(inline ? { reply_markup: inline } : {}),
+        })
+        return { status: 'sent', providerMessageId: String(message.message_id) }
       } catch (err) {
-        return {
-          status: 'failed',
-          error: err instanceof Error ? err.message : 'telegram_send_error',
-        }
+        const error = describeError(err).slice(0, 1024)
+        console.error('[messaging.send.failed]', { provider: 'telegram', error })
+        return { status: 'failed', error }
       }
     },
   }

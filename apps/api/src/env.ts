@@ -39,6 +39,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_USERNAME: z.string().optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
+  MESSAGING_PWA_BASE_URL: z.string().url().optional(),
 })
   .superRefine((env, ctx) => {
     if (!env.TELEGRAM_ENABLED) return

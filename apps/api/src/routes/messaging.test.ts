@@ -14,10 +14,23 @@ vi.mock('@repo/notifications', () => ({
     handleUnlink: vi.fn(),
     handleApprovalCallback: vi.fn(),
     handleRejectionCallback: vi.fn(),
+    handlePendingCommand: vi.fn(),
+    handleTodayCommand: vi.fn(),
+    handleHelpCommand: vi.fn(),
   },
   sendTelegramMessage: vi.fn(),
   answerTelegramCallback: vi.fn(),
   editTelegramMessageText: vi.fn(),
+  persistentReplyKeyboard: vi.fn(() => ({
+    keyboard: [[{ text: '📋' }]],
+    is_persistent: true,
+    resize_keyboard: true,
+  })),
+  REPLY_KEYBOARD_LABELS: {
+    pending: '📋 درخواست‌های در انتظار',
+    today: '📅 امروز',
+    notificationSettings: '⚙️ تنظیمات اعلان‌ها',
+  },
 }))
 
 vi.mock('@repo/database/messaging', () => ({
@@ -269,10 +282,13 @@ describe('messaging telegram webhook', () => {
       externalId: '42',
       displayName: '@mo',
     })
-    expect(notif.sendTelegramMessage).toHaveBeenCalledWith({
-      chatId: '42',
-      text: 'متصل شد',
-    })
+    expect(notif.sendTelegramMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chatId: '42',
+        text: 'متصل شد',
+        replyMarkup: expect.objectContaining({ is_persistent: true }),
+      })
+    )
   })
 
   it('routes approve callback to handleApprovalCallback and edits the message', async () => {
@@ -384,5 +400,88 @@ describe('messaging telegram webhook', () => {
     expect(notif.messagingCommands.handleRejectionCallback).not.toHaveBeenCalled()
     expect(notif.answerTelegramCallback).toHaveBeenCalledWith({ callbackQueryId: 'cb-3' })
     expect(notif.editTelegramMessageText).not.toHaveBeenCalled()
+  })
+
+  async function postMessage(text: string) {
+    vi.mocked(notif.getTelegramConfig).mockReturnValue({
+      botToken: 'token',
+      botUsername: 'TestBot',
+      webhookSecret: 'real-secret',
+    })
+    return app.request('/api/v1/messaging/telegram/webhook', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-telegram-bot-api-secret-token': 'real-secret',
+      },
+      body: JSON.stringify({
+        update_id: 99,
+        message: {
+          message_id: 1,
+          from: { id: 42, first_name: 'Mo' },
+          chat: { id: 42, type: 'private' },
+          text,
+        },
+      }),
+    })
+  }
+
+  it('routes /pending text to handlePendingCommand', async () => {
+    vi.mocked(notif.messagingCommands.handlePendingCommand).mockResolvedValue({
+      messages: [{ messageHtml: '✅ ندارد' }],
+    } as never)
+    const res = await postMessage('/pending')
+    expect(res.status).toBe(200)
+    expect(notif.messagingCommands.handlePendingCommand).toHaveBeenCalledWith({
+      provider: 'telegram',
+      externalId: '42',
+    })
+    expect(notif.sendTelegramMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ chatId: '42', text: '✅ ندارد' })
+    )
+  })
+
+  it('routes reply-keyboard "📋 درخواست‌های در انتظار" to handlePendingCommand', async () => {
+    vi.mocked(notif.messagingCommands.handlePendingCommand).mockResolvedValue({
+      messages: [{ messageHtml: '✅ ندارد' }],
+    } as never)
+    const res = await postMessage('📋 درخواست‌های در انتظار')
+    expect(res.status).toBe(200)
+    expect(notif.messagingCommands.handlePendingCommand).toHaveBeenCalled()
+  })
+
+  it('routes /today text to handleTodayCommand', async () => {
+    vi.mocked(notif.messagingCommands.handleTodayCommand).mockResolvedValue({
+      messages: [{ messageHtml: '📅 امروز' }],
+    } as never)
+    const res = await postMessage('/today')
+    expect(res.status).toBe(200)
+    expect(notif.messagingCommands.handleTodayCommand).toHaveBeenCalled()
+  })
+
+  it('routes /unlink to handleUnlink', async () => {
+    vi.mocked(notif.messagingCommands.handleUnlink).mockResolvedValue({
+      status: 'ok',
+      message: 'قطع شد',
+    } as never)
+    const res = await postMessage('/unlink')
+    expect(res.status).toBe(200)
+    expect(notif.messagingCommands.handleUnlink).toHaveBeenCalledWith({
+      provider: 'telegram',
+      externalId: '42',
+    })
+    expect(notif.sendTelegramMessage).toHaveBeenCalledWith({
+      chatId: '42',
+      text: 'قطع شد',
+    })
+  })
+
+  it('routes /help to handleHelpCommand', async () => {
+    vi.mocked(notif.messagingCommands.handleHelpCommand).mockReturnValue({
+      messages: [{ messageHtml: 'راهنما' }],
+    } as never)
+    const res = await postMessage('/help')
+    expect(res.status).toBe(200)
+    expect(notif.messagingCommands.handleHelpCommand).toHaveBeenCalled()
   })
 })

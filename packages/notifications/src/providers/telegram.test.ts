@@ -55,7 +55,11 @@ describe('createTelegramProvider().send', () => {
   })
 
   it('returns failed on HTTP error', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('bad', { status: 400 }))
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: false, error_code: 400, description: 'bad' }), {
+        status: 400,
+      })
+    )
     const provider = createTelegramProvider(() => testConfig)
     const result = await provider.send({
       notificationId: 'n1',
