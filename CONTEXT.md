@@ -65,6 +65,15 @@ The appointment-owned copy of a selected `ServiceAddon`: name, duration delta, p
 **AppointmentTotalsSnapshot**:
 The appointment-owned total duration and price after applying the `BookedServiceSnapshot` and any `BookedAddonSnapshot`s. Authoritative for revenue and retention spend.
 
+### Salon
+
+**Salon Working Days**:
+Salon-level open-day mask — which weekdays the salon is open. DB: `business_settings.working_days`. Coarse gate above per-staff `staff_schedules`.
+
+**Salon Presence**:
+Public contact surface: address, map links, and social links. DB: typed nullable columns on `salon_profile`. Persian UI: `حضور آنلاین`.
+_Avoid_: contact info, social block
+
 ### Sync
 
 **Offline Projection**:

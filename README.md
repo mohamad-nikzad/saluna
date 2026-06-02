@@ -47,6 +47,19 @@ pnpm dev:web          # marketing + booking (Astro) on port 3001
 pnpm dev:web-next     # legacy Next public site on port 3001
 pnpm dev:web-stack    # Astro + API with .env.database.local
 pnpm smoke:web        # smoke checks (set BASE_URL, optional SLUG)
+
+### Local Postgres (Docker)
+
+For fully offline work, copy `.env.database.local` (see repo; points at `127.0.0.1:5432/salon`), start Postgres, and apply checked-in migrations:
+
+```bash
+docker compose up -d postgres
+pnpm db:prepare:local   # starts Postgres if needed, reconciles push drift, migrates
+# or, if Postgres is already running:
+pnpm db:reconcile:local && pnpm db:migrate:local
+```
+
+Use `pnpm db:migrate:local` (not bare `pnpm db:migrate`) so Drizzle targets the local database file, not Neon dev.
 pnpm db:push:main     # schema -> production (use with care)
 ```
 
