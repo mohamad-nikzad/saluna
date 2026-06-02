@@ -84,22 +84,22 @@ import {
   parseLocalizedInt,
   toPersianDigits,
 } from '@repo/salon-core/persian-digits'
+import {
+  STATUS_CHANGE_SEGMENTS,
+  appointmentEditFormDefaults,
+  buildAppointmentDetailEditViewModel,
+  clientsForAppointmentEdit,
+  formatTomans,
+  isHistoricalAddon,
+  statusChangeFeedbackMessage,
+  tomansFormatter,
+} from '#/lib/appointment-detail-view-model'
 
 type StatusActionState = {
   status: AppointmentWithDetails['status']
   mode: 'saving' | 'saved' | 'queued'
   message: string
 } | null
-
-function formatTomans(price: number) {
-  return `${new Intl.NumberFormat('fa-IR').format(price)} تومان`
-}
-
-const tomansFormatter = new Intl.NumberFormat('fa-IR')
-
-const STATUS_SEGMENTS = (
-  ['scheduled', 'confirmed', 'completed', 'cancelled'] as const
-).map((key) => ({ key, label: APPOINTMENT_STATUS[key].label }))
 
 interface AppointmentDetailDrawerProps {
   appointment: AppointmentWithDetails | null
@@ -202,53 +202,40 @@ export function AppointmentDetailDrawer({
   const completeClientName = watchComplete('name')
   const completeClientPhone = watchComplete('phone')
 
-  const staffRoleOnly = useMemo(
-    () => staff.filter((m) => m.role === 'staff'),
-    [staff],
-  )
   const isEditingCurrentAppointment = Boolean(
     appointment && isEditing && editingAppointmentId === appointment.id,
   )
   const { data: availableAddons = [], isPending: addonsLoading } =
     useServiceAddons(serviceId, isEditingCurrentAppointment && !!serviceId)
-  const selectedEditService = useMemo(
-    () => services.find((service) => service.id === serviceId),
-    [serviceId, services],
-  )
-  const historicalAddonOptions = useMemo<ServiceAddon[]>(
+  const editViewModel = useMemo(
     () =>
-      (appointment?.bookedAddons ?? []).map((addon) => ({
-        id: addon.serviceAddonId,
-        salonId: '',
-        name: addon.bookedAddonName,
-        priceDelta: addon.bookedAddonPriceDelta,
-        durationDelta: addon.bookedAddonDurationDelta,
-        active: false,
-        sortOrder: addon.sortOrder,
-        scopes: [],
-        createdAt: addon.createdAt,
-        updatedAt: addon.createdAt,
-      })),
-    [appointment?.bookedAddons],
+      buildAppointmentDetailEditViewModel({
+        staff,
+        services,
+        serviceId,
+        availableAddons,
+        appointment,
+        addonIds,
+        durationMinutes,
+      }),
+    [
+      staff,
+      services,
+      serviceId,
+      availableAddons,
+      appointment,
+      addonIds,
+      durationMinutes,
+    ],
   )
-  const addonOptions = useMemo(() => {
-    const byId = new Map<string, ServiceAddon>()
-    for (const addon of historicalAddonOptions) byId.set(addon.id, addon)
-    for (const addon of availableAddons) byId.set(addon.id, addon)
-    return Array.from(byId.values()).sort(
-      (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'fa'),
-    )
-  }, [availableAddons, historicalAddonOptions])
-  const selectedAddons = useMemo(
-    () => addonOptions.filter((addon) => addonIds.includes(addon.id)),
-    [addonIds, addonOptions],
-  )
-  const previewDuration =
-    (selectedEditService?.duration ?? durationMinutes) +
-    selectedAddons.reduce((sum, addon) => sum + addon.durationDelta, 0)
-  const previewPrice =
-    (selectedEditService?.price ?? appointment?.bookedServicePrice ?? 0) +
-    selectedAddons.reduce((sum, addon) => sum + addon.priceDelta, 0)
+  const {
+    staffRoleOnly,
+    selectedEditService,
+    addonOptions,
+    previewDuration,
+    previewPrice,
+    editableServices,
+  } = editViewModel
 
   useEffect(() => {
     setLocalClients(clients)
@@ -319,34 +306,8 @@ export function AppointmentDetailDrawer({
 
   const startEditing = () => {
     if (!appointment || readOnly) return
-    setLocalClients(
-      appointment.client.isPlaceholder &&
-        !clients.some((client) => client.id === appointment.client.id)
-        ? [appointment.client, ...clients]
-        : clients,
-    )
-    resetEditForm({
-      useTemporaryClient: appointment.client.isPlaceholder,
-      temporaryClientName: appointment.client.isPlaceholder
-        ? appointment.client.name
-        : '',
-      temporaryClientNotes: appointment.client.isPlaceholder
-        ? (appointment.client.notes ?? '')
-        : '',
-      clientId: appointment.client.isPlaceholder ? '' : appointment.clientId,
-      staffId: appointment.staffId,
-      serviceId: appointment.serviceId,
-      date: appointment.date,
-      startTime: appointment.startTime,
-      endTime: appointment.endTime,
-      durationMinutes: durationMinutesFromRange(
-        appointment.startTime,
-        appointment.endTime,
-      ),
-      notes: appointment.notes || '',
-      addonIds:
-        appointment.bookedAddons?.map((addon) => addon.serviceAddonId) ?? [],
-    })
+    setLocalClients(clientsForAppointmentEdit(appointment, clients))
+    resetEditForm(appointmentEditFormDefaults(appointment))
     setStatus(appointment.status)
     setIsEditing(true)
     setEditingAppointmentId(appointment.id)
@@ -594,14 +555,11 @@ export function AppointmentDetailDrawer({
       setStatusAction({
         status: nextStatus,
         mode: dataClient && !isOnline ? 'queued' : 'saved',
-        message:
-          result.type === 'deleted'
-            ? dataClient && !isOnline
-              ? 'لغو رزرو موقت آفلاین ثبت شد و بعدا همگام می‌شود.'
-              : 'رزرو موقت لغو و حذف شد.'
-            : dataClient && !isOnline
-              ? 'وضعیت نوبت آفلاین ثبت شد و بعدا همگام می‌شود.'
-              : 'وضعیت نوبت ثبت شد.',
+        message: statusChangeFeedbackMessage({
+          hasDataClient: Boolean(dataClient),
+          isOnline,
+          changeType: result.type,
+        }),
       })
       onSuccess(
         result.type === 'deleted'
@@ -615,10 +573,6 @@ export function AppointmentDetailDrawer({
   }
 
   if (!appointment) return null
-
-  const editableServices = services.filter(
-    (service) => service.active || service.id === serviceId,
-  )
 
   return (
     <Drawer open={!!appointment} onOpenChange={handleOpenChange}>
@@ -815,9 +769,7 @@ export function AppointmentDetailDrawer({
                             <span className="min-w-0 flex-1">
                               <span className="block text-sm font-medium">
                                 {addon.name}
-                                {!availableAddons.some(
-                                  (item) => item.id === addon.id,
-                                ) ? (
+                                {isHistoricalAddon(addon.id, availableAddons) ? (
                                   <span className="mr-2 text-xs font-normal text-muted-foreground">
                                     تاریخی
                                   </span>
@@ -1089,7 +1041,7 @@ export function AppointmentDetailDrawer({
               <div>
                 <div className="mb-2 text-xs text-muted-foreground">وضعیت</div>
                 <div className="flex flex-wrap gap-2">
-                  {STATUS_SEGMENTS.map(({ key, label }) => {
+                  {STATUS_CHANGE_SEGMENTS.map(({ key, label }) => {
                     const active = appointment.status === key
                     const saving =
                       statusAction?.mode === 'saving' &&

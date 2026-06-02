@@ -19,12 +19,7 @@ import { Skeleton } from '@repo/ui/skeleton'
 import { SakuraMark } from '@repo/ui/sakura-mark'
 import { cn } from '@repo/ui/utils'
 import { durationMinutesFromRange } from '@repo/salon-core/appointment-time'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
-import {
-  JALALI_WEEKDAYS_SHORT,
-  formatJalaliFullDate,
-  parseGregorianToJalali,
-} from '@repo/salon-core/jalali'
+import { formatJalaliFullDate } from '@repo/salon-core/jalali'
 import {
   formatPersianTime,
   toPersianDigits,
@@ -38,15 +33,27 @@ import type {
   AppointmentWithDetails,
   Client,
   Service,
-  TodayAttentionItem,
   TodayData,
   User,
 } from '@repo/salon-core/types'
 
 import { api } from '#/lib/api-client'
 import { useAuth } from '#/lib/auth'
-import { getNextOpenSlot } from '#/lib/next-open-slot'
 import { useNetworkStatus } from '#/lib/network-status'
+import {
+  ACTIVE_STATUSES,
+  bookedServiceWithAddonCount,
+  buildManagerTodayViewModel,
+  buildStaffTodayViewModel,
+  buildWeekStrip,
+  DAY_WORK_MINUTES,
+  firstNameOf,
+  getInitials,
+  greetingFa,
+  staffCssVar,
+  summarizeNextOpenSlot,
+  type GroupedAttentionItem,
+} from '#/lib/today-view-model'
 import { useOfflineSnapshot } from '#/lib/offline-snapshot'
 import {
   useBumpOfflineData,
@@ -71,138 +78,12 @@ export const Route = createFileRoute('/_authed/today')({
   component: TodayPage,
 })
 
-type GroupedAttentionItem = {
-  id: string
-  title: string
-  detail: string
-  clientId?: string
-  priority: number
-  labels: string[]
-}
-
-const ACTIVE_STATUSES = new Set<AppointmentWithDetails['status']>([
-  'scheduled',
-  'confirmed',
-])
-const DAY_WORK_MINUTES = 9 * 60
-
 type StatusActionFeedback = {
   appointmentId: string
   status: AppointmentWithDetails['status']
   mode: 'saving' | 'saved' | 'queued' | 'error'
   message: string
 } | null
-
-const ATTENTION_LABELS: Record<TodayAttentionItem['type'], string> = {
-  soon: 'نزدیک',
-  overdue: 'ثبت نتیجه',
-  'no-show-risk': 'بدقول',
-  'first-time': 'اولین مراجعه',
-  vip: 'VIP',
-  'incomplete-client': 'اطلاعات ناقص',
-}
-
-function greetingFa() {
-  const hour = Number(salonCurrentHm().slice(0, 2))
-  if (hour < 5) return 'شب بخیر'
-  if (hour < 12) return 'صبح بخیر'
-  if (hour < 17) return 'وقت بخیر'
-  if (hour < 20) return 'عصر بخیر'
-  return 'شب بخیر'
-}
-
-function firstNameOf(name: string) {
-  return name.trim().split(/\s+/)[0] || name
-}
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '؟'
-  if (parts.length === 1) return parts[0].slice(0, 2)
-  return `${parts[0][0]}${parts[1][0]}`
-}
-
-function staffCssVar(color?: string | null) {
-  return `var(--calendar-${normalizeCalendarColorId(color)})`
-}
-
-function buildWeekStrip(dateYmd: string) {
-  const base = new Date(`${dateYmd}T00:00:00`)
-  const daysSinceSat = (base.getDay() + 1) % 7
-  const start = new Date(base)
-  start.setDate(base.getDate() - daysSinceSat)
-  return Array.from({ length: 7 }, (_, i) => {
-    const cur = new Date(start)
-    cur.setDate(start.getDate() + i)
-    const ymd = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`
-    return {
-      ymd,
-      weekday: JALALI_WEEKDAYS_SHORT[i],
-      dayNum: toPersianDigits(parseGregorianToJalali(ymd).jd),
-    }
-  })
-}
-
-function sortAppointments(list: AppointmentWithDetails[]) {
-  return [...list].sort((a, b) =>
-    `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`),
-  )
-}
-
-function bookedServiceWithAddonCount(appointment: AppointmentWithDetails) {
-  if (appointment.bookedAddonCount <= 0) return appointment.bookedServiceName
-  return `${appointment.bookedServiceName} +${toPersianDigits(appointment.bookedAddonCount)}`
-}
-
-function summarizeNextOpenSlot(slot: ReturnType<typeof getNextOpenSlot>) {
-  if (!slot) {
-    return 'بازه آزاد دیگری ندارد'
-  }
-
-  const primary = slot.startsNow
-    ? `از الان تا ${formatPersianTime(slot.endTime)}`
-    : `${formatPersianTime(slot.startTime)} تا ${formatPersianTime(slot.endTime)}`
-
-  if (slot.additionalRanges === 0) {
-    return primary
-  }
-
-  return `${primary} · ${toPersianDigits(slot.additionalRanges)} بازه دیگر`
-}
-
-function groupAttentionItems(items: TodayAttentionItem[]) {
-  const grouped = new Map<string, GroupedAttentionItem>()
-
-  for (const item of items) {
-    const key = item.appointmentId ?? item.clientId ?? item.id
-    const label = ATTENTION_LABELS[item.type]
-    const existing = grouped.get(key)
-
-    if (!existing) {
-      grouped.set(key, {
-        id: key,
-        title: item.title,
-        detail: item.detail,
-        clientId: item.clientId,
-        priority: item.priority,
-        labels: [label],
-      })
-      continue
-    }
-
-    if (!existing.labels.includes(label)) {
-      existing.labels.push(label)
-    }
-
-    if (item.priority < existing.priority) {
-      existing.priority = item.priority
-      existing.title = item.title
-      existing.detail = item.detail
-    }
-  }
-
-  return [...grouped.values()].sort((a, b) => a.priority - b.priority)
-}
 
 function HeaderGreeting({
   name,
@@ -614,49 +495,19 @@ function ManagerTodayView({
   const availabilityReady = createReady && isOnline
   const createDisabled = (!isOnline && !dataClient) || !createReady
 
-  const queue = useMemo(() => {
-    if (!data) return []
-    return sortAppointments(
-      data.appointments.filter(
-        (appointment) =>
-          appointment.status !== 'cancelled' &&
-          appointment.status !== 'no-show',
-      ),
-    )
-  }, [data])
-
-  const activeCount = useMemo(
-    () =>
-      data
-        ? data.appointments.filter((a) => ACTIVE_STATUSES.has(a.status)).length
-        : 0,
-    [data],
+  const {
+    queue,
+    activeCount,
+    attentionItems,
+    teamRows,
+    totalAppointments,
+    doneCount,
+    droppedCount,
+    defaultCreateTime,
+  } = useMemo(
+    () => buildManagerTodayViewModel({ data, staff }),
+    [data, staff],
   )
-
-  const attentionItems = useMemo(
-    () => (data ? groupAttentionItems(data.attentionItems).slice(0, 5) : []),
-    [data],
-  )
-
-  const teamRows = useMemo(() => {
-    if (!data) return []
-    const colorById = new Map(staff.map((member) => [member.id, member.color]))
-    return data.staffLoad.map((row) => ({
-      ...row,
-      color: colorById.get(row.staffId),
-    }))
-  }, [data, staff])
-
-  const totalAppointments = data
-    ? Object.values(data.counts).reduce((sum, count) => sum + count, 0)
-    : 0
-  const doneCount = data?.counts.completed ?? 0
-  const droppedCount =
-    (data?.counts.cancelled ?? 0) + (data?.counts['no-show'] ?? 0)
-  const defaultCreateTime =
-    data?.openSlots
-      .flatMap((slot) => slot.ranges.map((range) => range.startTime))
-      .sort()[0] ?? '09:00'
 
   const handleRetry = () => {
     mutateToday()
@@ -1198,66 +1049,22 @@ function StaffTodayView({
     return () => window.clearInterval(timer)
   }, [])
 
-  const todayAppointments = useMemo(
-    () => sortAppointments(todayData?.appointments ?? []),
-    [todayData],
-  )
-  const tomorrowAppointments = useMemo(
+  const {
+    todayAppointments,
+    tomorrowAppointments,
+    currentAppointment,
+    nextAppointment,
+    nextOpenSlot,
+    checkingTomorrowOpenSlots,
+  } = useMemo(
     () =>
-      sortAppointments(
-        (tomorrowData?.appointments ?? []).filter(
-          (appointment) => appointment.status !== 'cancelled',
-        ),
-      ),
-    [tomorrowData],
-  )
-
-  const activeTodayAppointments = useMemo(
-    () =>
-      todayAppointments.filter((appointment) =>
-        ACTIVE_STATUSES.has(appointment.status),
-      ),
-    [todayAppointments],
-  )
-
-  const currentAppointment =
-    activeTodayAppointments.find(
-      (appointment) =>
-        appointment.startTime <= clockHm && appointment.endTime > clockHm,
-    ) ?? null
-
-  const nextAppointment =
-    activeTodayAppointments.find(
-      (appointment) => appointment.startTime > clockHm,
-    ) ?? null
-
-  const todayOpenRanges = useMemo(
-    () => todayData?.openSlots[0]?.ranges ?? [],
-    [todayData],
-  )
-  const tomorrowOpenRanges = useMemo(
-    () => tomorrowData?.openSlots[0]?.ranges ?? [],
-    [tomorrowData],
-  )
-  const nextOpenSlot = useMemo(
-    () =>
-      getNextOpenSlot({
-        todayRanges: todayOpenRanges,
-        tomorrowRanges: tomorrowOpenRanges,
+      buildStaffTodayViewModel({
+        todayData,
+        tomorrowData,
         clockHm,
+        tomorrowLoading,
       }),
-    [clockHm, todayOpenRanges, tomorrowOpenRanges],
-  )
-  const checkingTomorrowOpenSlots = useMemo(
-    () =>
-      !getNextOpenSlot({
-        todayRanges: todayOpenRanges,
-        tomorrowRanges: [],
-        clockHm,
-      }) &&
-      tomorrowLoading &&
-      !tomorrowData,
-    [clockHm, todayOpenRanges, tomorrowData, tomorrowLoading],
+    [todayData, tomorrowData, clockHm, tomorrowLoading],
   )
 
   const handleRetry = () => {

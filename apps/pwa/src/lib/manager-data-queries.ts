@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import type {
   Service,
   ServiceAddon,
@@ -17,6 +16,7 @@ import {
   staffScheduleBundleQueryKey,
 } from '#/lib/query-keys'
 import { useManagerDataClient } from '#/lib/manager-data-client'
+import { useManagerCollection } from '#/lib/use-manager-collection'
 
 export type ManagerServiceCatalog = {
   categories: ServiceCategory[]
@@ -25,74 +25,40 @@ export type ManagerServiceCatalog = {
 }
 
 export function useManagerStaffQuery(enabled = true) {
-  const dc = useManagerDataClient()
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: managerStaffQueryKey,
-    queryFn: () => dc!.staff.list(),
-    enabled: enabled && !!dc,
-  })
-
-  useEffect(() => {
-    if (!dc) return
-    return dc.staff.subscribe((list) => {
-      queryClient.setQueryData(managerStaffQueryKey, list)
-    })
-  }, [dc, queryClient])
-
-  return query
+  return useManagerCollection(
+    managerStaffQueryKey,
+    (dc) => dc.staff.list(),
+    (dc, sync) => dc.staff.subscribe(sync),
+    enabled,
+  )
 }
 
 export function useManagerServicesQuery(enabled = true) {
-  const dc = useManagerDataClient()
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: managerServicesQueryKey,
-    queryFn: () => dc!.services.list(),
-    enabled: enabled && !!dc,
-  })
-
-  useEffect(() => {
-    if (!dc) return
-    return dc.services.subscribe((list) => {
-      queryClient.setQueryData(managerServicesQueryKey, list)
-    })
-  }, [dc, queryClient])
-
-  return query
+  return useManagerCollection(
+    managerServicesQueryKey,
+    (dc) => dc.services.list(),
+    (dc, sync) => dc.services.subscribe(sync),
+    enabled,
+  )
 }
 
 export function useManagerServiceCatalogQuery(enabled = true) {
-  const dc = useManagerDataClient()
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: managerServiceCatalogQueryKey,
-    queryFn: async (): Promise<ManagerServiceCatalog> => {
+  return useManagerCollection(
+    managerServiceCatalogQueryKey,
+    async (dc): Promise<ManagerServiceCatalog> => {
       const [categories, families, services] = await Promise.all([
-        dc!.services.categories.list({ includeInactive: true }),
-        dc!.services.families.list({ includeInactive: true }),
-        dc!.services.list({ includeInactive: true }),
+        dc.services.categories.list({ includeInactive: true }),
+        dc.services.families.list({ includeInactive: true }),
+        dc.services.list({ includeInactive: true }),
       ])
       return { categories, families, services }
     },
-    enabled: enabled && !!dc,
-  })
-
-  useEffect(() => {
-    if (!dc) return
-    return dc.services.subscribe((services) => {
-      queryClient.setQueryData(
-        managerServiceCatalogQueryKey,
-        (current: ManagerServiceCatalog | undefined) =>
-          current ? { ...current, services } : current,
-      )
-    })
-  }, [dc, queryClient])
-
-  return query
+    (dc, sync) =>
+      dc.services.subscribe((services) =>
+        sync((current) => (current ? { ...current, services } : current)),
+      ),
+    enabled,
+  )
 }
 
 export function useManagerAddonsQuery(enabled = true) {
@@ -107,23 +73,12 @@ export function useManagerAddonsQuery(enabled = true) {
 }
 
 export function useManagerBusinessSettingsQuery(enabled = true) {
-  const dc = useManagerDataClient()
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: managerBusinessSettingsQueryKey,
-    queryFn: () => dc!.businessSettings.get(),
-    enabled: enabled && !!dc,
-  })
-
-  useEffect(() => {
-    if (!dc) return
-    return dc.businessSettings.subscribe((settings) => {
-      queryClient.setQueryData(managerBusinessSettingsQueryKey, settings)
-    })
-  }, [dc, queryClient])
-
-  return query
+  return useManagerCollection(
+    managerBusinessSettingsQueryKey,
+    (dc) => dc.businessSettings.get(),
+    (dc, sync) => dc.businessSettings.subscribe(sync),
+    enabled,
+  )
 }
 
 export function useStaffScheduleBundleQuery(
