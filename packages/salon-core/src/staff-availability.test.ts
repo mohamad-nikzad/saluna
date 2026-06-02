@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { validateStaffAvailability, dayOfWeekFromDate } from './staff-availability'
+import { isSalonOpenOnDate, validateStaffAvailability, dayOfWeekFromDate } from './staff-availability'
 import type { BusinessHours, StaffSchedule } from './types'
 
 const business: BusinessHours = {
   workingStart: '09:00',
   workingEnd: '19:00',
   slotDurationMinutes: 30,
+  workingDays: 126,
 }
 
 function schedule(
@@ -110,5 +111,24 @@ describe('validateStaffAvailability', () => {
 describe('dayOfWeekFromDate', () => {
   it('returns UTC weekday index for ISO date string', () => {
     expect(dayOfWeekFromDate('2026-04-20')).toBe(new Date('2026-04-20T00:00:00Z').getUTCDay())
+  })
+})
+
+describe('isSalonOpenOnDate', () => {
+  // 126 = 0b1111110 — Sunday–Friday open, Saturday closed (bit 0 off).
+  const defaultMask = 126
+
+  it('returns true for an open salon day', () => {
+    // 2026-04-20 is Monday (bit 2).
+    expect(isSalonOpenOnDate(defaultMask, '2026-04-20')).toBe(true)
+  })
+
+  it('returns false for a closed salon day', () => {
+    // 2026-04-18 is Saturday (bit 0).
+    expect(isSalonOpenOnDate(defaultMask, '2026-04-18')).toBe(false)
+  })
+
+  it('returns false for an invalid date', () => {
+    expect(isSalonOpenOnDate(defaultMask, 'not-a-date')).toBe(false)
   })
 })

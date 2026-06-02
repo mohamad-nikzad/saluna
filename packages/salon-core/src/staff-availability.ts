@@ -29,6 +29,19 @@ export function dayOfWeekFromDate(date: string): number {
   return parsed.getUTCDay()
 }
 
+/** Maps JS `getUTCDay()` (0=Sun … 6=Sat) to working-days bit index (0=Sat … 6=Fri). */
+function workingDayBitIndexFromDate(date: string): number {
+  const jsDay = dayOfWeekFromDate(date)
+  if (jsDay < 0) return -1
+  return (jsDay + 1) % 7
+}
+
+export function isSalonOpenOnDate(workingDays: number, date: string): boolean {
+  const bitIndex = workingDayBitIndexFromDate(date)
+  if (bitIndex < 0) return false
+  return (workingDays & (1 << bitIndex)) !== 0
+}
+
 export function validateAgainstHours(
   startTime: string,
   endTime: string,
@@ -51,6 +64,7 @@ export function resolveStaffWorkingHoursForDay(
       workingStart: schedule.workingStart,
       workingEnd: schedule.workingEnd,
       slotDurationMinutes: businessHours.slotDurationMinutes,
+      workingDays: businessHours.workingDays,
     }
 
     if (!schedule.active) {

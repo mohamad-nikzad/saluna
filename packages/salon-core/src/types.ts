@@ -162,6 +162,8 @@ export interface BusinessHours {
   workingStart: string
   workingEnd: string
   slotDurationMinutes: number
+  /** Bitmask of working days. Bit 0 = Saturday … bit 6 = Friday. See ADR-0004. */
+  workingDays: number
 }
 
 export interface StaffSchedule {

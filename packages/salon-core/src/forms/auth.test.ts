@@ -35,6 +35,16 @@ describe('signupSchema', () => {
     expect(result.managerPhone).toBe('09123456789')
   })
 
+  it('accepts a payload without a slug', () => {
+    const result = signupSchema.safeParse({
+      salonName: 'سالن رز',
+      managerName: 'علی',
+      managerPhone: '09123456789',
+      password: 'secret123',
+    })
+    expect(result.success).toBe(true)
+  })
+
   it('rejects short password', () => {
     const result = signupSchema.safeParse({
       salonName: 'a',

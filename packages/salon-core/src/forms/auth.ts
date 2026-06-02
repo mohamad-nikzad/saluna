@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 import { formMessages } from './messages'
 import { phoneSchema, requiredTextSchema } from './primitives'
+import { slugSchema } from './slug'
 
 const MIN_PASSWORD_LENGTH = 6
 
@@ -19,15 +20,12 @@ export const loginSchema = z.object({
 export type LoginFormInput = z.input<typeof loginSchema>
 export type LoginFormPayload = z.output<typeof loginSchema>
 
-const slugRegex = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
-
 export const signupSchema = z.object({
   salonName: requiredTextSchema,
-  slug: z
-    .string({ required_error: formMessages.required })
-    .trim()
-    .min(1, formMessages.required)
-    .regex(slugRegex, formMessages.required),
+  // Optional: Persian salon names can't form a Latin slug, so the web client
+  // omits it and the server mints a unique placeholder. Clients that collect a
+  // slug (native) may still send one.
+  slug: slugSchema.optional(),
   managerName: requiredTextSchema,
   managerPhone: phoneSchema,
   password: z

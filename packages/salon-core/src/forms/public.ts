@@ -103,3 +103,32 @@ export const publicSettingsSchema = z.object({
 
 export type PublicSettingsInput = z.input<typeof publicSettingsSchema>
 export type PublicSettingsPayload = z.output<typeof publicSettingsSchema>
+
+/** Max length of the public-page onboarding bio (longer than the legacy bio). */
+export const PUBLIC_ONBOARDING_BIO_MAX_LENGTH = 280
+
+const onboardingBioSchema = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((value) => {
+    if (value == null) return undefined
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : undefined
+  })
+  .pipe(
+    z
+      .string()
+      .max(PUBLIC_ONBOARDING_BIO_MAX_LENGTH, formMessages.presenceBioTooLong)
+      .optional(),
+  )
+
+/**
+ * Public-page onboarding step payload. The onboarding step only toggles the
+ * page on and sets a short bio; theme/layout/services stay in `/public-page`.
+ */
+export const publicPageOnboardingSchema = z.object({
+  enabled: z.boolean(),
+  bioText: onboardingBioSchema,
+})
+
+export type PublicPageOnboardingInput = z.input<typeof publicPageOnboardingSchema>
+export type PublicPageOnboardingPayload = z.output<typeof publicPageOnboardingSchema>
