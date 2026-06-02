@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check ."
   },

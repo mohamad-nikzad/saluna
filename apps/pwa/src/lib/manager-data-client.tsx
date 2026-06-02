@@ -50,6 +50,7 @@ export function ManagerDataClientProvider({
   useEffect(() => {
     if (!client) return
     const run = () => {
+      if (window.location.pathname.startsWith('/onboarding')) return
       void client.sync.processPending()
     }
     const onOnline = () => run()

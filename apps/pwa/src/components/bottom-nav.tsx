@@ -45,11 +45,12 @@ export function BottomNav() {
   const items = user?.role === 'manager' ? managerItems : staffItems
 
   const isManager = user?.role === 'manager'
+  const onOnboarding = pathname.startsWith('/onboarding')
   const { data: pendingData } = useQuery({
     queryKey: ['appointment-requests', 'pending'],
     queryFn: ({ signal }) =>
       api.appointmentRequests.list({ status: 'pending', signal }),
-    enabled: isManager,
+    enabled: isManager && !onOnboarding,
     refetchInterval: 60_000,
   })
   const pendingCount = pendingData?.requests.length ?? 0

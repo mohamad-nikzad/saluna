@@ -24,6 +24,15 @@ import { Route as AuthedOnboardingRouteImport } from './routes/_authed/onboardin
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
+import { Route as AuthedOnboardingIndexRouteImport } from './routes/_authed/onboarding/index'
+import { Route as AuthedOnboardingWelcomeRouteImport } from './routes/_authed/onboarding/welcome'
+import { Route as AuthedOnboardingStaffRouteImport } from './routes/_authed/onboarding/staff'
+import { Route as AuthedOnboardingServicesRouteImport } from './routes/_authed/onboarding/services'
+import { Route as AuthedOnboardingPublicRouteImport } from './routes/_authed/onboarding/public'
+import { Route as AuthedOnboardingPresenceRouteImport } from './routes/_authed/onboarding/presence'
+import { Route as AuthedOnboardingNotificationsRouteImport } from './routes/_authed/onboarding/notifications'
+import { Route as AuthedOnboardingHoursRouteImport } from './routes/_authed/onboarding/hours'
+import { Route as AuthedOnboardingDoneRouteImport } from './routes/_authed/onboarding/done'
 import { Route as AuthedClientsIdRouteImport } from './routes/_authed/clients.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -100,6 +109,54 @@ const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedOnboardingIndexRoute = AuthedOnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingWelcomeRoute = AuthedOnboardingWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingStaffRoute = AuthedOnboardingStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingServicesRoute =
+  AuthedOnboardingServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthedOnboardingRoute,
+  } as any)
+const AuthedOnboardingPublicRoute = AuthedOnboardingPublicRouteImport.update({
+  id: '/public',
+  path: '/public',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingPresenceRoute =
+  AuthedOnboardingPresenceRouteImport.update({
+    id: '/presence',
+    path: '/presence',
+    getParentRoute: () => AuthedOnboardingRoute,
+  } as any)
+const AuthedOnboardingNotificationsRoute =
+  AuthedOnboardingNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthedOnboardingRoute,
+  } as any)
+const AuthedOnboardingHoursRoute = AuthedOnboardingHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingDoneRoute = AuthedOnboardingDoneRouteImport.update({
+  id: '/done',
+  path: '/done',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
 const AuthedClientsIdRoute = AuthedClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -113,7 +170,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
-  '/onboarding': typeof AuthedOnboardingRoute
+  '/onboarding': typeof AuthedOnboardingRouteWithChildren
   '/public-page': typeof AuthedPublicPageRoute
   '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
@@ -122,6 +179,15 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthedStaffRoute
   '/today': typeof AuthedTodayRoute
   '/clients/$id': typeof AuthedClientsIdRoute
+  '/onboarding/done': typeof AuthedOnboardingDoneRoute
+  '/onboarding/hours': typeof AuthedOnboardingHoursRoute
+  '/onboarding/notifications': typeof AuthedOnboardingNotificationsRoute
+  '/onboarding/presence': typeof AuthedOnboardingPresenceRoute
+  '/onboarding/public': typeof AuthedOnboardingPublicRoute
+  '/onboarding/services': typeof AuthedOnboardingServicesRoute
+  '/onboarding/staff': typeof AuthedOnboardingStaffRoute
+  '/onboarding/welcome': typeof AuthedOnboardingWelcomeRoute
+  '/onboarding/': typeof AuthedOnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,7 +196,6 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
-  '/onboarding': typeof AuthedOnboardingRoute
   '/public-page': typeof AuthedPublicPageRoute
   '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
@@ -139,6 +204,15 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthedStaffRoute
   '/today': typeof AuthedTodayRoute
   '/clients/$id': typeof AuthedClientsIdRoute
+  '/onboarding/done': typeof AuthedOnboardingDoneRoute
+  '/onboarding/hours': typeof AuthedOnboardingHoursRoute
+  '/onboarding/notifications': typeof AuthedOnboardingNotificationsRoute
+  '/onboarding/presence': typeof AuthedOnboardingPresenceRoute
+  '/onboarding/public': typeof AuthedOnboardingPublicRoute
+  '/onboarding/services': typeof AuthedOnboardingServicesRoute
+  '/onboarding/staff': typeof AuthedOnboardingStaffRoute
+  '/onboarding/welcome': typeof AuthedOnboardingWelcomeRoute
+  '/onboarding': typeof AuthedOnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,7 +223,7 @@ export interface FileRoutesById {
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
-  '/_authed/onboarding': typeof AuthedOnboardingRoute
+  '/_authed/onboarding': typeof AuthedOnboardingRouteWithChildren
   '/_authed/public-page': typeof AuthedPublicPageRoute
   '/_authed/requests': typeof AuthedRequestsRoute
   '/_authed/retention': typeof AuthedRetentionRoute
@@ -158,6 +232,15 @@ export interface FileRoutesById {
   '/_authed/staff': typeof AuthedStaffRoute
   '/_authed/today': typeof AuthedTodayRoute
   '/_authed/clients/$id': typeof AuthedClientsIdRoute
+  '/_authed/onboarding/done': typeof AuthedOnboardingDoneRoute
+  '/_authed/onboarding/hours': typeof AuthedOnboardingHoursRoute
+  '/_authed/onboarding/notifications': typeof AuthedOnboardingNotificationsRoute
+  '/_authed/onboarding/presence': typeof AuthedOnboardingPresenceRoute
+  '/_authed/onboarding/public': typeof AuthedOnboardingPublicRoute
+  '/_authed/onboarding/services': typeof AuthedOnboardingServicesRoute
+  '/_authed/onboarding/staff': typeof AuthedOnboardingStaffRoute
+  '/_authed/onboarding/welcome': typeof AuthedOnboardingWelcomeRoute
+  '/_authed/onboarding/': typeof AuthedOnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +260,15 @@ export interface FileRouteTypes {
     | '/staff'
     | '/today'
     | '/clients/$id'
+    | '/onboarding/done'
+    | '/onboarding/hours'
+    | '/onboarding/notifications'
+    | '/onboarding/presence'
+    | '/onboarding/public'
+    | '/onboarding/services'
+    | '/onboarding/staff'
+    | '/onboarding/welcome'
+    | '/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -185,7 +277,6 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clients'
     | '/dashboard'
-    | '/onboarding'
     | '/public-page'
     | '/requests'
     | '/retention'
@@ -194,6 +285,15 @@ export interface FileRouteTypes {
     | '/staff'
     | '/today'
     | '/clients/$id'
+    | '/onboarding/done'
+    | '/onboarding/hours'
+    | '/onboarding/notifications'
+    | '/onboarding/presence'
+    | '/onboarding/public'
+    | '/onboarding/services'
+    | '/onboarding/staff'
+    | '/onboarding/welcome'
+    | '/onboarding'
   id:
     | '__root__'
     | '/'
@@ -212,6 +312,15 @@ export interface FileRouteTypes {
     | '/_authed/staff'
     | '/_authed/today'
     | '/_authed/clients/$id'
+    | '/_authed/onboarding/done'
+    | '/_authed/onboarding/hours'
+    | '/_authed/onboarding/notifications'
+    | '/_authed/onboarding/presence'
+    | '/_authed/onboarding/public'
+    | '/_authed/onboarding/services'
+    | '/_authed/onboarding/staff'
+    | '/_authed/onboarding/welcome'
+    | '/_authed/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -328,6 +437,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCalendarRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/onboarding/': {
+      id: '/_authed/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof AuthedOnboardingIndexRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/welcome': {
+      id: '/_authed/onboarding/welcome'
+      path: '/welcome'
+      fullPath: '/onboarding/welcome'
+      preLoaderRoute: typeof AuthedOnboardingWelcomeRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/staff': {
+      id: '/_authed/onboarding/staff'
+      path: '/staff'
+      fullPath: '/onboarding/staff'
+      preLoaderRoute: typeof AuthedOnboardingStaffRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/services': {
+      id: '/_authed/onboarding/services'
+      path: '/services'
+      fullPath: '/onboarding/services'
+      preLoaderRoute: typeof AuthedOnboardingServicesRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/public': {
+      id: '/_authed/onboarding/public'
+      path: '/public'
+      fullPath: '/onboarding/public'
+      preLoaderRoute: typeof AuthedOnboardingPublicRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/presence': {
+      id: '/_authed/onboarding/presence'
+      path: '/presence'
+      fullPath: '/onboarding/presence'
+      preLoaderRoute: typeof AuthedOnboardingPresenceRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/notifications': {
+      id: '/_authed/onboarding/notifications'
+      path: '/notifications'
+      fullPath: '/onboarding/notifications'
+      preLoaderRoute: typeof AuthedOnboardingNotificationsRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/hours': {
+      id: '/_authed/onboarding/hours'
+      path: '/hours'
+      fullPath: '/onboarding/hours'
+      preLoaderRoute: typeof AuthedOnboardingHoursRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/done': {
+      id: '/_authed/onboarding/done'
+      path: '/done'
+      fullPath: '/onboarding/done'
+      preLoaderRoute: typeof AuthedOnboardingDoneRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
     '/_authed/clients/$id': {
       id: '/_authed/clients/$id'
       path: '/$id'
@@ -350,11 +522,38 @@ const AuthedClientsRouteWithChildren = AuthedClientsRoute._addFileChildren(
   AuthedClientsRouteChildren,
 )
 
+interface AuthedOnboardingRouteChildren {
+  AuthedOnboardingDoneRoute: typeof AuthedOnboardingDoneRoute
+  AuthedOnboardingHoursRoute: typeof AuthedOnboardingHoursRoute
+  AuthedOnboardingNotificationsRoute: typeof AuthedOnboardingNotificationsRoute
+  AuthedOnboardingPresenceRoute: typeof AuthedOnboardingPresenceRoute
+  AuthedOnboardingPublicRoute: typeof AuthedOnboardingPublicRoute
+  AuthedOnboardingServicesRoute: typeof AuthedOnboardingServicesRoute
+  AuthedOnboardingStaffRoute: typeof AuthedOnboardingStaffRoute
+  AuthedOnboardingWelcomeRoute: typeof AuthedOnboardingWelcomeRoute
+  AuthedOnboardingIndexRoute: typeof AuthedOnboardingIndexRoute
+}
+
+const AuthedOnboardingRouteChildren: AuthedOnboardingRouteChildren = {
+  AuthedOnboardingDoneRoute: AuthedOnboardingDoneRoute,
+  AuthedOnboardingHoursRoute: AuthedOnboardingHoursRoute,
+  AuthedOnboardingNotificationsRoute: AuthedOnboardingNotificationsRoute,
+  AuthedOnboardingPresenceRoute: AuthedOnboardingPresenceRoute,
+  AuthedOnboardingPublicRoute: AuthedOnboardingPublicRoute,
+  AuthedOnboardingServicesRoute: AuthedOnboardingServicesRoute,
+  AuthedOnboardingStaffRoute: AuthedOnboardingStaffRoute,
+  AuthedOnboardingWelcomeRoute: AuthedOnboardingWelcomeRoute,
+  AuthedOnboardingIndexRoute: AuthedOnboardingIndexRoute,
+}
+
+const AuthedOnboardingRouteWithChildren =
+  AuthedOnboardingRoute._addFileChildren(AuthedOnboardingRouteChildren)
+
 interface AuthedRouteChildren {
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedClientsRoute: typeof AuthedClientsRouteWithChildren
   AuthedDashboardRoute: typeof AuthedDashboardRoute
-  AuthedOnboardingRoute: typeof AuthedOnboardingRoute
+  AuthedOnboardingRoute: typeof AuthedOnboardingRouteWithChildren
   AuthedPublicPageRoute: typeof AuthedPublicPageRoute
   AuthedRequestsRoute: typeof AuthedRequestsRoute
   AuthedRetentionRoute: typeof AuthedRetentionRoute
@@ -368,7 +567,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedClientsRoute: AuthedClientsRouteWithChildren,
   AuthedDashboardRoute: AuthedDashboardRoute,
-  AuthedOnboardingRoute: AuthedOnboardingRoute,
+  AuthedOnboardingRoute: AuthedOnboardingRouteWithChildren,
   AuthedPublicPageRoute: AuthedPublicPageRoute,
   AuthedRequestsRoute: AuthedRequestsRoute,
   AuthedRetentionRoute: AuthedRetentionRoute,

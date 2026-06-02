@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   ArrowRight,
   ChevronDown,
@@ -26,10 +34,23 @@ import type {
 } from '@repo/data-client'
 
 import { useManagerDataClient } from '#/lib/manager-data-client'
+import { getMutationErrorMessage } from '#/lib/query-client'
+import { catalogPresetsQueryKey } from '#/lib/query-keys'
 
 export type ApplyPresetResult = {
   importedCategoryIds: string[]
   importedVariantIds: string[]
+}
+
+export type CatalogPresetPickerState = {
+  applying: boolean
+  canApply: boolean
+  selectedCount: number
+  selectedPresetName: string | null
+}
+
+export type CatalogPresetPickerHandle = {
+  applySelectedPreset: () => Promise<boolean>
 }
 
 const POST_APPLY_HINT =
@@ -69,55 +90,63 @@ function buildSelection(
   return selection
 }
 
-export function CatalogPresetPicker({
-  onApplied,
-  onManual,
-  className,
-}: {
+export const CatalogPresetPicker = forwardRef<
+  CatalogPresetPickerHandle,
+  {
   onApplied: (result: ApplyPresetResult) => void
   onManual?: () => void
+  onStateChange?: (state: CatalogPresetPickerState) => void
+  showApplyButton?: boolean
   className?: string
-}) {
+  }
+>(function CatalogPresetPicker(
+  {
+    onApplied,
+    onManual,
+    onStateChange,
+    showApplyButton = true,
+    className,
+  },
+  ref,
+) {
   const dc = useManagerDataClient()
-  const [presets, setPresets] = useState<CatalogPresetListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const presetsQuery = useQuery({
+    queryKey: catalogPresetsQueryKey,
+    queryFn: () => dc!.services.listCatalogPresets(),
+    enabled: !!dc,
+  })
+  const presets = presetsQuery.data ?? []
   const [selected, setSelected] = useState<CatalogPresetListItem | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>(
     {},
   )
-  const [applying, setApplying] = useState(false)
-  const [applyError, setApplyError] = useState<string | null>(null)
 
-  const loadPresets = useCallback(async () => {
-    if (!dc) return
-    setLoading(true)
-    setLoadError(null)
-    try {
-      const list = await dc.services.listCatalogPresets()
-      setPresets(list)
-    } catch {
-      setLoadError('بارگذاری قالب‌ها انجام نشد. دوباره تلاش کنید.')
-    } finally {
-      setLoading(false)
-    }
-  }, [dc])
-
-  useEffect(() => {
-    void loadPresets()
-  }, [loadPresets])
+  const applyPreset = useMutation({
+    mutationFn: ({
+      presetId,
+      selection,
+    }: {
+      presetId: string
+      selection: ApplyCatalogPresetSelection
+    }) => {
+      if (!dc) throw new Error('اتصال داده برقرار نیست')
+      return dc.services.applyCatalogPreset(presetId, selection)
+    },
+    meta: { skipToast: true, errorMessage: 'افزودن قالب انجام نشد' },
+    onSuccess: (result) => onApplied(result),
+  })
 
   const openPreset = (preset: CatalogPresetListItem) => {
+    applyPreset.reset()
     setSelected(preset)
     setChecked(new Set(allVariantKeys(preset.tree)))
     setOpenCategories({})
-    setApplyError(null)
   }
 
   const closePreset = () => {
     setSelected(null)
-    setApplyError(null)
+    applyPreset.reset()
   }
 
   const selection = useMemo(
@@ -164,21 +193,55 @@ export function CatalogPresetPicker({
     })
   }
 
-  const onApply = async () => {
-    if (!dc || !selected || selection.length === 0) return
-    setApplying(true)
-    setApplyError(null)
-    try {
-      const result = await dc.services.applyCatalogPreset(selected.id, selection)
-      onApplied(result)
-    } catch (err) {
-      setApplyError(err instanceof Error ? err.message : 'افزودن قالب انجام نشد')
-    } finally {
-      setApplying(false)
-    }
-  }
+  const canApply = Boolean(dc && selected && selection.length > 0)
 
-  if (loading) {
+  const onApply = useCallback(async (): Promise<boolean> => {
+    if (!selected || selection.length === 0) return false
+    try {
+      await applyPreset.mutateAsync({
+        presetId: selected.id,
+        selection,
+      })
+      return true
+    } catch {
+      return false
+    }
+  }, [applyPreset, selected, selection])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      applySelectedPreset: onApply,
+    }),
+    [onApply],
+  )
+
+  useEffect(() => {
+    onStateChange?.({
+      applying: applyPreset.isPending,
+      canApply,
+      selectedCount,
+      selectedPresetName: selected?.name ?? null,
+    })
+  }, [
+    applyPreset.isPending,
+    canApply,
+    onStateChange,
+    selected?.name,
+    selectedCount,
+  ])
+
+  const loadError = presetsQuery.error
+    ? getMutationErrorMessage(
+        presetsQuery.error,
+        'بارگذاری قالب‌ها انجام نشد. دوباره تلاش کنید.',
+      )
+    : null
+  const applyError = applyPreset.error
+    ? getMutationErrorMessage(applyPreset.error, 'افزودن قالب انجام نشد')
+    : null
+
+  if (presetsQuery.isPending) {
     return (
       <div className={cn('flex items-center justify-center py-10', className)}>
         <Spinner className="h-5 w-5" />
@@ -190,7 +253,11 @@ export function CatalogPresetPicker({
     return (
       <div className={cn('space-y-3 py-6 text-center', className)}>
         <p className="text-sm text-destructive">{loadError}</p>
-        <Button size="sm" variant="outline" onClick={() => void loadPresets()}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => void presetsQuery.refetch()}
+        >
           تلاش دوباره
         </Button>
       </div>
@@ -339,14 +406,16 @@ export function CatalogPresetPicker({
           {POST_APPLY_HINT}
         </p>
         {applyError && <p className="text-xs text-destructive">{applyError}</p>}
-        <Button
-          className="w-full gap-2"
-          onClick={onApply}
-          disabled={applying || selectedCount === 0}
-        >
-          {applying && <Spinner className="ml-2" />}
-          افزودن {toPersianDigits(selectedCount)} خدمت به سالن
-        </Button>
+        {showApplyButton && (
+          <Button
+            className="w-full gap-2"
+            onClick={() => void onApply()}
+            disabled={applyPreset.isPending || !canApply}
+          >
+            {applyPreset.isPending && <Spinner className="ml-2" />}
+            افزودن {toPersianDigits(selectedCount)} خدمت به سالن
+          </Button>
+        )}
       </div>
     )
   }
@@ -412,4 +481,4 @@ export function CatalogPresetPicker({
       )}
     </div>
   )
-}
+})

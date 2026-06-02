@@ -4,40 +4,53 @@ import {
   redirect,
   useNavigate,
 } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from '@repo/ui/button'
+import { z } from 'zod'
+import { ArrowLeft } from 'lucide-react'
 import { Input } from '@repo/ui/input'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@repo/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
+import { cn } from '@repo/ui/utils'
 import { ApiError } from '@repo/api-client'
 import { clearOfflineDatabase } from '@repo/data-client'
 import { displayPhone } from '@repo/salon-core/phone'
 import { signupSchema } from '@repo/salon-core/forms/auth'
-import type { SignupFormInput } from '@repo/salon-core/forms/auth'
+import { formMessages } from '@repo/salon-core/forms/messages'
 import type { User } from '@repo/salon-core/types'
 
+import { SalooraMark } from '#/components/brand/saloora-mark'
 import { api } from '#/lib/api-client'
+import { getMutationErrorMessage } from '#/lib/query-client'
 import { authQueryKey, useAuth } from '#/lib/auth'
 import { homePathForRole } from '#/lib/navigation'
+import {
+  managerBusinessSettingsQueryKey,
+  managerServicesQueryKey,
+  managerStaffQueryKey,
+  onboardingQueryKey,
+  salonPresenceQueryKey,
+  salonPublicSettingsQueryKey,
+} from '#/lib/query-keys'
 
-function makeSlug(value: string): string {
-  const slug = value
-    .trim()
-    .toLowerCase()
-    .replace(/[_\s]+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-  return slug || 'salon'
-}
+// The booking-page slug is minted server-side (Persian salon names can't form a
+// Latin URL); the owner picks a friendly one later in onboarding. The confirm
+// field guards against silent password typos and never reaches the server.
+const signupFormSchema = signupSchema
+  .omit({ slug: true })
+  .extend({
+    confirmPassword: z
+      .string({ required_error: formMessages.required })
+      .min(1, formMessages.required),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: formMessages.passwordMismatch,
+  })
+
+type SignupFormInput = z.input<typeof signupFormSchema>
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: async ({ context }) => {
@@ -53,6 +66,7 @@ export const Route = createFileRoute('/signup')({
 
 function SignupPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { setUser } = useAuth()
 
   const {
@@ -61,108 +75,121 @@ function SignupPage() {
     setError,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SignupFormInput>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(signupFormSchema),
     defaultValues: {
       salonName: '',
-      slug: 'salon',
       managerName: '',
       managerPhone: '',
       password: '',
+      confirmPassword: '',
     },
   })
 
-  const slug = watch('slug')
   const managerPhone = watch('managerPhone')
-  const slugEdited = watch('slug') !== makeSlug(watch('salonName'))
 
-  function handleSalonNameChange(value: string) {
-    setValue('salonName', value, { shouldValidate: false })
-    if (!slugEdited) {
-      setValue('slug', makeSlug(value), { shouldValidate: false })
-    }
-  }
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      const data = await api.auth.signup(values)
+  const signup = useMutation({
+    mutationFn: (values: SignupFormInput) =>
+      api.auth.signup({
+        salonName: values.salonName,
+        managerName: values.managerName,
+        managerPhone: values.managerPhone,
+        password: values.password,
+      }),
+    meta: { skipToast: true },
+    onSuccess: async (data) => {
       await clearOfflineDatabase()
       setUser(data.user)
-      await navigate({ to: homePathForRole(data.user.role) })
-    } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message || 'ثبت‌نام انجام نشد. دوباره تلاش کنید.'
-          : 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'
-      setError('root', { message })
-    }
+      await queryClient.removeQueries({ queryKey: onboardingQueryKey })
+      await queryClient.removeQueries({
+        queryKey: managerBusinessSettingsQueryKey,
+      })
+      await queryClient.removeQueries({ queryKey: managerServicesQueryKey })
+      await queryClient.removeQueries({ queryKey: managerStaffQueryKey })
+      await queryClient.removeQueries({ queryKey: salonPresenceQueryKey })
+      await queryClient.removeQueries({ queryKey: salonPublicSettingsQueryKey })
+      await navigate({ to: '/onboarding/welcome' })
+    },
+  })
+
+  const onSubmit = handleSubmit((values) => {
+    signup.mutate(values, {
+      onError: (err) => {
+        const message =
+          err instanceof ApiError
+            ? err.message || 'ثبت‌نام انجام نشد. دوباره تلاش کنید.'
+            : getMutationErrorMessage(
+                err,
+                'خطایی رخ داد. لطفاً دوباره تلاش کنید.',
+              )
+        setError('root', { message })
+      },
+    })
   })
 
   const managerNameField = register('managerName')
+  const salonNameField = register('salonName')
   const passwordField = register('password')
+  const confirmPasswordField = register('confirmPassword')
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-black tracking-tight text-foreground">
-            ساخت سالن جدید
+    <main className="flex min-h-dvh justify-center bg-gradient-to-b from-blush-soft/60 to-background p-4">
+      <div className="flex w-full max-w-md flex-col">
+        {/* Brand mark — Saloora */}
+        <div className="flex items-center gap-2 px-1 pt-2">
+          <span className="inline-flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <SalooraMark className="size-[22px]" />
+          </span>
+          <span className="text-sm font-extrabold tracking-tight text-primary">
+            سالورا
+          </span>
+        </div>
+
+        {/* Eyebrow + big conversational question */}
+        <div className="mt-8 px-1">
+          <span className="inline-flex w-fit items-center rounded-full bg-blush-soft px-3 py-1 text-[11px] font-semibold text-primary">
+            بیایید آشنا شویم
+          </span>
+          <h1 className="mt-3 text-2xl font-extrabold leading-snug tracking-tight text-foreground">
+            سالن‌تان را در چند ثانیه بسازیم
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            سالن خود را در سالورا بسازید و نوبت‌ها را مدیریت کنید
+          <p className="mt-2 text-sm leading-relaxed text-sage-deep">
+            همین نام روی صفحه‌ی رزرو و پیام‌های مشتری‌ها نمایش داده می‌شود.
           </p>
         </div>
 
-        <div className="rounded-lg border border-border/60 bg-card/95 p-5 shadow-sm">
-          <form onSubmit={onSubmit} noValidate>
-            <FieldGroup className="gap-5">
-              <Field>
-                <FieldLabel htmlFor="salonName">نام سالن</FieldLabel>
-                <Input
-                  id="salonName"
-                  value={watch('salonName')}
-                  onChange={(e) => handleSalonNameChange(e.target.value)}
-                  placeholder="مثلاً سالن رز"
-                  autoComplete="organization"
-                  disabled={isSubmitting}
-                  className="h-12 rounded-lg bg-muted/40"
-                />
-                {errors.salonName && (
-                  <FieldError>{errors.salonName.message}</FieldError>
-                )}
-              </Field>
+        <form onSubmit={onSubmit} noValidate className="mt-6">
+          <FieldGroup className="gap-5">
+            {/* Salon name — big focal input */}
+            <Field>
+              <FieldLabel htmlFor="salonName">نام سالن</FieldLabel>
+              <Input
+                id="salonName"
+                placeholder="مثلاً سالن رز"
+                autoComplete="organization"
+                disabled={signup.isPending}
+                className="h-14 rounded-2xl bg-card text-lg font-bold shadow-sm"
+                {...salonNameField}
+              />
+              {errors.salonName && (
+                <FieldError>{errors.salonName.message}</FieldError>
+              )}
+              <p className="px-1 text-xs leading-relaxed text-sage-deep">
+                لینک صفحه‌ی رزرو را بعداً در مراحل راه‌اندازی انتخاب می‌کنید.
+              </p>
+            </Field>
 
-              <Field>
-                <FieldLabel htmlFor="slug">آدرس سالن</FieldLabel>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => {
-                    setValue('slug', makeSlug(e.target.value), {
-                      shouldValidate: false,
-                    })
-                  }}
-                  placeholder="rose-salon"
-                  autoComplete="off"
-                  disabled={isSubmitting}
-                  dir="ltr"
-                  className="h-12 rounded-lg bg-muted/40 text-left"
-                />
-                <FieldDescription dir="ltr">
-                  saloora.beauty/{slug || 'salon'}
-                </FieldDescription>
-                {errors.slug && <FieldError>{errors.slug.message}</FieldError>}
-              </Field>
-
+            {/* Manager name + phone — paired */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="managerName">نام مدیر</FieldLabel>
                 <Input
                   id="managerName"
                   placeholder="نام و نام خانوادگی"
                   autoComplete="name"
-                  disabled={isSubmitting}
-                  className="h-12 rounded-lg bg-muted/40"
+                  disabled={signup.isPending}
+                  className="h-12 rounded-2xl bg-card"
                   {...managerNameField}
                 />
                 {errors.managerName && (
@@ -171,9 +198,7 @@ function SignupPage() {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="managerPhone">
-                  شماره موبایل مدیر
-                </FieldLabel>
+                <FieldLabel htmlFor="managerPhone">شماره موبایل</FieldLabel>
                 <Input
                   id="managerPhone"
                   type="tel"
@@ -186,50 +211,79 @@ function SignupPage() {
                   placeholder="۰۹۱۲۰۰۰۰۰۰۰"
                   autoComplete="username"
                   inputMode="numeric"
-                  disabled={isSubmitting}
+                  disabled={signup.isPending}
                   dir="ltr"
-                  className="h-12 rounded-lg bg-muted/40 text-left tabular-nums"
+                  className="h-12 rounded-2xl bg-card text-left tabular-nums"
                 />
                 {errors.managerPhone && (
                   <FieldError>{errors.managerPhone.message}</FieldError>
                 )}
               </Field>
+            </div>
 
-              <Field>
-                <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="حداقل ۶ کاراکتر"
-                  autoComplete="new-password"
-                  disabled={isSubmitting}
-                  className="h-12 rounded-lg bg-muted/40"
-                  {...passwordField}
-                />
-                {errors.password && (
-                  <FieldError>{errors.password.message}</FieldError>
-                )}
-              </Field>
+            {/* Password */}
+            <Field>
+              <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
+              <Input
+                id="password"
+                type="password"
+                placeholder="حداقل ۶ کاراکتر"
+                autoComplete="new-password"
+                disabled={signup.isPending}
+                className="h-12 rounded-2xl bg-card"
+                {...passwordField}
+              />
+              {errors.password && (
+                <FieldError>{errors.password.message}</FieldError>
+              )}
+            </Field>
 
-              <FormRootError message={errors.root?.message} />
+            {/* Confirm password — guards against silent typos */}
+            <Field>
+              <FieldLabel htmlFor="confirmPassword">تکرار رمز عبور</FieldLabel>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="رمز عبور را دوباره وارد کنید"
+                autoComplete="new-password"
+                disabled={signup.isPending}
+                className="h-12 rounded-2xl bg-card"
+                {...confirmPasswordField}
+              />
+              {errors.confirmPassword && (
+                <FieldError>{errors.confirmPassword.message}</FieldError>
+              )}
+            </Field>
 
-              <Button
-                type="submit"
-                className="h-12 w-full rounded-lg text-base font-semibold touch-manipulation"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? <Spinner className="ml-2" /> : null}
-                {isSubmitting ? 'در حال ساخت…' : 'ساخت سالن'}
-              </Button>
-            </FieldGroup>
-          </form>
-        </div>
+            <FormRootError message={errors.root?.message} />
 
-        <p className="mt-5 text-center text-sm text-muted-foreground">
+            <button
+              type="submit"
+              disabled={signup.isPending}
+              className={cn(
+                'flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl',
+                'bg-primary text-base font-extrabold text-primary-foreground',
+                'shadow-[0_10px_26px_-12px_rgba(0,0,0,0.45)] transition-opacity touch-manipulation',
+                'disabled:cursor-not-allowed disabled:opacity-60',
+              )}
+            >
+              {signup.isPending ? (
+                <Spinner className="size-5" />
+              ) : (
+                <>
+                  ساخت سالن
+                  <ArrowLeft className="size-5" />
+                </>
+              )}
+            </button>
+          </FieldGroup>
+        </form>
+
+        <p className="mt-6 px-1 text-center text-sm text-sage-deep">
           حساب دارید؟{' '}
           <Link
             to="/login"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
           >
             ورود
           </Link>

@@ -3,6 +3,7 @@ import {
   createFileRoute,
   isRedirect,
   redirect,
+  useRouterState,
 } from '@tanstack/react-router'
 import type { OnboardingResponse } from '@repo/api-client'
 import type { User } from '@repo/salon-core/types'
@@ -26,7 +27,10 @@ export const Route = createFileRoute('/_authed')({
       })
     }
 
-    if (user.role === 'manager' && location.pathname !== '/onboarding') {
+    if (
+      user.role === 'manager' &&
+      !location.pathname.startsWith('/onboarding')
+    ) {
       try {
         const data = await context.queryClient.ensureQueryData<OnboardingResponse>({
           queryKey: onboardingQueryKey,
@@ -48,14 +52,17 @@ export const Route = createFileRoute('/_authed')({
 })
 
 function AuthedLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const hideChrome = pathname.startsWith('/onboarding')
+
   return (
     <ManagerDataClientProvider>
       <div className="flex h-dvh flex-col bg-background">
-        <ManagerSyncBar />
+        {!hideChrome && <ManagerSyncBar />}
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
-        <BottomNav />
+        {!hideChrome && <BottomNav />}
       </div>
     </ManagerDataClientProvider>
   )
