@@ -21,7 +21,7 @@ export const staffCreateSchema = z.object({
   name: requiredTextSchema,
   phone: phoneSchema,
   password: z
-    .string({ required_error: formMessages.required })
+    .string({ error: formMessages.required })
     .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort),
   role: staffRoleSchema.default('staff'),
 })
@@ -40,7 +40,7 @@ export const staffScheduleDaySchema = z
     if (!row.active) return
     if (timeToMinutes(row.workingEnd) <= timeToMinutes(row.workingStart)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['workingEnd'],
         message: formMessages.endBeforeStart,
       })

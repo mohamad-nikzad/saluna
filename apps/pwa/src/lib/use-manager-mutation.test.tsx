@@ -5,14 +5,14 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { DataClient } from '@repo/data-client'
 
+import { useManagerMutation } from './use-manager-mutation'
+
 const processPending = vi.fn(async () => {})
 const fakeClient = { sync: { processPending } } as unknown as DataClient
 
 vi.mock('#/lib/manager-data-client', () => ({
   useRequiredManagerDataClient: () => fakeClient,
 }))
-
-import { useManagerMutation } from './use-manager-mutation'
 
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({

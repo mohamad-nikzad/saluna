@@ -19,7 +19,7 @@ const MAX_PHONE_DIGITS = 15
  * Input (z.input) is the raw string; output (z.output) is the canonical form.
  */
 export const phoneSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
   .transform((value) => normalizePhone(value))
@@ -89,7 +89,7 @@ export const jalaliDateSchema = z
     const parts = parseJalaliInput(value)
     if (!parts) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.jalaliDateInvalid,
       })
       return
@@ -97,14 +97,14 @@ export const jalaliDateSchema = z
     const { jy, jm, jd } = parts
     if (jy < 1300 || jy > 1500 || jm < 1 || jm > 12 || jd < 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.jalaliDateInvalid,
       })
       return
     }
     if (jd > jalaliMonthLength(jy, jm)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.jalaliDateInvalid,
       })
     }
@@ -115,7 +115,7 @@ export const jalaliDateSchema = z
  * 6-digit hex color (with leading #). Persian digits are tolerated.
  */
 export const hexColorSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .transform((value) => toLatinDigits(value))
   .pipe(z.string().regex(/^#[0-9a-fA-F]{6}$/, formMessages.hexColorInvalid))
@@ -130,7 +130,7 @@ export const durationMinutesSchema = z
       typeof value === 'number' ? value : Number(toLatinDigits(value).trim())
     if (!Number.isFinite(raw)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.numberInvalid,
       })
       return z.NEVER
@@ -156,7 +156,7 @@ export const nonNegativeMoneySchema = z
       typeof value === 'number' ? value : Number(toLatinDigits(value).trim())
     if (!Number.isFinite(raw)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.numberInvalid,
       })
       return z.NEVER
@@ -176,7 +176,7 @@ export const nonNegativeMoneySchema = z
  * Empty-after-trim becomes a validation error.
  */
 export const persianDigitsSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
   .transform((value) => toLatinDigits(value))
@@ -186,7 +186,7 @@ export const persianDigitsSchema = z
  * Required non-empty trimmed text.
  */
 export const requiredTextSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
 
@@ -200,19 +200,20 @@ export const optionalTrimmedTextSchema = z
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : undefined
   })
+  .optional()
 
 /**
  * Gregorian "YYYY-MM-DD" used by the persisted appointment APIs.
  * The picker displays Jalali, but stores Gregorian strings.
  */
 export const gregorianDateSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .transform((value) => toLatinDigits(value))
   .superRefine((value, ctx) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.dateInvalid,
       })
       return
@@ -220,7 +221,7 @@ export const gregorianDateSchema = z
     const parsed = parseISO(value)
     if (!isValid(parsed) || format(parsed, 'yyyy-MM-dd') !== value) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.dateInvalid,
       })
       return
@@ -228,7 +229,7 @@ export const gregorianDateSchema = z
     const { jy } = parseGregorianToJalali(value)
     if (jy < 1300 || jy > 1500) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.dateInvalid,
       })
     }
@@ -238,7 +239,7 @@ export const gregorianDateSchema = z
  * Time-of-day "HH:MM" (24h). Tolerates Persian/Arabic digits.
  */
 export const timeOfDaySchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
   .transform((value) => toLatinDigits(value))

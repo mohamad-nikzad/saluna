@@ -42,7 +42,7 @@ export function useStaffBookingAvailability(
       const res = await api.staff.bookingAvailability(debouncedSlot!, {
         signal,
       })
-      return (res as { staff?: StaffBookingRow[] }).staff ?? []
+      return (res as unknown as { staff?: StaffBookingRow[] }).staff ?? []
     },
     enabled: open && isOnline && debouncedSlot != null,
   })

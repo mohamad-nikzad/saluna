@@ -14,7 +14,7 @@ import {
 } from './primitives'
 
 export const catalogEntityIdSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
 
@@ -22,7 +22,7 @@ const SERVICE_CATEGORY_REQUIRED = 'بخش خدمات را انتخاب کنید'
 
 /** Service's required category reference, with a service-specific message. */
 export const serviceCategoryIdSchema = z
-  .string({ required_error: SERVICE_CATEGORY_REQUIRED })
+  .string({ error: SERVICE_CATEGORY_REQUIRED })
   .trim()
   .min(1, SERVICE_CATEGORY_REQUIRED)
 
@@ -57,12 +57,11 @@ const legacyServiceCategoryKeys = Object.keys(SERVICE_CATEGORIES) as [
 ]
 
 export const serviceCategorySchema = z.enum(legacyServiceCategoryKeys, {
-  required_error: formMessages.required,
-  invalid_type_error: formMessages.required,
+  error: formMessages.required,
 })
 
 export const calendarColorIdSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
   .transform((value) => normalizeCalendarColorId(value))
@@ -164,6 +163,9 @@ export const serviceAddonFormSchema = serviceAddonBaseSchema.refine(
   }
 )
 
+export type ServiceAddonFormInput = z.input<typeof serviceAddonFormSchema>
+export type ServiceAddonFormPayload = z.output<typeof serviceAddonFormSchema>
+
 export const serviceAddonCreateSchema = serviceAddonBaseSchema
   .extend({
     id: z.string().optional(),
@@ -173,17 +175,28 @@ export const serviceAddonCreateSchema = serviceAddonBaseSchema
     path: ['priceDelta'],
   })
 
-export const serviceAddonUpdateSchema = serviceAddonBaseSchema.partial().refine(
-  (value) =>
-    value.priceDelta === undefined ||
-    value.durationDelta === undefined ||
-    value.priceDelta > 0 ||
-    value.durationDelta > 0,
-  {
-    message: 'قیمت یا زمان افزوده باید بیشتر از صفر باشد',
-    path: ['priceDelta'],
-  }
-)
+export const serviceAddonUpdateSchema = z
+  .object({
+    name: requiredTextSchema.optional(),
+    priceDelta: nonNegativeMoneySchema.optional(),
+    durationDelta: z.coerce.number().int().min(0, formMessages.numberInvalid).optional(),
+    active: z.boolean().optional(),
+    sortOrder: z.coerce.number().int().min(0, formMessages.numberInvalid).optional(),
+    description: z.string().trim().optional(),
+    color: z.string().trim().optional().nullable(),
+    scopes: z.array(serviceAddonScopeInputSchema).optional(),
+  })
+  .refine(
+    (value) =>
+      value.priceDelta === undefined ||
+      value.durationDelta === undefined ||
+      value.priceDelta > 0 ||
+      value.durationDelta > 0,
+    {
+      message: 'قیمت یا زمان افزوده باید بیشتر از صفر باشد',
+      path: ['priceDelta'],
+    }
+  )
 
 export type ServiceFormInput = z.input<typeof serviceFormSchema>
 export type ServiceFormPayload = z.output<typeof serviceFormSchema>

@@ -28,7 +28,10 @@ import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
 import { businessSettingsSchema } from '@repo/salon-core/forms/settings'
-import type { BusinessSettingsPayload } from '@repo/salon-core/forms/settings'
+import type {
+  BusinessSettingsInput,
+  BusinessSettingsPayload,
+} from '@repo/salon-core/forms/settings'
 
 import { useAuth } from '#/lib/auth'
 import {
@@ -196,7 +199,7 @@ function SettingsPage() {
     setValue: setBusinessHoursValue,
     watch: watchBusinessHours,
     formState: { errors: businessHoursErrors, isSubmitting: savingHours },
-  } = useForm<BusinessSettingsPayload>({
+  } = useForm<BusinessSettingsInput, any, BusinessSettingsPayload>({
     resolver: zodResolver(businessSettingsSchema),
     defaultValues: {
       workingStart: '09:00',
@@ -207,7 +210,7 @@ function SettingsPage() {
   })
   const workingStart = watchBusinessHours('workingStart') ?? '09:00'
   const workingEnd = watchBusinessHours('workingEnd') ?? '19:00'
-  const slotMin = watchBusinessHours('slotDurationMinutes') ?? 30
+  const slotMin = Number(watchBusinessHours('slotDurationMinutes') ?? 30)
   const workingDays = watchBusinessHours('workingDays') ?? DEFAULT_WORKING_DAYS
 
   useEffect(() => {

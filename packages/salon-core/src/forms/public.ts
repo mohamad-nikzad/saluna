@@ -30,7 +30,7 @@ export const PUBLIC_REQUEST_WINDOW_DAYS = 30
  * Accepts Persian/Arabic digits and assorted separators.
  */
 export const iranianMobilePhoneSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(1, formMessages.required)
   .transform((value) => normalizePhone(value))
@@ -53,14 +53,14 @@ export const publicAppointmentRequestSchema = z
     const maxDate = addDaysYmd(today, PUBLIC_REQUEST_WINDOW_DAYS)
     if (values.date < today || values.date > maxDate) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['date'],
         message: formMessages.dateInvalid,
       })
     }
     if (values.endTime <= values.startTime) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['endTime'],
         message: formMessages.endBeforeStart,
       })
@@ -91,6 +91,7 @@ const bioSchema = z
     return trimmed.length > 0 ? trimmed : undefined
   })
   .pipe(z.string().max(PUBLIC_BIO_MAX_LENGTH, formMessages.bioTooLong).optional())
+  .optional()
 
 export const publicSettingsSchema = z.object({
   enabled: z.boolean().optional(),
@@ -120,6 +121,7 @@ const onboardingBioSchema = z
       .max(PUBLIC_ONBOARDING_BIO_MAX_LENGTH, formMessages.presenceBioTooLong)
       .optional(),
   )
+  .optional()
 
 /**
  * Public-page onboarding step payload. The onboarding step only toggles the

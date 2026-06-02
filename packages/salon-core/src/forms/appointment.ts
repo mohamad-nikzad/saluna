@@ -46,7 +46,7 @@ function validateAppointmentRange(
   const duration = durationMinutesFromRange(values.startTime, values.endTime)
   if (duration <= 0) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['endTime'],
       message: formMessages.endBeforeStart,
     })
@@ -57,7 +57,7 @@ function validateAppointmentRange(
     duration > APPOINTMENT_DURATION_BOUNDS.max
   ) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['durationMinutes'],
       message: `مدت نوبت باید بین ${APPOINTMENT_DURATION_BOUNDS.min} و ${APPOINTMENT_DURATION_BOUNDS.max} دقیقه باشد`,
     })
@@ -82,7 +82,7 @@ export const appointmentCreateSchema = appointmentBaseSchema
     const hasPlaceholder = values.placeholderClient != null
     if (hasClient === hasPlaceholder) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['clientId'],
         message: formMessages.clientRequired,
       })
@@ -147,28 +147,28 @@ export const appointmentFormSchema = z
     if (values.useTemporaryClient) {
       if (!values.temporaryClientName?.trim()) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['temporaryClientName'],
           message: formMessages.temporaryClientNameRequired,
         })
       }
     } else if (!values.clientId?.trim()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['clientId'],
         message: formMessages.clientRequired,
       })
     }
     if (!values.staffId?.trim()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['staffId'],
         message: formMessages.staffRequired,
       })
     }
     if (!values.serviceId?.trim()) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['serviceId'],
         message: formMessages.serviceRequired,
       })
@@ -195,7 +195,12 @@ export const appointmentFormSchema = z
       notes: values.notes,
     })
     if (!payload.success) {
-      for (const issue of payload.error.issues) ctx.addIssue(issue)
+      for (const issue of payload.error.issues)
+        ctx.addIssue({
+          code: 'custom',
+          message: issue.message,
+          path: issue.path,
+        })
       return z.NEVER
     }
     return payload.data

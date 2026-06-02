@@ -6,8 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   EMPTY_PRESENCE_INPUT,
   presenceSchema,
-  presenceToInput,
-  type PresenceInput,
+  presenceToInput
+  
+} from '@repo/salon-core/forms/presence'
+import type {
+  PresenceInput,
+  PresencePayload,
 } from '@repo/salon-core/forms/presence'
 import { Button } from '@repo/ui/button'
 import { FormRootError } from '@repo/ui/form'
@@ -39,7 +43,7 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
     setError,
     watch,
     formState: { errors },
-  } = useForm<PresenceInput>({
+  } = useForm<PresenceInput, any, PresencePayload>({
     resolver: zodResolver(presenceSchema),
     defaultValues: EMPTY_PRESENCE_INPUT,
   })
@@ -54,8 +58,8 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
   }, [presenceQuery.data, reset])
 
   const savePresence = useMutation({
-    mutationFn: (formValues: PresenceInput) =>
-      api.salonProfile.updatePresence(presenceSchema.parse(formValues)),
+    mutationFn: (formValues: PresencePayload) =>
+      api.salonProfile.updatePresence(formValues),
     meta: {
       skipToast: true,
       invalidatesQuery: options.invalidatesQuery ?? salonPresenceQueryKey,

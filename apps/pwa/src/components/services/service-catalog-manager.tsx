@@ -6,11 +6,13 @@ import {
   FolderPlus,
   Layers3,
   LayoutTemplate,
+  Pencil,
   Plus,
   Search,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@repo/ui/button'
+import { Badge } from '@repo/ui/badge'
 import { Card, CardTitle } from '@repo/ui/card'
 import { Input } from '@repo/ui/input'
 import {
@@ -31,12 +33,14 @@ import type {
   ServiceCategory,
   ServiceFamily,
 } from '@repo/salon-core/types'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { useManagerDataClient } from '#/lib/manager-data-client'
 import { CatalogPresetPicker } from '#/components/catalog-preset-picker'
 import { ServiceCategoryDrawer } from './service-category-drawer'
 import { ServiceDrawer } from './service-drawer'
 import { ServiceFamilyDrawer } from './service-family-drawer'
 import { buildCatalog } from './catalog-tree'
+import type { CategoryNode } from './catalog-tree'
 import { ServiceRow } from './service-row'
 
 interface ServiceCatalogManagerProps {
@@ -190,7 +194,9 @@ export function ServiceCatalogManager({
 
   const addService = (categoryId?: string, familyId?: string) => {
     setSelectedService(null)
-    setDefaultCategoryId(categoryId ?? categories[0]?.id ?? null)
+    setDefaultCategoryId(
+      categoryId !== undefined ? categoryId : (categories[0]?.id ?? null),
+    )
     setDefaultFamilyId(familyId ?? null)
     setServiceDrawerOpen(true)
   }

@@ -6,7 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormRootError } from '@repo/ui/form'
 import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
 import { businessSettingsSchema } from '@repo/salon-core/forms/settings'
-import type { BusinessSettingsPayload } from '@repo/salon-core/forms/settings'
+import type {
+  BusinessSettingsInput,
+  BusinessSettingsPayload,
+} from '@repo/salon-core/forms/settings'
 
 import { BusinessHoursFields } from '#/components/business-hours/business-hours-fields'
 import { api } from '#/lib/api-client'
@@ -40,7 +43,7 @@ function HoursScreen() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<BusinessSettingsPayload>({
+  } = useForm<BusinessSettingsInput, any, BusinessSettingsPayload>({
     resolver: zodResolver(businessSettingsSchema),
     defaultValues: {
       workingStart: '09:00',
@@ -52,7 +55,7 @@ function HoursScreen() {
 
   const workingStart = watch('workingStart') ?? '09:00'
   const workingEnd = watch('workingEnd') ?? '21:00'
-  const slotDurationMinutes = watch('slotDurationMinutes') ?? 30
+  const slotDurationMinutes = Number(watch('slotDurationMinutes') ?? 30)
   const workingDays = watch('workingDays') ?? DEFAULT_WORKING_DAYS
 
   useEffect(() => {

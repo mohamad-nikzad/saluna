@@ -13,7 +13,7 @@ const MIN_PASSWORD_LENGTH = 6
 export const loginSchema = z.object({
   phone: phoneSchema,
   password: z
-    .string({ required_error: formMessages.required })
+    .string({ error: formMessages.required })
     .min(1, formMessages.required),
 })
 
@@ -29,7 +29,7 @@ export const signupSchema = z.object({
   managerName: requiredTextSchema,
   managerPhone: phoneSchema,
   password: z
-    .string({ required_error: formMessages.required })
+    .string({ error: formMessages.required })
     .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort),
 })
 

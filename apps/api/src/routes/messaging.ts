@@ -16,7 +16,7 @@ import { error, ok } from '../lib/responses'
 
 const providerEnum = z.enum(['telegram', 'bale', 'rubika', 'whatsapp'])
 const linkBodySchema = z.object({ provider: providerEnum })
-const accountIdSchema = z.object({ id: z.string().uuid() })
+const accountIdSchema = z.object({ id: z.string().guid() })
 const patchBodySchema = z.object({ enabled: z.boolean() })
 
 export const messagingRoute = new Hono<AppEnv>()

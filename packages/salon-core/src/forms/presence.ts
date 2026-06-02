@@ -17,7 +17,7 @@ import { formMessages } from './messages'
 import { iranianMobilePhoneSchema } from './public'
 
 /** Trim, collapse empty → undefined, otherwise validate with `inner`. */
-function optionalWith<T extends z.ZodTypeAny>(inner: T) {
+function optionalWith<T extends z.ZodType<unknown, string>>(inner: T) {
   return z
     .union([z.string(), z.null(), z.undefined()])
     .transform((value) => {
@@ -26,6 +26,7 @@ function optionalWith<T extends z.ZodTypeAny>(inner: T) {
       return trimmed.length > 0 ? trimmed : undefined
     })
     .pipe(inner.optional())
+    .optional()
 }
 
 function parseHttpsUrl(value: string): URL | null {
@@ -42,7 +43,7 @@ function parseHttpsUrl(value: string): URL | null {
 const httpsUrlSchema = z.string().superRefine((value, ctx) => {
   if (!parseHttpsUrl(value)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: formMessages.urlMustBeHttps,
     })
   }
@@ -54,7 +55,7 @@ function mapUrlSchema(allowedDomain: string) {
     const url = parseHttpsUrl(value)
     if (!url) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.urlMustBeHttps,
       })
       return
@@ -62,7 +63,7 @@ function mapUrlSchema(allowedDomain: string) {
     const host = url.hostname.toLowerCase()
     if (host !== allowedDomain && !host.endsWith(`.${allowedDomain}`)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.mapUrlInvalid,
       })
     }
@@ -74,7 +75,7 @@ const socialHandleSchema = z.string().superRefine((value, ctx) => {
   if (/^@[A-Za-z0-9_.]{1,64}$/.test(value)) return
   if (parseHttpsUrl(value)) return
   ctx.addIssue({
-    code: z.ZodIssueCode.custom,
+    code: 'custom',
     message: formMessages.socialHandleInvalid,
   })
 })

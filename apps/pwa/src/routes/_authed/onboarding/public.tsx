@@ -8,7 +8,10 @@ import {
   PUBLIC_ONBOARDING_BIO_MAX_LENGTH,
   publicPageOnboardingSchema,
 } from '@repo/salon-core/forms/public'
-import type { PublicPageOnboardingInput } from '@repo/salon-core/forms/public'
+import type {
+  PublicPageOnboardingInput,
+  PublicPageOnboardingPayload,
+} from '@repo/salon-core/forms/public'
 
 import { PublicPageBasicsFields } from '#/components/public-page/public-page-basics'
 import { api } from '#/lib/api-client'
@@ -45,7 +48,7 @@ function PublicScreen() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<PublicPageOnboardingInput>({
+  } = useForm<PublicPageOnboardingInput, any, PublicPageOnboardingPayload>({
     resolver: zodResolver(publicPageOnboardingSchema),
     defaultValues: { enabled: true, bioText: '' },
   })
@@ -61,8 +64,11 @@ function PublicScreen() {
   }, [publicSettingsQuery.data, reset])
 
   const savePublicSettings = useMutation({
-    mutationFn: (formValues: PublicPageOnboardingInput) =>
-      api.salonPublicSettings.update(formValues),
+    mutationFn: (formValues: PublicPageOnboardingPayload) =>
+      api.salonPublicSettings.update({
+        enabled: formValues.enabled,
+        bioText: formValues.bioText ?? null,
+      }),
     meta: {
       skipToast: true,
       invalidatesQuery: [salonPublicSettingsQueryKey, onboardingQueryKey],

@@ -206,5 +206,7 @@ export function PresenceFields({
 }
 
 export function countFilledPresenceFields(values: PresenceInput): number {
-  return (Object.values(values) as string[]).filter((v) => v?.trim()).length
+  return (Object.values(values) as Array<string | undefined>).filter((v) =>
+    v?.trim(),
+  ).length
 }

@@ -32,7 +32,8 @@ import type {
 } from '@repo/salon-core/types'
 import { serviceAddonFormSchema } from '@repo/salon-core/forms/service'
 import type {
-  ServiceAddonCreatePayload,
+  ServiceAddonFormInput,
+  ServiceAddonFormPayload,
   ServiceAddonScopeInput,
 } from '@repo/salon-core/forms/service'
 import {
@@ -42,16 +43,6 @@ import {
 import { DataClientHttpError } from '@repo/data-client'
 import { useManagerDataClient } from '#/lib/manager-data-client'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
-
-type ServiceAddonFormInput = {
-  name: string
-  priceDelta: number
-  durationDelta: number
-  active: boolean
-  sortOrder: number
-  description?: string
-  scopes: ServiceAddonScopeInput[]
-}
 
 interface ServiceAddonDrawerProps {
   open: boolean
@@ -76,6 +67,12 @@ function addonScopeToInput(scope: ServiceAddonScope): ServiceAddonScopeInput {
   if (scope.type === 'family')
     return { type: 'family', familyId: scope.familyId }
   return { type: 'service', serviceId: scope.serviceId }
+}
+
+function formNumericValue(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') return parseLocalizedInt(value, fallback)
+  return fallback
 }
 
 function emptyValues(sortOrder: number): ServiceAddonFormInput {
@@ -148,7 +145,7 @@ export function ServiceAddonDrawer({
     reset,
     setValue,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<ServiceAddonFormInput>({
+  } = useForm<ServiceAddonFormInput, unknown, ServiceAddonFormPayload>({
     resolver: zodResolver(serviceAddonFormSchema),
     defaultValues: emptyValues(nextSortOrder),
   })
@@ -161,7 +158,7 @@ export function ServiceAddonDrawer({
   const watchedScopes = useWatch({ control, name: 'scopes' })
   const priceDelta = useWatch({ control, name: 'priceDelta' })
   const durationDelta = useWatch({ control, name: 'durationDelta' })
-  const scopes = useMemo(() => watchedScopes, [watchedScopes])
+  const scopes = useMemo(() => watchedScopes ?? [], [watchedScopes])
   const scopeKeys = useMemo(() => new Set(scopes.map(scopeKey)), [scopes])
 
   const addScope = (scope: ServiceAddonScopeInput) => {
@@ -183,17 +180,14 @@ export function ServiceAddonDrawer({
   }
 
   const saveAddon = useMutation({
-    mutationFn: async (values: ServiceAddonFormInput) => {
+    mutationFn: async (values: ServiceAddonFormPayload) => {
       if (!dc) {
         throw new DataClientHttpError('اتصال داده برقرار نیست', 0, null)
       }
-      const payload = serviceAddonFormSchema.parse(
-        values,
-      ) as ServiceAddonCreatePayload
       if (isEditing && addon) {
-        await dc.services.addons.update(addon.id, payload)
+        await dc.services.addons.update(addon.id, values)
       } else {
-        await dc.services.addons.create(payload)
+        await dc.services.addons.create(values)
       }
     },
     meta: {
@@ -259,12 +253,15 @@ export function ServiceAddonDrawer({
                       id="addon-price"
                       type="text"
                       inputMode="numeric"
-                      value={toPersianDigits(field.value)}
+                      value={toPersianDigits(formNumericValue(field.value))}
                       onChange={(event) =>
                         field.onChange(
                           Math.max(
                             0,
-                            parseLocalizedInt(event.target.value, priceDelta),
+                            parseLocalizedInt(
+                              event.target.value,
+                              formNumericValue(priceDelta),
+                            ),
                           ),
                         )
                       }
@@ -290,14 +287,14 @@ export function ServiceAddonDrawer({
                       id="addon-duration"
                       type="text"
                       inputMode="numeric"
-                      value={toPersianDigits(field.value)}
+                      value={toPersianDigits(formNumericValue(field.value))}
                       onChange={(event) =>
                         field.onChange(
                           Math.max(
                             0,
                             parseLocalizedInt(
                               event.target.value,
-                              durationDelta,
+                              formNumericValue(durationDelta),
                             ),
                           ),
                         )
@@ -356,7 +353,7 @@ export function ServiceAddonDrawer({
                       id="addon-sort"
                       type="text"
                       inputMode="numeric"
-                      value={toPersianDigits(field.value)}
+                      value={toPersianDigits(formNumericValue(field.value))}
                       onChange={(event) =>
                         field.onChange(
                           Math.max(0, parseLocalizedInt(event.target.value, 0)),

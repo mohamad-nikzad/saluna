@@ -8,14 +8,14 @@ import { durationMinutesSchema, timeOfDaySchema, timeToMinutes } from './primiti
  * Range 0–127 covers all seven days. See ADR-0004.
  */
 export const workingDaysSchema = z
-  .number({ invalid_type_error: formMessages.numberInvalid })
+  .number({ error: formMessages.numberInvalid })
   .int(formMessages.numberInvalid)
   .min(0, formMessages.numberInvalid)
   .max(127, formMessages.numberInvalid)
   .superRefine((value, ctx) => {
     if (value === 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: formMessages.workingDaysRequired,
       })
     }
@@ -32,7 +32,7 @@ export const businessSettingsSchema = z
     if (!values.workingStart || !values.workingEnd) return
     if (timeToMinutes(values.workingEnd) <= timeToMinutes(values.workingStart)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['workingEnd'],
         message: formMessages.endBeforeStart,
       })

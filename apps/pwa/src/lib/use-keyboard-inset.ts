@@ -41,7 +41,7 @@ export function useKeyboardInset(active: boolean) {
     }
 
     const handleGeometryChange = (event: Event) => {
-      const target = event.target as VirtualKeyboardLike
+      const target = event.target as unknown as VirtualKeyboardLike
       setInset(target.boundingRect.height)
     }
 

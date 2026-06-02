@@ -78,7 +78,7 @@ function emptyValues(
 function serviceToFormValues(service: Service): ServiceFormInput {
   return {
     name: service.name,
-    categoryId: service.categoryId ?? '',
+    categoryId: service.categoryId,
     familyId: service.familyId ?? '',
     category: service.category,
     duration: service.duration,
@@ -132,10 +132,7 @@ export function ServiceDrawer({
       ? families.find((family) => family.id === defaultFamilyId)
       : undefined
     const initialCategoryId =
-      defaultCategoryId ??
-      familyForDefault?.categoryId ??
-      categories[0]?.id ??
-      ''
+      defaultCategoryId ?? familyForDefault?.categoryId ?? categories[0]?.id
     reset(emptyValues(initialCategoryId, defaultFamilyId))
   }, [categories, defaultCategoryId, defaultFamilyId, families, open, reset, service])
 
@@ -286,7 +283,7 @@ export function ServiceDrawer({
                 name="categoryId"
                 render={({ field }) => (
                   <Select
-                    value={field.value ?? ''}
+                    value={field.value}
                     onValueChange={(value) => {
                       field.onChange(value)
                       setValue('familyId', '', { shouldDirty: true })

@@ -18,7 +18,7 @@ import { error, ok } from '../lib/responses'
 const slugParamSchema = z.object({ slug: z.string().min(1) })
 const slugTokenParamSchema = z.object({
   slug: z.string().min(1),
-  token: z.string().uuid(),
+  token: z.string().guid(),
 })
 
 const availabilityQuerySchema = z.object({

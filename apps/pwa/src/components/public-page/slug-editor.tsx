@@ -54,7 +54,7 @@ export function SlugEditor({
     setSaveError(null)
     const parsed = slugSchema.safeParse(slugDraft)
     if (!parsed.success) {
-      setFormatError(parsed.error.errors[0]?.message ?? 'آدرس معتبر نیست')
+      setFormatError(parsed.error.issues[0]?.message ?? 'آدرس معتبر نیست')
       return
     }
     setFormatError(null)

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import type { AvailabilitySlot } from '@repo/salon-core/availability'
 import { cn } from '@repo/ui/utils'
 import { WORKING_HOURS } from '@repo/salon-core/types'
+import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
 import type {
   AppointmentWithDetails,
   BusinessHours,
@@ -204,12 +205,14 @@ function CalendarPage() {
         workingStart: s.workingStart,
         workingEnd: s.workingEnd,
         slotDurationMinutes: s.slotDurationMinutes,
+        workingDays: s.workingDays,
       }
     }
     return {
       workingStart: WORKING_HOURS.start,
       workingEnd: WORKING_HOURS.end,
       slotDurationMinutes: WORKING_HOURS.slotDuration,
+      workingDays: DEFAULT_WORKING_DAYS,
     }
   }, [businessSource])
 

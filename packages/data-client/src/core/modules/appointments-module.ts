@@ -226,20 +226,6 @@ export function createAppointmentsModule(
     )
   }
 
-  async function resolveClientStaffService(
-    clientId: string,
-    staffId: string,
-    serviceId: string
-  ): Promise<{ client: Client; staff: User; service: Service } | null> {
-    const clients = (await storage.get<Client[]>('clients', 'list')) ?? []
-    const staffList = (await storage.get<User[]>('staff', 'list')) ?? []
-    const client = clients.find((c) => c.id === clientId) ?? (await storage.get<Client>('clients', `id:${clientId}`))
-    const staff = staffList.find((s) => s.id === staffId)
-    const service = await resolveServiceLocal(serviceId)
-    if (!client || !staff || !service) return null
-    return { client, staff, service }
-  }
-
   async function updateClientListRecord(
     txStorage: LocalDataPort,
     client: Client,

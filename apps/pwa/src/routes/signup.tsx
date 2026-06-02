@@ -42,7 +42,7 @@ const signupFormSchema = signupSchema
   .omit({ slug: true })
   .extend({
     confirmPassword: z
-      .string({ required_error: formMessages.required })
+      .string({ error: formMessages.required })
       .min(1, formMessages.required),
   })
   .refine((data) => data.password === data.confirmPassword, {

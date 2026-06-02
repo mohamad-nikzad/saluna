@@ -8,7 +8,7 @@ export const SLUG_MAX_LENGTH = 40
 const slugRegex = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
 
 export const slugSchema = z
-  .string({ required_error: formMessages.required })
+  .string({ error: formMessages.required })
   .trim()
   .min(SLUG_MIN_LENGTH, formMessages.slugTooShort)
   .max(SLUG_MAX_LENGTH, formMessages.slugTooLong)

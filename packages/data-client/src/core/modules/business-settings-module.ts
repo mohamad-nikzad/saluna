@@ -1,5 +1,6 @@
 import type { BusinessHours } from '@repo/salon-core'
 import { WORKING_HOURS } from '@repo/salon-core'
+import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
 import { readCacheTimestamp, writeCacheTimestamp } from '../cache-meta'
 import type { HttpTransportPort } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
@@ -37,6 +38,7 @@ function defaultHours(): BusinessHours {
     workingStart: WORKING_HOURS.start,
     workingEnd: WORKING_HOURS.end,
     slotDurationMinutes: WORKING_HOURS.slotDuration,
+    workingDays: DEFAULT_WORKING_DAYS,
   }
 }
 

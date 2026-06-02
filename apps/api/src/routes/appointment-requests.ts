@@ -11,7 +11,7 @@ import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
 
-const idParamSchema = z.object({ id: z.string().uuid() })
+const idParamSchema = z.object({ id: z.string().guid() })
 
 const listQuerySchema = z.object({
   status: z

@@ -131,9 +131,9 @@ export function AppointmentDrawer({
   const addonIds = watch('addonIds') ?? []
   const staffSlotOk = useStaffBookingAvailability(
     open,
-    date ?? '',
-    startTime ?? '',
-    endTime ?? '',
+    date,
+    startTime,
+    endTime,
     isOnline,
   )
   const { data: availableAddons = [], isPending: addonsLoading } =
@@ -809,7 +809,7 @@ export function AppointmentDrawer({
               !selectedServiceHasStaff ||
               !selectedStaffHasServices ||
               !selectedStaffCanPerformSelectedService ||
-              (useTemporaryClient ? !temporaryClientName.trim() : !clientId)
+              (useTemporaryClient ? !temporaryClientName?.trim() : !clientId)
             }
           >
             {isSubmitting && <Spinner className="ml-2" />}
