@@ -176,6 +176,7 @@ export function rowToBusinessHours(row: typeof businessSettings.$inferSelect): B
     workingStart: row.workingStart,
     workingEnd: row.workingEnd,
     slotDurationMinutes: row.slotDurationMinutes,
+    workingDays: row.workingDays,
   }
 }
 

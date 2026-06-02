@@ -5,6 +5,7 @@ import {
   boolean,
   integer,
   serial,
+  smallint,
   timestamp,
   jsonb,
   index,
@@ -152,6 +153,13 @@ export const salonProfile = pgTable('salon_profile', {
   status: text('status').notNull().$type<'active' | 'suspended' | 'archived'>().default('active'),
   phone: text('phone'),
   address: text('address'),
+  mapGoogle: text('map_google'),
+  mapNeshan: text('map_neshan'),
+  mapBalad: text('map_balad'),
+  socialInstagram: text('social_instagram'),
+  socialTelegram: text('social_telegram'),
+  socialWhatsapp: text('social_whatsapp'),
+  website: text('website'),
 })
 
 export const salonMember = pgTable(
@@ -607,6 +615,8 @@ export const businessSettings = pgTable(
     workingStart: text('working_start').notNull().default('09:00'),
     workingEnd: text('working_end').notNull().default('19:00'),
     slotDurationMinutes: integer('slot_duration_minutes').notNull().default(30),
+    // Bitmask: bit 0 = Saturday … bit 6 = Friday. Default 126 (0b1111110) = Sat–Thu open, Fri closed.
+    workingDays: smallint('working_days').notNull().default(126),
   },
   (t) => [uniqueIndex('business_settings_salon_id_unique').on(t.salonId)]
 )
@@ -616,6 +626,8 @@ export const salonOnboarding = pgTable('salon_onboarding', {
     .primaryKey()
     .references(() => organization.id, { onDelete: 'cascade' }),
   profileConfirmedAt: timestamp('profile_confirmed_at', { withTimezone: true }),
+  businessHoursConfirmedAt: timestamp('business_hours_confirmed_at', { withTimezone: true }),
+  managerIsStaff: boolean('manager_is_staff').notNull().default(false),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   skippedAt: timestamp('skipped_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

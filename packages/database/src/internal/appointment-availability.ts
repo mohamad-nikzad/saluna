@@ -8,7 +8,7 @@ import {
 } from '@repo/salon-core/availability'
 import { addDaysYmd, salonCurrentHm, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
-import { dayOfWeekFromDate, resolveStaffWorkingHoursForDay } from '@repo/salon-core/staff-availability'
+import { dayOfWeekFromDate, isSalonOpenOnDate, resolveStaffWorkingHoursForDay } from '@repo/salon-core/staff-availability'
 import type { Appointment, StaffSchedule, User } from '@repo/salon-core/types'
 import { getAppointmentsByDateRange } from './appointment-queries'
 import { getBusinessSettings } from './settings-queries'
@@ -139,7 +139,39 @@ export async function getManagerAppointmentAvailability(
     }
   }
 
-  const searchDates = searchDatesFor(params.mode, params.date)
+  if (params.mode === 'day' && !isSalonOpenOnDate(businessHours.workingDays, params.date)) {
+    return {
+      ok: true,
+      response: {
+        mode: 'day',
+        slots: [],
+        emptyReason: AVAILABILITY_EMPTY_REASONS.SALON_CLOSED,
+      },
+    }
+  }
+
+  const searchDates = searchDatesFor(params.mode, params.date).filter((date) =>
+    isSalonOpenOnDate(businessHours.workingDays, date)
+  )
+
+  if (searchDates.length === 0) {
+    return {
+      ok: true,
+      response:
+        params.mode === 'day'
+          ? {
+              mode: 'day',
+              slots: [],
+              emptyReason: AVAILABILITY_EMPTY_REASONS.SALON_CLOSED,
+            }
+          : {
+              mode: 'nearest',
+              slot: null,
+              emptyReason: AVAILABILITY_EMPTY_REASONS.SALON_CLOSED,
+            },
+    }
+  }
+
   const [appointments, schedulesByStaffEntries] = await Promise.all([
     getAppointmentsByDateRange(
       params.salonId,

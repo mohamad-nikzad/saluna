@@ -22,6 +22,27 @@
       "when": 1780241311005,
       "tag": "0002_silly_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780338664334,
+      "tag": "0003_sad_centennial",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780341945594,
+      "tag": "0004_fast_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780342200000,
+      "tag": "0005_business_hours_confirmed",
+      "breakpoints": true
     }
   ]
 }

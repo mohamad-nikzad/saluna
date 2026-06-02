@@ -282,5 +282,6 @@ export async function getEffectiveBusinessHours(
     workingStart: schedule.workingStart,
     workingEnd: schedule.workingEnd,
     slotDurationMinutes: salonHours.slotDurationMinutes,
+    workingDays: salonHours.workingDays,
   }
 }

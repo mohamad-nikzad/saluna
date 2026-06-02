@@ -18,9 +18,11 @@ export type {
 export {
   getManagerPublicSettings,
   updateManagerPublicSettings,
+  updateSalonSlug,
   getEnabledMessagingProvidersForSalon,
   enableMessagingProviderForSalon,
 } from './internal/public-settings-queries'
+export type { UpdateSalonSlugResult } from './internal/public-settings-queries'
 export type {
   ManagerPublicSettingsView,
   ManagerServiceVisibilityView,

@@ -1,0 +1,7 @@
+# Salon-level working days alongside per-staff schedules
+
+The salon has a coarse "working days" mask on `business_settings.working_days` (one bit per day of week, default Sat–Thu open / Friday closed) that sits **above** the existing per-staff `staff_schedules.day_of_week` rows. A day-of-week slot is bookable only if the salon is open that day **and** at least one capable staff has the day in their schedule — salon-level always wins when they disagree.
+
+We considered deriving "is the salon open Friday?" purely from staff schedules ("at least one active staff has Friday active") and rejected it. Derivation conflates *intent* with *current staffing*: a salon that has decided it is closed on Fridays still looks "open Friday" the moment a new hire's default schedule includes Friday, and a salon that just hasn't hired Friday staff yet looks "closed Friday" on its public booking page when it actually wants the slot to surface. Having the explicit salon-level mask lets the public page answer "are we open this day?" without scanning staff rows, lets onboarding capture the salon owner's intent on day one (the "روزهای باز" pills on the optional `businessHoursSet` step), and keeps per-staff schedules focused on *who* is working, not whether the shop is open at all.
+
+The conflict-resolution rule (salon-level closed → slot hidden regardless of staff availability) lives in the slot-generation code paths for `Appointment Intake`, the public booking page, and the calendar suggestion engine. Onboarding writes the default mask if the manager skips the hours step.

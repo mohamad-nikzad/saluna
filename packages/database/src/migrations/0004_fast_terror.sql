@@ -1,0 +1,1 @@
+ALTER TABLE "salon_onboarding" ADD COLUMN "manager_is_staff" boolean DEFAULT false NOT NULL;

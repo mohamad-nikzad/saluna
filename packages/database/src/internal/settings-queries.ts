@@ -2,11 +2,14 @@ import { eq } from 'drizzle-orm'
 import type { BusinessHours } from '@repo/salon-core/types'
 import { getDb } from '../client'
 import { businessSettings } from '../schema'
+import { confirmBusinessHours } from './onboarding-queries'
 
 const defaultBusinessHours: BusinessHours = {
   workingStart: '09:00',
   workingEnd: '19:00',
   slotDurationMinutes: 30,
+  // Default working days: Saturday–Thursday (Friday off). See ADR-0004.
+  workingDays: 126,
 }
 
 export async function getBusinessSettings(salonId: string): Promise<BusinessHours> {
@@ -22,6 +25,7 @@ export async function getBusinessSettings(salonId: string): Promise<BusinessHour
     workingStart: row.workingStart,
     workingEnd: row.workingEnd,
     slotDurationMinutes: row.slotDurationMinutes,
+    workingDays: row.workingDays,
   }
 }
 
@@ -39,6 +43,7 @@ export async function updateBusinessSettings(
       workingStart: next.workingStart,
       workingEnd: next.workingEnd,
       slotDurationMinutes: next.slotDurationMinutes,
+      workingDays: next.workingDays,
     })
     .onConflictDoUpdate({
       target: businessSettings.salonId,
@@ -46,7 +51,9 @@ export async function updateBusinessSettings(
         workingStart: next.workingStart,
         workingEnd: next.workingEnd,
         slotDurationMinutes: next.slotDurationMinutes,
+        workingDays: next.workingDays,
       },
     })
+  await confirmBusinessHours(salonId)
   return next
 }

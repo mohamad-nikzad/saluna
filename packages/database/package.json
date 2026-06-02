@@ -18,6 +18,7 @@
     "./services": "./src/services.ts",
     "./settings": "./src/settings.ts",
     "./staff": "./src/staff.ts",
+    "./salon-profile": "./src/salon-profile.ts",
     "./public": "./src/public.ts",
     "./appointment-requests": "./src/appointment-requests.ts",
     "./rate-limit": "./src/rate-limit.ts",

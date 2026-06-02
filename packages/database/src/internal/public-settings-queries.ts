@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, ne } from 'drizzle-orm'
 import type { PublicSettingsPayload } from '@repo/salon-core/forms/public'
 import { DEFAULT_PUBLIC_THEME_ID } from '@repo/salon-core/public-themes'
 import { DEFAULT_PUBLIC_LAYOUT_ID } from '@repo/salon-core/public-layouts'
@@ -202,4 +202,49 @@ export async function updateManagerPublicSettings(
   })
 
   return getManagerPublicSettings(salonId)
+}
+
+function isSlugConflict(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : ''
+  return (
+    msg.includes('already') ||
+    msg.includes('exists') ||
+    msg.includes('duplicate') ||
+    msg.includes('unique') ||
+    msg.includes('23505')
+  )
+}
+
+export type UpdateSalonSlugResult =
+  | { ok: true; result: ManagerPublicSettingsResult }
+  | { ok: false; reason: 'conflict' }
+
+export async function updateSalonSlug(
+  salonId: string,
+  slug: string,
+): Promise<UpdateSalonSlugResult> {
+  const db = getDb()
+
+  const taken = await db
+    .select({ id: organization.id })
+    .from(organization)
+    .where(and(eq(organization.slug, slug), ne(organization.id, salonId)))
+    .limit(1)
+  if (taken[0]) {
+    return { ok: false, reason: 'conflict' }
+  }
+
+  try {
+    await db
+      .update(organization)
+      .set({ slug })
+      .where(eq(organization.id, salonId))
+  } catch (err) {
+    if (isSlugConflict(err)) {
+      return { ok: false, reason: 'conflict' }
+    }
+    throw err
+  }
+
+  return { ok: true, result: await getManagerPublicSettings(salonId) }
 }

@@ -16,6 +16,7 @@ import {
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
 import {
   dayOfWeekFromDate,
+  isSalonOpenOnDate,
   resolveStaffWorkingHoursForDay,
 } from '@repo/salon-core/staff-availability'
 import type { Appointment, Service, StaffSchedule, User } from '@repo/salon-core/types'
@@ -195,6 +196,10 @@ export async function getPublicAvailability(
     return emptyAvailability(params.mode, AVAILABILITY_EMPTY_REASONS.NO_QUALIFIED_STAFF)
   }
 
+  if (params.mode === 'day' && !isSalonOpenOnDate(businessHours.workingDays, params.date)) {
+    return emptyAvailability(params.mode, AVAILABILITY_EMPTY_REASONS.SALON_CLOSED)
+  }
+
   const nearestDays = params.nearestDays ?? 14
   const dateOffsets =
     params.mode === 'day'
@@ -203,9 +208,15 @@ export async function getPublicAvailability(
   const searchDates = dateOffsets
     .map((offset) => addDaysYmd(params.date, offset))
     .filter((date) => date <= maxDate)
+    .filter((date) => isSalonOpenOnDate(businessHours.workingDays, date))
 
   if (searchDates.length === 0) {
-    return emptyAvailability(params.mode, AVAILABILITY_EMPTY_REASONS.OUTSIDE_SEARCH_WINDOW)
+    return emptyAvailability(
+      params.mode,
+      params.mode === 'day'
+        ? AVAILABILITY_EMPTY_REASONS.SALON_CLOSED
+        : AVAILABILITY_EMPTY_REASONS.OUTSIDE_SEARCH_WINDOW
+    )
   }
 
   const [appointments, schedulesByStaffEntries] = await Promise.all([
