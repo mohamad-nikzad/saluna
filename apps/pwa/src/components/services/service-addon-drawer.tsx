@@ -35,12 +35,9 @@ import type {
   ServiceAddonFormPayload,
   ServiceAddonScopeInput,
 } from '@repo/salon-core/forms/service'
-import {
-  parseLocalizedInt,
-  toPersianDigits,
-} from '@repo/salon-core/persian-digits'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { LocalizedNumberInput } from '#/components/localized-number-input'
 
 interface ServiceAddonDrawerProps {
   open: boolean
@@ -65,12 +62,6 @@ function addonScopeToInput(scope: ServiceAddonScope): ServiceAddonScopeInput {
   if (scope.type === 'family')
     return { type: 'family', familyId: scope.familyId }
   return { type: 'service', serviceId: scope.serviceId }
-}
-
-function formNumericValue(value: unknown, fallback = 0): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string') return parseLocalizedInt(value, fallback)
-  return fallback
 }
 
 function emptyValues(sortOrder: number): ServiceAddonFormInput {
@@ -141,6 +132,7 @@ export function ServiceAddonDrawer({
     handleSubmit,
     reset,
     setValue,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ServiceAddonFormInput, unknown, ServiceAddonFormPayload>({
     resolver: zodResolver(serviceAddonFormSchema),
@@ -153,8 +145,6 @@ export function ServiceAddonDrawer({
   }, [addon, nextSortOrder, open, reset])
 
   const watchedScopes = useWatch({ control, name: 'scopes' })
-  const priceDelta = useWatch({ control, name: 'priceDelta' })
-  const durationDelta = useWatch({ control, name: 'durationDelta' })
   const scopes = useMemo(() => watchedScopes ?? [], [watchedScopes])
   const scopeKeys = useMemo(() => new Set(scopes.map(scopeKey)), [scopes])
 
@@ -243,25 +233,14 @@ export function ServiceAddonDrawer({
                   control={control}
                   name="priceDelta"
                   render={({ field }) => (
-                    <Input
+                    <LocalizedNumberInput
                       id="addon-price"
-                      type="text"
-                      inputMode="numeric"
-                      value={toPersianDigits(formNumericValue(field.value))}
-                      onChange={(event) =>
-                        field.onChange(
-                          Math.max(
-                            0,
-                            parseLocalizedInt(
-                              event.target.value,
-                              formNumericValue(priceDelta),
-                            ),
-                          ),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      dir="rtl"
-                      className="text-right tabular-nums"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={() => {
+                        field.onBlur()
+                        void trigger('priceDelta')
+                      }}
                     />
                   )}
                 />
@@ -277,25 +256,14 @@ export function ServiceAddonDrawer({
                   control={control}
                   name="durationDelta"
                   render={({ field }) => (
-                    <Input
+                    <LocalizedNumberInput
                       id="addon-duration"
-                      type="text"
-                      inputMode="numeric"
-                      value={toPersianDigits(formNumericValue(field.value))}
-                      onChange={(event) =>
-                        field.onChange(
-                          Math.max(
-                            0,
-                            parseLocalizedInt(
-                              event.target.value,
-                              formNumericValue(durationDelta),
-                            ),
-                          ),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      dir="rtl"
-                      className="text-right tabular-nums"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={() => {
+                        field.onBlur()
+                        void trigger('durationDelta')
+                      }}
                     />
                   )}
                 />
@@ -343,19 +311,14 @@ export function ServiceAddonDrawer({
                   control={control}
                   name="sortOrder"
                   render={({ field }) => (
-                    <Input
+                    <LocalizedNumberInput
                       id="addon-sort"
-                      type="text"
-                      inputMode="numeric"
-                      value={toPersianDigits(formNumericValue(field.value))}
-                      onChange={(event) =>
-                        field.onChange(
-                          Math.max(0, parseLocalizedInt(event.target.value, 0)),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      dir="rtl"
-                      className="text-right tabular-nums"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={() => {
+                        field.onBlur()
+                        void trigger('sortOrder')
+                      }}
                     />
                   )}
                 />

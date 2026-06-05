@@ -152,6 +152,13 @@ export const durationMinutesSchema = z
 export const nonNegativeMoneySchema = z
   .union([z.number(), z.string()])
   .transform((value, ctx) => {
+    if (typeof value === 'string' && toLatinDigits(value).trim() === '') {
+      ctx.addIssue({
+        code: 'custom',
+        message: formMessages.numberInvalid,
+      })
+      return z.NEVER
+    }
     const raw =
       typeof value === 'number' ? value : Number(toLatinDigits(value).trim())
     if (!Number.isFinite(raw)) {
@@ -169,6 +176,38 @@ export const nonNegativeMoneySchema = z
       .int(formMessages.priceInvalid)
       .min(0, formMessages.priceInvalid)
       .max(999_999_999, formMessages.priceTooHigh),
+  )
+
+/**
+ * Non-negative integer. Accepts number or numeric string (Persian/Latin
+ * digits) and rejects empty strings instead of coercing them to zero.
+ */
+export const nonNegativeIntegerSchema = z
+  .union([z.number(), z.string()])
+  .transform((value, ctx) => {
+    if (typeof value === 'string' && toLatinDigits(value).trim() === '') {
+      ctx.addIssue({
+        code: 'custom',
+        message: formMessages.numberInvalid,
+      })
+      return z.NEVER
+    }
+    const raw =
+      typeof value === 'number' ? value : Number(toLatinDigits(value).trim())
+    if (!Number.isFinite(raw)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: formMessages.numberInvalid,
+      })
+      return z.NEVER
+    }
+    return raw
+  })
+  .pipe(
+    z
+      .number()
+      .int(formMessages.numberInvalid)
+      .min(0, formMessages.numberInvalid),
   )
 
 /**

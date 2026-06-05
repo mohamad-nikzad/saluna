@@ -43,19 +43,23 @@ import {
   resolveIntakeStaffChange,
   validateAppointmentIntakeSubmit,
 } from '#/lib/appointment-intake'
-import { tomansFormatter, useStaffBookingAvailability } from '#/lib/appointment-surface'
+import {
+  tomansFormatter,
+  useStaffBookingAvailability,
+} from '#/lib/appointment-surface'
 import { useServiceAddons } from '#/lib/use-service-addons'
 import { useAppointmentIntakeMutations } from '#/lib/use-appointment-intake-mutations'
 import { ServicePicker } from '#/components/services/service-picker'
 import { useNetworkStatus } from '#/lib/network-status'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
 import { TimePicker } from '@repo/ui/time-picker'
-import {
-  parseLocalizedInt,
-  toPersianDigits,
-} from '@repo/salon-core/persian-digits'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { appointmentFormSchema } from '@repo/salon-core/forms/appointment'
 import type { AppointmentFormInput } from '@repo/salon-core/forms/appointment'
+import {
+  LocalizedNumberInput,
+  parseOptionalLocalizedInteger,
+} from '#/components/localized-number-input'
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120]
 
@@ -115,6 +119,7 @@ export function AppointmentDrawer({
     setError,
     setFocus,
     setValue,
+    trigger,
     watch,
     formState: { errors, isSubmitting, isDirty },
   } = form
@@ -124,7 +129,8 @@ export function AppointmentDrawer({
   const serviceId = watch('serviceId')
   const date = watch('date')
   const startTime = watch('startTime')
-  const durationMinutes = Number(watch('durationMinutes')) || 45
+  const durationInput = watch('durationMinutes')
+  const durationMinutes = parseOptionalLocalizedInteger(durationInput) ?? 45
   const endTime =
     watch('endTime') || endTimeFromDuration(startTime, durationMinutes)
   const useTemporaryClient = Boolean(watch('useTemporaryClient'))
@@ -215,6 +221,18 @@ export function AppointmentDrawer({
     setValue('endTime', et, { shouldDirty: true })
     const d = durationFromEndTime(startTime, et)
     if (d != null) setValue('durationMinutes', d, { shouldDirty: true })
+  }
+
+  const handleDurationInputChange = (value: string) => {
+    setValue('durationMinutes', value, {
+      shouldDirty: true,
+      shouldValidate: false,
+    })
+    const parsed = parseOptionalLocalizedInteger(value)
+    if (parsed == null) return
+    setValue('endTime', endTimeFromDuration(startTime, parsed), {
+      shouldDirty: true,
+    })
   }
 
   const { requestClose, confirmDialog } = useDismissGuard({
@@ -621,21 +639,13 @@ export function AppointmentDrawer({
                       </Button>
                     ))}
                   </div>
-                  <Input
+                  <LocalizedNumberInput
                     id="duration"
-                    type="text"
-                    inputMode="numeric"
-                    value={toPersianDigits(durationMinutes)}
-                    onChange={(e) => {
-                      const v = parseLocalizedInt(
-                        e.target.value,
-                        durationMinutes,
-                      )
-                      if (!Number.isFinite(v)) return
-                      applyDuration(v)
+                    value={durationInput}
+                    onValueChange={handleDurationInputChange}
+                    onBlur={() => {
+                      void trigger('durationMinutes')
                     }}
-                    dir="rtl"
-                    className="text-right tabular-nums"
                   />
                   {errors.durationMinutes && (
                     <FieldError>{errors.durationMinutes.message}</FieldError>

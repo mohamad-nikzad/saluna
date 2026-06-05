@@ -41,6 +41,7 @@ import {
   isDuplicateClientError,
   useAppointmentIntakeMutations,
 } from '#/lib/use-appointment-intake-mutations'
+import { parseOptionalLocalizedInteger } from '#/components/localized-number-input'
 
 type StatusActionState = AppointmentStatusActionState
 
@@ -103,6 +104,7 @@ export function useAppointmentDetailDrawer({
     reset: resetEditForm,
     setError: setEditError,
     setValue: setEditValue,
+    trigger: triggerEdit,
     watch: watchEdit,
     formState: { isSubmitting: isEditSubmitting },
   } = editForm
@@ -113,7 +115,8 @@ export function useAppointmentDetailDrawer({
   const serviceId = watchEdit('serviceId') ?? ''
   const date = watchEdit('date')
   const startTime = watchEdit('startTime')
-  const durationMinutes = Number(watchEdit('durationMinutes')) || 45
+  const durationInput = watchEdit('durationMinutes')
+  const durationMinutes = parseOptionalLocalizedInteger(durationInput) ?? 45
   const endTime = watchEdit('endTime')
   const addonIds = watchEdit('addonIds') ?? []
 
@@ -210,6 +213,18 @@ export function useAppointmentDetailDrawer({
     setEditValue('endTime', et, { shouldDirty: true })
     const d = durationFromEndTime(startTime, et)
     if (d != null) setEditValue('durationMinutes', d, { shouldDirty: true })
+  }
+
+  const applyDurationInput = (value: string) => {
+    setEditValue('durationMinutes', value, {
+      shouldDirty: true,
+      shouldValidate: false,
+    })
+    const parsed = parseOptionalLocalizedInteger(value)
+    if (parsed == null) return
+    setEditValue('endTime', endTimeFromDuration(startTime, parsed), {
+      shouldDirty: true,
+    })
   }
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -498,7 +513,9 @@ export function useAppointmentDetailDrawer({
     handleEditStaffChange,
     handleTemporaryClientModeChange,
     applyDuration,
+    applyDurationInput,
     applyEndTime,
+    triggerEdit,
     editForm,
     completeForm,
     completeClientNameRef,
@@ -517,6 +534,7 @@ export function useAppointmentDetailDrawer({
     serviceId,
     date,
     startTime,
+    durationInput,
     durationMinutes,
     endTime,
     addonIds,

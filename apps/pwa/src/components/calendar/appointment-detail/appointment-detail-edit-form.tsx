@@ -27,15 +27,13 @@ import { ServicePicker } from '#/components/services/service-picker'
 import { StaffPicker } from '#/components/calendar/staff-picker'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
 import { TimePicker } from '@repo/ui/time-picker'
-import {
-  parseLocalizedInt,
-  toPersianDigits,
-} from '@repo/salon-core/persian-digits'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import {
   formatTomans,
   isHistoricalAddon,
   tomansFormatter,
 } from '#/lib/appointment-surface'
+import { LocalizedNumberInput } from '#/components/localized-number-input'
 
 interface AppointmentDetailEditFormProps {
   editForm: UseFormReturn<AppointmentFormInput>
@@ -50,6 +48,7 @@ interface AppointmentDetailEditFormProps {
   serviceId: string
   date: string | undefined
   startTime: string | undefined
+  durationInput: string | number | undefined
   durationMinutes: number
   endTime: string | undefined
   addonIds: string[]
@@ -67,7 +66,8 @@ interface AppointmentDetailEditFormProps {
   onEditStaffChange: (id: string) => void
   onEditServiceChange: (id: string) => void
   onToggleAddon: (addon: ServiceAddon) => void
-  applyDuration: (mins: number) => void
+  applyDurationInput: (value: string) => void
+  triggerEdit: UseFormReturn<AppointmentFormInput>['trigger']
   applyEndTime: (et: string) => void
 }
 
@@ -84,6 +84,7 @@ export function AppointmentDetailEditForm({
   serviceId,
   date,
   startTime,
+  durationInput,
   durationMinutes,
   endTime,
   addonIds,
@@ -101,7 +102,8 @@ export function AppointmentDetailEditForm({
   onEditStaffChange,
   onEditServiceChange,
   onToggleAddon,
-  applyDuration,
+  applyDurationInput,
+  triggerEdit,
   applyEndTime,
 }: AppointmentDetailEditFormProps) {
   const {
@@ -331,18 +333,13 @@ export function AppointmentDetailEditForm({
 
         <Field>
           <FieldLabel htmlFor="edit-duration">مدت (دقیقه)</FieldLabel>
-          <Input
+          <LocalizedNumberInput
             id="edit-duration"
-            type="text"
-            inputMode="numeric"
-            value={toPersianDigits(durationMinutes)}
-            onChange={(e) => {
-              const v = parseLocalizedInt(e.target.value, durationMinutes)
-              if (!Number.isFinite(v)) return
-              applyDuration(v)
+            value={durationInput}
+            onValueChange={applyDurationInput}
+            onBlur={() => {
+              void triggerEdit('durationMinutes')
             }}
-            dir="rtl"
-            className="text-right tabular-nums"
           />
           {editErrors.durationMinutes && (
             <FieldError>{editErrors.durationMinutes.message}</FieldError>

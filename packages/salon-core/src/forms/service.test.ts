@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { serviceFormSchema, serviceUpdateSchema } from './service'
+import {
+  serviceAddonFormSchema,
+  serviceFormSchema,
+  serviceUpdateSchema,
+} from './service'
 
 describe('serviceFormSchema', () => {
   it('trims name and normalizes numeric Persian-digit strings', () => {
@@ -83,6 +87,70 @@ describe('serviceFormSchema', () => {
         duration: 45,
         price: -1,
         color: 'rose',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects cleared numeric strings instead of coercing them to zero', () => {
+    expect(
+      serviceFormSchema.safeParse({
+        name: 'x',
+        categoryId: 'cat1',
+        category: 'hair',
+        duration: '',
+        price: 100,
+        color: 'rose',
+      }).success,
+    ).toBe(false)
+
+    expect(
+      serviceFormSchema.safeParse({
+        name: 'x',
+        categoryId: 'cat1',
+        category: 'hair',
+        duration: 45,
+        price: '',
+        color: 'rose',
+      }).success,
+    ).toBe(false)
+  })
+})
+
+describe('serviceAddonFormSchema', () => {
+  it('normalizes localized numeric strings', () => {
+    const result = serviceAddonFormSchema.parse({
+      name: 'رنگساژ',
+      priceDelta: '۱۵۰۰۰۰',
+      durationDelta: '۳۰',
+      sortOrder: '۲',
+      scopes: [{ type: 'service', serviceId: 'svc-1' }],
+    })
+
+    expect(result).toMatchObject({
+      priceDelta: 150000,
+      durationDelta: 30,
+      sortOrder: 2,
+    })
+  })
+
+  it('rejects cleared add-on numeric strings instead of coercing them to zero', () => {
+    expect(
+      serviceAddonFormSchema.safeParse({
+        name: 'رنگساژ',
+        priceDelta: '۱۰۰۰',
+        durationDelta: '',
+        sortOrder: 0,
+        scopes: [{ type: 'service', serviceId: 'svc-1' }],
+      }).success,
+    ).toBe(false)
+
+    expect(
+      serviceAddonFormSchema.safeParse({
+        name: 'رنگساژ',
+        priceDelta: '۱۰۰۰',
+        durationDelta: 0,
+        sortOrder: '',
+        scopes: [{ type: 'service', serviceId: 'svc-1' }],
       }).success,
     ).toBe(false)
   })

@@ -85,6 +85,7 @@ export function AppointmentDetailDrawer({
             serviceId={drawer.serviceId}
             date={drawer.date}
             startTime={drawer.startTime}
+            durationInput={drawer.durationInput}
             durationMinutes={drawer.durationMinutes}
             endTime={drawer.endTime}
             addonIds={drawer.addonIds}
@@ -102,7 +103,8 @@ export function AppointmentDetailDrawer({
             onEditStaffChange={drawer.handleEditStaffChange}
             onEditServiceChange={drawer.handleEditServiceChange}
             onToggleAddon={drawer.toggleEditAddon}
-            applyDuration={drawer.applyDuration}
+            applyDurationInput={drawer.applyDurationInput}
+            triggerEdit={drawer.triggerEdit}
             applyEndTime={drawer.applyEndTime}
           />
         ) : (

@@ -166,4 +166,20 @@ describe('appointmentFormSchema', () => {
       expect(paths).toContain('serviceId')
     }
   })
+
+  it('rejects a cleared duration instead of falling back to the old value', () => {
+    const result = appointmentFormSchema.safeParse({
+      ...base,
+      useTemporaryClient: false,
+      clientId: 'client-1',
+      durationMinutes: '',
+    })
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(
+        result.error.issues.map((issue) => issue.path.join('.')),
+      ).toContain('durationMinutes')
+    }
+  })
 })

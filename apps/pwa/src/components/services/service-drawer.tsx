@@ -31,15 +31,13 @@ import type {
 } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { calendarColorOptions } from '@repo/brand-tokens/calendar-colors'
-import {
-  parseLocalizedInt,
-  toPersianDigits,
-} from '@repo/salon-core/persian-digits'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { serviceFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceFormInput } from '@repo/salon-core/forms/service'
 import { DataClientHttpError } from '@repo/data-client'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
 import { useComboComponentsQuery } from '#/lib/manager-data-queries'
+import { LocalizedNumberInput } from '#/components/localized-number-input'
 import { ServicePicker } from './service-picker'
 
 interface ServiceDrawerProps {
@@ -113,6 +111,7 @@ export function ServiceDrawer({
     reset,
     setValue,
     setError,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ServiceFormInput>({
     resolver: zodResolver(serviceFormSchema),
@@ -132,7 +131,15 @@ export function ServiceDrawer({
     const initialCategoryId =
       defaultCategoryId ?? familyForDefault?.categoryId ?? categories[0]?.id
     reset(emptyValues(initialCategoryId, defaultFamilyId))
-  }, [categories, defaultCategoryId, defaultFamilyId, families, open, reset, service])
+  }, [
+    categories,
+    defaultCategoryId,
+    defaultFamilyId,
+    families,
+    open,
+    reset,
+    service,
+  ])
 
   const nameValue = useWatch({ control, name: 'name' })
   const categoryValue = useWatch({ control, name: 'categoryId' })
@@ -339,25 +346,14 @@ export function ServiceDrawer({
                   control={control}
                   name="duration"
                   render={({ field }) => (
-                    <Input
+                    <LocalizedNumberInput
                       id="svc-dur"
-                      type="text"
-                      inputMode="numeric"
-                      value={toPersianDigits(field.value)}
-                      onChange={(e) =>
-                        field.onChange(
-                          Math.max(
-                            5,
-                            parseLocalizedInt(
-                              e.target.value,
-                              Number(field.value) || 45,
-                            ),
-                          ),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      dir="rtl"
-                      className="text-right tabular-nums"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={() => {
+                        field.onBlur()
+                        void trigger('duration')
+                      }}
                     />
                   )}
                 />
@@ -371,25 +367,14 @@ export function ServiceDrawer({
                   control={control}
                   name="price"
                   render={({ field }) => (
-                    <Input
+                    <LocalizedNumberInput
                       id="svc-price"
-                      type="text"
-                      inputMode="numeric"
-                      value={toPersianDigits(field.value)}
-                      onChange={(e) =>
-                        field.onChange(
-                          Math.max(
-                            0,
-                            parseLocalizedInt(
-                              e.target.value,
-                              Number(field.value) || 0,
-                            ),
-                          ),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      dir="rtl"
-                      className="text-right tabular-nums"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      onBlur={() => {
+                        field.onBlur()
+                        void trigger('price')
+                      }}
                     />
                   )}
                 />
