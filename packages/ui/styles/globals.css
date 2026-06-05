@@ -180,7 +180,9 @@
   padding: 2px 5px;
   cursor: pointer;
   color: var(--foreground);
-  transition: transform 0.1s, opacity 0.1s;
+  transition:
+    transform 0.1s,
+    opacity 0.1s;
 }
 
 .salon-fullcalendar .fc-event:active {
@@ -306,11 +308,11 @@
   border: none;
   border-radius: 50%;
   background: var(--saloora-rose);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--saloora-rose) 25%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in oklch, var(--saloora-rose) 25%, transparent);
 }
 
 .salon-fullcalendar .fc-scrollgrid {
-  border-radius: calc(var(--radius));
   overflow: hidden;
   border-color: var(--border);
 }
@@ -332,6 +334,15 @@
   font-size: 0.8rem;
   font-weight: 500;
   padding: 4px 6px;
+}
+
+.salon-fullcalendar .fc-daygrid-day {
+  cursor: pointer;
+}
+
+.salon-fullcalendar .fc-daygrid-event {
+  min-height: 1.45rem;
+  padding-block: 0.2rem;
 }
 
 /* ── List / agenda: day-grouped rounded cards ────────────────── */
@@ -399,7 +410,9 @@
 }
 
 /* last row of a day group (and the very last row) closes the card */
-.salon-fullcalendar .fc-list-event:not(:has(+ .fc-list-event)) .fc-list-event-title,
+.salon-fullcalendar
+  .fc-list-event:not(:has(+ .fc-list-event))
+  .fc-list-event-title,
 .salon-fullcalendar .fc-list-event:has(+ .fc-list-day) .fc-list-event-title {
   border-bottom: 1px solid var(--border);
   border-end-start-radius: 18px;
@@ -419,7 +432,11 @@
 
 /* ── Week-view collapsed concurrency pill ("N همزمان") ────────── */
 .salon-fullcalendar .fc-event:has(.fc-apt-cluster) {
-  background-color: color-mix(in oklch, var(--primary) 12%, var(--card)) !important;
+  background-color: color-mix(
+    in oklch,
+    var(--primary) 12%,
+    var(--card)
+  ) !important;
   border-right-color: var(--border) !important;
   border-right-width: 1px;
 }
@@ -606,4 +623,27 @@
 
 .salon-fullcalendar .fc-event--cancelled .fc-apt-row-time-h {
   color: var(--destructive);
+}
+
+@media (max-width: 640px) {
+  .salon-fullcalendar .fc-timegrid-slot {
+    height: 2.15rem;
+  }
+
+  .salon-fullcalendar .fc-timegrid-event {
+    min-height: 2.4rem;
+  }
+
+  .salon-fullcalendar .fc-apt-client {
+    font-size: 0.68rem;
+  }
+
+  .salon-fullcalendar .fc-apt-svc {
+    font-size: 0.58rem;
+  }
+
+  .salon-fullcalendar .fc-scrollgrid-section-body .fc-scroller,
+  .salon-fullcalendar .fc-scrollgrid-section-body .fc-scroller-harness {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
 }

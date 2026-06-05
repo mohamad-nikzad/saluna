@@ -39,8 +39,10 @@ export function CalendarHeader({
         onDateChange(direction === 'prev' ? subDays(d, 1) : addDays(d, 1))
         break
       case 'week':
-      case 'list':
         onDateChange(direction === 'prev' ? subWeeks(d, 1) : addWeeks(d, 1))
+        break
+      case 'list':
+        onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
         break
       case 'month':
         onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
@@ -53,8 +55,9 @@ export function CalendarHeader({
       case 'day':
         return formatPersianFullDate(titleAnchor)
       case 'week':
-      case 'list':
         return formatPersianWeekRange(titleAnchor, addDays(titleAnchor, 6))
+      case 'list':
+        return formatPersianWeekRange(titleAnchor, addMonths(titleAnchor, 1))
       case 'month':
         return formatPersianMonthYear(navigationDate)
     }

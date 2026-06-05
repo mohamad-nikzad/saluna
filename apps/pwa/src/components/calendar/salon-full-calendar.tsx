@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import type {
   DateSelectArg,
   DatesSetArg,
+  DateRangeInput,
   EventClickArg,
   EventInput,
 } from '@fullcalendar/core'
@@ -11,7 +12,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
-import { format, subDays } from 'date-fns'
+import { addDays, addMonths, format, subDays } from 'date-fns'
 import { WORKING_HOURS } from '@repo/salon-core/types'
 import type {
   AppointmentWithDetails,
@@ -32,7 +33,10 @@ import {
   formatPersianTime,
   toPersianDigits,
 } from '@repo/salon-core/persian-digits'
-import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import {
+  salonCurrentHm,
+  salonTodayYmd,
+} from '@repo/salon-core/salon-local-time'
 import { buildConcurrencyClusters } from '#/components/calendar/concurrent-appointments-sheet'
 
 function staffColorToCssVar(staffColor: string): string {
@@ -88,7 +92,7 @@ function calendarViewToFc(view: CalendarView): string {
     case 'month':
       return 'dayGridMonth'
     case 'list':
-      return 'listWeek'
+      return 'listUpcomingMonth'
     default:
       return 'timeGridWeek'
   }
@@ -112,6 +116,24 @@ function appointmentServiceLabel(
   return `${base} +${toPersianDigits(apt.bookedAddonCount)}`
 }
 
+function subtractMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = Math.max(0, h * 60 + m - minutes)
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}:00`
+}
+
+function parseYmdToLocalDate(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number)
+  return new Date(y, m - 1, d, 12, 0, 0, 0)
+}
+
+function isSmallViewport(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(max-width: 640px)').matches
+  )
+}
+
 export interface SalonFullCalendarProps {
   className?: string
   appointments: AppointmentWithDetails[]
@@ -123,6 +145,7 @@ export interface SalonFullCalendarProps {
     activeStart: Date,
   ) => void
   onSlotSelect: (dateStr: string, timeStr: string) => void
+  onDaySummaryOpen?: (dateStr: string) => void
   onEventClick: (appointment: AppointmentWithDetails) => void
   /** Week view: tapping a collapsed "N همزمان" pill resolves to the overlapping cluster. */
   onClusterClick?: (cluster: AppointmentWithDetails[]) => void
@@ -141,6 +164,7 @@ export function SalonFullCalendar({
   currentDate,
   onVisibleRangeChange,
   onSlotSelect,
+  onDaySummaryOpen,
   onEventClick,
   onClusterClick,
   businessHours: businessHoursProp,
@@ -153,7 +177,52 @@ export function SalonFullCalendar({
     workingEnd: WORKING_HOURS.end,
     slotDurationMinutes: WORKING_HOURS.slotDuration,
   }
-  const slotIso = minutesToSlotDuration(bh.slotDurationMinutes)
+  const [isMobileCalendar, setIsMobileCalendar] = useState(isSmallViewport)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 640px)')
+    const handleChange = () => setIsMobileCalendar(mq.matches)
+    handleChange()
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
+  }, [])
+
+  const displaySlotMinutes = isMobileCalendar
+    ? Math.max(bh.slotDurationMinutes, 30)
+    : bh.slotDurationMinutes
+  const slotIso = minutesToSlotDuration(displaySlotMinutes)
+  const snapIso = minutesToSlotDuration(bh.slotDurationMinutes)
+  const mobileScrollTime = useMemo(() => {
+    if (view !== 'day' && view !== 'week') return `${bh.workingStart}:00`
+    const todayYmd = salonTodayYmd()
+    const currentYmd = format(currentDate, 'yyyy-MM-dd')
+    const target =
+      appointments
+        .filter((a) =>
+          view === 'day'
+            ? a.date === currentYmd
+            : a.date >= currentYmd &&
+              a.date <= format(addDays(currentDate, 6), 'yyyy-MM-dd'),
+        )
+        .sort((a, b) =>
+          `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`),
+        )[0]?.startTime ??
+      (currentYmd === todayYmd ? salonCurrentHm() : bh.workingStart)
+    return subtractMinutes(target, 45)
+  }, [appointments, bh.workingStart, currentDate, view])
+  const scrollTime = isMobileCalendar
+    ? mobileScrollTime
+    : `${bh.workingStart}:00`
+  const listVisibleRange = useMemo<
+    ((rangeDate: Date) => DateRangeInput) | undefined
+  >(() => {
+    if (view !== 'list') return undefined
+    return (rangeDate) => {
+      const today = parseYmdToLocalDate(salonTodayYmd())
+      const start = rangeDate < today ? today : rangeDate
+      return { start, end: addDays(addMonths(start, 1), 1) }
+    }
+  }, [view])
   const appointmentsById = useMemo(() => {
     const m = new Map<string, AppointmentWithDetails>()
     for (const a of appointments) m.set(a.id, a)
@@ -261,6 +330,14 @@ export function SalonFullCalendar({
     return () => cancelAnimationFrame(id)
   }, [view, currentDate])
 
+  useEffect(() => {
+    if (!isMobileCalendar || (view !== 'day' && view !== 'week')) return
+    const id = requestAnimationFrame(() => {
+      calendarRef.current?.getApi().scrollToTime(mobileScrollTime)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [isMobileCalendar, mobileScrollTime, view])
+
   const handleDatesSet = useCallback(
     (arg: DatesSetArg) => {
       const start = format(arg.start, 'yyyy-MM-dd')
@@ -273,14 +350,16 @@ export function SalonFullCalendar({
   const handleDateSelect = useCallback(
     (arg: DateSelectArg) => {
       const dateStr = format(arg.start, 'yyyy-MM-dd')
-      let timeStr = format(arg.start, 'HH:mm')
+      const timeStr = format(arg.start, 'HH:mm')
       if (arg.allDay || arg.view.type === 'dayGridMonth') {
-        timeStr = bh.workingStart
+        onDaySummaryOpen?.(dateStr)
+        arg.view.calendar.unselect()
+        return
       }
       onSlotSelect(dateStr, timeStr)
       arg.view.calendar.unselect()
     },
-    [onSlotSelect, bh.workingStart],
+    [onSlotSelect, onDaySummaryOpen],
   )
 
   const selectAllow = useCallback(
@@ -297,6 +376,12 @@ export function SalonFullCalendar({
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault()
+      if (info.view.type === 'dayGridMonth') {
+        const id = info.event.extendedProps.appointmentId as string | undefined
+        const apt = id ? appointmentsById.get(id) : null
+        if (apt) onDaySummaryOpen?.(apt.date)
+        return
+      }
       if (info.event.extendedProps.kind === 'cluster') {
         const ids =
           (info.event.extendedProps.clusterIds as string[] | undefined) ?? []
@@ -311,18 +396,18 @@ export function SalonFullCalendar({
       const apt = appointmentsById.get(id)
       if (apt) onEventClick(apt)
     },
-    [appointmentsById, onEventClick, onClusterClick],
+    [appointmentsById, onDaySummaryOpen, onEventClick, onClusterClick],
   )
 
   const handleDateClick = useCallback(
     (arg: { date: Date; dateStr: string; view: { type: string } }) => {
       if (arg.view.type === 'dayGridMonth') {
-        onSlotSelect(format(arg.date, 'yyyy-MM-dd'), bh.workingStart)
+        onDaySummaryOpen?.(format(arg.date, 'yyyy-MM-dd'))
       } else {
         onSlotSelect(format(arg.date, 'yyyy-MM-dd'), format(arg.date, 'HH:mm'))
       }
     },
-    [onSlotSelect, bh.workingStart],
+    [onDaySummaryOpen, onSlotSelect],
   )
 
   return (
@@ -357,11 +442,21 @@ export function SalonFullCalendar({
         initialDate={currentDate}
         locale={faLocale}
         headerToolbar={false}
+        views={{
+          listUpcomingMonth: {
+            type: 'list',
+            duration: { months: 1 },
+          },
+        }}
+        visibleRange={listVisibleRange}
         events={events}
         height="100%"
         direction="rtl"
         firstDay={6}
         slotDuration={slotIso}
+        snapDuration={snapIso}
+        scrollTime={scrollTime}
+        scrollTimeReset
         slotMinTime={`${bh.workingStart}:00`}
         slotMaxTime={`${bh.workingEnd}:00`}
         allDaySlot={false}
@@ -372,7 +467,7 @@ export function SalonFullCalendar({
         selectOverlap
         selectAllow={readOnly ? () => false : selectAllow}
         select={readOnly ? undefined : handleDateSelect}
-        dateClick={readOnly ? undefined : handleDateClick}
+        dateClick={readOnly && !onDaySummaryOpen ? undefined : handleDateClick}
         eventClick={handleEventClick}
         datesSet={handleDatesSet}
         // Use HTML custom content (not React nodes) so @fullcalendar/react avoids flushSync
@@ -391,6 +486,22 @@ export function SalonFullCalendar({
           }
           return {
             html: `<span class="fc-daygrid-day-number">${escapeHtml(formatPersianDayNumber(fcDayCellToDate(arg)))}</span>`,
+          }
+        }}
+        dayCellDidMount={(arg) => {
+          if (arg.view.type !== 'dayGridMonth') return
+          arg.el.setAttribute('role', 'button')
+          arg.el.setAttribute('tabindex', '0')
+          arg.el.setAttribute(
+            'aria-label',
+            `مشاهده روز ${format(arg.date, 'yyyy-MM-dd')}`,
+          )
+          const openDay = () =>
+            onDaySummaryOpen?.(format(arg.date, 'yyyy-MM-dd'))
+          arg.el.onkeydown = (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            openDay()
           }
         }}
         slotLabelContent={({ date }) => ({
@@ -471,7 +582,11 @@ export function SalonFullCalendar({
           formatPersianListDayRelative(expandedZonedToDate(arg.date))
         }
         listDaySideFormat={false}
-        noEventsText="نوبتی در این بازه نیست"
+        noEventsText={
+          view === 'list'
+            ? 'نوبتی در ماه پیش رو نیست'
+            : 'نوبتی در این بازه نیست'
+        }
         eventDisplay="block"
         displayEventEnd
       />

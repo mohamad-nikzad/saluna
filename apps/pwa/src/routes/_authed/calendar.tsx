@@ -5,8 +5,10 @@ import { format, parseISO, subDays, addDays } from 'date-fns'
 import { Plus, Search } from 'lucide-react'
 import { z } from 'zod'
 import { cn } from '@repo/ui/utils'
+import { Button } from '@repo/ui/button'
 import { WORKING_HOURS } from '@repo/salon-core/types'
 import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
+import { formatPersianFullDate } from '@repo/salon-core/jalali-display'
 import type {
   AppointmentWithDetails,
   BusinessHours,
@@ -27,6 +29,7 @@ import { useCalendarIndexedDbSources } from '#/lib/use-calendar-indexeddb-source
 import { CalendarHeader } from '#/components/calendar/calendar-header'
 import { SalonFullCalendar } from '#/components/calendar/salon-full-calendar'
 import { StaffFilter } from '#/components/calendar/staff-filter'
+import { DaySummarySheet } from '#/components/calendar/day-summary-sheet'
 import {
   ConcurrentAppointmentsSheet,
   buildConcurrencyClusters,
@@ -108,6 +111,11 @@ function CalendarPage() {
   const [concurrentCluster, setConcurrentCluster] = useState<
     AppointmentWithDetails[] | null
   >(null)
+  const [summaryDate, setSummaryDate] = useState<string | null>(null)
+  const [visibleRange, setVisibleRange] = useState<{
+    start: string
+    end: string
+  } | null>(null)
 
   const fallbackRange = useMemo(() => defaultRange(navDate), [navDate])
   const { start: startDate, end: endDate } = range ?? fallbackRange
@@ -200,6 +208,46 @@ function CalendarPage() {
     [filteredAppointments],
   )
 
+  const visibleFilteredAppointments = useMemo(() => {
+    if (!visibleRange) return filteredAppointments
+    return filteredAppointments.filter(
+      (a) => a.date >= visibleRange.start && a.date <= visibleRange.end,
+    )
+  }, [filteredAppointments, visibleRange])
+
+  const selectedStaffAppointments = useMemo(() => {
+    if (!isManager || selectedStaffIds.length === 0) return []
+    return appointments
+      .filter((a) => selectedStaffIds.includes(a.staffId))
+      .sort(compareAppointments)
+  }, [appointments, isManager, selectedStaffIds])
+
+  const selectedStaffOutsideVisible = useMemo(() => {
+    if (!visibleRange) return []
+    return selectedStaffAppointments.filter(
+      (a) => a.date < visibleRange.start || a.date > visibleRange.end,
+    )
+  }, [selectedStaffAppointments, visibleRange])
+
+  const nextSelectedStaffAppointment =
+    useMemo<AppointmentWithDetails | null>(() => {
+      const today = format(new Date(), 'yyyy-MM-dd')
+      const upcoming = selectedStaffOutsideVisible.find((a) => a.date >= today)
+      if (upcoming) return upcoming
+      return selectedStaffOutsideVisible.length > 0
+        ? selectedStaffOutsideVisible[0]
+        : null
+    }, [selectedStaffOutsideVisible])
+
+  const selectedStaffLabel = useMemo(() => {
+    const selected = staff.filter((member) =>
+      selectedStaffIds.includes(member.id),
+    )
+    if (selected.length === 0) return ''
+    if (selected.length === 1) return selected[0].name
+    return `${selected.length} نفر انتخاب شده`
+  }, [selectedStaffIds, staff])
+
   useEffect(() => {
     if (!search.date) return
     const parsed = parseISO(search.date)
@@ -252,6 +300,7 @@ function CalendarPage() {
         'yyyy-MM-dd',
       )
       setRange({ start: paddedStart, end: paddedEnd })
+      setVisibleRange({ start, end: endInclusive })
       setTitleAnchor(activeStart)
     },
     [],
@@ -268,6 +317,7 @@ function CalendarPage() {
     setNavDate(t)
     setTitleAnchor(t)
     setRange(null)
+    setVisibleRange(null)
   }
 
   const handleAddAppointment = useCallback(() => {
@@ -285,6 +335,42 @@ function CalendarPage() {
     },
     [appointmentFlow.actions, isManager],
   )
+
+  const handleOpenDaySummary = useCallback((dateStr: string) => {
+    const parsed = parseISO(dateStr)
+    if (!Number.isNaN(parsed.getTime())) {
+      setNavDate(parsed)
+      setTitleAnchor(parsed)
+    }
+    setSummaryDate(dateStr)
+  }, [])
+
+  const handleCreateFromDaySummary = useCallback(
+    (dateStr: string) => {
+      setSummaryDate(null)
+      if (!isManager) return
+      appointmentFlow.actions.openCreate(dateStr, businessWorkingStart)
+    },
+    [appointmentFlow.actions, businessWorkingStart, isManager],
+  )
+
+  const handleOpenAppointmentFromSummary = useCallback(
+    (appointment: AppointmentWithDetails) => {
+      setSummaryDate(null)
+      appointmentFlow.actions.openDetail(appointment)
+    },
+    [appointmentFlow.actions],
+  )
+
+  const handleJumpToFilteredAppointment = useCallback(() => {
+    if (!nextSelectedStaffAppointment) return
+    const parsed = parseISO(nextSelectedStaffAppointment.date)
+    if (Number.isNaN(parsed.getTime())) return
+    setNavDate(parsed)
+    setTitleAnchor(parsed)
+    setRange(null)
+    setVisibleRange(null)
+  }, [nextSelectedStaffAppointment])
 
   const upsertAppointmentInCache = useCallback(
     (appointment: AppointmentWithDetails) => {
@@ -476,21 +562,66 @@ function CalendarPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <SalonFullCalendar
-          className="flex-1"
-          appointments={filteredAppointments}
-          view={view}
-          currentDate={navDate}
-          businessHours={businessHours}
-          readOnly={!isManager}
-          onVisibleRangeChange={handleVisibleRangeChange}
-          onSlotSelect={handleSlotSelect}
-          onEventClick={handleAppointmentClick}
-          onClusterClick={setConcurrentCluster}
-          isRefreshing={
-            appointmentsQuery.isFetching && !appointmentsQuery.isLoading
-          }
-        />
+        <div className="relative flex min-h-0 flex-1">
+          <SalonFullCalendar
+            className="flex-1"
+            appointments={filteredAppointments}
+            view={view}
+            currentDate={navDate}
+            businessHours={businessHours}
+            readOnly={!isManager}
+            onVisibleRangeChange={handleVisibleRangeChange}
+            onSlotSelect={handleSlotSelect}
+            onDaySummaryOpen={handleOpenDaySummary}
+            onEventClick={handleAppointmentClick}
+            onClusterClick={setConcurrentCluster}
+            isRefreshing={
+              appointmentsQuery.isFetching && !appointmentsQuery.isLoading
+            }
+          />
+          {isManager &&
+            selectedStaffIds.length > 0 &&
+            visibleFilteredAppointments.length === 0 && (
+              <div className="pointer-events-none absolute inset-x-3 top-4 z-30 flex justify-center">
+                <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-border/70 bg-card/95 p-4 text-right shadow-lg shadow-foreground/10 backdrop-blur">
+                  <p className="text-sm font-bold text-foreground">
+                    برای {selectedStaffLabel} در این بازه نوبتی دیده نمی‌شود
+                  </p>
+                  <p className="mt-1.5 text-xs leading-6 text-muted-foreground">
+                    فیلتر پرسنل فعال است. می‌توانید فیلتر را پاک کنید یا به
+                    نزدیک‌ترین نوبت همین پرسنل در داده‌های بارگذاری‌شده بروید.
+                  </p>
+                  {nextSelectedStaffAppointment && (
+                    <p className="mt-2 text-xs font-semibold text-foreground">
+                      نزدیک‌ترین نوبت:{' '}
+                      {formatPersianFullDate(
+                        parseISO(nextSelectedStaffAppointment.date),
+                      )}
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-10 rounded-xl"
+                      onClick={() => setSelectedStaffIds([])}
+                    >
+                      پاک کردن فیلتر
+                    </Button>
+                    {nextSelectedStaffAppointment && (
+                      <Button
+                        type="button"
+                        className="min-h-10 rounded-xl"
+                        onClick={handleJumpToFilteredAppointment}
+                      >
+                        رفتن به نوبت بعدی
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+        </div>
       </div>
 
       {isManager && (
@@ -519,6 +650,15 @@ function CalendarPage() {
         onSelectAppointment={handleConcurrentSelect}
       />
 
+      <DaySummarySheet
+        date={summaryDate}
+        appointments={filteredAppointments}
+        canCreate={isManager}
+        onOpenChange={(open) => !open && setSummaryDate(null)}
+        onCreateAppointment={handleCreateFromDaySummary}
+        onOpenAppointment={handleOpenAppointmentFromSummary}
+      />
+
       <AppointmentFlowDrawers
         flow={appointmentFlow}
         staff={staff}
@@ -528,7 +668,9 @@ function CalendarPage() {
         onAppointmentCreated={handleAppointmentCreated}
         onDetailChange={handleDetailChange}
         onClientsChanged={() => {
-          void queryClient.invalidateQueries({ queryKey: managerClientsQueryKey })
+          void queryClient.invalidateQueries({
+            queryKey: managerClientsQueryKey,
+          })
         }}
         detailReadOnly={!isManager}
         intakeEnabled={isManager}
