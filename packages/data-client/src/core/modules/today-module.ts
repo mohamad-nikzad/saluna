@@ -1,8 +1,10 @@
 import type { TodayData } from '@repo/salon-core'
 import { readCacheTimestamp, writeCacheTimestamp } from '../cache-meta'
 import type { HttpTransportPort } from '../../ports/http-transport'
+import { DataClientHttpError } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
 import { createListenerSet } from '../listeners'
+import { defaultIsOnline, type OnlineStatusReader } from '../online-status'
 
 const COLLECTION = 'today'
 
@@ -20,8 +22,10 @@ export interface TodayModule {
 
 export function createTodayModule(
   transport: HttpTransportPort,
-  storage: LocalDataPort
+  storage: LocalDataPort,
+  deps: { isOnline?: OnlineStatusReader } = {}
 ): TodayModule {
+  const isOnline = deps.isOnline ?? defaultIsOnline
   const listeners = createListenerSet<{ date: string; data: TodayData | null }>()
 
   async function persistDay(date: string, data: TodayData) {
@@ -50,14 +54,18 @@ export function createTodayModule(
 
   return {
     async getForDate(date: string) {
+      if (isOnline()) {
+        try {
+          return await fetchDay(date)
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return null
+          /* fall back to the offline snapshot */
+        }
+      }
       const key = dayKey(date)
       const hit = await storage.get<TodayData>(COLLECTION, key)
       if (hit !== undefined) return hit
-      try {
-        return await fetchDay(date)
-      } catch {
-        return null
-      }
+      return null
     },
 
     refresh: fetchDay,

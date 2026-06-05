@@ -150,14 +150,18 @@ export function createAppointmentsModule(
   }
 
   async function loadRawRange(startDate: string, endDate: string): Promise<AppointmentWithDetails[]> {
+    if (isOnline()) {
+      try {
+        return await fetchRange(startDate, endDate)
+      } catch (error) {
+        if (error instanceof DataClientHttpError) return []
+        /* fall back to the offline snapshot */
+      }
+    }
     const key = rangeKey(startDate, endDate)
     const hit = await storage.get<AppointmentWithDetails[]>(COLLECTION, key)
     if (hit !== undefined) return [...hit]
-    try {
-      return await fetchRange(startDate, endDate)
-    } catch {
-      return []
-    }
+    return []
   }
 
   async function mergeOverlay(
@@ -636,18 +640,19 @@ export function createAppointmentsModule(
       }
 
       const key = `one:${id}`
-      const cached = await storage.get<AppointmentWithDetails>(COLLECTION, key)
-      if (cached !== undefined) return cached
-
-      let data: AppointmentOneResponse
-      try {
-        data = await transport.json<AppointmentOneResponse>('GET', `/api/appointments/${id}`)
-      } catch {
-        return null
+      if (isOnline()) {
+        try {
+          const data = await transport.json<AppointmentOneResponse>('GET', `/api/appointments/${id}`)
+          const apt = data.appointment ?? null
+          if (apt) await storage.set(COLLECTION, key, apt)
+          return apt
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return null
+          /* fall back to the offline snapshot */
+        }
       }
-      const apt = data.appointment ?? null
-      if (apt) await storage.set(COLLECTION, key, apt)
-      return apt
+      const cached = await storage.get<AppointmentWithDetails>(COLLECTION, key)
+      return cached ?? null
     },
 
     refresh: fetchRange,

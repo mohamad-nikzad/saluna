@@ -19,6 +19,7 @@ import {
   staffScheduleBundleQueryKey,
 } from '#/lib/query-keys'
 import { useManagerDataClient } from '#/lib/manager-data-client'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { useManagerCollection } from '#/lib/use-manager-collection'
 
 export type ManagerServiceCatalog = {
@@ -33,6 +34,7 @@ export function useManagerStaffQuery(enabled = true) {
     (dc) => dc.staff.list(),
     (dc, sync) => dc.staff.subscribe(sync),
     enabled,
+    HEAVY_QUERY_STALE_TIME_MS,
   )
 }
 
@@ -42,6 +44,7 @@ export function useManagerServicesQuery(enabled = true) {
     (dc) => dc.services.list(),
     (dc, sync) => dc.services.subscribe(sync),
     enabled,
+    HEAVY_QUERY_STALE_TIME_MS,
   )
 }
 
@@ -51,6 +54,7 @@ export function useManagerClientsQuery(enabled = true) {
     (dc) => dc.clients.list(),
     (dc, sync) => dc.clients.subscribe(sync),
     enabled,
+    HEAVY_QUERY_STALE_TIME_MS,
   )
 }
 
@@ -74,6 +78,7 @@ export function useManagerServiceCatalogQuery(enabled = true) {
         sync((current) => (current ? { ...current, services } : current)),
       ),
     enabled,
+    HEAVY_QUERY_STALE_TIME_MS,
   )
 }
 
@@ -85,6 +90,7 @@ export function useManagerAddonsQuery(enabled = true) {
     queryFn: (): Promise<ServiceAddon[]> =>
       dc!.services.addons.list({ includeInactive: true }),
     enabled: enabled && !!dc,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
   })
 }
 
@@ -94,6 +100,7 @@ export function useManagerBusinessSettingsQuery(enabled = true) {
     (dc) => dc.businessSettings.get(),
     (dc, sync) => dc.businessSettings.subscribe(sync),
     enabled,
+    HEAVY_QUERY_STALE_TIME_MS,
   )
 }
 

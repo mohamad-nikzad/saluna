@@ -35,6 +35,7 @@ import {
 } from '@repo/salon-core/persian-digits'
 
 import { api } from '#/lib/api-client'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { useNetworkStatus } from '#/lib/network-status'
 import { managerClientsQueryKey } from '#/lib/query-keys'
 import { useClientSummaryIndexedDbSources } from '#/lib/use-clients-indexeddb'
@@ -155,6 +156,7 @@ function ClientDetailPage() {
     queryKey: clientSummaryKey(id),
     queryFn: ({ signal }) => api.clients.summary(id, { signal }),
     initialData: initial,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
   })
 
   const idb = useClientSummaryIndexedDbSources(true, isOnline, id, liveData)

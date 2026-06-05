@@ -271,14 +271,18 @@ export function createServicesModule(
   }
 
   async function listAddons(includeInactive = false): Promise<ServiceAddon[]> {
+    if (isOnline()) {
+      try {
+        return await fetchAddonList(includeInactive)
+      } catch (error) {
+        if (error instanceof DataClientHttpError) return []
+        /* fall back to the offline snapshot */
+      }
+    }
     const key = addonListKey(includeInactive)
     const hit = await storage.get<ServiceAddon[]>(COLLECTION, key)
     if (hit !== undefined) return hit
-    try {
-      return await fetchAddonList(includeInactive)
-    } catch {
-      return []
-    }
+    return []
   }
 
   function offlineAddonScopes(input: ServiceAddonScopeInput[] = []): ServiceAddon['scopes'] {
@@ -344,14 +348,18 @@ export function createServicesModule(
   }
 
   async function list(includeInactive = false): Promise<Service[]> {
+    if (isOnline()) {
+      try {
+        return await fetchList(includeInactive)
+      } catch (error) {
+        if (error instanceof DataClientHttpError) return []
+        /* fall back to the offline snapshot */
+      }
+    }
     const key = listKey(includeInactive)
     const hit = await storage.get<Service[]>(COLLECTION, key)
     if (hit !== undefined) return hit
-    try {
-      return await fetchList(includeInactive)
-    } catch {
-      return []
-    }
+    return []
   }
 
   return {
@@ -360,9 +368,6 @@ export function createServicesModule(
 
     async getById(id: string, opts?: { includeInactive?: boolean }) {
       const key = `id:${id}`
-      const cached = await storage.get<Service>(COLLECTION, key)
-      if (cached !== undefined) return cached
-
       if (mutationQueue) {
         const pending = await mutationQueue.listForLocalOverlay()
         for (const m of pending) {
@@ -374,27 +379,31 @@ export function createServicesModule(
         }
       }
 
-      const rows = await list(Boolean(opts?.includeInactive))
-      const fromList = rows.find((s) => s.id === id) ?? null
-      if (fromList) {
-        await storage.set(COLLECTION, key, fromList)
-        return fromList
+      if (isOnline()) {
+        try {
+          const data = await transport.json<ServiceOneResponse>(
+            'GET',
+            `/api/services/${id}`,
+          )
+          const svc = data.service ?? null
+          if (svc) {
+            await storage.set(COLLECTION, key, svc)
+            await writeCacheTimestamp(storage, COLLECTION, key)
+          }
+          return svc
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return null
+          /* fall back to the offline snapshot */
+        }
       }
 
-      try {
-        const data = await transport.json<ServiceOneResponse>(
-          'GET',
-          `/api/services/${id}`,
-        )
-        const svc = data.service ?? null
-        if (svc) {
-          await storage.set(COLLECTION, key, svc)
-          await writeCacheTimestamp(storage, COLLECTION, key)
-        }
-        return svc
-      } catch {
-        return null
-      }
+      const cached = await storage.get<Service>(COLLECTION, key)
+      if (cached !== undefined) return cached
+
+      const rows = await list(Boolean(opts?.includeInactive))
+      const fromList = rows.find((s) => s.id === id) ?? null
+      if (fromList) await storage.set(COLLECTION, key, fromList)
+      return fromList
     },
 
     refresh: (_opts?: { includeInactive?: boolean }) =>
@@ -620,22 +629,26 @@ export function createServicesModule(
     comboComponents: {
       async get(id) {
         const key = `combo:${id}:components`
+        if (isOnline()) {
+          try {
+            const data = await transport.json<ComboComponentsResponse>(
+              'GET',
+              `/api/services/${id}/combo-components`
+            )
+            const combo = data.combo ?? null
+            if (combo) {
+              await storage.set(COLLECTION, key, combo)
+              await writeCacheTimestamp(storage, COLLECTION, key)
+            }
+            return combo
+          } catch (error) {
+            if (error instanceof DataClientHttpError) return null
+            /* fall back to the offline snapshot */
+          }
+        }
         const cached = await storage.get<ComboComponentsSummary>(COLLECTION, key)
         if (cached !== undefined) return cached
-        try {
-          const data = await transport.json<ComboComponentsResponse>(
-            'GET',
-            `/api/services/${id}/combo-components`
-          )
-          const combo = data.combo ?? null
-          if (combo) {
-            await storage.set(COLLECTION, key, combo)
-            await writeCacheTimestamp(storage, COLLECTION, key)
-          }
-          return combo
-        } catch {
-          return null
-        }
+        return null
       },
 
       async update(id, input) {
@@ -660,20 +673,24 @@ export function createServicesModule(
 
       async forService(serviceId) {
         const key = `service:${serviceId}:addons`
+        if (isOnline()) {
+          try {
+            const data = await transport.json<ServiceAddonsResponse>(
+              'GET',
+              `/api/services/${serviceId}/addons`,
+            )
+            const addons = data.addons ?? []
+            await storage.set(COLLECTION, key, addons)
+            await writeCacheTimestamp(storage, COLLECTION, key)
+            return addons
+          } catch (error) {
+            if (error instanceof DataClientHttpError) return []
+            /* fall back to the offline snapshot */
+          }
+        }
         const cached = await storage.get<ServiceAddon[]>(COLLECTION, key)
         if (cached !== undefined) return cached
-        try {
-          const data = await transport.json<ServiceAddonsResponse>(
-            'GET',
-            `/api/services/${serviceId}/addons`,
-          )
-          const addons = data.addons ?? []
-          await storage.set(COLLECTION, key, addons)
-          await writeCacheTimestamp(storage, COLLECTION, key)
-          return addons
-        } catch {
-          return []
-        }
+        return []
       },
 
       async create(input) {
@@ -813,23 +830,27 @@ export function createServicesModule(
       async list(options) {
         const includeInactive = Boolean(options?.includeInactive)
         const key = includeInactive ? 'categories:list:all' : 'categories:list'
+        if (isOnline()) {
+          try {
+            const data = await transport.json<ServiceCategoriesResponse>(
+              'GET',
+              '/api/service-categories',
+              {
+                query: includeInactive ? { all: '1' } : undefined,
+              },
+            )
+            const categories = data.categories ?? []
+            await storage.set(COLLECTION, key, categories)
+            await writeCacheTimestamp(storage, COLLECTION, key)
+            return categories
+          } catch (error) {
+            if (error instanceof DataClientHttpError) return []
+            /* fall back to the offline snapshot */
+          }
+        }
         const hit = await storage.get<ServiceCategory[]>(COLLECTION, key)
         if (hit !== undefined) return hit
-        try {
-          const data = await transport.json<ServiceCategoriesResponse>(
-            'GET',
-            '/api/service-categories',
-            {
-              query: includeInactive ? { all: '1' } : undefined,
-            },
-          )
-          const categories = data.categories ?? []
-          await storage.set(COLLECTION, key, categories)
-          await writeCacheTimestamp(storage, COLLECTION, key)
-          return categories
-        } catch {
-          return []
-        }
+        return []
       },
 
       async create(input) {
@@ -863,23 +884,27 @@ export function createServicesModule(
       async list(options) {
         const includeInactive = Boolean(options?.includeInactive)
         const key = includeInactive ? 'families:list:all' : 'families:list'
+        if (isOnline()) {
+          try {
+            const data = await transport.json<ServiceFamiliesResponse>(
+              'GET',
+              '/api/service-families',
+              {
+                query: includeInactive ? { all: '1' } : undefined,
+              },
+            )
+            const families = data.families ?? []
+            await storage.set(COLLECTION, key, families)
+            await writeCacheTimestamp(storage, COLLECTION, key)
+            return families
+          } catch (error) {
+            if (error instanceof DataClientHttpError) return []
+            /* fall back to the offline snapshot */
+          }
+        }
         const hit = await storage.get<ServiceFamily[]>(COLLECTION, key)
         if (hit !== undefined) return hit
-        try {
-          const data = await transport.json<ServiceFamiliesResponse>(
-            'GET',
-            '/api/service-families',
-            {
-              query: includeInactive ? { all: '1' } : undefined,
-            },
-          )
-          const families = data.families ?? []
-          await storage.set(COLLECTION, key, families)
-          await writeCacheTimestamp(storage, COLLECTION, key)
-          return families
-        } catch {
-          return []
-        }
+        return []
       },
 
       async create(input) {

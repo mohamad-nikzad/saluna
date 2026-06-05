@@ -19,6 +19,7 @@ import { APPOINTMENT_STATUS } from '@repo/salon-core/types'
 import type { DashboardData } from '@repo/api-client'
 
 import { api } from '#/lib/api-client'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { dashboardQueryKey } from '#/lib/query-keys'
 
 export const Route = createFileRoute('/_authed/dashboard')({
@@ -32,6 +33,7 @@ export const Route = createFileRoute('/_authed/dashboard')({
     context.queryClient.ensureQueryData<DashboardData>({
       queryKey: dashboardQueryKey,
       queryFn: ({ signal }) => api.dashboard.get({ signal }),
+      staleTime: HEAVY_QUERY_STALE_TIME_MS,
     }),
   component: DashboardPage,
   pendingComponent: DashboardPending,
@@ -143,8 +145,8 @@ function DashboardPage() {
     queryKey: dashboardQueryKey,
     queryFn: ({ signal }) => api.dashboard.get({ signal }),
     initialData: initial,
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
+    refetchInterval: HEAVY_QUERY_STALE_TIME_MS,
   })
 
   const maxServiceCount = Math.max(

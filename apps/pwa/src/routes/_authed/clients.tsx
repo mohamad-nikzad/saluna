@@ -16,6 +16,7 @@ import type { RetentionQueueResponse } from '@repo/api-client'
 import { api } from '#/lib/api-client'
 import { useManagerClientsQuery } from '#/lib/manager-data-queries'
 import { useNetworkStatus } from '#/lib/network-status'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { managerClientsQueryKey } from '#/lib/query-keys'
 import { useClientsListIndexedDbSources } from '#/lib/use-clients-indexeddb'
 import { ClientDrawer } from '#/components/clients/client-drawer'
@@ -118,7 +119,7 @@ function ClientsPage() {
   const { data: retentionData } = useQuery({
     queryKey: retentionQueryKey,
     queryFn: ({ signal }) => api.retention.list({ signal }),
-    staleTime: 60_000,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
   }) as { data: RetentionQueueResponse | undefined }
 
   const idb = useClientsListIndexedDbSources(true, isOnline, liveData)

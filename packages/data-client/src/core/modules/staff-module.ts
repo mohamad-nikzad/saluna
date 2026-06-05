@@ -123,13 +123,17 @@ export function createStaffModule(
   }
 
   async function list(): Promise<User[]> {
+    if (isOnline()) {
+      try {
+        return await fetchList()
+      } catch (error) {
+        if (error instanceof DataClientHttpError) return []
+        /* fall back to the offline snapshot */
+      }
+    }
     const hit = await storage.get<User[]>(COLLECTION, KEY_LIST)
     if (hit !== undefined) return mergeStaffOverlay(hit)
-    try {
-      return await fetchList()
-    } catch {
-      return []
-    }
+    return []
   }
 
   async function readBusinessHoursFallback(): Promise<BusinessHours> {
@@ -192,9 +196,6 @@ export function createStaffModule(
       const pendingFirst = await overlayScheduleFromPending(staffId)
       if (pendingFirst) return pendingFirst
 
-      const cached = await storage.get<StaffScheduleBundle>(COLLECTION, scheduleKey(staffId))
-      if (cached) return mergeScheduleBundle(cached, staffId)
-
       if (isOnline()) {
         try {
           const data = await transport.json<StaffScheduleResponse>(
@@ -204,10 +205,19 @@ export function createStaffModule(
           await storage.set(COLLECTION, scheduleKey(staffId), data)
           await writeCacheTimestamp(storage, COLLECTION, scheduleKey(staffId))
           return mergeScheduleBundle(data, staffId)
-        } catch {
+        } catch (error) {
+          if (error instanceof DataClientHttpError) {
+            return {
+              schedule: [],
+              businessHours: await readBusinessHoursFallback(),
+            }
+          }
           /* fall through */
         }
       }
+
+      const cached = await storage.get<StaffScheduleBundle>(COLLECTION, scheduleKey(staffId))
+      if (cached) return mergeScheduleBundle(cached, staffId)
 
       return {
         schedule: [],

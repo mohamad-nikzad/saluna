@@ -40,7 +40,7 @@ export function composeDataClient(input: {
         })
       : null
 
-  const session = createSessionModule(transport, storage)
+  const session = createSessionModule(transport, storage, { isOnline })
   const getSalonId = () => session.get().then((u) => u?.salonId ?? null)
 
   const sync = createSyncModule({
@@ -75,7 +75,7 @@ export function composeDataClient(input: {
       mutationQueue,
       isOnline,
     }),
-    today: createTodayModule(transport, storage),
+    today: createTodayModule(transport, storage, { isOnline }),
     sync,
   }
 }

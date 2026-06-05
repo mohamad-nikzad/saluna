@@ -15,6 +15,7 @@ import type {
 import type { RetentionQueueResponse } from '@repo/api-client'
 
 import { api } from '#/lib/api-client'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
 const retentionQueryKey = ['retention'] as const
 
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/_authed/retention')({
     context.queryClient.ensureQueryData<RetentionQueueResponse>({
       queryKey: retentionQueryKey,
       queryFn: ({ signal }) => api.retention.list({ signal }),
+      staleTime: HEAVY_QUERY_STALE_TIME_MS,
     }),
   component: RetentionPage,
   pendingComponent: RetentionPending,
@@ -77,6 +79,7 @@ function RetentionPage() {
     queryKey: retentionQueryKey,
     queryFn: ({ signal }) => api.retention.list({ signal }),
     initialData: initial,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
   })
 
   const updateStatus = useMutation({

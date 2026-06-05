@@ -22,24 +22,32 @@ describe('createDataClient', () => {
       json: vi.fn(async () => ({ staff: [mockUser('u1')] })),
     } as unknown as HttpTransportPort
 
-    const client = createDataClient({ persistence: 'online-only', transport })
+    const client = createDataClient({
+      persistence: 'online-only',
+      transport,
+      isOnline: () => true,
+    })
     await client.staff.list()
     await client.staff.list()
     expect(transport.json).toHaveBeenCalledTimes(2)
   })
 
-  it('serves staff list from memory cache after first fetch', async () => {
+  it('uses HTTP on every online read even with memory persistence', async () => {
     const transport = {
       json: vi.fn(async () => ({ staff: [mockUser('u1')] })),
     } as unknown as HttpTransportPort
 
-    const client = createDataClient({ persistence: 'memory', transport })
+    const client = createDataClient({
+      persistence: 'memory',
+      transport,
+      isOnline: () => true,
+    })
     await client.staff.list()
     await client.staff.list()
-    expect(transport.json).toHaveBeenCalledTimes(1)
+    expect(transport.json).toHaveBeenCalledTimes(2)
   })
 
-  it('persists staff list across two clients with indexeddb persistence', async () => {
+  it('uses HTTP on every online read even with indexeddb persistence', async () => {
     const transport = {
       json: vi.fn(async () => ({ staff: [mockUser('idb-1')] })),
     } as unknown as HttpTransportPort
@@ -49,6 +57,7 @@ describe('createDataClient', () => {
       persistence: 'indexeddb',
       indexedDb: { databaseName: dbName },
       transport,
+      isOnline: () => true,
     })
     await a.staff.list()
     expect(transport.json).toHaveBeenCalledTimes(1)
@@ -57,8 +66,36 @@ describe('createDataClient', () => {
       persistence: 'indexeddb',
       indexedDb: { databaseName: dbName },
       transport,
+      isOnline: () => true,
     })
     await b.staff.list()
+    expect(transport.json).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses indexeddb as an offline-only staff fallback', async () => {
+    const transport = {
+      json: vi.fn(async () => ({ staff: [mockUser('idb-offline-1')] })),
+    } as unknown as HttpTransportPort
+
+    const dbName = `dc-test-${Math.random().toString(36).slice(2)}`
+    const online = createDataClient({
+      persistence: 'indexeddb',
+      indexedDb: { databaseName: dbName },
+      transport,
+      isOnline: () => true,
+    })
+    await online.staff.list()
+    expect(transport.json).toHaveBeenCalledTimes(1)
+
+    const offline = createDataClient({
+      persistence: 'indexeddb',
+      indexedDb: { databaseName: dbName },
+      transport,
+      isOnline: () => false,
+    })
+    await expect(offline.staff.list()).resolves.toEqual([
+      expect.objectContaining({ id: 'idb-offline-1' }),
+    ])
     expect(transport.json).toHaveBeenCalledTimes(1)
   })
 
@@ -254,7 +291,11 @@ describe('createDataClient', () => {
       }),
     } as unknown as HttpTransportPort
 
-    const client = createDataClient({ persistence: 'memory', transport })
+    const client = createDataClient({
+      persistence: 'memory',
+      transport,
+      isOnline: () => true,
+    })
 
     await expect(client.services.comboComponents.get('combo-1')).resolves.toEqual(combo)
     await expect(
@@ -269,7 +310,7 @@ describe('createDataClient', () => {
     )
   })
 
-  it('reads, caches, and resolves service add-ons through the services module', async () => {
+  it('reads service add-ons from HTTP while online and resolves per-service add-ons', async () => {
     const addon = {
       id: 'addon-1',
       salonId: 's1',
@@ -292,12 +333,16 @@ describe('createDataClient', () => {
       }),
     } as unknown as HttpTransportPort
 
-    const client = createDataClient({ persistence: 'memory', transport })
+    const client = createDataClient({
+      persistence: 'memory',
+      transport,
+      isOnline: () => true,
+    })
 
     await expect(client.services.addons.list()).resolves.toEqual([addon])
     await expect(client.services.addons.list()).resolves.toEqual([addon])
     await expect(client.services.addons.forService('service-1')).resolves.toEqual([addon])
-    expect(transport.json).toHaveBeenCalledTimes(2)
+    expect(transport.json).toHaveBeenCalledTimes(3)
   })
 
   it('projects offline service add-on creates into cached lists', async () => {

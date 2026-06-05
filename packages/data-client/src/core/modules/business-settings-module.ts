@@ -3,6 +3,7 @@ import { WORKING_HOURS } from '@repo/salon-core'
 import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
 import { readCacheTimestamp, writeCacheTimestamp } from '../cache-meta'
 import type { HttpTransportPort } from '../../ports/http-transport'
+import { DataClientHttpError } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
 import { createListenerSet } from '../listeners'
 import type { MutationQueuePort } from '../mutation-queue'
@@ -87,13 +88,17 @@ export function createBusinessSettingsModule(
 
   return {
     async get() {
+      if (isOnline()) {
+        try {
+          return await fetchSettings()
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return applyPendingOverlay(null)
+          /* fall back to the offline snapshot */
+        }
+      }
       const merged = await resolvedGet()
       if (merged !== null) return merged
-      try {
-        return await fetchSettings()
-      } catch {
-        return applyPendingOverlay(null)
-      }
+      return applyPendingOverlay(null)
     },
 
     refresh: fetchSettings,

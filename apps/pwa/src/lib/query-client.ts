@@ -5,6 +5,7 @@ import { toast } from '@repo/ui/use-toast'
 
 export const DEFAULT_MUTATION_SUCCESS = 'عملیات با موفقیت انجام شد'
 export const DEFAULT_MUTATION_ERROR = 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'
+export const HEAVY_QUERY_STALE_TIME_MS = 5 * 60 * 1000
 
 declare module '@tanstack/react-query' {
   interface Register {

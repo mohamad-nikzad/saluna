@@ -8,6 +8,7 @@ import {
 import { DataClientHttpError, type HttpTransportPort } from '../../ports/http-transport'
 import type { LocalDataPort } from '../../ports/local-data-port'
 import { createListenerSet } from '../listeners'
+import { defaultIsOnline, type OnlineStatusReader } from '../online-status'
 
 const COLLECTION = 'session'
 const KEY_USER = 'user'
@@ -24,8 +25,10 @@ export interface SessionModule {
 
 export function createSessionModule(
   transport: HttpTransportPort,
-  storage: LocalDataPort
+  storage: LocalDataPort,
+  deps: { isOnline?: OnlineStatusReader } = {}
 ): SessionModule {
+  const isOnline = deps.isOnline ?? defaultIsOnline
   const listeners = createListenerSet<User | null>()
 
   async function persistUser(user: User | null) {
@@ -48,16 +51,20 @@ export function createSessionModule(
 
   return {
     async get() {
+      if (isOnline()) {
+        try {
+          return await loadFromNetwork()
+        } catch (e) {
+          if (e instanceof DataClientHttpError && e.status === 401) {
+            await persistUser(null)
+            return null
+          }
+          /* fall back to the offline snapshot */
+        }
+      }
       const cached = await storage.get<User>(COLLECTION, KEY_USER)
       if (cached !== undefined) return cached
-      try {
-        return await loadFromNetwork()
-      } catch (e) {
-        if (e instanceof DataClientHttpError && e.status === 401) {
-          await persistUser(null)
-        }
-        return null
-      }
+      return null
     },
 
     async refresh() {

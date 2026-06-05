@@ -92,13 +92,17 @@ export function createClientsModule(
   }
 
   async function list(): Promise<Client[]> {
+    if (isOnline()) {
+      try {
+        return await fetchList()
+      } catch (error) {
+        if (error instanceof DataClientHttpError) return []
+        /* fall back to the offline snapshot */
+      }
+    }
     const hit = await storage.get<Client[]>(COLLECTION, LIST_KEY)
     if (hit !== undefined) return hit
-    try {
-      return await fetchList()
-    } catch {
-      return []
-    }
+    return []
   }
 
   async function invalidateList() {
@@ -127,37 +131,39 @@ export function createClientsModule(
 
     async getById(id: string) {
       const key = `id:${id}`
+      if (isOnline()) {
+        try {
+          const data = await transport.json<ClientDetailResponse>('GET', `/api/clients/${id}`)
+          const client = data.client ?? null
+          if (client) {
+            await storage.set(COLLECTION, key, client)
+            await writeCacheTimestamp(storage, COLLECTION, key)
+          }
+          return client
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return null
+          /* fall back to the offline snapshot */
+        }
+      }
       const cached = await storage.get<Client>(COLLECTION, key)
-      if (cached !== undefined) return cached
-
-      let data: ClientDetailResponse
-      try {
-        data = await transport.json<ClientDetailResponse>('GET', `/api/clients/${id}`)
-      } catch {
-        return null
-      }
-      const client = data.client ?? null
-      if (client) {
-        await storage.set(COLLECTION, key, client)
-        await writeCacheTimestamp(storage, COLLECTION, key)
-      }
-      return client
+      return cached ?? null
     },
 
     async getSummary(id: string) {
       const key = `summary:${id}`
-      const cached = await storage.get<ClientSummary>(COLLECTION, key)
-      if (cached !== undefined) return cached
-
-      let summary: ClientSummary
-      try {
-        summary = await transport.json<ClientSummary>('GET', `/api/clients/${id}/summary`)
-      } catch {
-        return null
+      if (isOnline()) {
+        try {
+          const summary = await transport.json<ClientSummary>('GET', `/api/clients/${id}/summary`)
+          await storage.set(COLLECTION, key, summary)
+          await writeCacheTimestamp(storage, COLLECTION, key)
+          return summary
+        } catch (error) {
+          if (error instanceof DataClientHttpError) return null
+          /* fall back to the offline snapshot */
+        }
       }
-      await storage.set(COLLECTION, key, summary)
-      await writeCacheTimestamp(storage, COLLECTION, key)
-      return summary
+      const cached = await storage.get<ClientSummary>(COLLECTION, key)
+      return cached ?? null
     },
 
     refresh: fetchList,

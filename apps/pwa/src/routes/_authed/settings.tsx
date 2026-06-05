@@ -41,6 +41,7 @@ import {
 } from '#/lib/manager-data-client'
 import { useTheme } from '#/lib/theme'
 import { api } from '#/lib/api-client'
+import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { useManagerBusinessSettingsQuery } from '#/lib/manager-data-queries'
 import {
   dashboardQueryKey,
@@ -176,6 +177,7 @@ function SettingsPage() {
     queryKey: dashboardQueryKey,
     queryFn: ({ signal }) => api.dashboard.get({ signal }),
     enabled: isManager,
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
   })
 
   const updateLocalAlerts = useMutation({

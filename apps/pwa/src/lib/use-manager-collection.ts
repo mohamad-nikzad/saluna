@@ -25,6 +25,7 @@ export function useManagerCollection<T>(
   list: (dataClient: DataClient) => Promise<T>,
   subscribe?: ManagerCollectionSubscribe<T>,
   enabled = true,
+  staleTime?: number,
 ): UseQueryResult<T> {
   const dc = useManagerDataClient()
   const queryClient = useQueryClient()
@@ -33,6 +34,7 @@ export function useManagerCollection<T>(
     queryKey,
     queryFn: () => list(dc!),
     enabled: enabled && !!dc,
+    staleTime,
   })
 
   useEffect(() => {
