@@ -13,7 +13,7 @@ This is a follow-up to already-landed work (the concurrent gantt sheet + day/lis
 
 ## Context you need (the app)
 
-- App: `apps/app` — Saloora, a Persian/RTL salon PWA (Next.js + shadcn/ui + Tailwind v4 +
+- App: `retired manager app` — Saloora, a Persian/RTL salon PWA (Next.js + shadcn/ui + Tailwind v4 +
   `@repo/brand-tokens`). Manager and staff roles; staff get a read-only calendar.
 - The calendar page renders a **restyled FullCalendar** (`@fullcalendar/react`). The product
   decision (see `SALOORA_V2_MIGRATION_PLAN.md`, Phase 5) is **restyle FullCalendar, do not
@@ -33,7 +33,7 @@ Tapping a "N همزمان" pill opens the per-staff gantt bottom sheet (already 
 
 ## Reuse these — already implemented and verified
 
-All in `apps/app/components/calendar/`:
+All in `apps/pwa/src/components/calendar/`:
 
 - **`concurrent-appointments-sheet.tsx`** exports:
   - `buildConcurrencyClusters(appointments): Map<string, AppointmentWithDetails[]>` — groups
@@ -137,12 +137,12 @@ Add under the existing `.salon-fullcalendar` rules:
 
 ## Verification
 
-1. `pnpm --filter @repo/app typecheck` and lint the touched files — must pass.
+1. `pnpm --filter @repo/pwa typecheck` and lint the touched files — must pass.
 2. Run the dev server via the preview tooling (`.claude/launch.json` has an `app` config on
    port 3000) and open `/calendar`, mobile viewport.
 3. **The local dev DB has no overlapping appointments.** To exercise the feature without
    mutating data, inject overlaps **client-side only**: monkey-patch `window.fetch` in the
-   page context to append a few overlapping appointments to the `/api/appointments?startDate…`
+   page context to append a few overlapping appointments to the `/api/appointments?startDate...`
    response, then trigger an SWR refetch (nudge the date with the prev/next buttons so the
    range key changes). The patch is lost on reload and writes nothing to the DB. (This is how
    the sheet itself was verified.)
@@ -152,8 +152,8 @@ Add under the existing `.salon-fullcalendar` rules:
 
 ## Files to touch
 
-- `apps/app/components/calendar/salon-full-calendar.tsx` — synthetic events, click routing,
+- `apps/pwa/src/components/calendar/salon-full-calendar.tsx` — synthetic events, click routing,
   `eventContent` + `dayHeaderContent` branches, count map.
-- `apps/app/app/(app)/calendar/page.tsx` — pass `onClusterClick={setConcurrentCluster}`.
+- `retired manager app route (app)/calendar/page.tsx` — pass `onClusterClick={setConcurrentCluster}`.
 - `packages/ui/styles/globals.css` — `.fc-apt-cluster`, `.day-header-count`.
-- (Reuse, no change) `apps/app/components/calendar/concurrent-appointments-sheet.tsx`.
+- (Reuse, no change) `apps/pwa/src/components/calendar/concurrent-appointments-sheet.tsx`.

@@ -1,16 +1,16 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * E2E runs against a real Next dev server + Postgres (seeded salon).
+ * E2E runs against a real PWA dev server + Postgres (seeded salon).
  *
- * - Start the app first: `pnpm dev:app` (needs root `.env.local` + `.env.database.dev`), then:
+ * - Start the app first: `pnpm --filter @repo/pwa dev` (needs root `.env.local` + `.env.database.dev`), then:
  *   `pnpm test:e2e`
  * - Or let Playwright start it (same env files must exist):
  *   `pnpm test:e2e` with E2E_SKIP_SERVER unset.
- * - Point elsewhere: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 bun run test:e2e`
+ * - Point elsewhere: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 pnpm test:e2e`
  *
  * **Use a browser already on your machine (skip `playwright install chromium`):**
- * - Google Chrome: `bun run test:e2e:system-chrome` (sets `PLAYWRIGHT_SYSTEM_BROWSER=chrome`).
+ * - Google Chrome: set `PLAYWRIGHT_SYSTEM_BROWSER=chrome`.
  * - Chromium / another binary: set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to the real binary, e.g.
  *   macOS Homebrew cask: `/Applications/Chromium.app/Contents/MacOS/Chromium`
  */
@@ -35,7 +35,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
-    // Match `next dev` default host so cookies and dev tooling align with local usage.
+    // Match Vite's default host so cookies and dev tooling align with local usage.
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
     locale: 'fa-IR',
     ...devices['Desktop Chrome'],
@@ -48,7 +48,7 @@ export default defineConfig({
   webServer: process.env.E2E_SKIP_SERVER
     ? undefined
     : {
-        command: 'pnpm dev:app',
+        command: 'pnpm --filter @repo/pwa dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

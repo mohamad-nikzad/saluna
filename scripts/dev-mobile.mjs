@@ -26,7 +26,7 @@ const apiBaseUrl =
   process.env.EXPO_PUBLIC_API_BASE_URL ?? `http://${host}:${backendPort}`
 
 const children = [
-  spawn('pnpm', ['--filter', '@repo/app', 'dev:lan'], {
+  spawn('pnpm', ['--filter', '@repo/api', 'dev'], {
     env: {
       ...process.env,
       PORT: backendPort,

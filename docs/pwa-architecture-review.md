@@ -9,7 +9,7 @@
 
 1. Read domain language first: [`CONTEXT.md`](../CONTEXT.md) (especially **Offline Projection**, **Appointment Intake**, **Appointment Detail Read Model**).
 2. Read ADRs before proposing changes that touch requests or availability: [`docs/adr/0001-appointment-request-as-distinct-aggregate.md`](adr/0001-appointment-request-as-distinct-aggregate.md), [`docs/adr/0002-no-soft-hold-on-pending-requests.md`](adr/0002-no-soft-hold-on-pending-requests.md).
-3. Migration context: [`docs/pwa-migration-plan.md`](pwa-migration-plan.md) — PWA replaces `apps/app`; Hono API at `/api/v1` is the only backend boundary.
+3. Migration context: [`docs/pwa-migration-plan.md`](pwa-migration-plan.md) — PWA replaces `retired manager app`; Hono API at `/api/v1` is the only backend boundary.
 4. Pick **one** numbered candidate below and enter the **grilling loop** (design tree: constraints, interface shape, tests). Do not implement multiple candidates in one pass unless the user asks.
 5. Use architecture vocabulary from [LANGUAGE.md](https://github.com/cursor/skills/blob/main/improve-codebase-architecture/LANGUAGE.md): **module**, **interface**, **seam**, **adapter**, **depth**, **locality**, **leverage**, **deletion test**.
 6. Use domain vocabulary from `CONTEXT.md` — not generic terms like "service layer" or "boundary."
@@ -28,7 +28,7 @@
 
 ## Executive summary
 
-The PWA is ahead of `apps/app` on **Offline Projection** and view-model extraction, but several **seams are split** — offline behavior, read caches, and write policies leak into route files and large drawers. Five lib unit tests exist; UI and integration seams are largely untested.
+The PWA is ahead of `retired manager app` on **Offline Projection** and view-model extraction, but several **seams are split** — offline behavior, read caches, and write policies leak into route files and large drawers. Five lib unit tests exist; UI and integration seams are largely untested.
 
 **Strongest within-PWA candidates:** #1 (offline), #2 (reads), #3 (writes).  
 **Largest locality wins for features:** #4 (appointment surface), #5 (today screen).  
@@ -79,7 +79,7 @@ The PWA is ahead of `apps/app` on **Offline Projection** and view-model extracti
 
 `@repo/salon-core`, `@repo/api-client`, `@repo/data-client`, `@repo/ui`, `@repo/brand-tokens`
 
-### PWA vs `apps/app`
+### PWA vs `retired manager app`
 
 | PWA | Legacy app |
 |-----|------------|
@@ -119,7 +119,7 @@ All under `apps/pwa/src/lib/`:
 | Monolithic today | `_authed/today.tsx`, `today-view-model.ts` |
 | Monolithic appointment UI | `appointment-detail-drawer.tsx`, `appointment-drawer.tsx`, `appointment-detail-view-model.ts` |
 | Onboarding guards split | `onboarding/-steps.ts`, `onboarding.tsx`, `_authed.tsx` |
-| Cross-app duplication | `apps/pwa/src/**` ↔ `apps/app/**` |
+| Cross-app duplication | `apps/pwa/src/**` ↔ `retired manager app/**` |
 
 ---
 
@@ -165,7 +165,7 @@ One **Offline Projection** module with a single interface for "what to show when
 - **Leverage:** every manager screen shares phase semantics
 - **Tests:** interface-level phase transitions without full route trees
 
-**Deletion test:** Removing `offline-projection.ts` + adapter hooks **spreads** phase logic into `today`, `calendar`, `clients` (reverts toward `apps/app` style).
+**Deletion test:** Removing `offline-projection.ts` + adapter hooks **spreads** phase logic into `today`, `calendar`, `clients` (reverts toward `retired manager app` style).
 
 **ADR notes:** None.
 
@@ -367,7 +367,7 @@ One **onboarding progression** module: step graph, completion predicates, redire
 
 **Files:**
 
-- Parallel trees: `apps/pwa/src/**` ↔ `apps/app/**`
+- Parallel trees: `apps/pwa/src/**` ↔ `retired manager app/**`
 - Examples: `appointment-drawer.tsx`, `service-catalog-manager.tsx`, `bottom-nav.tsx`, `lib/use-manager-today-indexeddb.ts`, `components/manager-data-client-provider.tsx`
 
 **Problem:**
@@ -376,7 +376,7 @@ Diverging implementations of same manager screens. PWA has offline layering + vi
 
 **Solution:**
 
-After migration slices stabilize, extract shared domain UI into a package (e.g. extend `@repo/ui` or new `@repo/manager-ui`). PWA/app supply only routing and data providers at the seam.
+After migration slices stabilize, extract shared domain UI into a package (e.g. extend `@repo/ui` or new `@repo/manager-ui`). PWA/pwa supply only routing and data providers at the seam.
 
 **Benefits:**
 

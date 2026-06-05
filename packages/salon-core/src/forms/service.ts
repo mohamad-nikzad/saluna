@@ -1,5 +1,5 @@
 /**
- * Service form schema — shared between web (`apps/app`) and native (`apps/native`).
+ * Service form schema — shared between PWA (`apps/pwa`) and native (`apps/native`).
  * Normalizes category/color/number fields into API-ready payload values.
  */
 import { z } from 'zod'

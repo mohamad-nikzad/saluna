@@ -17,9 +17,7 @@ Public marketing + salon booking surface (Astro). SSR via `@astrojs/node` (`mode
 | `HOST` | Bind address (default `0.0.0.0` in Docker / PM2) |
 | `PORT` | Listen port (default `3001`) |
 
-`with-root-env.mjs` maps `NEXT_PUBLIC_*` → `PUBLIC_*` when the Astro names are unset.
-
-Legacy Next.js is `apps/web-next` (`@repo/web-next`); it uses `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_API_URL`.
+`with-root-env.mjs` maps `NEXT_PUBLIC_*` -> `PUBLIC_*` when the Astro names are unset.
 
 ## Build & run (bare Node)
 
@@ -65,7 +63,7 @@ After=network.target
 [Service]
 Type=simple
 User=saloon
-WorkingDirectory=/opt/saloon/apps/web
+WorkingDirectory=/opt/saloon/pwas/web
 Environment=NODE_ENV=production
 Environment=HOST=0.0.0.0
 Environment=PORT=3001

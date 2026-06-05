@@ -4,7 +4,7 @@ This workflow deploys Saluna to one VPS even if the VPS has no useful outbound
 internet. Build images on a connected machine, copy sealed tarballs to the VPS,
 load them there, and run Docker Compose.
 
-`apps/web-next` and `apps/app` are deprecated and are not deployed here.
+`retired public Next app` and `retired manager app` are deprecated and are not deployed here.
 
 ## Production stack
 
@@ -115,14 +115,14 @@ place them under `/opt/saluna`, with release bundles in `/opt/saluna/releases`.
 
 ```bash
 cd /opt/saluna
-LOAD_INFRA=1 START_REGISTRY=1 ./scripts/apply-airgap-release.sh
+LOAD_INFRA=1 START_REGISTRY=1 ./scripts/pwaly-airgap-release.sh
 ```
 
 After infra has been loaded once:
 
 ```bash
 cd /opt/saluna
-./scripts/apply-airgap-release.sh
+./scripts/pwaly-airgap-release.sh
 ```
 
 The apply script:
@@ -156,7 +156,7 @@ For future releases:
 ./scripts/build-airgap-release.sh
 VPS_HOST=YOUR_VPS_ORIGIN_IP ./scripts/push-airgap-registry.sh
 ssh deploy@YOUR_VPS_ORIGIN_IP \
-  'cd /opt/saluna && SALUNA_IMAGE_TAG=YOUR_TAG USE_REGISTRY=1 ./scripts/apply-airgap-release.sh'
+  'cd /opt/saluna && SALUNA_IMAGE_TAG=YOUR_TAG USE_REGISTRY=1 ./scripts/pwaly-airgap-release.sh'
 ```
 
 When using the registry workflow, Compose pulls from
@@ -206,7 +206,7 @@ From outside the VPS, after DNS or ArvanCloud is routed:
 
 ```bash
 curl -i https://api.saluna.ir/health
-curl -i https://app.saluna.ir/healthz
+curl -i https://pwa.saluna.ir/healthz
 curl -i https://saluna.ir/
 ```
 
@@ -236,7 +236,7 @@ For a new release:
    dated version.
 2. Run `./scripts/build-airgap-release.sh`.
 3. Run `VPS_HOST=YOUR_VPS_ORIGIN_IP ./scripts/upload-airgap-release.sh`.
-4. SSH to the VPS and run `cd /opt/saluna && ./scripts/apply-airgap-release.sh`.
+4. SSH to the VPS and run `cd /opt/saluna && ./scripts/pwaly-airgap-release.sh`.
 
 Keep at least one previous image tag loaded so rollback is just changing
 `SALUNA_IMAGE_TAG` back and running Compose again.

@@ -1,21 +1,17 @@
 # Public web cut-over
 
-**Done:** `apps/web-astro` is now `apps/web` (`@repo/web`, Astro). The legacy Next.js app lives at `apps/web-next` (`@repo/web-next`) — same pattern as `apps/app` vs `apps/pwa`.
+**Done:** `apps/web-astro` is now `apps/web` (`@repo/web`, Astro). The retired public Next.js app has been removed from the workspace.
 
 ## Dev
 
 | App | Package | Port | Role |
 |-----|---------|------|------|
 | Astro (current) | `@repo/web` | 3001 | Public marketing + booking |
-| Next (legacy) | `@repo/web-next` | 3001 | Deprecated — do not run alongside Astro |
 
 ```bash
 pnpm dev:web              # Astro (default in `pnpm dev`)
-pnpm dev:web-next         # legacy Next only
 pnpm dev:web-stack        # Astro + API (.env.database.local)
 ```
-
-Only one app can bind port 3001 at a time.
 
 ## Validation
 

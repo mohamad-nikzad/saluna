@@ -58,7 +58,7 @@ Frontend (live target — `apps/pwa`):
 - `apps/pwa/src/routes/_authed/settings.tsx` — surfaces business settings / presence post-onboarding.
 
 Deprecated (do not touch):
-- `apps/app/**` — Next.js app, deprecated. Mirror changes are not needed.
+- `retired manager app/**` — Next.js app, deprecated. Mirror changes are not needed.
 
 ---
 
@@ -170,7 +170,7 @@ No subagent work required; reference only.
 **Files to change:**
 - `apps/api/src/routes/settings.ts` (or wherever `PATCH /api/settings/business` lives) — accept `workingDays`.
 - `apps/api/src/routes/salon-profile.ts` (or create if missing) — `PATCH /api/salon-profile/presence` accepting the presence payload.
-- `apps/api/src/routes/salon-public-settings.ts` — `PATCH /api/salon-public-settings` already exists per `apps/app/app/api/salon-public-settings` — verify it's in `apps/api` too; if not, port. Accept `{ enabled, bioText }` partial.
+- `apps/api/src/routes/salon-public-settings.ts` — `PATCH /api/salon-public-settings` already exists per `retired Next API routes/salon-public-settings` — verify it's in `apps/api` too; if not, port. Accept `{ enabled, bioText }` partial.
 - Telegram-link route — check `apps/api/src/routes/` for existing messaging routes; surface a `GET /api/messaging/telegram/deep-link` if not present (so the onboarding step can hand the manager a `t.me/...?start=` URL).
 
 **Tasks:**
@@ -266,7 +266,7 @@ Mirror `B_Hours`. Day-of-week pills (Sat–Fri) + start/end TimePicker + slot-du
 
 ### 7c · Services screen (`services.tsx`)
 
-Mirror `B_Services` (big category tiles, multi-select) + the existing `CatalogPresetPicker` from `apps/pwa/src/components/`. Tiles are visual shortcuts; tapping applies the preset via the existing `/api/catalog-presets/:id/apply` route. Required step — cannot advance until at least one service exists. "ادامه" → `/onboarding/staff`.
+Mirror `B_Services` (big category tiles, multi-select) + the existing `CatalogPresetPicker` from `apps/pwa/src/components/`. Tiles are visual shortcuts; tapping applies the preset via the existing `/api/catalog-presets/:id/pwaly` route. Required step — cannot advance until at least one service exists. "ادامه" → `/onboarding/staff`.
 
 ### 7d · Staff screen (`staff.tsx`)
 
@@ -332,7 +332,7 @@ Mirror `B_Done`. Plum hero, big check, "تمام شد! 🌸" headline, "«{salon
 - Per-event notification toggles, quiet hours.
 - Theme / layout pickers in onboarding (live preview required → settings-only).
 - A separate `publicTitle` field on the salon (single `salonName` does both roles).
-- Migrating `apps/app/**` (deprecated Next.js app) to match — not maintained.
+- Migrating `retired manager app/**` (deprecated Next.js app) to match — not maintained.
 - Public-page brand domain switch (`saloora.app` in prototype → `aravira.app` in production); the prototype is a visual reference, not a brand cutover.
 
 ---

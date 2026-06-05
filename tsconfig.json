@@ -2,9 +2,7 @@
   "extends": "./packages/typescript-config/base.json",
   "files": [],
   "references": [
-    { "path": "./apps/app" },
     { "path": "./apps/web" },
-    { "path": "./apps/web-next" },
     { "path": "./packages/ui" },
     { "path": "./packages/salon-core" },
     { "path": "./packages/database" },

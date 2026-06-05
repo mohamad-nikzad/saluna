@@ -1,5 +1,5 @@
 /**
- * Staff form schemas — shared between web (`apps/app`) and native (`apps/native`).
+ * Staff form schemas — shared between PWA (`apps/pwa`) and native (`apps/native`).
  * Covers staff creation and weekly working-schedule editing.
  */
 import { z } from 'zod'

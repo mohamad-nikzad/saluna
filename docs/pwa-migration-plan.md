@@ -4,7 +4,7 @@ Date: 2026-05-26
 
 ## Executive Summary
 
-Move the existing manager PWA from the legacy Next.js app in `apps/app` to the fresh React + Vite + TanStack Router app in `apps/pwa` through vertical slices. Do not mutate the legacy app in place, do not depend on Next.js API routes, and do not introduce TanStack Start. The new PWA must use the Hono API as its only backend boundary.
+Move the existing manager PWA from the legacy Next.js app in `retired manager app` to the fresh React + Vite + TanStack Router app in `apps/pwa` through vertical slices. Do not mutate the legacy app in place, do not depend on Next.js API routes, and do not introduce TanStack Start. The new PWA must use the Hono API as its only backend boundary.
 
 The repo is already well positioned for this migration: `apps/api` contains a real Hono API, `packages/api-client` contains typed client modules for many domains, and `packages/data-client` already owns manager offline projections, IndexedDB persistence, and mutation queue behavior. The main migration risk is not UI portability; it is normalizing the API boundary because legacy UI and `packages/data-client` currently use `/api/*`, while Hono is mounted at `/api/v1/*` and the old Next app bridges the mismatch with rewrites.
 
@@ -34,34 +34,34 @@ Important TanStack implications:
 - Use `router.invalidate()` after route-loader mutations and loader errors.
 - Keep the TanStack Router Vite plugin before React in `vite.config.ts`.
 
-## Legacy App Inventory (`apps/app`)
+## Legacy App Inventory (`retired manager app`)
 
 ### Routes and Route Groups
 
 Legacy App Router pages:
 
-- `/` from `apps/app/app/page.tsx`
-- `/login` from `apps/app/app/login/page.tsx`
-- `/signup` from `apps/app/app/signup/page.tsx`
-- `/today` from `apps/app/app/(app)/today/page.tsx`
-- `/calendar` from `apps/app/app/(app)/calendar/page.tsx`
-- `/clients` from `apps/app/app/(app)/clients/page.tsx`
-- `/clients/[id]` from `apps/app/app/(app)/clients/[id]/page.tsx`
-- `/requests` from `apps/app/app/(app)/requests/page.tsx`
-- `/settings` from `apps/app/app/(app)/settings/page.tsx`
-- `/dashboard` from `apps/app/app/(app)/dashboard/page.tsx`
-- `/retention` from `apps/app/app/(app)/retention/page.tsx`
-- `/services` from `apps/app/app/(app)/services/page.tsx`
-- `/staff` from `apps/app/app/(app)/staff/page.tsx`
-- `/onboarding` from `apps/app/app/(app)/onboarding/page.tsx`
-- `/public-page` from `apps/app/app/(app)/public-page/page.tsx`
+- `/` from `retired manager app route page.tsx`
+- `/login` from `retired manager app route login/page.tsx`
+- `/signup` from `retired manager app route signup/page.tsx`
+- `/today` from `retired manager app route (app)/today/page.tsx`
+- `/calendar` from `retired manager app route (app)/calendar/page.tsx`
+- `/clients` from `retired manager app route (app)/clients/page.tsx`
+- `/clients/[id]` from `retired manager app route (app)/clients/[id]/page.tsx`
+- `/requests` from `retired manager app route (app)/requests/page.tsx`
+- `/settings` from `retired manager app route (app)/settings/page.tsx`
+- `/dashboard` from `retired manager app route (app)/dashboard/page.tsx`
+- `/retention` from `retired manager app route (app)/retention/page.tsx`
+- `/services` from `retired manager app route (app)/services/page.tsx`
+- `/staff` from `retired manager app route (app)/staff/page.tsx`
+- `/onboarding` from `retired manager app route (app)/onboarding/page.tsx`
+- `/public-page` from `retired manager app route (app)/public-page/page.tsx`
 - `/nav-prototype` exists as a prototype route and should not be migrated unless still intentionally used.
 
 The `(app)` route group is an implementation detail. In TanStack Router, preserve URL paths, not the Next route group.
 
 ### Layouts and Navigation Shells
 
-`apps/app/app/layout.tsx` provides:
+`retired manager app route layout.tsx` provides:
 
 - RTL Persian document shell.
 - Next font (`Vazirmatn`) via `next/font/google`.
@@ -69,7 +69,7 @@ The `(app)` route group is an implementation detail. In TanStack Router, preserv
 - `InstallPrompt`, `ServiceWorkerRegister`, `Toaster`, and Vercel Analytics.
 - PWA metadata and viewport.
 
-`apps/app/app/(app)/layout.tsx` provides the protected app shell:
+`retired manager app route (app)/layout.tsx` provides the protected app shell:
 
 - `SwrProvider`
 - `AuthProvider`
@@ -123,7 +123,7 @@ Current data access is mixed:
 
 - SWR for many route reads.
 - Raw `fetch('/api/...', { credentials: 'include' })`.
-- `fetchJsonOrThrow` from `apps/app/lib/pwa-client.ts`.
+- `fetchJsonOrThrow` from `apps/pwa/src/lib/pwa-client.ts`.
 - `@repo/data-client` for manager offline cache, IndexedDB projections, and queued mutations.
 - `@repo/api-client` exists but is not yet the main app-wide client.
 
@@ -171,8 +171,8 @@ TanStack target:
 
 Current PWA behavior:
 
-- `apps/app/app/manifest.ts` generates Persian app manifest with icons, screenshots, shortcuts, RTL/lang, display overrides, colors.
-- `apps/app/public/sw.js` is a hand-written service worker.
+- `retired manager app route manifest.ts` generates Persian app manifest with icons, screenshots, shortcuts, RTL/lang, display overrides, colors.
+- `apps/pwa/public/sw.js` is a hand-written service worker.
 - Service worker precaches manifest/icons/offline launch page/logo.
 - Service worker caches navigations for core app routes.
 - Service worker excludes `/api/*` from caching.
@@ -185,7 +185,7 @@ Current PWA behavior:
 
 TanStack/Vite target:
 
-- Copy/adapt assets from `apps/app/public` into `apps/pwa/public`.
+- Copy/adapt assets from `apps/pwa/public` into `apps/pwa/public`.
 - Replace Next generated manifest with static `manifest.webmanifest` or generated Vite build artifact.
 - Register a service worker from the Vite app, not Next.
 - Replace Next build-id update detection with Vite asset manifest/version strategy.
@@ -225,12 +225,12 @@ PWA target:
 
 - Introduce Vite-prefixed public values:
   - `VITE_API_BASE_URL` — e.g. `https://api.saluna.ir` in prod, `http://localhost:<honoPort>` in dev. Client appends `/api/v1/...`.
-  - `VITE_APP_URL` — e.g. `https://app.saluna.ir`.
+  - `VITE_APP_URL` — e.g. `https://pwa.saluna.ir`.
   - `VITE_WEB_URL`
   - `VITE_VAPID_PUBLIC_KEY` if the client reads it directly, though current push config can come from Hono.
   - `VITE_PWA_ASSET_VERSION`
 - Hono env additions to match:
-  - `CORS_ORIGINS` must include `https://app.saluna.ir` and `http://localhost:5173`, with `credentials: true`.
+  - `CORS_ORIGINS` must include `https://pwa.saluna.ir` and `http://localhost:5173`, with `credentials: true`.
   - Session cookie set with `SameSite=None; Secure; HttpOnly`, and `Domain=.saluna.ir` if cookie sharing across `app`/`api` subdomains is desired.
 - Server-only secrets remain in `apps/api`/runtime env, never in `apps/pwa`.
 
@@ -262,7 +262,7 @@ PWA should depend on client-safe packages only:
 
 ### Legacy Next API Behavior to Replace with Hono
 
-Treat all legacy API route files under `apps/app/app/api` as reference only. Do not import them or route the PWA through them.
+Treat all legacy API route files under `retired Next API routes` as reference only. Do not import them or route the PWA through them.
 
 Already covered by Hono:
 
@@ -322,11 +322,11 @@ Destination setup TODOs:
 **Resolved (2026-05-26):**
 
 - **Production topology:** separate origins.
-  - PWA: `https://app.saluna.ir`
+  - PWA: `https://pwa.saluna.ir`
   - Hono API: `https://api.saluna.ir`
 - **API URL strategy:** Direct Hono. PWA calls `${VITE_API_BASE_URL}/api/v1/*` directly. No reverse-proxy rewrite of `/api/*` in front of the PWA.
 - **Cookies:** session cookie is set with `SameSite=None; Secure; HttpOnly`, no `Domain` attribute (host-only on `api.saluna.ir`). Implemented in `apps/api/src/routes/auth.ts` — `Secure` works on `http://localhost` because browsers treat localhost as a secure context.
-- **CORS:** Hono `CORS_ORIGINS` must include `https://app.saluna.ir` (prod) and `http://localhost:5173` (dev) with `credentials: true`. Preflight must allow `Content-Type` and any auth headers actually sent.
+- **CORS:** Hono `CORS_ORIGINS` must include `https://pwa.saluna.ir` (prod) and `http://localhost:5173` (dev) with `credentials: true`. Preflight must allow `Content-Type` and any auth headers actually sent.
 - **Dev environment:** mirror prod cross-origin topology rather than using a Vite same-origin proxy. Set `VITE_API_BASE_URL=http://localhost:<honoPort>` and run Hono with dev CORS allowing `http://localhost:5173`. Rationale: catches cookie/CORS regressions in dev instead of in production. A same-origin Vite proxy would hide `SameSite=None`/`Secure` cookie issues until deploy.
 - **Data-client base path:** `@repo/data-client` gets a configurable base URL (default `${VITE_API_BASE_URL}/api/v1`) so `/api/*` hardcoding is removed without depending on Next rewrites.
 - **`@repo/api-client` endpoints:** point at Hono `/api/v1/*` directly (no logical `/api/*` indirection).
@@ -578,7 +578,7 @@ Foundation slice landed and verified end-to-end against Hono on localhost.
 - `routes/auth.ts` — session cookie now `HttpOnly; Secure; SameSite=None` (was `Lax`, secure only in prod). Logout `deleteCookie` mirrors the same attributes so the browser will overwrite the prior cookie.
 
 **Shared (`packages/api-client`):**
-- `endpoints.ts` — all paths rewritten to `/api/v1/*` (Hono base). Legacy `apps/app` uses raw fetch, so this is safe.
+- `endpoints.ts` — all paths rewritten to `/api/v1/*` (Hono base). Legacy `retired manager app` uses raw fetch, so this is safe.
 
 **PWA (`apps/pwa`):**
 - Deps: added `@repo/ui`, `@repo/salon-core`, `@repo/brand-tokens`, `@repo/api-client`, `@tanstack/react-query(+devtools)`, `react-hook-form`, `@hookform/resolvers`, `zod`, `date-fns`. Pinned `react`/`react-dom` to 19.1.0 to match `@repo/ui`.
@@ -608,7 +608,7 @@ Foundation slice landed and verified end-to-end against Hono on localhost.
 
 ## Phase 2 — Shipped (2026-05-26)
 
-`/_authed/dashboard` ships full UI parity with `apps/app/app/(app)/dashboard/page.tsx`:
+`/_authed/dashboard` ships full UI parity with `retired manager app route (app)/dashboard/page.tsx`:
 
 - Router `loader` calls `queryClient.ensureQueryData` against `api.dashboard.get`.
 - `useQuery` with `staleTime: 60_000` + `refetchInterval: 60_000` (matches legacy SWR `refreshInterval`).
@@ -619,7 +619,7 @@ Foundation slice landed and verified end-to-end against Hono on localhost.
 ## Phase 3 — Shipped (2026-05-26)
 
 **Shared (`packages/data-client`):**
-- `adapters/http/fetch-http-transport.ts` — added `apiPrefix` option (default `'/api'`). When set, rewrites the leading `/api` in caller-supplied module paths. Legacy `apps/app` keeps default; PWA passes `'/api/v1'` to target Hono directly. Module callsites unchanged, so legacy + tests unchanged.
+- `adapters/http/fetch-http-transport.ts` — added `apiPrefix` option (default `'/api'`). When set, rewrites the leading `/api` in caller-supplied module paths. Legacy `retired manager app` keeps default; PWA passes `'/api/v1'` to target Hono directly. Module callsites unchanged, so legacy + tests unchanged.
 - `create-data-client.ts` — plumbs `apiPrefix` through `CreateDataClientConfig`.
 
 **PWA (`apps/pwa`):**
@@ -633,7 +633,7 @@ Foundation slice landed and verified end-to-end against Hono on localhost.
 - `pnpm exec tsc --noEmit` in `apps/pwa` → only the pre-existing `appointments-module.ts` TS6133 warning (unchanged from main)
 - `pnpm build` in `apps/pwa` → succeeds; sync UI lives in the `_authed` chunk
 
-**Note on existing offline state:** Installed legacy users hit `apps/app` at `saluna-manager-offline`. Both apps now write to the same DB. When a user moves to the PWA, queued mutations replay against Hono via the `/api/v1` rewrite — same endpoints, just a different prefix. No migration needed.
+**Note on existing offline state:** Installed legacy users hit `retired manager app` at `saluna-manager-offline`. Both apps now write to the same DB. When a user moves to the PWA, queued mutations replay against Hono via the `/api/v1` rewrite — same endpoints, just a different prefix. No migration needed.
 
 ## Phase 4 — Shipped (2026-05-26)
 
@@ -660,7 +660,7 @@ List page with offline-first IDB hydration, retention follow-up filter cross-que
 - `vaul` (for `FormSheet`).
 - `<Toaster />` from `@repo/ui/toaster` rendered in `__root` (so `runMutation` toasts work).
 
-**New PWA modules ported from `apps/app`:**
+**New PWA modules ported from `retired manager app`:**
 - `src/lib/network-status.ts` — `useNetworkStatus`, `formatSnapshotAge`.
 - `src/lib/use-keyboard-inset.ts` — keyboard inset CSS var for `FormSheet` footer.
 - `src/lib/use-dismiss-guard.tsx` — unsaved-changes confirm dialog.
@@ -757,7 +757,7 @@ Read-only `/calendar` route lands with FullCalendar grid, view toggle (روز/ه
 - `package.json` + `pnpm install` performed.
 - `api-client.ts` — added `appointments: createAppointmentsApi(apiClient)`.
 - `src/components/brand/brand-mark.tsx` — minimal Vite-safe port (no asset versioning yet; Phase 7).
-- `public/brand/*` — brand assets copied from `apps/app/public/brand`.
+- `public/brand/*` — brand assets copied from `apps/pwa/public/brand`.
 - `src/components/calendar/` — ported `calendar-header`, `staff-filter`, `concurrent-appointments-sheet` (verbatim minus `'use client'`), `salon-full-calendar` (verbatim + import path fix `@/` → `#/`), `calendar-skeleton`.
 - `src/lib/use-calendar-indexeddb-sources.ts` — ported, retargeted at `#/lib/manager-data-client`, dropped unused `idbLoading`.
 - `src/routes/_authed/calendar.tsx` — `validateSearch` (z.object{date, clientId, appointmentId}) + TanStack Query for appointments/staff/services/clients/business + `useCalendarIndexedDbSources` layered on top. Cluster sheet wired. Create/availability FABs, slot select, and single-event taps call a `toast` stub for 5b. `appointmentId`/`clientId` search params toast a hint and self-clear.
@@ -778,8 +778,8 @@ Read-only `/calendar` route lands with FullCalendar grid, view toggle (روز/ه
 Appointment **create** drawer lands on `/calendar`. Slot taps, FAB plus, and `?clientId=` deep links open the drawer; `?appointmentId=` and the availability FAB still toast a "next slice" hint (deferred to 5c/5d).
 
 **PWA (`apps/pwa`):**
-- `src/components/calendar/client-picker.tsx` — ported verbatim from `apps/app`. Drawer-nested on touch, dismiss-on-outside on desktop. Data-client `clients.create` first; falls back to `api.clients.create({ …values, tags: values.tags ?? [] })` (same pattern as `client-drawer.tsx`).
-- `src/components/calendar/appointment-drawer.tsx` — ported verbatim minus Next imports. Raw `fetch('/api/appointments', POST)` fallback replaced with `api.appointments.create(payload)`; raw `fetch('/api/services/:id/addons')` fallback replaced with `api.services.addons.forService(id, { signal })`; raw `fetch('/api/staff/booking-availability?…')` replaced with `api.staff.bookingAvailability({ date, startTime, endTime }, { signal })` (response cast to `{ staff: Array<{ staffId, available }> }` — api-client's generated `StaffResponse` type is wrong for this endpoint; not blocking).
+- `src/components/calendar/client-picker.tsx` — ported verbatim from `retired manager app`. Drawer-nested on touch, dismiss-on-outside on desktop. Data-client `clients.create` first; falls back to `api.clients.create({ …values, tags: values.tags ?? [] })` (same pattern as `client-drawer.tsx`).
+- `src/components/calendar/appointment-drawer.tsx` — ported verbatim minus Next imports. Raw `fetch('/api/appointments', POST)` fallback replaced with `api.appointments.create(payload)`; raw `fetch('/api/services/:id/addons')` fallback replaced with `api.services.addons.forService(id, { signal })`; raw `fetch('/api/staff/booking-availability?...')` replaced with `api.staff.bookingAvailability({ date, startTime, endTime }, { signal })` (response cast to `{ staff: Array<{ staffId, available }> }` — api-client's generated `StaffResponse` type is wrong for this endpoint; not blocking).
 - `src/routes/_authed/calendar.tsx` —
   - Added create-drawer state (`showCreateDrawer`, `createDate`, `createTime`, `initialStaffIdForCreate`, `initialServiceIdForCreate`, `initialClientIdForCreate`).
   - Wired `handleSlotSelect` (replaces `stubDrawer` for `onSlotSelect`), `handleAddAppointment` (FAB plus), `handleCreateDrawerOpenChange`, `handleAppointmentCreated`.
@@ -801,11 +801,11 @@ Appointment **create** drawer lands on `/calendar`. Slot taps, FAB plus, and `?c
 Appointment **detail** drawer lands on `/calendar`. Single-event taps (in any view), cluster-sheet picks, and `?appointmentId=` deep links now open the drawer. Edit, status change, delete, and "تکمیل اطلاعات مشتری" (placeholder client) all flow through the data-client when available and fall back to `@repo/api-client` cross-origin Hono.
 
 **PWA (`apps/pwa`):**
-- `src/components/calendar/appointment-detail-drawer.tsx` — ported from `apps/app`. Path aliases `@/` → `#/`. `useNetworkStatus` from `#/lib/network-status`. Raw-fetch fallbacks replaced:
+- `src/components/calendar/appointment-detail-drawer.tsx` — ported from `retired manager app`. Path aliases `@/` -> `#/`. `useNetworkStatus` from `#/lib/network-status`. Raw-fetch fallbacks replaced:
   - `fetch('/api/services/:id/addons')` → `api.services.addons.forService(id, { signal })`
-  - `fetch('/api/appointments/:id/complete-client', POST)` → `api.appointments.completePlaceholderClient(id, …)`
-  - `fetch('/api/appointments/:id', PATCH)` (update + status) → `api.appointments.update(id, …)` / `api.appointments.updateStatus(id, status)`
-  - `fetch('/api/appointments/:id', DELETE)` → `api.appointments.delete(id)`
+  - `fetch('/api/appointments/:id/complete-client', POST)` -> `api.appointments.completePlaceholderClient(id, ...)`
+  - `fetch('/api/appointments/:id', PATCH)` (update + status) -> `api.appointments.update(id, ...)` / `api.appointments.updateStatus(id, status)`
+  - `fetch('/api/appointments/:id', DELETE)` -> `api.appointments.delete(id)`
   - `ApiError` is caught and rewrapped as `DataClientHttpError` for `runMutation` message preservation. For the placeholder-client duplicate-phone flow, the duplicate `existingClient` is read from `ApiError.payload` (legacy read it from `res.json()`).
 - `src/routes/_authed/calendar.tsx` —
   - Added `selectedAppointment` state. `handleAppointmentClick` now opens the drawer for non-clustered events; `handleConcurrentSelect(appointment)` opens it from the cluster sheet.
@@ -824,7 +824,7 @@ Appointment **detail** drawer lands on `/calendar`. Single-event taps (in any vi
 Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The search FAB now opens the drawer; picking a slot closes it and re-opens the create drawer pre-seeded with `staffId` / `serviceId` / `date` / `startTime` (matching legacy `handleAvailabilitySlotSelect` behavior, including the `requestAnimationFrame` defer so the two vaul drawers don't fight each other on mount).
 
 **PWA (`apps/pwa`):**
-- `src/components/calendar/availability-drawer.tsx` — ported from `apps/app`. Path aliases `@/` → `#/`. `useNetworkStatus` from `#/lib/network-status`, `useDismissGuard` from `#/lib/use-dismiss-guard`, `ServicePicker` from `#/components/services/service-picker`. Raw `fetchJsonOrThrow('/api/appointments/availability?…')` replaced with `api.appointments.availability({ mode, serviceId, date, staffId? }, { signal })`. `HttpError` → `ApiError` for the user-facing error message.
+- `src/components/calendar/availability-drawer.tsx` — ported from `retired manager app`. Path aliases `@/` -> `#/`. `useNetworkStatus` from `#/lib/network-status`, `useDismissGuard` from `#/lib/use-dismiss-guard`, `ServicePicker` from `#/components/services/service-picker`. Raw `fetchJsonOrThrow('/api/appointments/availability?...')` replaced with `api.appointments.availability({ mode, serviceId, date, staffId? }, { signal })`. `HttpError` -> `ApiError` for the user-facing error message.
 - `src/routes/_authed/calendar.tsx` —
   - Dropped the `toast`-based `stubAvailabilityDrawer`; added `showAvailabilityDrawer` state.
   - `handleOpenAvailability` (manager-only) wired to the search FAB.
@@ -844,12 +844,12 @@ Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The s
 
 **PWA (`apps/pwa`):**
 - `api-client.ts` — added `today: createTodayApi(apiClient)`.
-- `src/lib/next-open-slot.ts` — ported verbatim from legacy `apps/app/app/(app)/today/next-open-slot.ts`.
+- `src/lib/next-open-slot.ts` — ported verbatim from legacy `retired manager app route (app)/today/next-open-slot.ts`.
 - `src/lib/use-manager-today-indexeddb.ts` — ported; retargeted at `#/lib/manager-data-client`. Hydrates today/staff/services/clients into IDB when online, falls back to IDB-only when offline.
 - `src/lib/offline-snapshot.ts` — added `useOfflineSnapshot(key, liveData)` hook (read on mount, write on every fresh `liveData`). Reuses the existing `saluna-offline-v1:` prefix and key shape — staff snapshots still land at `today:staff:<ymd>`, matching legacy.
 - `src/components/status-pill.tsx` — ported.
 - `src/components/today-skeleton.tsx` — ported (`ManagerTodaySkeleton`, `StaffTodaySkeleton`).
-- `src/routes/_authed/today.tsx` — full port. `useSWR` → TanStack `useQuery` (separate manager/staff query trees gated by role). Raw `fetch('/api/appointments/:id', PATCH {status})` replaced with `api.appointments.updateStatus(id, status)`; `removedAppointmentId` branch preserved off the typed union. `next/link` → TanStack `Link to=...`, `useRouter().push` → `useNavigate()` (only used for the manager cross-day create redirect to `/calendar?date=…`). Both views consume `useNetworkStatus` from `#/lib/network-status`; the staff view uses the new `useOfflineSnapshot`. Manager view consumes `useManagerTodayIndexedDbSources` + `useManagerDataClient`/`useBumpOfflineData` for offline-first behavior, identical to legacy.
+- `src/routes/_authed/today.tsx` — full port. `useSWR` -> TanStack `useQuery` (separate manager/staff query trees gated by role). Raw `fetch('/api/appointments/:id', PATCH {status})` replaced with `api.appointments.updateStatus(id, status)`; `removedAppointmentId` branch preserved off the typed union. `next/link` -> TanStack `Link to=...`, `useRouter().push` -> `useNavigate()` (only used for the manager cross-day create redirect to `/calendar?date=...`). Both views consume `useNetworkStatus` from `#/lib/network-status`; the staff view uses the new `useOfflineSnapshot`. Manager view consumes `useManagerTodayIndexedDbSources` + `useManagerDataClient`/`useBumpOfflineData` for offline-first behavior, identical to legacy.
 
 **Parity deviations:**
 - The manager view used legacy `router.push('/calendar?date=…')` after a cross-day create; PWA uses TanStack `navigate({ to: '/calendar', search: { date } })` which yields the same navigation but routed through the SPA (no full reload).
@@ -870,7 +870,7 @@ Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The s
 
 **PWA (`apps/pwa`):**
 - `src/lib/api-client.ts` — registered `appointmentRequests: createAppointmentRequestsApi(apiClient)`.
-- `src/routes/_authed/requests.tsx` — full UI port from `apps/app/app/(app)/requests/page.tsx`. Router `loader` → `ensureQueryData(['appointment-requests','pending'])`; tab-scoped lists use `useQuery` keyed `['appointment-requests', <status>]`. Approve/reject are `useMutation`s; on success both the current tab key and the pending key are invalidated so the badge updates immediately. `ApiError.message` is surfaced inline (preserves legacy parity for "تأیید درخواست انجام نشد" / "رد درخواست انجام نشد" plus server-supplied messages). Staff/services lookups are gated on `status === 'pending'`.
+- `src/routes/_authed/requests.tsx` — full UI port from `retired manager app route (app)/requests/page.tsx`. Router `loader` → `ensureQueryData(['appointment-requests','pending'])`; tab-scoped lists use `useQuery` keyed `['appointment-requests', <status>]`. Approve/reject are `useMutation`s; on success both the current tab key and the pending key are invalidated so the badge updates immediately. `ApiError.message` is surfaced inline (preserves legacy parity for "تأیید درخواست انجام نشد" / "رد درخواست انجام نشد" plus server-supplied messages). Staff/services lookups are gated on `status === 'pending'`.
 - `src/components/bottom-nav.tsx` — added manager-only `/requests` item (Inbox icon) between `/calendar` and `/clients`. `useQuery` for pending-count with `refetchInterval: 60_000`; badge shows `99+` over 99, mirroring legacy.
 
 **Parity deviations:**
@@ -887,10 +887,10 @@ Availability ("بررسی زمان خالی") drawer lands on `/calendar`. The s
 PWA hardening lands: real manifest + icons/screenshots, service worker with Vite-aware caching, in-app update prompt, and the legacy iOS/Android install drawer.
 
 **Assets (`apps/pwa/public/`):**
-- Copied from `apps/app/public`: `icons/` (full set incl. maskable), `screenshots/manifest-*.png`, `offline-launch.html`, `favicon.ico`, `favicon-{16,32,196}x{...}.png`, `apple-touch-icon.png`, `icon-base.png`, `icon-{dark,light}-32x32.png`, `logo.png`.
+- Copied from `apps/pwa/public`: `icons/` (full set incl. maskable), `screenshots/manifest-*.png`, `offline-launch.html`, `favicon.ico`, `favicon-{16,32,196}x{...}.png`, `apple-touch-icon.png`, `icon-base.png`, `icon-{dark,light}-32x32.png`, `logo.png`.
 - Removed Vite starter `manifest.json`, `logo192.png`, `logo512.png`.
-- New `manifest.webmanifest` — static port of legacy `apps/app/app/manifest.ts` (Persian/RTL, theme/background colors, full icon set incl. maskable, screenshots, calendar/clients/today shortcuts). Asset-version query string dropped from manifest entries (was Next-only via `withPwaAssetVersion`); a future bump uses `VITE_PWA_ASSET_VERSION` injected at the SW + register layer.
-- New `sw.js` — ported from `apps/app/public/sw.js`. Same precache list, navigation cache-then-network, navigation fallback chain, static media SWR, push/notificationclick handlers. Adapted for Vite:
+- New `manifest.webmanifest` — static port of legacy `retired manager app route manifest.ts` (Persian/RTL, theme/background colors, full icon set incl. maskable, screenshots, calendar/clients/today shortcuts). Asset-version query string dropped from manifest entries (was Next-only via `withPwaAssetVersion`); a future bump uses `VITE_PWA_ASSET_VERSION` injected at the SW + register layer.
+- New `sw.js` — ported from `apps/pwa/public/sw.js`. Same precache list, navigation cache-then-network, navigation fallback chain, static media SWR, push/notificationclick handlers. Adapted for Vite:
   - Added `/services`, `/requests` to `NAVIGATION_FALLBACK_PATHS` and `shouldCacheNavigation` (routes that exist in the PWA but not legacy at the time).
   - New `isHashedAssetRequest` cache-first strategy for `/assets/*` (Vite's hashed bundle output) into `ASSET_CACHE_NAME`. Hashed names guarantee cache-busting; new builds get fresh entries automatically and old caches are dropped on activate.
   - Bypass cross-origin requests entirely (Hono is on a different origin, so the SW would never see them, but explicit guard is cheap).
@@ -898,12 +898,12 @@ PWA hardening lands: real manifest + icons/screenshots, service worker with Vite
   - Same `/api/` opt-out preserved.
 
 **PWA (`apps/pwa`):**
-- `src/lib/pwa-assets.ts` — Vite port of `apps/app/lib/pwa-assets.ts`. Reads `import.meta.env.VITE_PWA_ASSET_VERSION` with the same `2026-05-26-v1` default.
+- `src/lib/pwa-assets.ts` — Vite port of `apps/pwa/src/lib/pwa-assets.ts`. Reads `import.meta.env.VITE_PWA_ASSET_VERSION` with the same `2026-05-26-v1` default.
 - `src/env.ts` — added `pwaAssetVersion` field for completeness alongside other VITE-prefixed values.
-- `src/components/pwa/service-worker-register.tsx` — Vite port of `apps/app/components/pwa/service-worker-register.tsx`. Same dev cleanup (unregister + purge caches), same update toast UX, same controllerchange/visibility/focus/10-minute interval re-check pattern. **Build-id replacement:** instead of `extractNextBuildId`, we extract the Vite hashed entry script path (`/assets/index-XXXXX.js`) from `document.scripts` at boot, then on each re-check fetch `/` (no-store) and compare against the script referenced in the fresh index.html. Mismatch → prompt for reload.
-- `src/components/pwa/install-prompt.tsx` — Vite port of `apps/app/components/pwa/install-prompt.tsx`. `usePathname` → `useRouterState({ select: s => s.location.pathname })`. All localStorage keys preserved verbatim (`saluna-pwa-first-visit`, `saluna-pwa-install-dismissed-v2`, `saluna-pwa-install-qualified-v1`, `saluna-pwa-install-auto-opened-v1`) so existing installed-user state migrates cleanly. Same value-moment paths, iOS Safari detection, and `beforeinstallprompt`/`appinstalled` handling.
+- `src/components/pwa/service-worker-register.tsx` — Vite port of `apps/pwa/src/components/pwa/service-worker-register.tsx`. Same dev cleanup (unregister + purge caches), same update toast UX, same controllerchange/visibility/focus/10-minute interval re-check pattern. **Build-id replacement:** instead of `extractNextBuildId`, we extract the Vite hashed entry script path (`/assets/index-XXXXX.js`) from `document.scripts` at boot, then on each re-check fetch `/` (no-store) and compare against the script referenced in the fresh index.html. Mismatch → prompt for reload.
+- `src/components/pwa/install-prompt.tsx` — Vite port of `apps/pwa/src/components/pwa/install-prompt.tsx`. `usePathname` → `useRouterState({ select: s => s.location.pathname })`. All localStorage keys preserved verbatim (`saluna-pwa-first-visit`, `saluna-pwa-install-dismissed-v2`, `saluna-pwa-install-qualified-v1`, `saluna-pwa-install-auto-opened-v1`) so existing installed-user state migrates cleanly. Same value-moment paths, iOS Safari detection, and `beforeinstallprompt`/`appinstalled` handling.
 - `src/routes/__root.tsx` — mounts `<ServiceWorkerRegister />` and `<InstallPrompt />` alongside `<Toaster />`.
-- `index.html` — added theme-color (light/dark via media), color-scheme, `application-name`, apple-web-app metas, `format-detection`, description, `<link rel="manifest" href="/manifest.webmanifest">`, full favicon/apple-touch-icon link set.
+- `index.html` — added theme-color (light/dark via media), color-scheme, `application-name`, apple-web-app metas, `format-detection`, description, `<link rel="manifest" href="/manifest.webmanifest">`, full favicon/pwale-touch-icon link set.
 
 **Deferred:**
 - Vazirmatn font loading — still system fonts; Iran VPS / no Google Fonts constraint means self-hosting is the right path. Tracked separately.
@@ -921,7 +921,7 @@ Build the smallest useful vertical slice:
 1. Normalize Hono API base URL/path strategy for `apps/pwa`.
 2. Add PWA auth provider and API client factory.
 3. Consolidate TanStack router creation.
-4. Add root/app/authenticated layout routes.
+4. Add root/pwa/authenticated layout routes.
 5. Migrate `/`, `/login`, `/signup`.
 6. Migrate `/dashboard`.
 7. Add bottom nav shell with manager/staff items.

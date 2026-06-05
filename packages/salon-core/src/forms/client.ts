@@ -1,5 +1,5 @@
 /**
- * Client form schema — shared between web (`apps/app`) and native (`apps/native`).
+ * Client form schema — shared between PWA (`apps/pwa`) and native (`apps/native`).
  * Both validates and normalizes (phone becomes canonical in the payload).
  */
 import { z } from 'zod'

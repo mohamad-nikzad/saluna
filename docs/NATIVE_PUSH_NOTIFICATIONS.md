@@ -1,7 +1,7 @@
 # Native Notifications Plan — Iran-Ready
 
 The native app currently ships only a local preferences UI for notifications
-(`apps/native/app/push-settings.tsx`). The toggle stores `native:push-enabled`
+(`apps/native/pwa/push-settings.tsx`). The toggle stores `native:push-enabled`
 in `AsyncStorage` and opens OS notification settings, but it does not create a
 server-side notification, register any delivery channel, or provide a durable
 in-app inbox.
@@ -94,7 +94,7 @@ Goal: create the durable, self-hosted notification backbone without changing
 native UX yet.
 
 - Add the notification tables described above.
-- Add `apps/app/lib/notifications` as the orchestration layer:
+- Add `apps/pwa/src/lib/notifications` as the orchestration layer:
   - `createNotificationForUser(...)`
   - `listNotificationsForUser(...)`
   - `markNotificationRead(...)`
@@ -146,7 +146,7 @@ Acceptance:
 
 Goal: make notifications visible and controllable in the native app.
 
-- [x] Replace `apps/native/app/push-settings.tsx` with notification settings that
+- [x] Replace `apps/native/pwa/push-settings.tsx` with notification settings that
       reflect real channels:
   - appointment alerts on/off.
   - local device alerts on/off.

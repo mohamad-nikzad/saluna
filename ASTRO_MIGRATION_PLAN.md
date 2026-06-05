@@ -55,8 +55,8 @@ apps/web-astro/
 └─ src/
    ├─ env.ts                   # re-exports from astro:env/client + astro:env/server for ergonomics
    ├─ lib/
-   │  ├─ public-api.ts         # lifted from apps/web/app/salons/_lib/public-api.ts
-   │  ├─ format.ts             # lifted from apps/web/app/salons/_lib/format.ts
+   │  ├─ public-api.ts         # lifted from apps/web/pwa/salons/_lib/public-api.ts
+   │  ├─ format.ts             # lifted from apps/web/pwa/salons/_lib/format.ts
    │  ├─ cache-headers.ts      # NEW: setSalonShellCache(Astro), setNoStoreCache(Astro)
    │  └─ seo.ts                # NEW: JSON-LD builders (BeautySalon, Service, BreadcrumbList)
    ├─ assets/
@@ -85,7 +85,7 @@ apps/web-astro/
    │  ├─ salons/[slug]/requests/[token].astro     # SSR, no-store
    │  └─ og/[slug].png.ts                         # satori endpoint
    └─ styles/
-      └─ globals.css           # lifted verbatim from apps/web/app/globals.css
+      └─ globals.css           # lifted verbatim from apps/web/pwa/globals.css
 ```
 
 > Note: Astro 6 moved content-collection config to **`src/content.config.ts`** at project root (no longer `src/content/config.ts`). We don't use collections today, but the path is reserved if we later move salon catalog data in-repo.
@@ -107,7 +107,7 @@ Each phase is scoped so a subagent can pick it up with only the plan + the phase
 
 ### Phase 0 — Scaffold (`apps/web-astro`)
 
-Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo conventions documented in `apps/api`, `apps/app`, `apps/web`."
+Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo conventions documented in `apps/api`, `retired manager app`, `apps/web`."
 
 1. Confirm Node 22.12+ on the dev/CI hosts (Astro 6 requirement). Bump `engines.node` in root `package.json` if it pins lower.
 2. `pnpm create astro@latest apps/web-astro -- --template minimal --typescript strict --no-install --no-git --skip-houston`.
@@ -115,7 +115,7 @@ Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo
    - `dependencies`: `astro@^6.4.2`, `@astrojs/node@^10.1.2`, `@astrojs/react@^5.0.6`, `@astrojs/sitemap@^3`, `react@19.1.0`, `react-dom@19.1.0`, `lucide-react@^0.564.0`, `sharp`, `satori`, `@resvg/resvg-js`, `@repo/salon-core@workspace:*`.
    - `devDependencies`: `@repo/typescript-config@workspace:*`, `@types/react@^19`, `@types/react-dom@^19`, `@types/node@^22`, `eslint-plugin-astro`, `prettier-plugin-astro`.
    - Note: `zod` is no longer a runtime dep — Astro 6 ships its own (Zod 4) and exposes it via `astro/zod` for `defineCollection` / `defineAction` schemas. We don't use either yet; if we do, import from `astro/zod`.
-4. `package.json` scripts (match cross-app convention from `apps/web` + `apps/app`):
+4. `package.json` scripts (match cross-app convention from `apps/web` + `retired manager app`):
    ```
    "dev": "node ../../scripts/with-root-env.mjs astro dev --port 3001",
    "dev:local": "ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs astro dev --host 0.0.0.0 --port 3001",
@@ -125,7 +125,7 @@ Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo
    "typecheck": "astro check && tsc --project tsconfig.json --noEmit",
    "boundaries": "eslint . --max-warnings=0"
    ```
-   Port stays 3001 to match existing nginx config and avoid clashing with `apps/app` (3000) / `apps/api` (3002).
+   Port stays 3001 to match existing nginx config and avoid clashing with `retired manager app` (3000) / `apps/api` (3002).
 5. `tsconfig.json` extends both `@repo/typescript-config/base.json` and `astro/tsconfigs/strict`; set `paths: { "@/*": ["./src/*"] }`. Astro 6's `astro/tsconfigs/strict` wins where the two overlap.
 6. `src/env.d.ts`:
    ```ts
@@ -198,7 +198,7 @@ Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo
    ```ts
    export { PUBLIC_APP_URL, PUBLIC_API_URL } from 'astro:env/client'
    ```
-2. **Global CSS**: copy `apps/web/app/globals.css` → `src/styles/globals.css` verbatim. Import once in `src/layouts/Base.astro`. Tailwind v4 already uses `@import 'tailwindcss'`; Astro 6 supports Tailwind 4 via PostCSS with no integration. Verify CSS variables, `.dark` mode, and animations render. **Sanity check the new Astro 6 script/style ordering** (it now follows source order — previously reversed) by skimming `globals.css` for any selector that relied on prior ordering.
+2. **Global CSS**: copy `apps/web/pwa/globals.css` → `src/styles/globals.css` verbatim. Import once in `src/layouts/Base.astro`. Tailwind v4 already uses `@import 'tailwindcss'`; Astro 6 supports Tailwind 4 via PostCSS with no integration. Verify CSS variables, `.dark` mode, and animations render. **Sanity check the new Astro 6 script/style ordering** (it now follows source order — previously reversed) by skimming `globals.css` for any selector that relied on prior ordering.
 3. **Fonts** — use the built-in Astro 6 **Fonts API** (config block in Phase 0). In components:
    ```astro
    ---
@@ -235,7 +235,7 @@ Subagent prompt scope: "Create the new Astro 6.4.2 package matching the monorepo
 
 ### Phase 2 — Landing page (`/`)
 
-Subagent prompt scope: "Port `apps/web/app/page.tsx` to `apps/web-astro/src/pages/index.astro`. Fully static, no client state, zero JS shipped."
+Subagent prompt scope: "Port `apps/web/pwa/page.tsx` to `apps/web-astro/src/pages/index.astro`. Fully static, no client state, zero JS shipped."
 
 1. Convert TSX to `.astro`. The page uses `next/font` (Lalezar — already declared in the Fonts API block; add `<Font cssVariable="--font-lalezar" preload />` to this page only), `next/image`, hard-coded Persian copy, inline `<style>` for `saloora-petal` keyframes.
 2. Replace `next/image` with Astro `<Image />` from `astro:assets`. Move `<Image>`-referenced assets from `public/landing/` → `src/assets/landing/` so sharp can optimise them; leave purely-URL-referenced assets in `public/`. Use the stable responsive image API (`widths`, `sizes`) where the original Next code used `sizes` props.
@@ -244,7 +244,7 @@ Subagent prompt scope: "Port `apps/web/app/page.tsx` to `apps/web-astro/src/page
 5. Drop `'use client'` markers (no client state anywhere on this page).
 6. Page metadata via Base layout props.
 
-**Critical files to read:** `apps/web/app/page.tsx`, `apps/web/app/globals.css` (animations), `apps/web/public/landing/*`.
+**Critical files to read:** `apps/web/pwa/page.tsx`, `apps/web/pwa/globals.css` (animations), `apps/web/public/landing/*`.
 
 **Acceptance:** `view-source` on `/` ships **0 bytes of JS** beyond the `<ClientRouter />` runtime, Lighthouse SEO/Perf both ≥ 95 on a cold local build.
 
@@ -325,7 +325,7 @@ This is the highest-value page — the layered architecture lives here.
    ```
 5. **JSON-LD helper** (`src/lib/seo.ts`): builds `{ "@context": "https://schema.org", "@type": "BeautySalon", name, telephone, url, image, makesOffer: services.map(s => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.name }, priceSpecification: ... })) }`. Strict-typed inputs, no runtime deps.
 
-**Critical files to read:** `apps/web/app/salons/[slug]/page.tsx`, `apps/web/app/salons/[slug]/_layouts/InlineLayout.tsx`, `AgendaLayout.tsx`, `BookingForm.tsx`, `SalonInfoCard.tsx`, all three `useXxx` hooks, `_lib/public-api.ts`.
+**Critical files to read:** `apps/web/pwa/salons/[slug]/page.tsx`, `apps/web/pwa/salons/[slug]/_layouts/InlineLayout.tsx`, `AgendaLayout.tsx`, `BookingForm.tsx`, `SalonInfoCard.tsx`, all three `useXxx` hooks, `_lib/public-api.ts`.
 
 **Acceptance:** Curling `/salons/<slug>` returns HTML containing salon name, services list, JSON-LD, and `Cache-Control: public, s-maxage=300, stale-while-revalidate=86400`. The AgendaLayout/InlineLayout island hydrates client-side and lazy-loads availability via the public API. Second curl within 5 min hits nginx, never touches Node.
 
@@ -419,7 +419,7 @@ Salon-layout `ogImage` prop already points at `/og/{slug}.png`. The single Vazir
 1. **ESLint**: copy lint config from `apps/web/`; add `eslint-plugin-astro` and the workspace `boundaries` rules. Astro 6's flat-config support: extend `'plugin:astro/recommended'` from a flat-config block.
 2. **Prettier**: add `prettier-plugin-astro` to root `.prettierrc` (if present).
 3. **Type-check in Turbo**: `astro check` runs in CI; `turbo.json` `typecheck` task already covers it (no outputs).
-4. **Server startup**: standalone Node entry at `dist/server/entry.mjs`. Document PM2 ecosystem entry or systemd unit (one of either, matching how `apps/app` is deployed today — needs verification against actual deploy script before Phase 6). Bind `HOST=0.0.0.0 PORT=3001`. Astro 6 + Node 22.12 means no `node --experimental-*` flags.
+4. **Server startup**: standalone Node entry at `dist/server/entry.mjs`. Document PM2 ecosystem entry or systemd unit (one of either, matching how `retired manager app` is deployed today — needs verification against actual deploy script before Phase 6). Bind `HOST=0.0.0.0 PORT=3001`. Astro 6 + Node 22.12 means no `node --experimental-*` flags.
 5. **nginx**:
    - Cache layer in front of `/salons/*` and `/og/*` honouring `s-maxage` + `stale-while-revalidate` (`proxy_cache` + `proxy_cache_use_stale`).
    - Long-term cache for `/_astro/*` build hashes (`immutable`).
@@ -432,7 +432,7 @@ Salon-layout `ogImage` prop already points at `/og/{slug}.png`. The single Vazir
 1. Run both apps in parallel for a week. nginx upstream cut-over: stop Next on :3001, start Astro on :3001 — single-port reuse is fine because cut-over is sequential. No nginx config change needed.
 2. Side-by-side validation script (manual): curl key URLs from both apps, diff `<title>`, JSON-LD, presence of salon name and services in raw HTML.
 3. Lighthouse + GSC submission: re-submit sitemap, verify no coverage regressions for 14 days.
-4. Once green: `git rm -r apps/web`, rename `apps/web-astro` → `apps/web`, update root scripts. Keep `@repo/next-config` (still used by `apps/app`).
+4. Once green: `git rm -r apps/web`, rename `apps/web-astro` -> `apps/web`, update root scripts.
 5. **Follow-up tickets** (track separately, not in this migration):
    - Self-host Vazirmatn via Astro Fonts `fontProviders.local()` for fully air-gapped page loads.
    - i18n scaffolding when English copy lands (Astro 6 i18n: `routing: 'prefix-except-default'`).
@@ -446,15 +446,15 @@ Salon-layout `ogImage` prop already points at `/og/{slug}.png`. The single Vazir
 
 | Source (Next) | Destination (Astro) | Action |
 |---|---|---|
-| `apps/web/app/layout.tsx` | `apps/web-astro/src/layouts/Base.astro` | Rewrite |
-| `apps/web/app/page.tsx` | `apps/web-astro/src/pages/index.astro` | Rewrite (no JS) |
-| `apps/web/app/globals.css` | `apps/web-astro/src/styles/globals.css` | Copy verbatim |
-| `apps/web/app/salons/[slug]/page.tsx` | `apps/web-astro/src/pages/salons/[slug]/index.astro` | Rewrite (frontmatter + islands) |
-| `apps/web/app/salons/[slug]/_layouts/*.tsx` + hooks | `apps/web-astro/src/components/react/*` | Copy verbatim; one `router.push` swap |
-| `apps/web/app/salons/[slug]/requests/[token]/page.tsx` | `apps/web-astro/src/pages/salons/[slug]/requests/[token].astro` | Rewrite frontmatter |
-| `apps/web/app/salons/[slug]/requests/[token]/cancel-button.tsx` | `apps/web-astro/src/components/react/CancelRequestButton.tsx` | Copy verbatim |
-| `apps/web/app/salons/_lib/public-api.ts` | `apps/web-astro/src/lib/public-api.ts` | Copy; swap `@/env` import for `astro:env/client` exports |
-| `apps/web/app/salons/_lib/format.ts` | `apps/web-astro/src/lib/format.ts` | Copy verbatim |
+| `apps/web/pwa/layout.tsx` | `apps/web-astro/src/layouts/Base.astro` | Rewrite |
+| `apps/web/pwa/page.tsx` | `apps/web-astro/src/pages/index.astro` | Rewrite (no JS) |
+| `apps/web/pwa/globals.css` | `apps/web-astro/src/styles/globals.css` | Copy verbatim |
+| `apps/web/pwa/salons/[slug]/page.tsx` | `apps/web-astro/src/pages/salons/[slug]/index.astro` | Rewrite (frontmatter + islands) |
+| `apps/web/pwa/salons/[slug]/_layouts/*.tsx` + hooks | `apps/web-astro/src/components/react/*` | Copy verbatim; one `router.push` swap |
+| `apps/web/pwa/salons/[slug]/requests/[token]/page.tsx` | `apps/web-astro/src/pages/salons/[slug]/requests/[token].astro` | Rewrite frontmatter |
+| `apps/web/pwa/salons/[slug]/requests/[token]/cancel-button.tsx` | `apps/web-astro/src/components/react/CancelRequestButton.tsx` | Copy verbatim |
+| `apps/web/pwa/salons/_lib/public-api.ts` | `apps/web-astro/src/lib/public-api.ts` | Copy; swap `@/env` import for `astro:env/client` exports |
+| `apps/web/pwa/salons/_lib/format.ts` | `apps/web-astro/src/lib/format.ts` | Copy verbatim |
 | `apps/web/env.ts` | `astro.config.mjs` `env.schema` + thin `src/env.ts` re-export | Rewrite |
 | `apps/web/next.config.mjs` | `apps/web-astro/astro.config.mjs` | Rewrite |
 | `apps/web/public/landing/*.webp` referenced via `<Image />` | `apps/web-astro/src/assets/landing/*` | Move |
@@ -468,7 +468,7 @@ Salon-layout `ogImage` prop already points at `/og/{slug}.png`. The single Vazir
 - `scripts/with-root-env.mjs`
 
 **Dropped:**
-- `@repo/next-config` (replaced by `astro.config.mjs`; package kept because `apps/app` still uses it)
+- Shared Next config was replaced by `astro.config.mjs`.
 - `next`, `next/image`, `next/font`, `next/navigation`, `next/link`, `force-dynamic`, `generateMetadata`, `notFound()` from next, `useTransition`/`useRouter` (one call site, swapped for `window.location.assign`)
 - standalone `zod` dep (Astro 6 ships Zod 4 via `astro/zod` for schema APIs we use)
 
@@ -491,7 +491,7 @@ End-to-end sanity:
    - `curl -i http://localhost:3001/salons/<missing-slug>` → 404.
 4. Lighthouse on landing: SEO ≥ 95, Perf ≥ 95, A11y ≥ 90.
 5. Lighthouse on salon page: SEO ≥ 95, Perf ≥ 85 (booking island weighs more).
-6. `pnpm --filter @repo/web-astro build && node ./apps/web-astro/dist/server/entry.mjs` — boots, serves prod build.
+6. `pnpm --filter @repo/web-astro build && node ./pwas/web-astro/dist/server/entry.mjs` — boots, serves prod build.
 7. Side-by-side smoke: run Next on :3001 then stop, run Astro on :3001 — confirm nginx upstream healthchecks pass without config changes.
 
 ---
