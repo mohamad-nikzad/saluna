@@ -399,7 +399,7 @@ export function useAppointmentDetailDrawer({
       setShowCompleteClientDrawer(false)
       setDuplicateClient(null)
       onClientsChanged?.()
-      onSuccess({ type: 'updated', appointment: updated })
+      onSuccess({ type: 'updated', appointment: updated, source: 'completeClient' })
     } catch (err) {
       if (isDuplicateClientError(err)) {
         setCompleteFormError('root', { message: err.message })
@@ -433,7 +433,11 @@ export function useAppointmentDetailDrawer({
         values,
         nextStatus: status as AppointmentWithDetails['status'],
       })
-      onSuccess(change)
+      onSuccess(
+        change.type === 'deleted'
+          ? change
+          : { ...change, source: 'edit' },
+      )
     } catch {
       // Toast handled by mutation cache.
     }
@@ -481,7 +485,7 @@ export function useAppointmentDetailDrawer({
       onSuccess(
         result.type === 'deleted'
           ? { type: 'deleted', id: result.id }
-          : { type: 'updated', appointment: result.appointment },
+          : { type: 'updated', appointment: result.appointment, source: 'status' },
       )
     } catch {
       setStatusAction(null)

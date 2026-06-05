@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import { sameAddonIds } from '@repo/salon-core/appointment-time'
 import { addonLineValues, totalSnapshotFromServiceAndAddons } from './appointment-queries'
 import type { ServiceAddon } from '@repo/salon-core/types'
+
+describe('appointment update helpers', () => {
+  it('treats add-on ids as unchanged regardless of order', () => {
+    expect(sameAddonIds(['addon-b', 'addon-a'], ['addon-a', 'addon-b'])).toBe(true)
+    expect(sameAddonIds(['addon-a'], ['addon-b'])).toBe(false)
+  })
+})
 
 describe('appointment add-on snapshots', () => {
   it('copies selected add-on values into historical appointment lines', () => {

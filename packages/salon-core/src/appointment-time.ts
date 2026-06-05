@@ -49,6 +49,13 @@ export function isEndAfterStart(startTime: string, endTime: string): boolean {
   return durationMinutesFromRange(startTime, endTime) > 0
 }
 
+export function sameAddonIds(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((id, index) => id === sortedB[index])
+}
+
 export function validateAppointmentWindow(
   startTime: string,
   endTime: string

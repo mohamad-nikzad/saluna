@@ -198,7 +198,7 @@ Reduce mobile friction for long working-hour calendar views.
 
 ### D1. Close appointment edit/detail drawer after successful edit
 
-**Status:** Open — `/calendar` still calls `openDetail` after a successful full edit (`handleDetailChange`)
+**Status:** Fixed — `/calendar` closes the detail drawer after a successful full edit; status-only updates still refresh the open drawer
 
 **Report**
 
@@ -228,7 +228,7 @@ Close the appointment detail/edit drawer after successful full edit-form save, w
 
 ### D2. Persist appointment edit start/end time changes
 
-**Status:** Open — intake/query layers support explicit `endTime` when service/addons are unchanged, but no regression tests; custom end time still loses when service/addons change together
+**Status:** Fixed — intake/query layers compare actual service/add-on changes instead of payload presence; explicit `endTime` wins when managers edit a custom end time alongside service/add-on changes; regression tests added
 
 **Report**
 

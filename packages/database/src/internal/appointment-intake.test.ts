@@ -351,6 +351,107 @@ describe('appointment intake placeholder rules', () => {
     })
   })
 
+  it('persists explicit start/end times when service and add-ons are unchanged', async () => {
+    const result = await validateUpdateAppointmentIntake({
+      salonId: 'salon-1',
+      appointmentId: 'appointment-1',
+      existing: {
+        id: 'appointment-1',
+        clientId: 'placeholder-1',
+        staffId: 'staff-1',
+        serviceId: 'service-1',
+        bookedServiceName: 'Cut',
+        bookedServiceDuration: 45,
+        bookedServicePrice: 100,
+        bookedTotalDuration: 45,
+        bookedTotalPrice: 100,
+        bookedAddonCount: 0,
+        bookedAddons: [],
+        date: '2026-05-01',
+        startTime: '10:00',
+        endTime: '10:45',
+        status: 'scheduled',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      body: {
+        serviceId: 'service-1',
+        addonIds: [],
+        startTime: '11:00',
+        endTime: '12:30',
+        durationMinutes: 90,
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      patch: {
+        startTime: '11:00',
+        endTime: '12:30',
+      },
+    })
+    expect(result.ok && 'patch' in result && result.patch.serviceId).toBeUndefined()
+    expect(result.ok && 'patch' in result && result.patch.addonIds).toBeUndefined()
+  })
+
+  it('keeps a custom end time when service or add-ons change', async () => {
+    mocks.getServiceById.mockResolvedValue({
+      id: 'service-1',
+      name: 'کات جدید در کاتالوگ',
+      active: true,
+      duration: 60,
+      price: 200,
+    })
+    mocks.getActiveServiceAddonsForService.mockResolvedValue([
+      {
+        id: 'addon-1',
+        name: 'فرنچ',
+        durationDelta: 15,
+        priceDelta: 50,
+        active: true,
+      },
+    ])
+
+    const result = await validateUpdateAppointmentIntake({
+      salonId: 'salon-1',
+      appointmentId: 'appointment-1',
+      existing: {
+        id: 'appointment-1',
+        clientId: 'placeholder-1',
+        staffId: 'staff-1',
+        serviceId: 'service-1',
+        bookedServiceName: 'Cut',
+        bookedServiceDuration: 45,
+        bookedServicePrice: 100,
+        bookedTotalDuration: 45,
+        bookedTotalPrice: 100,
+        bookedAddonCount: 0,
+        bookedAddons: [],
+        date: '2026-05-01',
+        startTime: '10:00',
+        endTime: '10:45',
+        status: 'scheduled',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      body: {
+        addonIds: ['addon-1'],
+        startTime: '10:00',
+        endTime: '11:30',
+        durationMinutes: 90,
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      patch: {
+        addonIds: ['addon-1'],
+        startTime: '10:00',
+        endTime: '11:30',
+      },
+    })
+  })
+
   it('uses the existing booked base duration when only add-ons change', async () => {
     mocks.getServiceById.mockResolvedValue({
       id: 'service-1',

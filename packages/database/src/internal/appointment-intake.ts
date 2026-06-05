@@ -3,6 +3,7 @@ import { SCHEDULE_CONFLICT_CODES, isBlockingAppointmentStatus } from '@repo/salo
 import {
   durationMinutesFromRange,
   endTimeFromDuration,
+  sameAddonIds,
   validateAppointmentWindow,
 } from '@repo/salon-core/appointment-time'
 import { isClientProvidedEntityId } from './client-queries'
@@ -322,8 +323,10 @@ export async function validateUpdateAppointmentIntake(input: {
   const duration = positiveDurationMinutes(body.durationMinutes)
   const startChanged = typeof body.startTime === 'string' && body.startTime !== existing.startTime
   const serviceChanged = typeof body.serviceId === 'string' && body.serviceId !== existing.serviceId
-  const addonIdsChanged = body.addonIds !== undefined
+  const existingAddonIds = (existing.bookedAddons ?? []).map((line) => line.serviceAddonId)
   const addonIds = explicitAddonIds(body.addonIds)
+  const addonIdsChanged =
+    addonIds != null && !sameAddonIds(addonIds, existingAddonIds)
 
   if (serviceChanged && addonIds == null) {
     return fail(400, 'برای تغییر خدمت، افزودنی‌ها باید دوباره مشخص شوند')
@@ -337,28 +340,32 @@ export async function validateUpdateAppointmentIntake(input: {
   if (serviceChanged || addonIdsChanged) {
     const service = await getServiceById(resolvedServiceId, input.salonId)
     if (service) {
-      const selectedAddonIds = addonIds ?? []
+      const selectedAddonIds = addonIds ?? existingAddonIds
       const addonsCheck = await validateSelectedAddons({
         salonId: input.salonId,
         serviceId: resolvedServiceId,
         addonIds: selectedAddonIds,
       })
       if (addonsCheck !== true) return addonsCheck
-      const baseService = serviceChanged
-        ? service
-        : {
-            ...service,
-            duration: existing.bookedServiceDuration,
-            price: existing.bookedServicePrice,
-          }
-      endTime = endTimeFromDuration(
-        effectiveStart,
-        await bookedTotalDuration({
-          salonId: input.salonId,
-          service: baseService,
-          addonIds: selectedAddonIds,
-        })
-      )
+      if (endExplicit) {
+        endTime = endExplicit
+      } else {
+        const baseService = serviceChanged
+          ? service
+          : {
+              ...service,
+              duration: existing.bookedServiceDuration,
+              price: existing.bookedServicePrice,
+            }
+        endTime = endTimeFromDuration(
+          effectiveStart,
+          await bookedTotalDuration({
+            salonId: input.salonId,
+            service: baseService,
+            addonIds: selectedAddonIds,
+          })
+        )
+      }
     }
   } else if (endExplicit) {
     endTime = endExplicit
@@ -415,7 +422,7 @@ export async function validateUpdateAppointmentIntake(input: {
   const patch: AppointmentPatch = { endTime }
   if (body.clientId !== undefined) patch.clientId = body.clientId as string
   if (body.staffId !== undefined) patch.staffId = body.staffId as string
-  if (body.serviceId !== undefined) patch.serviceId = body.serviceId as string
+  if (serviceChanged) patch.serviceId = body.serviceId as string
   if (addonIdsChanged) patch.addonIds = addonIds ?? []
   if (body.date !== undefined) patch.date = body.date as string
   if (typeof body.startTime === 'string') patch.startTime = body.startTime

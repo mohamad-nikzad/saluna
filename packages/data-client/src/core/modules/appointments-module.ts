@@ -4,6 +4,7 @@ import {
   isBlockingAppointmentStatus,
   SCHEDULE_CONFLICT_CODES,
   endTimeFromDuration,
+  sameAddonIds,
   validateAppointmentWindow,
 } from '@repo/salon-core'
 import { normalizePhone } from '@repo/salon-core'
@@ -471,7 +472,10 @@ export function createAppointmentsModule(
         code: 'missing-reference',
       })
     }
-    const catalogSelectionChanged = input.serviceId !== undefined || input.addonIds !== undefined
+    const existingAddonIds = current.bookedAddons?.map((line) => line.serviceAddonId) ?? []
+    const catalogSelectionChanged =
+      (input.serviceId !== undefined && input.serviceId !== current.serviceId) ||
+      (input.addonIds !== undefined && !sameAddonIds(input.addonIds, existingAddonIds))
 
     const next: AppointmentWithDetails = {
       ...current,

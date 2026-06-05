@@ -6,7 +6,7 @@ import type {
   ServiceAddon,
 } from '@repo/salon-core/types'
 import { detectScheduleOverlaps } from '@repo/salon-core/appointment-conflict'
-import { endTimeFromDuration } from '@repo/salon-core/appointment-time'
+import { endTimeFromDuration, sameAddonIds } from '@repo/salon-core/appointment-time'
 import { getDb } from '../client'
 import {
   appointmentAddonLines,
@@ -283,7 +283,7 @@ export async function getAppointmentById(
     .limit(1)
   const row = rows[0]
   if (!row) return undefined
-  const [appointment] = attachAddonCounts(
+  const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id])
   )
@@ -361,8 +361,12 @@ export async function updateAppointment(
   const existing = await getAppointmentById(id, salonId)
   if (!existing) return undefined
   const serviceId = data.serviceId ?? existing.serviceId
-  const serviceOrAddonsChanged = data.serviceId !== undefined || data.addonIds !== undefined
-  if (data.serviceId !== undefined && data.addonIds === undefined) {
+  const existingAddonIds = (existing.bookedAddons ?? []).map((line) => line.serviceAddonId)
+  const serviceChanged = data.serviceId !== undefined && data.serviceId !== existing.serviceId
+  const addonIdsChanged =
+    data.addonIds !== undefined && !sameAddonIds(data.addonIds, existingAddonIds)
+  const serviceOrAddonsChanged = serviceChanged || addonIdsChanged
+  if (serviceChanged && data.addonIds === undefined) {
     throw new Error('appointment service changes require explicit add-on ids')
   }
   let selectedAddons: ServiceAddon[] | null = null
@@ -371,8 +375,8 @@ export async function updateAppointment(
   }
   if (data.clientId !== undefined) patch.clientId = data.clientId
   if (data.staffId !== undefined) patch.staffId = data.staffId
-  if (data.serviceId !== undefined) {
-    const service = await getServiceById(data.serviceId, salonId)
+  if (serviceChanged) {
+    const service = await getServiceById(data.serviceId!, salonId)
     if (!service) throw new Error('service not found')
     patch.serviceId = data.serviceId
     Object.assign(patch, snapshotFromService(service))
@@ -383,10 +387,10 @@ export async function updateAppointment(
     selectedAddons = await resolveAppointmentAddons({
       salonId,
       serviceId,
-      addonIds: data.addonIds,
+      addonIds: data.addonIds ?? existingAddonIds,
     })
     const baseSnapshot =
-      data.serviceId !== undefined
+      serviceChanged
         ? snapshotFromService(service)
         : {
             bookedServiceName: existing.bookedServiceName,
@@ -404,11 +408,17 @@ export async function updateAppointment(
         selectedAddons
       )
     )
-    patch.endTime = endTimeFromDuration(data.startTime ?? existing.startTime, patch.bookedTotalDuration!)
   }
   if (data.date !== undefined) patch.date = data.date
   if (data.startTime !== undefined) patch.startTime = data.startTime
-  if (data.endTime !== undefined && !serviceOrAddonsChanged) patch.endTime = data.endTime
+  if (data.endTime !== undefined) {
+    patch.endTime = data.endTime
+  } else if (serviceOrAddonsChanged) {
+    patch.endTime = endTimeFromDuration(
+      data.startTime ?? existing.startTime,
+      patch.bookedTotalDuration ?? existing.bookedTotalDuration
+    )
+  }
   if (data.status !== undefined) patch.status = data.status
   if (data.notes !== undefined) patch.notes = data.notes
 

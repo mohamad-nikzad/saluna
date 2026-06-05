@@ -3,10 +3,9 @@ import type { CompletePlaceholderClientInput, AppointmentFormInput  } from '@rep
 import { appointmentFormSchema } from '@repo/salon-core/forms/appointment'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
-import type { AppointmentDetailChange } from '#/lib/appointment-surface'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
 
-type StatusChangeResult =
+type AppointmentMutationResult =
   | { type: 'deleted'; id: string }
   | { type: 'updated'; appointment: AppointmentWithDetails }
 
@@ -30,7 +29,7 @@ export function useAppointmentIntakeMutations() {
         values: AppointmentFormInput
         nextStatus: AppointmentWithDetails['status']
       },
-    ): Promise<AppointmentDetailChange> => {
+    ): Promise<AppointmentMutationResult> => {
       const payload = appointmentFormSchema.parse(values)
       const result = await dc.appointments.update(appointmentId, {
         ...payload,
@@ -60,7 +59,7 @@ export function useAppointmentIntakeMutations() {
           appointmentId: string
           nextStatus: AppointmentWithDetails['status']
         },
-      ): Promise<StatusChangeResult> => {
+      ): Promise<AppointmentMutationResult> => {
         const result = await dc.appointments.updateStatus(
           appointmentId,
           nextStatus,

@@ -49,7 +49,9 @@ export {
   validateAppointmentIntakeSubmit,
 } from '#/lib/appointment-intake'
 
+export type AppointmentDetailChangeSource = 'edit' | 'status' | 'completeClient'
+
 /** Result of a detail drawer mutation (edit, status, complete client). */
 export type AppointmentDetailChange =
-  | { type: 'updated'; appointment: AppointmentWithDetails }
+  | { type: 'updated'; appointment: AppointmentWithDetails; source: AppointmentDetailChangeSource }
   | { type: 'deleted'; id: string }

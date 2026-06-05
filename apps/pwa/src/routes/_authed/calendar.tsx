@@ -443,7 +443,11 @@ function CalendarPage() {
         appointmentFlow.actions.closeDetail()
       } else {
         upsertAppointmentInCache(change.appointment)
-        appointmentFlow.actions.openDetail(change.appointment)
+        if (change.source === 'edit') {
+          appointmentFlow.actions.closeDetail()
+        } else {
+          appointmentFlow.actions.openDetail(change.appointment)
+        }
       }
       void queryClient.invalidateQueries({
         queryKey: ['appointments', 'range'],
