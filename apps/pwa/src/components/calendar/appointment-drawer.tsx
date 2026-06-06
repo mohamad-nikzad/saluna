@@ -209,6 +209,14 @@ export function AppointmentDrawer({
     reset,
     services,
   ])
+  const initialIntentKey = [
+    initialDate,
+    initialTime,
+    initialStaffId ?? '',
+    initialServiceId ?? '',
+    initialClientId ?? '',
+  ].join('|')
+  const initialIntentKeyRef = useRef(initialIntentKey)
 
   const applyDuration = (mins: number) => {
     const clamped = clampAppointmentDuration(mins)
@@ -260,12 +268,14 @@ export function AppointmentDrawer({
   }, [open, resetFormForInitialSlot])
 
   useEffect(() => {
-    if (!open) return
-    const st = formatTimeHm(parseTimeHm(initialTime))
-    setValue('date', initialDate)
-    setValue('startTime', st)
-    setValue('endTime', endTimeFromDuration(st, durationMinutes))
-  }, [durationMinutes, initialDate, initialTime, open, setValue])
+    if (!open) {
+      initialIntentKeyRef.current = initialIntentKey
+      return
+    }
+    if (initialIntentKeyRef.current === initialIntentKey) return
+    initialIntentKeyRef.current = initialIntentKey
+    resetFormForInitialSlot()
+  }, [initialIntentKey, open, resetFormForInitialSlot])
 
   useEffect(() => {
     if (open && useTemporaryClient) {

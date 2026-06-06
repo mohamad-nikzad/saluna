@@ -6,7 +6,11 @@ import type {
   ServiceAddon,
 } from '@repo/salon-core/types'
 import { detectScheduleOverlaps } from '@repo/salon-core/appointment-conflict'
-import { endTimeFromDuration, sameAddonIds } from '@repo/salon-core/appointment-time'
+import {
+  durationMinutesFromRange,
+  endTimeFromDuration,
+  sameAddonIds,
+} from '@repo/salon-core/appointment-time'
 import { getDb } from '../client'
 import {
   appointmentAddonLines,
@@ -319,6 +323,7 @@ export async function createAppointment(
   })
   const snapshotSource = options.serviceSnapshotOverride ?? service
   const totals = totalSnapshotFromServiceAndAddons(snapshotSource, selectedAddons)
+  const bookedTotalDuration = durationMinutesFromRange(apt.startTime, apt.endTime)
   const values: typeof appointments.$inferInsert = {
     salonId,
     clientId: apt.clientId,
@@ -326,9 +331,10 @@ export async function createAppointment(
     serviceId: apt.serviceId,
     date: apt.date,
     startTime: apt.startTime,
-    endTime: endTimeFromDuration(apt.startTime, totals.bookedTotalDuration),
+    endTime: apt.endTime,
     ...snapshotFromService(snapshotSource),
     ...totals,
+    bookedTotalDuration,
     status: apt.status,
     notes: apt.notes,
     createdByUserId: options.createdByUserId ?? null,

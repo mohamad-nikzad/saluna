@@ -252,12 +252,16 @@ export async function validateCreateAppointmentIntake(input: {
   })
   if (addonsCheck !== true) return addonsCheck
 
-  const totalDuration = await bookedTotalDuration({
+  const catalogDuration = await bookedTotalDuration({
     salonId: input.salonId,
     service: refs.service,
     addonIds,
   })
-  const endTime = endTimeFromDuration(input.startTime, totalDuration)
+  const endExplicit = explicitEndTime(input.endTime)
+  const duration = positiveDurationMinutes(input.durationMinutes)
+  const endTime =
+    endExplicit ??
+    endTimeFromDuration(input.startTime, duration ?? catalogDuration)
   const windowCheck = validateAppointmentWindow(input.startTime, endTime)
   if (!windowCheck.ok) {
     return fail(400, windowCheck.error)

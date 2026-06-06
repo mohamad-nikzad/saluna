@@ -260,7 +260,7 @@ describe('appointment intake placeholder rules', () => {
     )
   })
 
-  it('computes create end time from base service plus selected add-ons', async () => {
+  it('uses explicit create end time instead of base service plus selected add-ons', async () => {
     mocks.getServiceById.mockResolvedValue({
       id: 'service-1',
       name: 'کات',
@@ -294,7 +294,34 @@ describe('appointment intake placeholder rules', () => {
       ok: true,
       command: {
         addonIds: ['addon-1'],
-        endTime: '11:00',
+        endTime: '10:20',
+      },
+    })
+  })
+
+  it('uses explicit create duration when no end time is provided', async () => {
+    mocks.getServiceById.mockResolvedValue({
+      id: 'service-1',
+      name: 'کات',
+      active: true,
+      duration: 45,
+      price: 100,
+    })
+
+    const result = await validateCreateAppointmentIntake({
+      salonId: 'salon-1',
+      clientId: 'placeholder-1',
+      staffId: 'staff-1',
+      serviceId: 'service-1',
+      date: '2026-05-01',
+      startTime: '10:00',
+      durationMinutes: 90,
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      command: {
+        endTime: '11:30',
       },
     })
   })
