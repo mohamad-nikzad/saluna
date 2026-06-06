@@ -56,6 +56,7 @@ build-api:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
   script:
@@ -92,6 +93,7 @@ build-web:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
   script:
@@ -135,6 +137,7 @@ build-pwa:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
   script:
