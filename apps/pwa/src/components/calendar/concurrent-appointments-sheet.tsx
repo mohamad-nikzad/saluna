@@ -13,7 +13,7 @@ import {
 import { Button } from '@repo/ui/button'
 import { SakuraMark } from '@repo/ui/sakura-mark'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
+import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 import {
   formatPersianTime,
   toPersianDigits,
@@ -24,18 +24,6 @@ import { cn } from '@repo/ui/utils'
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number)
   return h * 60 + m
-}
-
-function staffColorVar(color: string): string {
-  return `var(--calendar-${normalizeCalendarColorId(color)})`
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
 }
 
 /**
@@ -244,7 +232,7 @@ export function ConcurrentAppointmentsSheet({
               {/* lanes */}
               <div className="flex flex-col gap-1.5">
                 {lanes.map((lane) => {
-                  const color = staffColorVar(lane.staff.color)
+                  const color = staffAccentVar(lane.staff.color)
                   return (
                     <div
                       key={lane.staff.id}
@@ -307,7 +295,7 @@ export function ConcurrentAppointmentsSheet({
             </div>
             <div className="overflow-hidden rounded-[18px] border border-border/60 bg-card">
               {sorted.map((apt, index) => {
-                const color = staffColorVar(apt.staff.color)
+                const color = staffAccentVar(apt.staff.color)
                 const duration =
                   timeToMinutes(apt.endTime) - timeToMinutes(apt.startTime)
                 const isCancelled =
@@ -344,7 +332,7 @@ export function ConcurrentAppointmentsSheet({
                         color,
                       }}
                     >
-                      {getInitials(apt.client.name)}
+                      {personInitials(apt.client.name)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div

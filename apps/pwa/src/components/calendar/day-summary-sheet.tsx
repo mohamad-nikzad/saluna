@@ -11,7 +11,7 @@ import {
   SheetTitle,
 } from '@repo/ui/sheet'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
+import { staffAccentVar } from '#/lib/roster-visuals'
 import {
   formatPersianTime,
   toPersianDigits,
@@ -26,10 +26,6 @@ interface DaySummarySheetProps {
   onOpenChange: (open: boolean) => void
   onCreateAppointment: (date: string) => void
   onOpenAppointment: (appointment: AppointmentWithDetails) => void
-}
-
-function staffColorVar(color: string): string {
-  return `var(--calendar-${normalizeCalendarColorId(color)})`
 }
 
 function appointmentSort(a: AppointmentWithDetails, b: AppointmentWithDetails) {
@@ -83,7 +79,7 @@ export function DaySummarySheet({
           {sorted.length > 0 ? (
             <div className="flex flex-col gap-2.5">
               {sorted.map((appointment) => {
-                const color = staffColorVar(appointment.staff.color)
+                const color = staffAccentVar(appointment.staff.color)
                 const isInactive =
                   appointment.status === 'cancelled' ||
                   appointment.status === 'no-show'

@@ -19,7 +19,6 @@ import type {
   BusinessHours,
   CalendarView,
 } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import {
   expandedZonedToDate,
   formatPersianDayHeaderCompact,
@@ -38,18 +37,7 @@ import {
   salonTodayYmd,
 } from '@repo/salon-core/salon-local-time'
 import { buildConcurrencyClusters } from '#/components/calendar/concurrent-appointments-sheet'
-
-function staffColorToCssVar(staffColor: string): string {
-  return `var(--calendar-${normalizeCalendarColorId(staffColor)})`
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-}
+import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 
 function durationMinutes(startTime: string, endTime: string): number {
   const [sh, sm] = startTime.split(':').map(Number)
@@ -238,7 +226,7 @@ export function SalonFullCalendar({
 
   const events: EventInput[] = useMemo(() => {
     const buildSingle = (apt: AppointmentWithDetails): EventInput => {
-      const staffVar = staffColorToCssVar(apt.staff.color)
+      const staffVar = staffAccentVar(apt.staff.color)
       const isDone = apt.status === 'completed'
       const isCancelled = apt.status === 'cancelled' || apt.status === 'no-show'
       const classNames: string[] = []
@@ -259,7 +247,7 @@ export function SalonFullCalendar({
           clientLabel,
           serviceLabel: appointmentServiceLabel(apt, view),
           staffName: apt.staff.name.split(' ')[0],
-          clientInitials: getInitials(apt.client.name),
+          clientInitials: personInitials(apt.client.name),
           durationLabel: `${toPersianDigits(durationMinutes(apt.startTime, apt.endTime))} د`,
           isDone,
           isCancelled,
@@ -303,7 +291,7 @@ export function SalonFullCalendar({
       )
       const dotColors: string[] = []
       for (const c of cluster) {
-        const v = staffColorToCssVar(c.staff.color)
+        const v = staffAccentVar(c.staff.color)
         if (!dotColors.includes(v)) dotColors.push(v)
       }
       out.push({

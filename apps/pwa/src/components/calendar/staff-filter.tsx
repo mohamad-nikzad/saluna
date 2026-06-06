@@ -1,22 +1,13 @@
 import { useMemo } from 'react'
 import type { User } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { Users } from 'lucide-react'
+import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 import { CalendarDrawerFilter } from './calendar-drawer-filter'
 
 interface StaffFilterProps {
   staff: User[]
   selectedIds: string[]
   onChange: (ids: string[]) => void
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
 }
 
 export function StaffFilter({
@@ -29,8 +20,8 @@ export function StaffFilter({
       staff.map((member) => ({
         id: member.id,
         label: member.name,
-        marker: getInitials(member.name),
-        colorVar: `var(--calendar-${normalizeCalendarColorId(member.color)})`,
+        marker: personInitials(member.name),
+        colorVar: staffAccentVar(member.color),
         searchText: member.name,
       })),
     [staff],

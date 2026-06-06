@@ -13,7 +13,7 @@ import {
 import { cn } from '@repo/ui/utils'
 import type { User } from '@repo/salon-core/types'
 import { ResponsivePicker } from '#/components/responsive-picker'
-import { getInitials } from '#/components/clients/client-visuals'
+import { personInitials } from '#/lib/roster-visuals'
 
 export type StaffPickerStatus = {
   disabled?: boolean
@@ -50,7 +50,7 @@ function StaffAvatar({
       )}
       style={{ width: size, height: size }}
     >
-      {getInitials(name)}
+      {personInitials(name)}
     </span>
   )
 }
