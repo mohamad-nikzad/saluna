@@ -13,11 +13,9 @@ import {
   bookedServiceWithAddonCount,
   DAY_WORK_MINUTES,
   firstNameOf,
-  getInitials,
   greetingFa,
-  staffCssVar
-  
 } from '#/lib/today-view-model'
+import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 import type {GroupedAttentionItem} from '#/lib/today-view-model';
 import { StatusPill } from '#/components/status-pill'
 
@@ -111,7 +109,7 @@ export function Avatar({
   color?: string | null
   size?: number
 }) {
-  const cssVar = staffCssVar(color)
+  const cssVar = staffAccentVar(color)
   return (
     <div
       className="flex shrink-0 items-center justify-center rounded-full font-bold"
@@ -123,7 +121,7 @@ export function Avatar({
         color: cssVar,
       }}
     >
-      {getInitials(name)}
+      {personInitials(name)}
     </div>
   )
 }
@@ -251,7 +249,7 @@ export function TeamRow({
     100,
     Math.round((bookedMinutes / DAY_WORK_MINUTES) * 100),
   )
-  const cssVar = staffCssVar(color)
+  const cssVar = staffAccentVar(color)
   return (
     <div
       className={cn(

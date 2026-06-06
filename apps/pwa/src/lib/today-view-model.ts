@@ -1,4 +1,3 @@
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import {
   JALALI_WEEKDAYS_SHORT,
   parseGregorianToJalali,
@@ -65,17 +64,6 @@ export function greetingFa() {
 
 export function firstNameOf(name: string) {
   return name.trim().split(/\s+/)[0] || name
-}
-
-export function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '؟'
-  if (parts.length === 1) return parts[0].slice(0, 2)
-  return `${parts[0][0]}${parts[1][0]}`
-}
-
-export function staffCssVar(color?: string | null) {
-  return `var(--calendar-${normalizeCalendarColorId(color)})`
 }
 
 export function buildWeekStrip(dateYmd: string) {

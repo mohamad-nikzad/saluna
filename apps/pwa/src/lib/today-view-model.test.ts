@@ -13,12 +13,12 @@ import {
   buildStaffTodayViewModel,
   buildWeekStrip,
   firstNameOf,
-  getInitials,
   greetingForHour,
   groupAttentionItems,
   sortAppointments,
   summarizeNextOpenSlot,
 } from './today-view-model'
+import { personInitials } from '#/lib/roster-visuals'
 
 function appt(
   overrides: Partial<AppointmentWithDetails> &
@@ -182,16 +182,16 @@ describe('greetingForHour', () => {
   })
 })
 
-describe('firstNameOf / getInitials', () => {
+describe('firstNameOf / personInitials', () => {
   it('takes the first whitespace-separated token', () => {
     expect(firstNameOf('علی رضایی')).toBe('علی')
     expect(firstNameOf('  ')).toBe('  ')
   })
 
   it('derives initials from up to two name parts', () => {
-    expect(getInitials('')).toBe('؟')
-    expect(getInitials('Sara')).toBe('Sa')
-    expect(getInitials('Sara Ahmadi')).toBe('SA')
+    expect(personInitials('')).toBe('؟')
+    expect(personInitials('Sara')).toBe('Sa')
+    expect(personInitials('Sara Ahmadi')).toBe('SA')
   })
 })
 

@@ -1,16 +1,11 @@
 import type { Client } from '@repo/salon-core/types'
 
+import { personInitials } from '#/lib/roster-visuals'
+
 export const VIP_LABEL = 'VIP'
 
 export function isVip(client: Pick<Client, 'tags'>) {
   return (client.tags ?? []).some((tag) => tag.label === VIP_LABEL)
-}
-
-export function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '؟'
-  if (parts.length === 1) return parts[0].slice(0, 2)
-  return `${parts[0][0]}${parts[1][0]}`
 }
 
 export function clientAccent(
@@ -49,7 +44,7 @@ export function ClientAvatar({
         color: accent,
       }}
     >
-      {getInitials(name)}
+      {personInitials(name)}
     </div>
   )
 }

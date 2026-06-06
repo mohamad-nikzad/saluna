@@ -27,6 +27,7 @@ import { STAFF_COLORS } from '@repo/salon-core/types'
 import type { User } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { displayPhone, normalizePhone } from '@repo/salon-core/phone'
+import { staffAccentVar } from '#/lib/roster-visuals'
 import {
   staffCreateSchema,
   staffUpdateSchema,
@@ -323,7 +324,7 @@ export function StaffDrawer({
                     {STAFF_COLORS.map((color) => {
                       const normalized = normalizeCalendarColorId(color)
                       const selected = colorValue === normalized
-                      const colorVar = `var(--calendar-${normalized})`
+                      const colorVar = staffAccentVar(color)
                       return (
                         <button
                           key={color}

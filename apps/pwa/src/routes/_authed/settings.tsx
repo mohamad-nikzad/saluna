@@ -26,6 +26,7 @@ import { Skeleton } from '@repo/ui/skeleton'
 import { brand } from '@repo/brand'
 import { SakuraMark } from '@repo/ui/sakura-mark'
 import { cn } from '@repo/ui/utils'
+import { personInitials } from '#/lib/roster-visuals'
 import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { DEFAULT_WORKING_DAYS } from '@repo/salon-core/working-days'
@@ -62,13 +63,6 @@ type DashboardMetrics = {
 export const Route = createFileRoute('/_authed/settings')({
   component: SettingsPage,
 })
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '؟'
-  if (parts.length === 1) return parts[0].slice(0, 2)
-  return `${parts[0][0]}${parts[1][0]}`
-}
 
 function formatRevenueCompact(value: number) {
   if (value >= 1_000_000) {
@@ -306,7 +300,7 @@ function SettingsPage() {
               style={{ position: 'absolute', insetInlineStart: -30, top: -30 }}
             />
             <div className="relative flex size-14 shrink-0 items-center justify-center rounded-[18px] bg-primary text-lg font-extrabold text-primary-foreground">
-              {getInitials(user.name)}
+              {personInitials(user.name)}
             </div>
             <div className="relative min-w-0 flex-1">
               <div className="truncate text-base font-bold text-foreground">
@@ -480,6 +474,7 @@ function SettingsPage() {
       </div>
 
       {isManager ? (
+        // Profile-only drawer: roleLocked + refreshAuth differ from StaffActionsProvider.
         <StaffDrawer
           open={profileDrawerOpen}
           onOpenChange={setProfileDrawerOpen}
