@@ -98,6 +98,12 @@ export default defineConfig({
         url: true,
         default: 'http://localhost:3002',
       }),
+      PUBLIC_MANAGER_APP_URL: envField.string({
+        context: 'client',
+        access: 'public',
+        url: true,
+        default: 'http://localhost:3000',
+      }),
     },
   },
   vite: { ssr: { noExternal: ['@repo/salon-core'] } },

@@ -1,4 +1,4 @@
-import { PUBLIC_APP_URL } from '@/env'
+import { PUBLIC_MANAGER_APP_URL } from '@/env'
 import type { IconName } from '@/components/landing/icons'
 
 export const displayClass = 'font-[family-name:var(--font-lalezar)]'
@@ -106,5 +106,5 @@ export const popularServices = [
   { name: 'میکاپ', value: 12 },
 ]
 
-export const loginHref = new URL('/login', PUBLIC_APP_URL).toString()
-export const signupHref = new URL('/signup', PUBLIC_APP_URL).toString()
+export const loginHref = new URL('/login', PUBLIC_MANAGER_APP_URL).toString()
+export const signupHref = new URL('/signup', PUBLIC_MANAGER_APP_URL).toString()
