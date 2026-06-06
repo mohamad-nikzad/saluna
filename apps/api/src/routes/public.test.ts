@@ -1,3 +1,4 @@
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/public', () => ({
@@ -35,6 +36,8 @@ process.env.JWT_SECRET = 'test-secret'
 const { app } = await import('../app')
 
 const validToken = '11111111-1111-1111-1111-111111111111'
+const validRequestDate = salonTodayYmd()
+const validAvailabilityDate = addDaysYmd(validRequestDate, 1)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -83,7 +86,7 @@ describe('public routes', () => {
       response: { mode: 'day', slots: [] },
     } as never)
     const res = await app.request(
-      '/api/v1/public/salons/foo/availability?serviceId=svc1&date=2026-06-01',
+      `/api/v1/public/salons/foo/availability?serviceId=svc1&date=${validAvailabilityDate}`,
     )
     expect(res.status).toBe(200)
     const body = (await res.json()) as { mode: string }
@@ -101,7 +104,7 @@ describe('public routes', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         serviceId: 'svc1',
-        date: '2026-06-01',
+        date: validRequestDate,
         startTime: '10:00',
         endTime: '10:30',
         customerName: 'علی',
@@ -122,7 +125,7 @@ describe('public routes', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         serviceId: 'svc1',
-        date: '2026-06-01',
+        date: validRequestDate,
         startTime: '10:00',
         endTime: '10:30',
         customerName: 'علی',
@@ -140,7 +143,7 @@ describe('public routes', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         serviceId: 'svc1',
-        date: '2026-06-01',
+        date: validRequestDate,
         startTime: '10:00',
         endTime: '10:30',
         customerName: 'علی',
@@ -157,7 +160,7 @@ describe('public routes', () => {
       bookedServiceName: 'Cut',
       bookedServiceDuration: 30,
       bookedServicePrice: 100_000,
-      requestedDate: '2026-06-01',
+      requestedDate: validRequestDate,
       requestedStartTime: '10:00',
       requestedEndTime: '10:30',
       salon: { name: 'Foo', phone: '02112345678' },
