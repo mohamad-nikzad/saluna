@@ -21,6 +21,7 @@ import type { LoginFormInput } from '@repo/salon-core/forms/auth'
 import type { User } from '@repo/salon-core/types'
 
 import { brand } from '@repo/brand'
+import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import { authQueryKey, useAuth } from '#/lib/auth'
@@ -150,9 +151,8 @@ function LoginPage() {
 
               <Field>
                 <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="رمز عبور را وارد کنید"
                   autoComplete="current-password"
                   disabled={login.isPending}

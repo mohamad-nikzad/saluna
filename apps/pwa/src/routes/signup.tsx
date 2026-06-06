@@ -23,6 +23,7 @@ import type { User } from '@repo/salon-core/types'
 
 import { brand } from '@repo/brand'
 import { SalooraMark } from '#/components/brand/saloora-mark'
+import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import { authQueryKey, useAuth } from '#/lib/auth'
@@ -227,9 +228,8 @@ function SignupPage() {
             {/* Password */}
             <Field>
               <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="حداقل ۸ کاراکتر"
                 autoComplete="new-password"
                 disabled={signup.isPending}
@@ -244,9 +244,8 @@ function SignupPage() {
             {/* Confirm password — guards against silent typos */}
             <Field>
               <FieldLabel htmlFor="confirmPassword">تکرار رمز عبور</FieldLabel>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder="رمز عبور را دوباره وارد کنید"
                 autoComplete="new-password"
                 disabled={signup.isPending}

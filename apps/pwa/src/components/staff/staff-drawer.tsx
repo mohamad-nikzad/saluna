@@ -38,6 +38,7 @@ import type {
 import { DataClientHttpError } from '@repo/data-client'
 import { api } from '#/lib/api-client'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import { PasswordInput } from '#/components/password-input'
 import { cn } from '@repo/ui/utils'
 
 interface StaffDrawerProps {
@@ -248,9 +249,8 @@ export function StaffDrawer({
             {!staff ? (
               <Field>
                 <FieldLabel htmlFor="staff-password">رمز عبور</FieldLabel>
-                <Input
+                <PasswordInput
                   id="staff-password"
-                  type="password"
                   placeholder="رمز ورود به سیستم"
                   {...register('password')}
                 />
@@ -320,7 +320,9 @@ export function StaffDrawer({
                             className="size-5 rounded-full"
                             style={{ backgroundColor: colorVar }}
                           />
-                          {selected ? <Badge variant="secondary">فعال</Badge> : null}
+                          {selected ? (
+                            <Badge variant="secondary">فعال</Badge>
+                          ) : null}
                         </button>
                       )
                     })}
@@ -336,7 +338,10 @@ export function StaffDrawer({
           <Button
             onClick={onSubmit}
             disabled={
-              isSubmitting || !nameValue || !phoneValue || (!staff && !passwordValue)
+              isSubmitting ||
+              !nameValue ||
+              !phoneValue ||
+              (!staff && !passwordValue)
             }
             className="touch-manipulation"
           >

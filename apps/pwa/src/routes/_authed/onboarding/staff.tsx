@@ -8,19 +8,14 @@ import { Input } from '@repo/ui/input'
 import { Field, FieldError, FieldLabel } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
 import { displayPhone } from '@repo/salon-core/phone'
-import {
-  staffCreateSchema
-  
-} from '@repo/salon-core/forms/staff'
-import type {StaffCreateFormInput} from '@repo/salon-core/forms/staff';
+import { staffCreateSchema } from '@repo/salon-core/forms/staff'
+import type { StaffCreateFormInput } from '@repo/salon-core/forms/staff'
 import type { OnboardingResponse } from '@repo/api-client'
 
+import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
-import {
-  managerStaffQueryKey,
-  onboardingQueryKey,
-} from '#/lib/query-keys'
+import { managerStaffQueryKey, onboardingQueryKey } from '#/lib/query-keys'
 import { PillCTA, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -128,10 +123,7 @@ function StaffScreen() {
         eyebrow={step.eyebrow}
         question="چه کسی کنار شماست؟"
         footer={
-          <PillCTA
-            type="submit"
-            pending={pending}
-          >
+          <PillCTA type="submit" pending={pending}>
             ادامه
           </PillCTA>
         }
@@ -180,9 +172,8 @@ function StaffScreen() {
             <FieldLabel htmlFor="onboarding-staff-password">
               رمز عبور پرسنل
             </FieldLabel>
-            <Input
+            <PasswordInput
               id="onboarding-staff-password"
-              type="password"
               placeholder="حداقل ۸ کاراکتر"
               disabled={pending}
               className="h-11"
