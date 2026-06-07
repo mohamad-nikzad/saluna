@@ -10,6 +10,22 @@ export type UpdateRetentionItemResponse = {
   followUp: ClientFollowUp
 }
 
+export type BaleRetentionMessageResponse = {
+  delivery: {
+    id: string
+    provider: 'bale_safir'
+    status: 'sent' | 'failed' | 'skipped'
+    providerMessageId: string | null
+    error: string | null
+  }
+  result: {
+    status: 'sent' | 'failed' | 'skipped'
+    providerMessageId?: string | null
+    error?: string | null
+    phone?: string | null
+  }
+}
+
 export function createRetentionApi(client: ApiClient) {
   return {
     list(opts: { signal?: AbortSignal } = {}) {
@@ -27,6 +43,16 @@ export function createRetentionApi(client: ApiClient) {
         {
           method: 'PATCH',
           body: { status },
+          signal: opts.signal,
+        },
+      )
+    },
+    sendBaleMessage(id: string, opts: { retry?: boolean; signal?: AbortSignal } = {}) {
+      return client.request<BaleRetentionMessageResponse>(
+        `${endpoints.retention}/${id}/bale-message`,
+        {
+          method: 'POST',
+          body: opts.retry ? { retry: true } : {},
           signal: opts.signal,
         },
       )

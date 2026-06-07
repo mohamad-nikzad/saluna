@@ -95,6 +95,20 @@ describe('api modules', () => {
       method: 'PATCH',
       body: { status: 'reviewed' },
     })
+
+    await api.sendBaleMessage('follow-1')
+    expectLastCall(calls, {
+      path: '/api/v1/retention/follow-1/bale-message',
+      method: 'POST',
+      body: {},
+    })
+
+    await api.sendBaleMessage('follow-1', { retry: true })
+    expectLastCall(calls, {
+      path: '/api/v1/retention/follow-1/bale-message',
+      method: 'POST',
+      body: { retry: true },
+    })
   })
 
   it('wraps business settings routes', async () => {

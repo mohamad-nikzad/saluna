@@ -5,9 +5,19 @@ vi.mock('@repo/database/retention', () => ({
 }))
 
 vi.mock('@repo/database/clients', () => ({
+  createClientFollowUpMessageDelivery: vi.fn(),
+  getClientFollowUpMessageContext: vi.fn(),
+  getLatestClientFollowUpMessageDelivery: vi.fn(),
   updateClientFollowUpStatus: vi.fn(),
   isClientProvidedEntityId: (id: string | undefined) =>
     typeof id === 'string' && id.length > 0,
+}))
+
+vi.mock('@repo/notifications', () => ({
+  normalizeBaleSafirPhone: vi.fn((phone: string) =>
+    /^09\d{9}$/.test(phone) ? `98${phone.slice(1)}` : null
+  ),
+  sendBaleSafirMessage: vi.fn(),
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -20,6 +30,7 @@ vi.mock('@repo/database/members', () => ({
 
 import * as retentionDb from '@repo/database/retention'
 import * as clientsDb from '@repo/database/clients'
+import * as notifications from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
 import { getMemberForUser } from '@repo/database/members'
 
@@ -45,6 +56,20 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
   vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(clientsDb.getLatestClientFollowUpMessageDelivery).mockResolvedValue(null as never)
+  vi.mocked(clientsDb.createClientFollowUpMessageDelivery).mockImplementation(async (input) => ({
+    id: 'd1',
+    createdAt: new Date('2026-06-07T00:00:00.000Z'),
+    sentAt: input.status === 'sent' ? new Date('2026-06-07T00:00:00.000Z') : null,
+    providerMessageId: input.providerMessageId ?? null,
+    error: input.error ?? null,
+    ...input,
+  }) as never)
+  vi.mocked(notifications.sendBaleSafirMessage).mockResolvedValue({
+    status: 'sent',
+    providerMessageId: 'm1',
+    phone: '989123456789',
+  } as never)
 })
 
 describe('retention router', () => {
@@ -98,5 +123,98 @@ describe('retention router', () => {
     })
     expect(res.status).toBe(200)
     expect(clientsDb.updateClientFollowUpStatus).toHaveBeenCalledWith('s1', 'abc', 'reviewed')
+  })
+
+  it('POST bale-message 404 when follow-up is missing', async () => {
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue(null as never)
+
+    const res = await app.request('/api/v1/retention/f1/bale-message', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(404)
+    expect(notifications.sendBaleSafirMessage).not.toHaveBeenCalled()
+  })
+
+  it('POST bale-message refuses invalid client phones', async () => {
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue({
+      followUp: { id: 'f1', status: 'open', reason: 'inactive' },
+      client: { id: 'c1', name: 'Client', phone: '02112345678' },
+      salon: { id: 's1', name: 'Salon' },
+    } as never)
+
+    const res = await app.request('/api/v1/retention/f1/bale-message', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'شماره موبایل مشتری معتبر نیست' })
+    expect(notifications.sendBaleSafirMessage).not.toHaveBeenCalled()
+  })
+
+  it('POST bale-message refuses duplicate successful sends', async () => {
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue({
+      followUp: { id: 'f1', status: 'open', reason: 'inactive' },
+      client: { id: 'c1', name: 'Client', phone: '09123456789' },
+      salon: { id: 's1', name: 'Salon' },
+    } as never)
+    vi.mocked(clientsDb.getLatestClientFollowUpMessageDelivery).mockResolvedValue({
+      id: 'd0',
+      status: 'sent',
+    } as never)
+
+    const res = await app.request('/api/v1/retention/f1/bale-message', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'پیام بله قبلا ارسال شده است' })
+    expect(notifications.sendBaleSafirMessage).not.toHaveBeenCalled()
+  })
+
+  it('POST bale-message sends through Safir and records delivery', async () => {
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue({
+      followUp: { id: 'f1', status: 'open', reason: 'inactive' },
+      client: { id: 'c1', name: 'Client', phone: '09123456789' },
+      salon: { id: 's1', name: 'Salon' },
+    } as never)
+
+    const res = await app.request('/api/v1/retention/f1/bale-message', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(200)
+    expect(notifications.sendBaleSafirMessage).toHaveBeenCalledWith({
+      phone: '989123456789',
+      text: expect.stringContaining('Client عزیز، سلام'),
+      requestId: 'retention:f1:bale_safir:v1',
+    })
+    expect(clientsDb.createClientFollowUpMessageDelivery).toHaveBeenCalledWith({
+      salonId: 's1',
+      followUpId: 'f1',
+      clientId: 'c1',
+      provider: 'bale_safir',
+      phone: '989123456789',
+      requestId: 'retention:f1:bale_safir:v1',
+      status: 'sent',
+      providerMessageId: 'm1',
+      error: null,
+      sentByUserId: 'u1',
+    })
+    expect(await res.json()).toMatchObject({
+      delivery: {
+        id: 'd1',
+        provider: 'bale_safir',
+        status: 'sent',
+      },
+      result: {
+        status: 'sent',
+        providerMessageId: 'm1',
+      },
+    })
   })
 })
