@@ -139,7 +139,6 @@ build-pwa:
       changes:
         - apps/pwa/**/*
         - packages/api-client/**/*
-        - packages/data-client/**/*
         - packages/database/**/*
         - packages/ui/**/*
         - packages/brand/**/*
@@ -238,7 +237,6 @@ deploy-pwa:
       changes:
         - apps/pwa/**/*
         - packages/api-client/**/*
-        - packages/data-client/**/*
         - packages/database/**/*
         - packages/ui/**/*
         - packages/brand/**/*

@@ -15,7 +15,6 @@ import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
 import { cn } from '@repo/ui/utils'
 import { ApiError } from '@repo/api-client'
-import { clearOfflineDatabase } from '@repo/data-client'
 import { displayPhone } from '@repo/salon-core/phone'
 import { signupSchema } from '@repo/salon-core/forms/auth'
 import { formMessages } from '@repo/salon-core/forms/messages'
@@ -100,7 +99,6 @@ function SignupPage() {
       }),
     meta: { skipToast: true },
     onSuccess: async (data) => {
-      await clearOfflineDatabase()
       setUser(data.user)
       await queryClient.removeQueries({ queryKey: getApiV1OnboardingQueryKey() })
       await queryClient.removeQueries({

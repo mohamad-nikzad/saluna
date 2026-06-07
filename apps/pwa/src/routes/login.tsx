@@ -14,7 +14,6 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
 import { ApiError } from '@repo/api-client'
-import { clearOfflineDatabase } from '@repo/data-client'
 import { displayPhone } from '@repo/salon-core/phone'
 import { loginSchema } from '@repo/salon-core/forms/auth'
 import type { LoginFormInput } from '@repo/salon-core/forms/auth'
@@ -75,7 +74,6 @@ function LoginPage() {
     mutationFn: (values: LoginFormInput) => api.auth.login(values),
     meta: { skipToast: true },
     onSuccess: async (data) => {
-      await clearOfflineDatabase()
       setUser(data.user)
       const safe = safeInternalRedirect(redirectTo)
       if (safe) await navigate({ href: safe })

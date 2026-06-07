@@ -224,13 +224,12 @@ Hono OpenAPI routes (apps/api)
 - Do not merge legacy `createApiClient()` and generated `configureGeneratedApiClient()` into one API.
 - Keep app-specific auth configuration in apps, not in this package.
 - Prefer generated query options over per-endpoint wrapper hooks.
-- `@repo/data-client` (PWA offline) is untouched until a separate removal effort.
+- `@repo/data-client` was removed in Phase 17; PWA is online-only.
 
 ### Deferred (not Phases 1–6)
 
 - **Phase 7:** Migrate apps by vertical slice (query + mutation + invalidation + auth per slice).
 - **OpenAPI expansion:** public booking, push, messaging webhooks, health, Better Auth passthrough.
-- **`@repo/data-client` removal:** after generated client is proven on tenant CRUD APIs.
 
 ---
 

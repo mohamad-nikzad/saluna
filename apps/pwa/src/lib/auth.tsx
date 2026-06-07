@@ -3,16 +3,9 @@ import type { ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
 import { ApiError } from '@repo/api-client'
-import { clearOfflineDatabase } from '@repo/data-client'
 import type { User } from '@repo/salon-core/types'
 
 import { api } from '#/lib/api-client'
-import {
-  SESSION_USER_CACHE_KEY,
-  clearSnapshot,
-  readSnapshot,
-  writeSnapshot,
-} from '#/lib/offline-snapshot'
 
 export const authQueryKey = ['auth', 'me'] as const
 
@@ -21,15 +14,12 @@ async function fetchSessionUser({
 }: { signal?: AbortSignal } = {}): Promise<User | null> {
   try {
     const res = await api.auth.me({ signal })
-    writeSnapshot(SESSION_USER_CACHE_KEY, res.user)
     return res.user
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
-      clearSnapshot(SESSION_USER_CACHE_KEY)
       return null
     }
-    // Network/offline: fall back to cached user so the app stays usable.
-    return readSnapshot<User>(SESSION_USER_CACHE_KEY)?.data ?? null
+    throw err
   }
 }
 
@@ -39,11 +29,6 @@ export function registerAuthQueryDefaults(queryClient: QueryClient) {
     staleTime: 60_000,
     retry: 1,
   })
-
-  const cached = readSnapshot<User>(SESSION_USER_CACHE_KEY)?.data ?? null
-  if (cached) {
-    queryClient.setQueryData(authQueryKey, cached)
-  }
 }
 
 export type AuthContextValue = {
@@ -68,11 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setUser = useCallback(
     (user: User | null) => {
       queryClient.setQueryData(authQueryKey, user)
-      if (user) {
-        writeSnapshot(SESSION_USER_CACHE_KEY, user)
-      } else {
-        clearSnapshot(SESSION_USER_CACHE_KEY)
-      }
     },
     [queryClient],
   )
@@ -93,11 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       /* ignore — clear local state regardless */
     }
     setUser(null)
-    // Wipe offline data in the background so the caller can navigate to
-    // /login immediately. Awaiting the IndexedDB clear here would keep the
-    // authed layout mounted with a now-empty page, flashing a blank screen
-    // behind the bottom nav before the redirect lands.
-    void clearOfflineDatabase().then(() => queryClient.invalidateQueries())
+    void queryClient.invalidateQueries()
   }, [queryClient, setUser])
 
   const value = useMemo<AuthContextValue>(

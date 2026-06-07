@@ -17,7 +17,6 @@ const config = [
       'public/icons/**',
       'apps/api/.wrangler/**',
       'packages/api-client/src/generated/**',
-      'packages/data-client/portability/dist-portability/**',
     ],
   },
   {
@@ -27,34 +26,6 @@ const config = [
         'error',
         {
           patterns: ['../../apps/*', '../*/app/*'],
-        },
-      ],
-    },
-  },
-  {
-    files: ['packages/data-client/**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'next',
-              message: '@repo/data-client must stay framework-neutral (no Next.js).',
-            },
-            {
-              name: 'next/*',
-              message: '@repo/data-client must stay framework-neutral (no Next.js).',
-            },
-            {
-              name: 'react',
-              message: '@repo/data-client must stay framework-neutral (no React).',
-            },
-            {
-              name: 'react-dom',
-              message: '@repo/data-client must stay framework-neutral (no React).',
-            },
-          ],
         },
       ],
     },

@@ -28,7 +28,6 @@
     "@repo/api-client": "workspace:*",
     "@repo/brand": "workspace:*",
     "@repo/brand-tokens": "workspace:*",
-    "@repo/data-client": "workspace:*",
     "@repo/salon-core": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",

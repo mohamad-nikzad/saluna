@@ -1,6 +1,6 @@
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import type { QueryKey } from '@tanstack/react-query'
-import { DataClientHttpError } from '@repo/data-client'
+import { ApiError } from '@repo/api-client'
 import { toast } from '@repo/ui/use-toast'
 
 export const DEFAULT_MUTATION_SUCCESS = 'عملیات با موفقیت انجام شد'
@@ -28,7 +28,7 @@ export function getMutationErrorMessage(
   error: unknown,
   fallback = DEFAULT_MUTATION_ERROR,
 ): string {
-  if (error instanceof DataClientHttpError) {
+  if (error instanceof ApiError) {
     return error.message
   }
   if (error instanceof Error && error.message) {

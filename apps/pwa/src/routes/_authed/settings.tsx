@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,8 +37,8 @@ import type {
 } from '@repo/salon-core/forms/settings'
 
 import { useAuth } from '#/lib/auth'
-import { useManagerDataClient } from '#/lib/manager-data-client'
 import { useTheme } from '#/lib/theme'
+import { getApiV1StaffQueryKey } from '#/lib/staff-queries'
 import { dashboardQueryOptions } from '#/lib/dashboard-queries'
 import {
   businessSettingsQueryOptions,
@@ -154,8 +154,8 @@ function SettingsSkeleton() {
 function SettingsPage() {
   const { user, logout, refresh: refreshAuth } = useAuth()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { theme, setTheme } = useTheme()
-  const dc = useManagerDataClient()
   const [loggingOut, setLoggingOut] = useState(false)
   const [localAlerts, setLocalAlerts] = useState<boolean | null>(null)
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
@@ -255,7 +255,7 @@ function SettingsPage() {
   const handleProfileSaved = () => {
     setProfileDrawerOpen(false)
     void refreshAuth()
-    void dc?.staff.refresh()
+    void queryClient.invalidateQueries({ queryKey: getApiV1StaffQueryKey() })
   }
 
   return (

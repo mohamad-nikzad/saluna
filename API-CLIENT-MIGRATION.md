@@ -28,7 +28,7 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 | 14. Onboarding | ✅ Done | OpenAPI onboarding; PWA wizard on generated options |
 | 15. Dashboard, today & retention | ✅ Done | OpenAPI dashboard/today/retention; PWA on generated options |
 | 16. Messaging & notifications | ✅ Done | OpenAPI messaging/notifications/notification-preferences; PWA connect + prefs on generated options |
-| 17. data-client removal | ⏳ Planned | Drop offline layer after CRUD slices proven |
+| 17. data-client removal | ✅ Done | Removed `@repo/data-client`, offline UX, and IndexedDB sync layer |
 | 18. Web public API | ⏳ Planned | `apps/web` raw fetch → generated SDK |
 | 19. Native app | ⏳ Deferred | Not in prod — migrate when scoped |
 | 20. Legacy cleanup | ⏳ Planned | Remove `src/legacy/` when no consumers remain |
@@ -52,7 +52,7 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 **Next (Phases 7–20):**
 
 - Wire generated client in apps; migrate by vertical slice (OpenAPI first, then screens).
-- Remove `@repo/data-client` after tenant CRUD is on generated options.
+- Remove `@repo/data-client` after tenant CRUD is on generated options. ✅ Phase 17
 - Retire legacy client when all consumers are migrated.
 
 ---
@@ -795,7 +795,7 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 
 ---
 
-### Phase 17: Remove `@repo/data-client`
+### Phase 17: Remove `@repo/data-client` ✅
 
 **Goal:** Delete offline layer after Phases 8–16 migrated all data-client domains.
 
@@ -814,6 +814,8 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 - PWA has no offline/sync code paths.
 - `packages/data-client` deleted.
 - Manager app is online-only with generated client.
+
+**Done:** Removed data-client provider/sync bar, offline projection/snapshot hooks, write-policy scaffolding, and the `packages/data-client` package. Auth/login/signup no longer clear IndexedDB; settings refreshes staff via generated query invalidation.
 
 ---
 
@@ -922,7 +924,7 @@ Phase 20  Legacy cleanup
  ✅ 14. OpenAPI onboarding → migrate wizard
  ✅ 15. OpenAPI dashboard/today/retention → migrate aggregates
  ✅ 16. OpenAPI messaging/notifications → migrate connect + prefs
- → 17. Remove @repo/data-client + offline UX
+ → 17. Remove @repo/data-client + offline UX ✅
  → 18. OpenAPI public → migrate apps/web
  → 19. Native (when scoped)
  → 20. Delete src/legacy/
@@ -963,7 +965,7 @@ Phase 20  Legacy cleanup
 - [x] Phase 14: OpenAPI onboarding + migrate wizard
 - [x] Phase 15: OpenAPI dashboard/today/retention + migrate reads
 - [x] Phase 16: OpenAPI messaging/notifications + migrate connect/prefs
-- [ ] Phase 17: Remove `@repo/data-client` and offline UX
+- [x] Phase 17: Remove `@repo/data-client` and offline UX
 - [ ] Phase 18: OpenAPI public + migrate `apps/web`
 - [ ] Phase 19: Native (when scoped)
 - [ ] Phase 20: Delete `src/legacy/` when grep clean

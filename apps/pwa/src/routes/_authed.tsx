@@ -9,8 +9,6 @@ import type { User } from '@repo/salon-core/types'
 
 import { authQueryKey } from '#/lib/auth'
 import { BottomNav } from '#/components/bottom-nav'
-import { ManagerSyncBar } from '#/components/manager-sync-bar'
-import { ManagerDataClientProvider } from '#/lib/manager-data-client'
 import { onboardingQueryOptions } from '#/lib/onboarding-queries'
 
 export const Route = createFileRoute('/_authed')({
@@ -39,7 +37,7 @@ export const Route = createFileRoute('/_authed')({
         }
       } catch (err) {
         if (isRedirect(err)) throw err
-        // Offline / network failure: don't block the app.
+        // Network failure: don't block the app.
       }
     }
 
@@ -53,14 +51,11 @@ function AuthedLayout() {
   const hideChrome = pathname.startsWith('/onboarding')
 
   return (
-    <ManagerDataClientProvider>
-      <div className="flex h-dvh flex-col bg-background">
-        {!hideChrome && <ManagerSyncBar />}
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
-        {!hideChrome && <BottomNav />}
-      </div>
-    </ManagerDataClientProvider>
+    <div className="flex h-dvh flex-col bg-background">
+      <main className="flex-1 overflow-auto">
+        <Outlet />
+      </main>
+      {!hideChrome && <BottomNav />}
+    </div>
   )
 }

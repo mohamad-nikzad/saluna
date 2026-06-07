@@ -142,7 +142,7 @@ CI currently maps changed paths to app builds like this:
 | `apps/pwa/**` | PWA |
 | `packages/auth/**`, `packages/notifications/**` | API |
 | `packages/database/**` | API and PWA |
-| `packages/api-client/**`, `packages/data-client/**`, `packages/ui/**`, `packages/brand-tokens/**` | PWA |
+| `packages/api-client/**`, `packages/ui/**`, `packages/brand-tokens/**` | PWA |
 | `packages/brand/**`, `packages/salon-core/**` | API, web, and PWA |
 | `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` | API, web, and PWA |
 | `.gitlab-ci.yml`, `docker-compose.prod.yml`, deploy scripts | affected operational job or all apps when needed |

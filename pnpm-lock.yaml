@@ -262,9 +262,6 @@ importers:
       '@repo/brand-tokens':
         specifier: workspace:*
         version: link:../../packages/brand-tokens
-      '@repo/data-client':
-        specifier: workspace:*
-        version: link:../../packages/data-client
       '@repo/salon-core':
         specifier: workspace:*
         version: link:../../packages/salon-core
@@ -517,28 +514,6 @@ importers:
       typescript:
         specifier: 5.7.3
         version: 5.7.3
-
-  packages/data-client:
-    dependencies:
-      '@repo/salon-core':
-        specifier: workspace:*
-        version: link:../salon-core
-      dexie:
-        specifier: '4'
-        version: 4.4.2
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^22
-        version: 22.19.17
-      fake-indexeddb:
-        specifier: '6'
-        version: 6.2.5
-      vite:
-        specifier: ^6.3.5
-        version: 6.4.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.30.1)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/database:
     dependencies:
@@ -6246,9 +6221,6 @@ packages:
   devtools-protocol@0.0.1595872:
     resolution: {integrity: sha512-kRfgp8vWVjBu/fbYCiVFiOqsCk3CrMKEo3WbgGT2NXK2dG7vawWPBljixajVgGK9II8rDO9G0oD0zLt3I1daRg==}
 
-  dexie@4.4.2:
-    resolution: {integrity: sha512-zMtV8q79EFE5U8FKZvt0Y/77PCU/Hr/RDxv1EDeo228L+m/HTbeN2AjoQm674rhQCX8n3ljK87lajt7UQuZfvw==}
-
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
     engines: {node: '>=0.3.1'}
@@ -6940,10 +6912,6 @@ packages:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
-
-  fake-indexeddb@6.2.5:
-    resolution: {integrity: sha512-CGnyrvbhPlWYMngksqrSSUT1BAVP49dZocrHuK0SvtR0D5TMs5wP0o3j7jexDJW01KSadjBp1M/71o/KR3nD1w==}
-    engines: {node: '>=18'}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -16580,8 +16548,6 @@ snapshots:
 
   devtools-protocol@0.0.1595872: {}
 
-  dexie@4.4.2: {}
-
   diff@8.0.4: {}
 
   doctrine@2.1.0:
@@ -17492,8 +17458,6 @@ snapshots:
       '@types/yauzl': 2.10.3
     transitivePeerDependencies:
       - supports-color
-
-  fake-indexeddb@6.2.5: {}
 
   fast-deep-equal@3.1.3: {}
 

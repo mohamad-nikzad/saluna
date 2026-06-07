@@ -25,7 +25,6 @@ COPY apps/pwa/package.json ./apps/pwa/package.json
 COPY packages/api-client/package.json ./packages/api-client/package.json
 COPY packages/brand/package.json ./packages/brand/package.json
 COPY packages/brand-tokens/package.json ./packages/brand-tokens/package.json
-COPY packages/data-client/package.json ./packages/data-client/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/salon-core/package.json ./packages/salon-core/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
@@ -39,7 +38,6 @@ COPY apps/pwa ./apps/pwa
 COPY packages/api-client ./packages/api-client
 COPY packages/brand ./packages/brand
 COPY packages/brand-tokens ./packages/brand-tokens
-COPY packages/data-client ./packages/data-client
 COPY packages/database ./packages/database
 COPY packages/salon-core ./packages/salon-core
 COPY packages/typescript-config ./packages/typescript-config
