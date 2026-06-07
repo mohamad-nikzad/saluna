@@ -37,6 +37,7 @@ FROM base AS deps
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json ./apps/web/
+COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/salon-core/package.json ./packages/salon-core/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 
@@ -47,11 +48,13 @@ FROM deps AS build
 
 COPY scripts/with-root-env.mjs ./scripts/
 COPY packages/typescript-config ./packages/typescript-config
+COPY packages/api-client ./packages/api-client
 COPY packages/brand ./packages/brand
 COPY packages/salon-core ./packages/salon-core
 COPY apps/web ./apps/web
 
 RUN mkdir -p node_modules/@repo \
+  && ln -sfn ../../packages/api-client node_modules/@repo/api-client \
   && ln -sfn ../../packages/brand node_modules/@repo/brand \
   && ln -sfn ../../packages/typescript-config node_modules/@repo/typescript-config
 
@@ -79,6 +82,7 @@ ENV NODE_ENV=production \
 
 # Hoisted node_modules at repo root; Node resolves from apps/web upward
 COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/packages/api-client /app/packages/api-client
 COPY --from=build /app/packages/brand /app/packages/brand
 COPY --from=build /app/packages/salon-core /app/packages/salon-core
 COPY --from=build /app/packages/typescript-config /app/packages/typescript-config
