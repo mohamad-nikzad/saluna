@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@repo/notifications', () => ({
   isWebPushConfigured: vi.fn(() => true),
   getMessagingProvider: vi.fn(),
+  getBaleConfig: vi.fn(() => null),
+  getTelegramConfig: vi.fn(() => null),
   renderAppointmentRequestPending: vi.fn(),
   createNotificationForUser: vi.fn(),
   messagingCommands: {
@@ -11,6 +13,23 @@ vi.mock('@repo/notifications', () => ({
   },
   sendTelegramMessage: vi.fn(),
   answerTelegramCallback: vi.fn(),
+  editTelegramMessageText: vi.fn(),
+  editTelegramMessageReplyMarkup: vi.fn(),
+  sendBaleMessage: vi.fn(),
+  answerBaleCallback: vi.fn(),
+  editBaleMessageText: vi.fn(),
+  editBaleMessageReplyMarkup: vi.fn(),
+  renderBaleBotHtml: vi.fn((html: string) => html.replace(/<[^>]*>/g, '')),
+  persistentReplyKeyboard: vi.fn(() => ({
+    keyboard: [],
+    is_persistent: true,
+    resize_keyboard: true,
+  })),
+  REPLY_KEYBOARD_LABELS: {
+    pending: '📋 درخواست‌های در انتظار',
+    today: '📅 امروز',
+    notificationSettings: '⚙️ تنظیمات اعلان‌ها',
+  },
 }))
 
 vi.mock('@repo/database/push', () => ({
@@ -51,8 +70,19 @@ const jsonHeaders = { ...authHeaders, 'Content-Type': 'application/json' }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
   vi.mocked(isWebPushConfigured).mockReturnValue(true)
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = 'pk-test'
 })
@@ -64,14 +94,18 @@ describe('push router', () => {
   })
 
   it('GET /config returns key when configured', async () => {
-    const res = await app.request('/api/v1/push/config', { headers: authHeaders })
+    const res = await app.request('/api/v1/push/config', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ configured: true, publicKey: 'pk-test' })
   })
 
   it('GET /config returns null key when not configured', async () => {
     vi.mocked(isWebPushConfigured).mockReturnValue(false)
-    const res = await app.request('/api/v1/push/config', { headers: authHeaders })
+    const res = await app.request('/api/v1/push/config', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ configured: false, publicKey: null })
   })

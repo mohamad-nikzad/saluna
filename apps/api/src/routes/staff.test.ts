@@ -129,13 +129,23 @@ describe('staff router', () => {
     expect(res.status).toBe(400)
   })
 
-  it('400 on create when password confirmation mismatches', async () => {
+  it('200 on POST create without confirmPassword in body', async () => {
+    vi.mocked(db.getAllStaff).mockResolvedValue([] as never)
+    vi.mocked(authServer.api.signUpEmail).mockResolvedValue({
+      user: { id: 'u3' },
+    } as never)
+    vi.mocked(authServer.api.addMember).mockResolvedValue({} as never)
+    vi.mocked(db.getUserById).mockResolvedValue({
+      id: 'u3',
+      name: 'Ali',
+    } as never)
+    const { confirmPassword: _confirmPassword, ...apiPayload } = validCreate
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...validCreate, confirmPassword: 'different123' }),
+      body: JSON.stringify(apiPayload),
     })
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(200)
   })
 
   it('200 on POST create', async () => {

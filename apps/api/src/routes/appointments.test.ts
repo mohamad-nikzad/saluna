@@ -27,6 +27,8 @@ vi.mock('@repo/notifications', () => ({
   isWebPushConfigured: vi.fn(() => false),
   sendWebPushToUser: vi.fn(),
   getMessagingProvider: vi.fn(),
+  getBaleConfig: vi.fn(() => null),
+  getTelegramConfig: vi.fn(() => null),
   renderAppointmentRequestPending: vi.fn(),
   messagingCommands: {
     handleLinkStart: vi.fn(),
@@ -34,6 +36,23 @@ vi.mock('@repo/notifications', () => ({
   },
   sendTelegramMessage: vi.fn(),
   answerTelegramCallback: vi.fn(),
+  editTelegramMessageText: vi.fn(),
+  editTelegramMessageReplyMarkup: vi.fn(),
+  sendBaleMessage: vi.fn(),
+  answerBaleCallback: vi.fn(),
+  editBaleMessageText: vi.fn(),
+  editBaleMessageReplyMarkup: vi.fn(),
+  renderBaleBotHtml: vi.fn((html: string) => html.replace(/<[^>]*>/g, '')),
+  persistentReplyKeyboard: vi.fn(() => ({
+    keyboard: [],
+    is_persistent: true,
+    resize_keyboard: true,
+  })),
+  REPLY_KEYBOARD_LABELS: {
+    pending: '📋 درخواست‌های در انتظار',
+    today: '📅 امروز',
+    notificationSettings: '⚙️ تنظیمات اعلان‌ها',
+  },
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -71,26 +90,51 @@ const jsonHeaders = { ...authHeaders, 'Content-Type': 'application/json' }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('appointments router', () => {
   it('GET / returns 401 without auth', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue(null as never)
-    const res = await app.request('/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02')
+    const res = await app.request(
+      '/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02',
+    )
     expect(res.status).toBe(401)
   })
 
   it('GET / returns 400 without dates', async () => {
-    const res = await app.request('/api/v1/appointments', { headers: authHeaders })
+    const res = await app.request('/api/v1/appointments', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(400)
   })
 
   it('GET / scopes to staff when role=staff', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
-    vi.mocked(authServer.api.getSession).mockResolvedValue({ user: { id: 'u2' } } as never)
-    vi.mocked(appts.getAppointmentsWithDetailsByDateRange).mockResolvedValue([] as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u2' },
+    } as never)
+    vi.mocked(appts.getAppointmentsWithDetailsByDateRange).mockResolvedValue(
+      [] as never,
+    )
     const res = await app.request(
       '/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02',
       { headers: authHeaders },
@@ -105,7 +149,9 @@ describe('appointments router', () => {
   })
 
   it('GET / for manager passes undefined staff filter', async () => {
-    vi.mocked(appts.getAppointmentsWithDetailsByDateRange).mockResolvedValue([] as never)
+    vi.mocked(appts.getAppointmentsWithDetailsByDateRange).mockResolvedValue(
+      [] as never,
+    )
     const res = await app.request(
       '/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02',
       { headers: authHeaders },
@@ -120,7 +166,13 @@ describe('appointments router', () => {
   })
 
   it('POST / returns 403 for staff role', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
       headers: jsonHeaders,
@@ -158,7 +210,10 @@ describe('appointments router', () => {
       }),
     })
     expect(res.status).toBe(409)
-    expect(await res.json()).toEqual({ error: 'تداخل برنامه', code: 'schedule-conflict' })
+    expect(await res.json()).toEqual({
+      error: 'تداخل برنامه',
+      code: 'schedule-conflict',
+    })
   })
 
   it('POST / creates appointment and returns detail', async () => {
@@ -177,7 +232,10 @@ describe('appointments router', () => {
       staffId: 'u1',
       serviceId: 'svc1',
     } as never)
-    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({ id: 'a1', detail: true } as never)
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
+      id: 'a1',
+      detail: true,
+    } as never)
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
       headers: jsonHeaders,
@@ -191,7 +249,9 @@ describe('appointments router', () => {
       }),
     })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ appointment: { id: 'a1', detail: true } })
+    expect(await res.json()).toEqual({
+      appointment: { id: 'a1', detail: true },
+    })
   })
 
   it('GET /availability returns 400 on invalid mode', async () => {
@@ -216,23 +276,41 @@ describe('appointments router', () => {
   })
 
   it('GET /:id returns 404 when missing', async () => {
-    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue(undefined as never)
-    const res = await app.request('/api/v1/appointments/a1', { headers: authHeaders })
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue(
+      undefined as never,
+    )
+    const res = await app.request('/api/v1/appointments/a1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(404)
   })
 
   it('GET /:id 403 for staff viewing other staff appointment', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
       staffId: 'other',
     } as never)
-    const res = await app.request('/api/v1/appointments/a1', { headers: authHeaders })
+    const res = await app.request('/api/v1/appointments/a1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(403)
   })
 
   it('PATCH /:id 403 for staff doing non-status patch', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
       staffId: 'u2',
@@ -251,7 +329,13 @@ describe('appointments router', () => {
   })
 
   it('PATCH /:id allows staff status-only update on own appointment', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
       staffId: 'u2',
@@ -294,7 +378,9 @@ describe('appointments router', () => {
       id: 'c1',
       isPlaceholder: true,
     } as never)
-    vi.mocked(clientsDb.cancelIncompletePlaceholderAppointment).mockResolvedValue({
+    vi.mocked(
+      clientsDb.cancelIncompletePlaceholderAppointment,
+    ).mockResolvedValue({
       ok: true,
       appointmentDeleted: true,
       placeholderDeleted: true,
@@ -314,7 +400,13 @@ describe('appointments router', () => {
   })
 
   it('DELETE /:id returns 403 for staff', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       method: 'DELETE',
       headers: authHeaders,
@@ -344,17 +436,21 @@ describe('appointments router', () => {
     })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ success: true })
-    expect(clientsDb.cleanupPlaceholderAfterAppointmentMutation).toHaveBeenCalled()
+    expect(
+      clientsDb.cleanupPlaceholderAfterAppointmentMutation,
+    ).toHaveBeenCalled()
   })
 
   it('POST /:id/complete-client propagates 409 with existingClient', async () => {
-    vi.mocked(clientsDb.completePlaceholderAppointmentClient).mockResolvedValue({
-      ok: false,
-      status: 409,
-      error: 'این شماره تماس برای مشتری دیگری ثبت شده است',
-      code: 'duplicate-phone',
-      existingClient: { id: 'c2', name: 'Other' },
-    } as never)
+    vi.mocked(clientsDb.completePlaceholderAppointmentClient).mockResolvedValue(
+      {
+        ok: false,
+        status: 409,
+        error: 'این شماره تماس برای مشتری دیگری ثبت شده است',
+        code: 'duplicate-phone',
+        existingClient: { id: 'c2', name: 'Other' },
+      } as never,
+    )
     const res = await app.request('/api/v1/appointments/a1/complete-client', {
       method: 'POST',
       headers: jsonHeaders,
@@ -369,17 +465,22 @@ describe('appointments router', () => {
   })
 
   it('POST /:id/complete-client success returns outcome', async () => {
-    vi.mocked(clientsDb.completePlaceholderAppointmentClient).mockResolvedValue({
-      ok: true,
-      appointment: { id: 'a1' },
-      outcome: 'completed',
-    } as never)
+    vi.mocked(clientsDb.completePlaceholderAppointmentClient).mockResolvedValue(
+      {
+        ok: true,
+        appointment: { id: 'a1' },
+        outcome: 'completed',
+      } as never,
+    )
     const res = await app.request('/api/v1/appointments/a1/complete-client', {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({ name: 'Ali', phone: '09121234567' }),
     })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ appointment: { id: 'a1' }, outcome: 'completed' })
+    expect(await res.json()).toEqual({
+      appointment: { id: 'a1' },
+      outcome: 'completed',
+    })
   })
 })

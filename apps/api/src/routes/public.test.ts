@@ -17,6 +17,8 @@ vi.mock('@repo/database/rate-limit', () => ({
 vi.mock('@repo/notifications', () => ({
   notifyManagersOfNewAppointmentRequest: vi.fn().mockResolvedValue(undefined),
   getMessagingProvider: vi.fn(),
+  getBaleConfig: vi.fn(() => null),
+  getTelegramConfig: vi.fn(() => null),
   isWebPushConfigured: vi.fn(() => false),
   messagingCommands: {
     handleLinkStart: vi.fn(),
@@ -24,6 +26,23 @@ vi.mock('@repo/notifications', () => ({
   },
   sendTelegramMessage: vi.fn(),
   answerTelegramCallback: vi.fn(),
+  editTelegramMessageText: vi.fn(),
+  editTelegramMessageReplyMarkup: vi.fn(),
+  sendBaleMessage: vi.fn(),
+  answerBaleCallback: vi.fn(),
+  editBaleMessageText: vi.fn(),
+  editBaleMessageReplyMarkup: vi.fn(),
+  renderBaleBotHtml: vi.fn((html: string) => html.replace(/<[^>]*>/g, '')),
+  persistentReplyKeyboard: vi.fn(() => ({
+    keyboard: [],
+    is_persistent: true,
+    resize_keyboard: true,
+  })),
+  REPLY_KEYBOARD_LABELS: {
+    pending: '📋 درخواست‌های در انتظار',
+    today: '📅 امروز',
+    notificationSettings: '⚙️ تنظیمات اعلان‌ها',
+  },
 }))
 
 import * as publicDb from '@repo/database/public'
@@ -41,7 +60,9 @@ const validAvailabilityDate = addDaysYmd(validRequestDate, 1)
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(rateLimit.checkAndRecordPublicSubmit).mockResolvedValue({ allowed: true })
+  vi.mocked(rateLimit.checkAndRecordPublicSubmit).mockResolvedValue({
+    allowed: true,
+  })
 })
 
 describe('public routes', () => {
@@ -49,7 +70,14 @@ describe('public routes', () => {
     vi.mocked(publicDb.getPublicSalon).mockResolvedValue({
       ok: true,
       view: {
-        salon: { id: 's1', slug: 'foo', name: 'Foo', phone: null, timezone: 'Asia/Tehran', locale: 'fa' },
+        salon: {
+          id: 's1',
+          slug: 'foo',
+          name: 'Foo',
+          phone: null,
+          timezone: 'Asia/Tehran',
+          locale: 'fa',
+        },
         publicSettings: {
           enabled: true,
           bioText: null,
@@ -76,7 +104,9 @@ describe('public routes', () => {
   })
 
   it('GET /availability rejects bad date format with 400', async () => {
-    const res = await app.request('/api/v1/public/salons/foo/availability?serviceId=svc1&date=bogus')
+    const res = await app.request(
+      '/api/v1/public/salons/foo/availability?serviceId=svc1&date=bogus',
+    )
     expect(res.status).toBe(400)
   })
 
@@ -99,18 +129,21 @@ describe('public routes', () => {
       id: 'req1',
       confirmationToken: validToken,
     } as never)
-    const res = await app.request('/api/v1/public/salons/foo/appointment-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        serviceId: 'svc1',
-        date: validRequestDate,
-        startTime: '10:00',
-        endTime: '10:30',
-        customerName: 'علی',
-        customerPhone: '09121234567',
-      }),
-    })
+    const res = await app.request(
+      '/api/v1/public/salons/foo/appointment-requests',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: 'svc1',
+          date: validRequestDate,
+          startTime: '10:00',
+          endTime: '10:30',
+          customerName: 'علی',
+          customerPhone: '09121234567',
+        }),
+      },
+    )
     expect(res.status).toBe(201)
     expect(await res.json()).toEqual({ token: validToken })
   })
@@ -120,36 +153,42 @@ describe('public routes', () => {
       allowed: false,
       retryAfterMs: 60_000,
     } as never)
-    const res = await app.request('/api/v1/public/salons/foo/appointment-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        serviceId: 'svc1',
-        date: validRequestDate,
-        startTime: '10:00',
-        endTime: '10:30',
-        customerName: 'علی',
-        customerPhone: '09121234567',
-      }),
-    })
+    const res = await app.request(
+      '/api/v1/public/salons/foo/appointment-requests',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: 'svc1',
+          date: validRequestDate,
+          startTime: '10:00',
+          endTime: '10:30',
+          customerName: 'علی',
+          customerPhone: '09121234567',
+        }),
+      },
+    )
     expect(res.status).toBe(429)
     expect(res.headers.get('Retry-After')).toBe('60')
     expect(publicDb.createAppointmentRequest).not.toHaveBeenCalled()
   })
 
   it('POST /appointment-requests rejects invalid phone with 400', async () => {
-    const res = await app.request('/api/v1/public/salons/foo/appointment-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        serviceId: 'svc1',
-        date: validRequestDate,
-        startTime: '10:00',
-        endTime: '10:30',
-        customerName: 'علی',
-        customerPhone: '12345',
-      }),
-    })
+    const res = await app.request(
+      '/api/v1/public/salons/foo/appointment-requests',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: 'svc1',
+          date: validRequestDate,
+          startTime: '10:00',
+          endTime: '10:30',
+          customerName: 'علی',
+          customerPhone: '12345',
+        }),
+      },
+    )
     expect(res.status).toBe(400)
   })
 
@@ -168,7 +207,9 @@ describe('public routes', () => {
       reviewedAt: null,
       rejectionReason: null,
     } as never)
-    const res = await app.request(`/api/v1/public/salons/foo/appointment-requests/${validToken}`)
+    const res = await app.request(
+      `/api/v1/public/salons/foo/appointment-requests/${validToken}`,
+    )
     expect(res.status).toBe(200)
     const body = (await res.json()) as Record<string, unknown>
     expect(body).not.toHaveProperty('customerName')
@@ -177,12 +218,16 @@ describe('public routes', () => {
 
   it('GET status 404 when token unknown', async () => {
     vi.mocked(publicDb.getAppointmentRequestByToken).mockResolvedValue(null)
-    const res = await app.request(`/api/v1/public/salons/foo/appointment-requests/${validToken}`)
+    const res = await app.request(
+      `/api/v1/public/salons/foo/appointment-requests/${validToken}`,
+    )
     expect(res.status).toBe(404)
   })
 
   it('POST cancel flips pending → cancelled', async () => {
-    vi.mocked(publicDb.cancelAppointmentRequestByToken).mockResolvedValue({ ok: true } as never)
+    vi.mocked(publicDb.cancelAppointmentRequestByToken).mockResolvedValue({
+      ok: true,
+    } as never)
     const res = await app.request(
       `/api/v1/public/salons/foo/appointment-requests/${validToken}/cancel`,
       { method: 'POST' },
