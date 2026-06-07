@@ -7,6 +7,33 @@ export * from './registry'
 export * from './types'
 
 export {
+  answerBaleCallback,
+  createBaleProvider,
+  editBaleMessageReplyMarkup,
+  editBaleMessageText,
+  escapeBaleMarkdown,
+  getBaleConfig,
+  initBaleMessaging,
+  renderBaleBotHtml,
+  renderBaleMarkdown,
+  sendBaleMessage,
+  setBaleFetchForTests,
+  type BaleConfig,
+} from './bale'
+
+export {
+  buildBaleSafirSendMessageRequest,
+  getBaleSafirConfig,
+  initBaleSafir,
+  mapBaleSafirErrorCode,
+  normalizeBaleSafirPhone,
+  sendBaleSafirMessage,
+  setBaleSafirFetchForTests,
+  type BaleSafirButton,
+  type BaleSafirConfig,
+} from './bale-safir'
+
+export {
   answerTelegramCallback,
   createTelegramProvider,
   editTelegramMessageReplyMarkup,
