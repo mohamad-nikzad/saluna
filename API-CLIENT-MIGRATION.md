@@ -929,7 +929,7 @@ Phase 20  Legacy cleanup
  → 17. Remove @repo/data-client + offline UX ✅
  → 18. OpenAPI public → migrate apps/web ✅
  → 19. Native (when scoped)
- → 20. Delete src/legacy/
+ → 20. Delete src/legacy/ ✅ (auth-only retained)
 ```
 
 ---
@@ -970,7 +970,7 @@ Phase 20  Legacy cleanup
 - [x] Phase 17: Remove `@repo/data-client` and offline UX
 - [x] Phase 18: OpenAPI public + migrate `apps/web`
 - [ ] Phase 19: Native (when scoped)
-- [ ] Phase 20: Delete `src/legacy/` when grep clean
+- [x] Phase 20: Delete `src/legacy/` when grep clean (auth-only retained; native out of scope)
 - [ ] Prefer generated query options over endpoint wrapper hooks
 - [ ] Expand OpenAPI contract **before** migrating screens for each route group
 - [ ] Migrate query keys + invalidation together per slice

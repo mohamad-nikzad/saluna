@@ -15,8 +15,8 @@ import type {
   CalendarView,
 } from '@repo/salon-core/types'
 
-import { api } from '#/lib/api-client'
 import { useAuth } from '#/lib/auth'
+import { businessSettingsQueryOptions } from '#/lib/settings-queries'
 import {
   appointmentsRangeInvalidationKeys,
   appointmentsRangeQueryOptions,
@@ -49,8 +49,6 @@ const searchSchema = z.object({
   clientId: z.string().optional(),
   appointmentId: z.string().optional(),
 })
-
-type BusinessResponse = { settings: BusinessHours | null }
 
 const VIEW_OPTIONS: { value: CalendarView; label: string }[] = [
   { value: 'day', label: 'روز' },
@@ -127,10 +125,7 @@ function CalendarPage() {
     enabled: isManager,
   })
 
-  const businessQuery = useQuery<BusinessResponse>({
-    queryKey: ['settings', 'business'],
-    queryFn: ({ signal }) => api.businessSettings.get({ signal }),
-  })
+  const businessQuery = useQuery(businessSettingsQueryOptions())
 
   const appointments = useMemo<AppointmentWithDetails[]>(
     () => appointmentsQuery.data ?? [],
@@ -139,10 +134,8 @@ function CalendarPage() {
   const staff = staffQuery.data ?? []
   const services = servicesQuery.data ?? []
   const clients = clientsQuery.data ?? []
-  const businessSource = businessQuery.data
-
   const businessHours: BusinessHours = useMemo(() => {
-    const s = businessSource?.settings
+    const s = businessQuery.data
     if (s) {
       return {
         workingStart: s.workingStart,
@@ -157,7 +150,7 @@ function CalendarPage() {
       slotDurationMinutes: WORKING_HOURS.slotDuration,
       workingDays: DEFAULT_WORKING_DAYS,
     }
-  }, [businessSource])
+  }, [businessQuery.data])
 
   const businessWorkingStart = businessHours.workingStart
   const appointmentFlow = useAppointmentFlow({

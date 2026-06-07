@@ -9,7 +9,7 @@ configureGeneratedApiClient({
 
 /**
  * Dual-run during API client migration:
- * - Legacy `api` from `#/lib/api-client` stays until each vertical slice migrates.
+ * - Legacy `api.auth` from `#/lib/api-client` stays until auth has OpenAPI wrappers.
  * - Generated query/mutation options from `@repo/api-client/query` require this module
  *   to be imported at app startup (see `main.tsx`).
  */
