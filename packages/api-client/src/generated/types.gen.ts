@@ -754,6 +754,40 @@ export type SlugUpdateRequest = {
     slug: string;
 };
 
+export type OnboardingResponse = {
+    onboarding: OnboardingStatus;
+};
+
+export type OnboardingStatus = {
+    salon: OnboardingSalon;
+    steps: OnboardingSteps;
+    completedAt: string | string | unknown;
+    skippedAt: string | string | unknown;
+};
+
+export type OnboardingSalon = {
+    id: string;
+    name: string;
+    slug: string;
+    phone: string | null;
+    address: string | null;
+} | null;
+
+export type OnboardingSteps = {
+    businessHoursSet: boolean;
+    servicesAdded: boolean;
+    staffAdded: boolean;
+    presenceSet: boolean;
+    publicPageConfigured: boolean;
+    notificationsConfigured: boolean;
+};
+
+export type OnboardingUpdateRequest = {
+    action: OnboardingAction;
+};
+
+export type OnboardingAction = 'complete' | 'skip' | 'reopen' | 'set-manager-staff' | 'confirm-business-hours';
+
 export type GetApiV1ClientsData = {
     body?: never;
     path?: never;
@@ -2603,3 +2637,65 @@ export type PatchApiV1SalonPublicSettingsSlugResponses = {
 };
 
 export type PatchApiV1SalonPublicSettingsSlugResponse = PatchApiV1SalonPublicSettingsSlugResponses[keyof PatchApiV1SalonPublicSettingsSlugResponses];
+
+export type GetApiV1OnboardingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/onboarding';
+};
+
+export type GetApiV1OnboardingErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1OnboardingError = GetApiV1OnboardingErrors[keyof GetApiV1OnboardingErrors];
+
+export type GetApiV1OnboardingResponses = {
+    /**
+     * Current onboarding status for the authenticated salon
+     */
+    200: OnboardingResponse;
+};
+
+export type GetApiV1OnboardingResponse = GetApiV1OnboardingResponses[keyof GetApiV1OnboardingResponses];
+
+export type PatchApiV1OnboardingData = {
+    body: OnboardingUpdateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/onboarding';
+};
+
+export type PatchApiV1OnboardingErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+};
+
+export type PatchApiV1OnboardingError = PatchApiV1OnboardingErrors[keyof PatchApiV1OnboardingErrors];
+
+export type PatchApiV1OnboardingResponses = {
+    /**
+     * Updated onboarding status
+     */
+    200: OnboardingResponse;
+};
+
+export type PatchApiV1OnboardingResponse = PatchApiV1OnboardingResponses[keyof PatchApiV1OnboardingResponses];

@@ -6,12 +6,13 @@ import {
   useChildMatches,
 } from '@tanstack/react-router'
 import type { useQueryClient } from '@tanstack/react-query'
-import { ApiError } from '@repo/api-client'
+import { ApiError } from '@repo/api-client/errors'
 import { SakuraMark } from '@repo/ui/sakura-mark'
-import type { OnboardingResponse, OnboardingStatus } from '@repo/api-client'
 
-import { api } from '#/lib/api-client'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import {
+  onboardingQueryOptions,
+  type OnboardingStatus,
+} from '#/lib/onboarding-queries'
 import { ThinProgress } from './onboarding/-shell'
 import {
   ONBOARDING_STEPS
@@ -59,10 +60,7 @@ export async function loadOnboardingStatus(
   queryClient: ReturnType<typeof useQueryClient>,
 ): Promise<OnboardingStatus | null> {
   try {
-    const data = await queryClient.ensureQueryData<OnboardingResponse>({
-      queryKey: onboardingQueryKey,
-      queryFn: ({ signal }) => api.onboarding.get({ signal }),
-    })
+    const data = await queryClient.ensureQueryData(onboardingQueryOptions())
     return data.onboarding
   } catch (err) {
     if (isRedirect(err)) throw err

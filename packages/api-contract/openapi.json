@@ -3,7 +3,7 @@
   "info": {
     "title": "Saluna API",
     "version": "0.7.0",
-    "description": "Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, and salon-public-settings route groups are documented."
+    "description": "Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, and onboarding route groups are documented."
   },
   "servers": [
     {
@@ -59,6 +59,10 @@
     {
       "name": "Salon public settings",
       "description": "Public booking page settings and slug"
+    },
+    {
+      "name": "Onboarding",
+      "description": "Manager onboarding wizard status and step actions"
     }
   ],
   "components": {
@@ -2920,6 +2924,144 @@
         },
         "required": [
           "slug"
+        ]
+      },
+      "OnboardingResponse": {
+        "type": "object",
+        "properties": {
+          "onboarding": {
+            "$ref": "#/components/schemas/OnboardingStatus"
+          }
+        },
+        "required": [
+          "onboarding"
+        ]
+      },
+      "OnboardingStatus": {
+        "type": "object",
+        "properties": {
+          "salon": {
+            "$ref": "#/components/schemas/OnboardingSalon"
+          },
+          "steps": {
+            "$ref": "#/components/schemas/OnboardingSteps"
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "skippedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "salon",
+          "steps",
+          "completedAt",
+          "skippedAt"
+        ]
+      },
+      "OnboardingSalon": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "phone",
+          "address"
+        ]
+      },
+      "OnboardingSteps": {
+        "type": "object",
+        "properties": {
+          "businessHoursSet": {
+            "type": "boolean"
+          },
+          "servicesAdded": {
+            "type": "boolean"
+          },
+          "staffAdded": {
+            "type": "boolean"
+          },
+          "presenceSet": {
+            "type": "boolean"
+          },
+          "publicPageConfigured": {
+            "type": "boolean"
+          },
+          "notificationsConfigured": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "businessHoursSet",
+          "servicesAdded",
+          "staffAdded",
+          "presenceSet",
+          "publicPageConfigured",
+          "notificationsConfigured"
+        ]
+      },
+      "OnboardingUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/OnboardingAction"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "OnboardingAction": {
+        "type": "string",
+        "enum": [
+          "complete",
+          "skip",
+          "reopen",
+          "set-manager-staff",
+          "confirm-business-hours"
         ]
       }
     },
@@ -6813,6 +6955,122 @@
           },
           "409": {
             "description": "Slug already taken by another salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding": {
+      "get": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Get onboarding status",
+        "description": "Salon setup progress for the manager onboarding wizard. Step flags are derived from salon data.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current onboarding status for the authenticated salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_settings permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Update onboarding state",
+        "description": "Apply a wizard action such as confirming business hours, marking the manager as solo staff, completing, skipping, or reopening onboarding.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated onboarding status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_settings permission",
             "content": {
               "application/json": {
                 "schema": {

@@ -4,7 +4,6 @@ export const notificationPreferencesQueryKey = [
 ] as const
 export const salonPublicSettingsQueryKey = ['salon-public-settings'] as const
 export const salonPresenceQueryKey = ['salon-profile', 'presence'] as const
-export const onboardingQueryKey = ['onboarding'] as const
 export const messagingAccountsQueryKey = ['messaging', 'accounts'] as const
 
 export const managerBusinessSettingsQueryKey = [

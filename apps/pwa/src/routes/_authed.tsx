@@ -5,15 +5,13 @@ import {
   redirect,
   useRouterState,
 } from '@tanstack/react-router'
-import type { OnboardingResponse } from '@repo/api-client'
 import type { User } from '@repo/salon-core/types'
 
-import { api } from '#/lib/api-client'
 import { authQueryKey } from '#/lib/auth'
 import { BottomNav } from '#/components/bottom-nav'
 import { ManagerSyncBar } from '#/components/manager-sync-bar'
 import { ManagerDataClientProvider } from '#/lib/manager-data-client'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import { onboardingQueryOptions } from '#/lib/onboarding-queries'
 
 export const Route = createFileRoute('/_authed')({
   beforeLoad: async ({ context, location }) => {
@@ -32,10 +30,9 @@ export const Route = createFileRoute('/_authed')({
       !location.pathname.startsWith('/onboarding')
     ) {
       try {
-        const data = await context.queryClient.ensureQueryData<OnboardingResponse>({
-          queryKey: onboardingQueryKey,
-          queryFn: ({ signal }) => api.onboarding.get({ signal }),
-        })
+        const data = await context.queryClient.ensureQueryData(
+          onboardingQueryOptions(),
+        )
         const steps = data.onboarding.steps
         if (!steps.servicesAdded || !steps.staffAdded) {
           throw redirect({ to: '/onboarding' })

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormRootError } from '@repo/ui/form'
@@ -12,12 +12,16 @@ import type {
 } from '@repo/salon-core/forms/settings'
 
 import { BusinessHoursFields } from '#/components/business-hours/business-hours-fields'
-import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import {
-  managerBusinessSettingsQueryKey,
-  onboardingQueryKey,
-} from '#/lib/query-keys'
+  getApiV1OnboardingQueryKey,
+  useUpdateOnboardingMutation,
+} from '#/lib/onboarding-queries'
+import {
+  businessSettingsQueryOptions,
+  getApiV1SettingsBusinessQueryKey,
+  useUpdateBusinessSettingsMutation,
+} from '#/lib/settings-queries'
 import { OptionalStepFooter, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -31,10 +35,7 @@ function HoursScreen() {
   const navigate = useNavigate()
   const [skipping, setSkipping] = useState(false)
 
-  const businessSettingsQuery = useQuery({
-    queryKey: managerBusinessSettingsQueryKey,
-    queryFn: ({ signal }) => api.businessSettings.get({ signal }),
-  })
+  const businessSettingsQuery = useQuery(businessSettingsQueryOptions())
 
   const {
     handleSubmit,
@@ -59,7 +60,7 @@ function HoursScreen() {
   const workingDays = watch('workingDays') ?? DEFAULT_WORKING_DAYS
 
   useEffect(() => {
-    const settings = businessSettingsQuery.data?.settings
+    const settings = businessSettingsQuery.data
     if (settings) {
       reset({
         workingStart: settings.workingStart,
@@ -70,37 +71,30 @@ function HoursScreen() {
     }
   }, [businessSettingsQuery.data, reset])
 
-  const skipHours = useMutation({
-    mutationFn: () => api.onboarding.update('confirm-business-hours'),
-    meta: {
-      skipToast: true,
-      invalidatesQuery: onboardingQueryKey,
-    },
-    onSuccess: () => {
-      void navigate({ to: '/onboarding/services' })
-    },
+  const skipHours = useUpdateOnboardingMutation({
+    skipToast: true,
+    invalidatesQuery: getApiV1OnboardingQueryKey(),
   })
 
-  const saveHours = useMutation({
-    mutationFn: (values: BusinessSettingsPayload) =>
-      api.businessSettings.update(values),
-    meta: {
-      skipToast: true,
-      invalidatesQuery: [managerBusinessSettingsQueryKey, onboardingQueryKey],
-    },
-    onSuccess: () => {
-      void navigate({ to: '/onboarding/services' })
-    },
+  const saveHours = useUpdateBusinessSettingsMutation({
+    skipToast: true,
+    invalidatesQuery: [
+      getApiV1SettingsBusinessQueryKey(),
+      getApiV1OnboardingQueryKey(),
+    ],
   })
 
   const onSkip = () => {
     setSkipping(true)
-    skipHours.mutate(undefined, {
+    skipHours.mutate('confirm-business-hours', {
       onError: (err) => {
         setError('root', {
           message: getMutationErrorMessage(err, 'رد کردن این مرحله انجام نشد'),
         })
         setSkipping(false)
+      },
+      onSuccess: () => {
+        void navigate({ to: '/onboarding/services' })
       },
       onSettled: () => {
         setSkipping(false)
@@ -114,6 +108,9 @@ function HoursScreen() {
         setError('root', {
           message: getMutationErrorMessage(err, 'ذخیره ساعات کاری انجام نشد'),
         })
+      },
+      onSuccess: () => {
+        void navigate({ to: '/onboarding/services' })
       },
     })
   })

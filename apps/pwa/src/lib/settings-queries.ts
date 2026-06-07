@@ -1,4 +1,5 @@
 import { queryOptions, useMutation } from '@tanstack/react-query'
+import type { QueryKey } from '@tanstack/react-query'
 import type { BusinessSettingsPayload } from '@repo/salon-core/forms/settings'
 import type { BusinessHours } from '@repo/salon-core/types'
 import { getApiV1SettingsBusiness } from '@repo/api-client/sdk'
@@ -30,7 +31,12 @@ export function businessSettingsQueryOptions() {
   })
 }
 
-export function useUpdateBusinessSettingsMutation() {
+export function useUpdateBusinessSettingsMutation(
+  options?: {
+    skipToast?: boolean
+    invalidatesQuery?: QueryKey | readonly QueryKey[]
+  },
+) {
   const generated = patchApiV1SettingsBusinessMutation()
 
   return useMutation({
@@ -46,7 +52,9 @@ export function useUpdateBusinessSettingsMutation() {
     },
     meta: {
       errorMessage: 'ذخیره ساعات کاری انجام نشد',
-      invalidatesQuery: getApiV1SettingsBusinessQueryKey(),
+      invalidatesQuery:
+        options?.invalidatesQuery ?? getApiV1SettingsBusinessQueryKey(),
+      ...(options?.skipToast ? { skipToast: true } : {}),
     },
   })
 }

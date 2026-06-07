@@ -9,12 +9,14 @@ import type {
   CatalogPresetPickerHandle,
   CatalogPresetPickerState,
 } from '#/components/catalog-preset-picker'
-import { api } from '#/lib/api-client'
+import {
+  getApiV1OnboardingQueryKey,
+  onboardingQueryOptions,
+} from '#/lib/onboarding-queries'
 import {
   getApiV1ServicesQueryKey,
   servicesListQueryOptions,
 } from '#/lib/services-queries'
-import { onboardingQueryKey } from '#/lib/query-keys'
 import { PillCTA, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -43,7 +45,9 @@ function ServicesScreen() {
 
   const refreshServices = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: getApiV1ServicesQueryKey() })
-    await queryClient.invalidateQueries({ queryKey: onboardingQueryKey })
+    await queryClient.invalidateQueries({
+      queryKey: getApiV1OnboardingQueryKey(),
+    })
     await servicesQuery.refetch()
   }, [queryClient, servicesQuery])
 
@@ -57,10 +61,7 @@ function ServicesScreen() {
         await refreshServices()
       }
 
-      await queryClient.fetchQuery({
-        queryKey: onboardingQueryKey,
-        queryFn: ({ signal }) => api.onboarding.get({ signal }),
-      })
+      await queryClient.fetchQuery(onboardingQueryOptions())
       await navigate({ to: '/onboarding/staff' })
     } finally {
       setContinuing(false)

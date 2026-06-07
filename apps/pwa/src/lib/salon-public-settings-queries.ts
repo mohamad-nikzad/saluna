@@ -1,4 +1,5 @@
 import { queryOptions, useMutation } from '@tanstack/react-query'
+import type { QueryKey } from '@tanstack/react-query'
 import type { PublicSettingsInput } from '@repo/salon-core/forms/public'
 import type { PublicSettingsUpdateRequest } from '@repo/api-client/types'
 import {
@@ -30,7 +31,12 @@ export function salonPublicSettingsQueryOptions() {
   })
 }
 
-export function useUpdateSalonPublicSettingsMutation() {
+export function useUpdateSalonPublicSettingsMutation(
+  options?: {
+    skipToast?: boolean
+    invalidatesQuery?: QueryKey | readonly QueryKey[]
+  },
+) {
   const generated = putApiV1SalonPublicSettingsMutation()
 
   return useMutation({
@@ -45,7 +51,9 @@ export function useUpdateSalonPublicSettingsMutation() {
     },
     meta: {
       errorMessage: 'ذخیره تنظیمات انجام نشد',
-      invalidatesQuery: getApiV1SalonPublicSettingsQueryKey(),
+      invalidatesQuery:
+        options?.invalidatesQuery ?? getApiV1SalonPublicSettingsQueryKey(),
+      ...(options?.skipToast ? { skipToast: true } : {}),
     },
   })
 }

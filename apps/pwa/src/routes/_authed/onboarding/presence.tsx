@@ -5,10 +5,8 @@ import {
   PresenceFormBody,
   usePresenceForm,
 } from '#/components/public-page/presence-form'
-import {
-  onboardingQueryKey,
-  salonPresenceQueryKey,
-} from '#/lib/query-keys'
+import { getApiV1OnboardingQueryKey } from '#/lib/onboarding-queries'
+import { getApiV1SalonProfilePresenceQueryKey } from '#/lib/salon-profile-queries'
 import { OptionalStepFooter, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -25,7 +23,10 @@ function PresenceScreen() {
   const [skipping, setSkipping] = useState(false)
 
   const presence = usePresenceForm({
-    invalidatesQuery: [salonPresenceQueryKey, onboardingQueryKey],
+    invalidatesQuery: [
+      getApiV1SalonProfilePresenceQueryKey(),
+      getApiV1OnboardingQueryKey(),
+    ],
     onSuccess: () => {
       void navigate({ to: '/onboarding/public' })
     },

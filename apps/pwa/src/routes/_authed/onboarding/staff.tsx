@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,19 +11,19 @@ import { FormRootError } from '@repo/ui/form'
 import { displayPhone } from '@repo/salon-core/phone'
 import { staffCreateSchema } from '@repo/salon-core/forms/staff'
 import type { StaffCreateFormInput } from '@repo/salon-core/forms/staff'
-import type { OnboardingResponse } from '@repo/api-client'
 
 import { PasswordInput } from '#/components/password-input'
-import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import {
+  getApiV1OnboardingQueryKey,
+  onboardingQueryOptions,
+  useUpdateOnboardingMutation,
+  type OnboardingResponse,
+} from '#/lib/onboarding-queries'
 import { useCreateStaffMutation } from '#/lib/staff-queries'
 import { PillCTA, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
-// Required step — satisfied either by creating a real staff member or by the
-// owner declaring they work solo (`set-manager-staff`). No fake staff row is
-// created for the solo path.
 export const Route = createFileRoute('/_authed/onboarding/staff')({
   beforeLoad: ({ context }) => guardStep(context.queryClient, 'staff'),
   component: StaffScreen,
@@ -65,14 +65,7 @@ function StaffScreen() {
 
   const createStaff = useCreateStaffMutation({ skipToast: true })
 
-  const setManagerStaff = useMutation({
-    mutationFn: () => api.onboarding.update('set-manager-staff'),
-    meta: { skipToast: true },
-    onSuccess: (data) => {
-      queryClient.setQueryData<OnboardingResponse>(onboardingQueryKey, data)
-      void navigate({ to: '/onboarding/presence' })
-    },
-  })
+  const setManagerStaff = useUpdateOnboardingMutation({ skipToast: true })
 
   const onSubmit = handleSubmit((values) => {
     createStaff.mutate(values, {
@@ -82,10 +75,7 @@ function StaffScreen() {
         })
       },
       onSuccess: async () => {
-        await queryClient.fetchQuery({
-          queryKey: onboardingQueryKey,
-          queryFn: ({ signal }) => api.onboarding.get({ signal }),
-        })
+        await queryClient.fetchQuery(onboardingQueryOptions())
         await navigate({ to: '/onboarding/presence' })
       },
     })
@@ -93,11 +83,18 @@ function StaffScreen() {
 
   const onSolo = () => {
     setSoloPending(true)
-    setManagerStaff.mutate(undefined, {
+    setManagerStaff.mutate('set-manager-staff', {
       onError: (err) => {
         setError('root', {
           message: getMutationErrorMessage(err, 'ثبت انجام نشد'),
         })
+      },
+      onSuccess: (data) => {
+        queryClient.setQueryData<OnboardingResponse>(
+          getApiV1OnboardingQueryKey(),
+          data,
+        )
+        void navigate({ to: '/onboarding/presence' })
       },
       onSettled: () => {
         setSoloPending(false)

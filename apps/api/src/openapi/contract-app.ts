@@ -64,6 +64,10 @@ import {
   updateSalonSlugRoute,
 } from './routes/salon-public-settings'
 import {
+  getOnboardingRoute,
+  updateOnboardingRoute,
+} from './routes/onboarding'
+import {
   createStaffRoute,
   deleteStaffRoute,
   getStaffBookingAvailabilityRoute,
@@ -457,6 +461,32 @@ const updateSalonPublicSettingsStub: RouteHandler<
 const updateSalonSlugStub: RouteHandler<typeof updateSalonSlugRoute> = (c) =>
   c.json(stubManagerPublicSettings, 200)
 
+const stubOnboardingStatus = {
+  salon: {
+    id: 'stub',
+    name: 'stub',
+    slug: 'stub-salon',
+    phone: null,
+    address: null,
+  },
+  steps: {
+    businessHoursSet: false,
+    servicesAdded: false,
+    staffAdded: false,
+    presenceSet: false,
+    publicPageConfigured: false,
+    notificationsConfigured: false,
+  },
+  completedAt: null,
+  skippedAt: null,
+}
+
+const getOnboardingStub: RouteHandler<typeof getOnboardingRoute> = (c) =>
+  c.json({ onboarding: stubOnboardingStatus }, 200)
+
+const updateOnboardingStub: RouteHandler<typeof updateOnboardingRoute> = (c) =>
+  c.json({ onboarding: stubOnboardingStatus }, 200)
+
 /**
  * Minimal OpenAPI app used only for contract generation.
  * Stub handlers avoid loading auth/database modules at generate time.
@@ -561,6 +591,12 @@ export const contractApp = new OpenAPIHono()
       .openapi(updateSalonPublicSettingsRoute, updateSalonPublicSettingsStub)
       .openapi(updateSalonSlugRoute, updateSalonSlugStub),
   )
+  .route(
+    '/api/v1/onboarding',
+    new OpenAPIHono()
+      .openapi(getOnboardingRoute, getOnboardingStub)
+      .openapi(updateOnboardingRoute, updateOnboardingStub),
+  )
 
 export const openApiDocumentConfig = {
   openapi: '3.0.0' as const,
@@ -569,7 +605,7 @@ export const openApiDocumentConfig = {
     version: '0.7.0',
     description:
       'Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. ' +
-      'This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, and salon-public-settings route groups are documented.',
+      'This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, and onboarding route groups are documented.',
   },
   servers: [{ url: '', description: 'Saluna API (paths include /api/v1 prefix)' }],
   tags: [
@@ -596,6 +632,10 @@ export const openApiDocumentConfig = {
     {
       name: 'Salon public settings',
       description: 'Public booking page settings and slug',
+    },
+    {
+      name: 'Onboarding',
+      description: 'Manager onboarding wizard status and step actions',
     },
   ],
   components: {

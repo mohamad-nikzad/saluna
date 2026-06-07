@@ -4,20 +4,21 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
-import type { OnboardingResponse } from '@repo/api-client'
 
-import { api } from '#/lib/api-client'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import {
+  getApiV1OnboardingQueryKey,
+  onboardingQueryOptions,
+  useUpdateOnboardingMutation,
+  type OnboardingResponse,
+} from '#/lib/onboarding-queries'
 import { HeroPillCTA, HeroShell } from './-shell'
 import { guardStep } from './-steps'
 
 import { brand } from '@repo/brand'
 
-// Done is not a tracked step. The CTA completes onboarding and routes to the
-// calendar.
 export const Route = createFileRoute('/_authed/onboarding/done')({
   beforeLoad: ({ context }) => guardStep(context.queryClient, 'done'),
   component: DoneScreen,
@@ -29,10 +30,7 @@ function DoneScreen() {
   const queryClient = useQueryClient()
   const [copied, setCopied] = useState(false)
 
-  const onboardingQuery = useQuery({
-    queryKey: onboardingQueryKey,
-    queryFn: ({ signal }) => api.onboarding.get({ signal }),
-  })
+  const onboardingQuery = useQuery(onboardingQueryOptions())
 
   const salon = onboardingQuery.data?.onboarding.salon
   const publicPageConfigured =
@@ -51,18 +49,19 @@ function DoneScreen() {
     }
   }
 
-  const completeOnboarding = useMutation({
-    mutationFn: () => api.onboarding.update('complete'),
-    meta: { skipToast: true },
-    onSuccess: async (data) => {
-      queryClient.setQueryData<OnboardingResponse>(onboardingQueryKey, data)
-      await navigate({ to: '/calendar' })
-      await router.invalidate()
-    },
-  })
+  const completeOnboarding = useUpdateOnboardingMutation({ skipToast: true })
 
   const onComplete = () => {
-    completeOnboarding.mutate()
+    completeOnboarding.mutate('complete', {
+      onSuccess: async (data) => {
+        queryClient.setQueryData<OnboardingResponse>(
+          getApiV1OnboardingQueryKey(),
+          data,
+        )
+        await navigate({ to: '/calendar' })
+        await router.invalidate()
+      },
+    })
   }
 
   return (

@@ -34,7 +34,7 @@ import { getApiV1StaffQueryKey } from '#/lib/staff-queries'
 import { getApiV1SettingsBusinessQueryKey } from '#/lib/settings-queries'
 import { getApiV1SalonProfilePresenceQueryKey } from '#/lib/salon-profile-queries'
 import { getApiV1SalonPublicSettingsQueryKey } from '#/lib/salon-public-settings-queries'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import { getApiV1OnboardingQueryKey } from '#/lib/onboarding-queries'
 
 // The booking-page slug is minted server-side (Persian salon names can't form a
 // Latin URL); the owner picks a friendly one later in onboarding. The confirm
@@ -102,7 +102,7 @@ function SignupPage() {
     onSuccess: async (data) => {
       await clearOfflineDatabase()
       setUser(data.user)
-      await queryClient.removeQueries({ queryKey: onboardingQueryKey })
+      await queryClient.removeQueries({ queryKey: getApiV1OnboardingQueryKey() })
       await queryClient.removeQueries({
         queryKey: getApiV1SettingsBusinessQueryKey(),
       })

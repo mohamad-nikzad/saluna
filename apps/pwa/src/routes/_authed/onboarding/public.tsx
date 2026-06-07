@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormRootError } from '@repo/ui/form'
@@ -14,18 +14,16 @@ import type {
 } from '@repo/salon-core/forms/public'
 
 import { PublicPageBasicsFields } from '#/components/public-page/public-page-basics'
-import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
+import { getApiV1OnboardingQueryKey } from '#/lib/onboarding-queries'
 import {
-  onboardingQueryKey,
-  salonPublicSettingsQueryKey,
-} from '#/lib/query-keys'
+  getApiV1SalonPublicSettingsQueryKey,
+  salonPublicSettingsQueryOptions,
+  useUpdateSalonPublicSettingsMutation,
+} from '#/lib/salon-public-settings-queries'
 import { OptionalStepFooter, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
-// Optional step. Toggles the public booking page on and sets a short bio;
-// theme/layout/services stay in `/public-page`. Named `public` (not
-// `public-page`) to avoid clashing with the existing `_authed/public-page`.
 export const Route = createFileRoute('/_authed/onboarding/public')({
   beforeLoad: ({ context }) => guardStep(context.queryClient, 'public'),
   component: PublicScreen,
@@ -36,10 +34,7 @@ function PublicScreen() {
   const navigate = useNavigate()
   const [skipping, setSkipping] = useState(false)
 
-  const publicSettingsQuery = useQuery({
-    queryKey: salonPublicSettingsQueryKey,
-    queryFn: ({ signal }) => api.salonPublicSettings.get({ signal }),
-  })
+  const publicSettingsQuery = useQuery(salonPublicSettingsQueryOptions())
 
   const {
     handleSubmit,
@@ -63,19 +58,12 @@ function PublicScreen() {
     }
   }, [publicSettingsQuery.data, reset])
 
-  const savePublicSettings = useMutation({
-    mutationFn: (formValues: PublicPageOnboardingPayload) =>
-      api.salonPublicSettings.update({
-        enabled: formValues.enabled,
-        bioText: formValues.bioText ?? null,
-      }),
-    meta: {
-      skipToast: true,
-      invalidatesQuery: [salonPublicSettingsQueryKey, onboardingQueryKey],
-    },
-    onSuccess: () => {
-      void navigate({ to: '/onboarding/notifications' })
-    },
+  const savePublicSettings = useUpdateSalonPublicSettingsMutation({
+    skipToast: true,
+    invalidatesQuery: [
+      getApiV1SalonPublicSettingsQueryKey(),
+      getApiV1OnboardingQueryKey(),
+    ],
   })
 
   const onSubmit = handleSubmit((formValues) => {
@@ -84,6 +72,9 @@ function PublicScreen() {
         setError('root', {
           message: getMutationErrorMessage(err, 'ذخیره صفحه عمومی انجام نشد'),
         })
+      },
+      onSuccess: () => {
+        void navigate({ to: '/onboarding/notifications' })
       },
     })
   })

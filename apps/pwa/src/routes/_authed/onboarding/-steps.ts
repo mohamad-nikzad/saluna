@@ -1,10 +1,13 @@
 import { redirect } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
-import { ApiError } from '@repo/api-client'
-import type { OnboardingResponse, OnboardingStatus } from '@repo/api-client'
+import { ApiError } from '@repo/api-client/errors'
 
-import { api } from '#/lib/api-client'
-import { onboardingQueryKey } from '#/lib/query-keys'
+import {
+  getApiV1OnboardingQueryKey,
+  onboardingQueryOptions,
+  type OnboardingResponse,
+  type OnboardingStatus,
+} from '#/lib/onboarding-queries'
 
 // Shared step model for the onboarding route-per-step skeleton (Phase 6).
 // Files prefixed with `-` are ignored by the TanStack Router file-route
@@ -184,14 +187,13 @@ export async function guardStep(
   id: OnboardingStepId,
 ): Promise<void> {
   let status: OnboardingStatus | undefined =
-    queryClient.getQueryData<OnboardingResponse>(onboardingQueryKey)?.onboarding
+    queryClient.getQueryData<OnboardingResponse>(
+      getApiV1OnboardingQueryKey(),
+    )?.onboarding
 
   if (!status) {
     try {
-      const data = await queryClient.ensureQueryData<OnboardingResponse>({
-        queryKey: onboardingQueryKey,
-        queryFn: ({ signal }) => api.onboarding.get({ signal }),
-      })
+      const data = await queryClient.ensureQueryData(onboardingQueryOptions())
       status = data.onboarding
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
