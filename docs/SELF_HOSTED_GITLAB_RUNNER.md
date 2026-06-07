@@ -15,6 +15,7 @@ keep it project-scoped, protected, tagged, and low-concurrency.
 - Runner container limit: `0.75` CPU, `768m` RAM
 - Job container limit: `1` CPU, `1100m` RAM
 - Allowed job images: Kaniko and mirrored Alpine only
+- Helper image: `hub.hamdocker.ir/gitlab/gitlab-runner-helper:x86_64-v19.0.1`
 
 This is intentionally not a general shared runner. Do not enable untagged jobs.
 Do not enable privileged mode unless the CI design changes and the risk is
