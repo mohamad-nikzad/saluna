@@ -661,11 +661,21 @@ curl -I https://registry.npmjs.org
 curl -I https://registry-1.docker.io
 curl -I https://github.com
 curl -I https://api.telegram.org
+curl -I https://tapi.bale.ai
+curl -I https://safir.bale.ai
 ```
 
 If these fail or are too slow, use the tarball workflow above. Normal HamGit
 builds already use HamDocker, hmirror npm, and Arvan apk as described in
 [`DEPLOYMENTS.md`](./DEPLOYMENTS.md).
+
+For messaging features, allow outbound HTTPS from the API service to
+`api.telegram.org`, `tapi.bale.ai`, and `safir.bale.ai`. Bale bot webhooks also
+require the public API URL to use HTTPS on port `443` or `88` before running:
+
+```bash
+pnpm --filter @repo/api cli:messaging-set-webhook -- --provider=bale
+```
 
 ## Troubleshooting
 

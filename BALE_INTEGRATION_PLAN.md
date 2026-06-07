@@ -132,7 +132,36 @@ delivery:
 
 ## Implementation Plan
 
-### 1. Bale Bot Provider
+### 1. Bale Bot Provider - Done 2026-06-07
+
+Implemented first server-side provider slice:
+
+- Added `packages/notifications/src/providers/bale.ts` with config init,
+  provider registration surface, deep links, Markdown rendering/escaping,
+  `sendBaleMessage`, edit helpers, callback answers, Bale response/error
+  handling, and inline keyboard conversion.
+- Added Bale API env fields and validation in `apps/api/src/env.ts`, including
+  Safir env fields for the later phone-delivery chunk.
+- Registered the Bale bot provider from `apps/api/src/bootstrap-messaging.ts`.
+- Exported Bale provider helpers from `@repo/notifications`.
+- Added provider tests for configured/skipped sends, Bale `{ ok: false }`
+  failures, provider message ids, inline callback/url buttons, callback byte
+  limits, unsafe URL filtering, and Markdown escaping.
+
+Verification completed:
+
+- `pnpm --filter @repo/notifications test`
+- `pnpm --filter @repo/notifications typecheck`
+- `pnpm --filter api typecheck`
+
+Remaining notes:
+
+- Deep-link behavior still needs verification with a real Bale bot before
+  implementation freeze, as originally noted.
+- Webhook setup CLI, PWA settings, Safir delivery, staff appointment-added
+  delivery, and retention sending remain open.
+
+Original implementation notes:
 
 Add `packages/notifications/src/providers/bale.ts`.
 
@@ -168,7 +197,48 @@ Testing:
 - Inline data/url buttons map correctly.
 - Markdown escaping handles names/services containing markup characters.
 
-### 2. Bale Webhook Route
+### 2. Bale Webhook Route - Done 2026-06-07
+
+Implemented Bale bot inbound handling:
+
+- Added `apps/api/src/routes/messaging-bale.ts` and mounted it at
+  `POST /api/v1/messaging/bale/webhook/:secret`.
+- Verified the unguessable path secret against `BALE_WEBHOOK_SECRET` before
+  parsing JSON or calling command handlers.
+- Added provider-local Bale update/message/callback types to keep the route
+  independent from Telegram and avoid introducing a shared bot superclass.
+- Routed `/start <token>`, bare `/start`, `/pending`, `/today`, `/unlink`,
+  `/help`, reply-keyboard labels, and notification-settings reply label through
+  the same command handlers with `provider: "bale"`.
+- Routed `approve`, `reject`, `back`, and `asg` callback payloads through the
+  existing appointment-request approval handlers with `provider: "bale"`.
+- Wired Bale callback answering plus message text/reply-markup edits through the
+  Bale provider helpers.
+- Added `renderBaleBotHtml` to convert the existing command-handler HTML output
+  into Bale-safe text before sending or editing Bale bot messages.
+- Extended API tests to cover no config, wrong secret, invalid JSON, link start,
+  text command dispatch, approve callbacks, staff-picker callbacks, and unknown
+  callback acknowledgements.
+- Updated existing API route notification mocks so importing the app with the
+  new mounted Bale route remains stable across unrelated route tests.
+
+Verification completed:
+
+- `pnpm --filter @repo/notifications test`
+- `pnpm --filter @repo/notifications typecheck`
+- `pnpm --filter @repo/api test -- src/routes/messaging.test.ts`
+- `pnpm --filter @repo/api test`
+- `pnpm --filter @repo/api typecheck`
+
+Remaining notes:
+
+- Reply-keyboard shape is currently reused from the existing Telegram keyboard
+  object. Bale bot docs should be checked against a real bot before final
+  freeze, but the command matching and route wiring are complete.
+- End-to-end callback behavior still needs real Bale webhook verification once a
+  bot token and public webhook URL are available.
+
+Original implementation notes:
 
 Add `apps/api/src/routes/messaging-bale.ts` and mount it in `apps/api/src/app.ts`.
 
@@ -199,52 +269,110 @@ Testing:
 - Approve/reject callbacks mutate appointment requests exactly like Telegram.
 - Staff-picker and back callbacks edit markup correctly.
 
-### 3. Webhook Setup CLI
+### 3. Webhook Setup CLI - Done 2026-06-07
 
-Extend or add a CLI:
+Implemented Bale webhook setup through the existing messaging CLI:
 
-- Option A: extend `apps/api/src/cli/messaging-set-webhook.ts` with
-  `--provider=telegram|bale`.
-- Option B: add `apps/api/src/cli/bale-set-webhook.ts`.
+- Extended `apps/api/src/cli/messaging-set-webhook.ts` with
+  `--provider=telegram|bale`, keeping Telegram as the default for existing
+  deploy commands.
+- Added Bale `setWebhook` registration against
+  `https://tapi.bale.ai/bot<token>/setWebhook` with JSON payload
+  `{ "url": BALE_WEBHOOK_URL }`.
+- Added Bale webhook URL validation so the CLI refuses non-HTTPS URLs,
+  unsupported explicit ports, and URLs that do not include
+  `BALE_WEBHOOK_SECRET` as a path segment.
+- Added focused CLI tests for provider parsing, missing/incomplete Bale config,
+  Bale webhook URL validation, expected endpoint/payload construction, JSON
+  posting, and Bale `{ ok: false }` error surfacing.
+- Added `docs/VPS_AIRGAPPED_DEPLOYMENT.md` ops notes for outbound access to
+  `https://tapi.bale.ai` and `https://safir.bale.ai`, plus the Bale webhook CLI
+  command.
 
-For Bale:
+Verification completed:
 
-- Call `setWebhook` at
-  `https://tapi.bale.ai/bot<token>/setWebhook` with
-  `url = BALE_WEBHOOK_URL`.
-- Ensure `BALE_WEBHOOK_URL` includes the secret route segment and uses HTTPS on
-  port `443` or `88`, matching Bale docs.
-- Add an ops note to `docs/VPS_AIRGAPPED_DEPLOYMENT.md` or the API deploy docs
-  covering Bale outbound host allowlist needs:
-  - `https://tapi.bale.ai`
-  - `https://safir.bale.ai`
+- `pnpm --filter @repo/api test -- src/cli/messaging-set-webhook.test.ts`
+- `pnpm --filter @repo/api typecheck`
+- `pnpm --filter @repo/api test`
 
-Testing:
+Remaining notes:
 
-- CLI refuses missing/incomplete Bale config.
-- CLI builds the expected setWebhook payload.
+- The CLI has not been run against a real Bale bot token/public webhook URL in
+  this workspace.
 
-### 4. PWA Messaging Settings
+### 4. PWA Messaging Settings - Done 2026-06-07
 
-Generalize the current Telegram-only settings UI.
+Implemented manager settings support for multiple bot-account providers:
 
-Implementation:
+- Added `useMessagingConnect(provider)` and kept `useTelegramConnect` as a
+  Telegram compatibility wrapper for the existing onboarding flow.
+- Extended `GET /api/v1/messaging/accounts` to return configured messaging
+  provider summaries in addition to linked accounts.
+- Updated `packages/api-client/src/messaging.ts` with the configured provider
+  response type.
+- Updated `MessagingAccountsSection` to render provider rows for Telegram and
+  Bale when the provider is configured, while still showing already-linked
+  accounts if a provider later becomes unconfigured.
+- Kept staff bot account linking out of the v1 settings UI; staff
+  appointment-added delivery remains planned for Safir phone delivery.
+- Added PWA tests for configured Telegram/Bale rows, hiding unconfigured Bale
+  when no linked account exists, showing linked Telegram/Bale accounts
+  independently, and Bale link creation through `useMessagingConnect("bale")`.
+- Added API route coverage for configured provider summaries in the accounts
+  response.
 
-- Rename `useTelegramConnect` to a provider-parameterized hook, for example
-  `useMessagingConnect(provider)`.
-- Rename `TelegramConnectCard` to a generic provider card if still needed.
-- Update `MessagingAccountsSection` to render Telegram and Bale cards for
-  managers.
-- Keep staff bot account linking out of v1 UI unless needed for future staff
-  bot commands. Staff appointment-added notifications use Safir phone delivery.
+Verification completed:
 
-Testing:
+- `pnpm --filter @repo/api test -- src/routes/messaging.test.ts`
+- `pnpm --filter @repo/pwa test src/components/settings/messaging-accounts-section.test.tsx src/components/messaging/use-messaging-connect.test.tsx`
+- `pnpm --filter @repo/api test`
+- `pnpm --filter @repo/pwa test`
+- `pnpm --filter @repo/api-client typecheck`
+- `pnpm --filter @repo/pwa typecheck`
+- `pnpm --filter @repo/api typecheck`
 
-- Manager sees Telegram and Bale connection rows when providers are configured.
-- Existing Telegram connect/toggle/unlink behavior is unchanged.
-- Bale connect calls `api.messaging.createLink({ provider: "bale" })`.
+Remaining notes:
 
-### 5. Safir Phone Delivery
+- Browser smoke opened the local PWA and reached the login screen, but settings
+  could not be reached because the API dev server's configured database host
+  refused the connection (`ECONNREFUSED 50.7.5.83:5432`). Component/API tests
+  cover the settings-row behavior for this slice.
+- `TelegramConnectCard` remains Telegram-specific because it is currently only
+  used by Telegram onboarding, not by the generalized settings UI.
+
+### 5. Safir Phone Delivery - Done 2026-06-07
+
+Implemented the reusable Safir phone-delivery primitive:
+
+- Added `packages/notifications/src/providers/bale-safir.ts` with config init,
+  test fetch override, phone normalization, Safir `send_message` request
+  construction, supported inline button conversion (`url`, `web_app`,
+  `copy_text`), provider message id extraction, and delivery result mapping.
+- Normalized common stored Iranian phone inputs (`0912...`, `912...`,
+  `+98912...`, `98912...`) into Safir's required `98...` destination format
+  before sending.
+- Rejected invalid/non-Iranian mobile numbers before making a network call.
+- Mapped documented Safir error codes to local delivery errors:
+  `invalid_phone`, `not_bale_user`, `rate_limited`, `payment_required`, and
+  `safir_send_error`.
+- Exported Safir helpers from `@repo/notifications`.
+- Initialized Safir config from the API bootstrap without registering Safir as
+  an account-linking messaging provider.
+
+Verification completed:
+
+- `pnpm --filter @repo/notifications test -- providers/bale-safir.test.ts`
+- `pnpm --filter @repo/notifications test`
+- `pnpm --filter @repo/notifications typecheck`
+- `pnpm --filter @repo/api typecheck`
+
+Remaining notes:
+
+- This chunk only adds the delivery primitive. Staff appointment-created delivery
+  and manager-triggered retention sends still need API/database integration.
+- The sender has not been run against real Safir credentials in this workspace.
+
+Original implementation notes:
 
 Add a Safir sender module, for example `packages/notifications/src/providers/bale-safir.ts`.
 
@@ -273,7 +401,43 @@ Testing:
 - Successful response records provider message id.
 - Each documented Safir error maps to the expected local status/error.
 
-### 6. Staff Appointment-Added Notifications
+### 6. Staff Appointment-Added Notifications - Done 2026-06-07
+
+Implemented staff Bale delivery for manager-created appointments:
+
+- Extended `packages/notifications/src/notifications.ts` so
+  `appointment_created` notifications can fall back to Bale Safir phone delivery
+  after the existing linked-account messaging fan-out.
+- Preserved linked Bale bot precedence: if the staff user has an enabled Bale
+  bot account, the existing Bale bot provider handles delivery and Safir is not
+  sent.
+- Added no-link Safir fallback when the salon has Bale enabled and Safir is
+  configured.
+- Reused the existing staff user phone source through `getUserById`, matching
+  the staff username/display-username storage path without schema changes.
+- Recorded Safir delivery rows on channel `bale` with `provider: "bale_safir"`
+  so bot delivery and phone delivery remain distinguishable without a migration.
+- Recorded skipped Safir delivery for missing phone, salon-disabled, disabled
+  linked Bale account, and Safir-not-configured cases; Safir API failures such
+  as `not_bale_user` are recorded as failed delivery results from the sender.
+- Used a short Persian-first message assembled from the existing notification
+  title/body (`نوبت جدید` plus client/service/date/start time from the
+  appointment creation path).
+
+Verification completed:
+
+- `pnpm --filter @repo/notifications test -- notifications.test.ts`
+- `pnpm --filter @repo/notifications test`
+- `pnpm --filter @repo/notifications typecheck`
+- `pnpm --filter @repo/api typecheck`
+
+Remaining notes:
+
+- Delivery has not been exercised with real Safir credentials in this workspace.
+- The delivery table still uses channel `bale`; Safir is distinguished through
+  metadata provider `bale_safir`.
+
+Original implementation notes:
 
 Current appointment creation already calls `createNotificationForUser` for staff
 when a manager creates an appointment for someone else. Extend delivery behavior
@@ -308,7 +472,53 @@ Testing:
 - `NotBaleUser` records a failed/skipped Bale delivery but appointment creation
   still succeeds.
 
-### 7. Manager-Triggered Retention Messages
+### 7. Manager-Triggered Retention Messages - Done 2026-06-07
+
+Implemented manual retention sends:
+
+- Added `client_follow_up_message_deliveries` plus migration
+  `0006_client_follow_up_message_deliveries` to audit manager-triggered client
+  follow-up delivery attempts.
+- Added database helpers to load the follow-up/client/salon send context, fetch
+  the latest provider delivery, and record new delivery rows.
+- Added `POST /api/v1/retention/:id/bale-message`.
+- Kept the route manager-only through the existing retention router middleware.
+- Refused missing follow-ups, non-open follow-ups, missing/invalid client phone
+  numbers, duplicate successful Bale sends, and repeat attempts without an
+  explicit `{ "retry": true }` body.
+- Sent the message through Bale Safir with deterministic request id
+  `retention:<follow_up_id>:bale_safir:v1`.
+- Recorded Safir results with provider `bale_safir`, normalized phone,
+  provider message id, error, sending manager, and sent timestamp when
+  successful.
+- Added route coverage for missing follow-up, invalid phone, duplicate sent
+  delivery, and successful Safir send/audit insert.
+- Added `api.retention.sendBaleMessage(id, { retry })` to the API client.
+- Added a "پیام بله" action to open retention cards in the PWA, with a
+  confirmation dialog before sending.
+- Rendered per-card sent/failed/skipped Bale delivery state after a send attempt
+  without changing the existing reviewed/dismissed flows.
+
+Verification completed:
+
+- `pnpm --filter @repo/api test -- src/routes/retention.test.ts`
+- `pnpm --filter @repo/database typecheck`
+- `pnpm --filter @repo/api typecheck`
+- `pnpm exec tsx scripts/check-db-schema-sync.mjs`
+- `pnpm --filter @repo/api test -- src/routes/retention.test.ts src/routes/messaging.test.ts`
+- `pnpm --filter @repo/api-client test -- api-modules.test.ts`
+- `pnpm --filter @repo/api-client typecheck`
+- `pnpm --filter @repo/pwa typecheck`
+
+Remaining notes:
+
+- Delivery has not been exercised with real Safir credentials in this
+  workspace.
+- Browser smoke still depends on a reachable authenticated local API/database;
+  previous local browser smoke could only reach login because the configured
+  database host refused the connection.
+
+Original implementation notes:
 
 Add manual client retention sending from the existing retention queue.
 
@@ -380,6 +590,24 @@ Testing:
 - Existing Telegram behavior remains unchanged.
 
 ## Verification
+
+Final verification on 2026-06-07:
+
+- `pnpm --filter @repo/notifications test`
+- `pnpm --filter @repo/database test`
+- `pnpm --filter @repo/api test`
+- `pnpm --filter @repo/pwa test`
+- `pnpm --filter @repo/database typecheck`
+- `pnpm --filter @repo/api-client typecheck`
+- `pnpm --filter @repo/api typecheck`
+- `pnpm --filter @repo/pwa typecheck`
+- `pnpm --filter @repo/notifications typecheck`
+- `pnpm --filter @repo/auth typecheck`
+- `pnpm exec tsx scripts/check-db-schema-sync.mjs`
+
+Repo-level `pnpm typecheck` currently stops before running TypeScript because
+Turbo detects the existing `@repo/database` and `@repo/auth` typecheck cycle.
+The package-level typechecks above cover the touched packages.
 
 Run targeted tests first:
 
