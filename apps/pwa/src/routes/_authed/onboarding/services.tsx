@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
@@ -10,12 +10,11 @@ import type {
   CatalogPresetPickerState,
 } from '#/components/catalog-preset-picker'
 import { api } from '#/lib/api-client'
-import { useBumpOfflineData } from '#/lib/manager-data-client'
-import { useManagerServicesQuery } from '#/lib/manager-data-queries'
 import {
-  managerServicesQueryKey,
-  onboardingQueryKey,
-} from '#/lib/query-keys'
+  getApiV1ServicesQueryKey,
+  servicesListQueryOptions,
+} from '#/lib/services-queries'
+import { onboardingQueryKey } from '#/lib/query-keys'
 import { PillCTA, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -29,8 +28,7 @@ function ServicesScreen() {
   const step = ONBOARDING_STEP_BY_ID.services
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const bumpOfflineData = useBumpOfflineData()
-  const servicesQuery = useManagerServicesQuery()
+  const servicesQuery = useQuery(servicesListQueryOptions())
   const pickerRef = useRef<CatalogPresetPickerHandle>(null)
   const [pickerState, setPickerState] = useState<CatalogPresetPickerState>({
     applying: false,
@@ -44,11 +42,10 @@ function ServicesScreen() {
   const hasService = activeCount > 0
 
   const refreshServices = useCallback(async () => {
-    bumpOfflineData()
-    await queryClient.invalidateQueries({ queryKey: managerServicesQueryKey })
+    await queryClient.invalidateQueries({ queryKey: getApiV1ServicesQueryKey() })
     await queryClient.invalidateQueries({ queryKey: onboardingQueryKey })
     await servicesQuery.refetch()
-  }, [bumpOfflineData, queryClient, servicesQuery])
+  }, [queryClient, servicesQuery])
 
   const onContinue = async () => {
     setContinuing(true)
@@ -60,7 +57,6 @@ function ServicesScreen() {
         await refreshServices()
       }
 
-    // Refetch onboarding status so the staff step guard sees `servicesAdded`.
       await queryClient.fetchQuery({
         queryKey: onboardingQueryKey,
         queryFn: ({ signal }) => api.onboarding.get({ signal }),

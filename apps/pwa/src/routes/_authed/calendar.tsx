@@ -17,10 +17,7 @@ import type {
 
 import { api } from '#/lib/api-client'
 import { useAuth } from '#/lib/auth'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import {
-  useManagerServicesQuery,
-} from '#/lib/manager-data-queries'
+import { servicesListQueryOptions } from '#/lib/services-queries'
 import {
   clientsListQueryOptions,
   getApiV1ClientsQueryKey,
@@ -91,7 +88,6 @@ function CalendarPage() {
   const navigate = useNavigate()
   const search = Route.useSearch()
   const { user } = useAuth()
-  const dc = useManagerDataClient()
   const isOnline = useNetworkStatus()
   const isManager = user?.role === 'manager'
   const queryClient = useQueryClient()
@@ -132,7 +128,7 @@ function CalendarPage() {
   })
 
   const staffQuery = useQuery(staffListQueryOptions())
-  const servicesQuery = useManagerServicesQuery(!!dc)
+  const servicesQuery = useQuery(servicesListQueryOptions())
 
   const clientsQuery = useQuery({
     ...clientsListQueryOptions(),

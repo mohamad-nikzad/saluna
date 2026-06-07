@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight,
   ChevronDown,
@@ -27,15 +27,14 @@ import {
 import { Spinner } from '@repo/ui/spinner'
 import { cn } from '@repo/ui/utils'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
-import type {
-  ApplyCatalogPresetSelection,
-  CatalogPresetListItem,
-} from '@repo/data-client'
+import type { ApplyCatalogPresetBody } from '@repo/salon-core/forms/catalog-preset'
 
-import { useManagerDataClient } from '#/lib/manager-data-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
-import { catalogPresetsQueryKey } from '#/lib/query-keys'
+import {
+  catalogPresetsQueryOptions,
+  useApplyCatalogPresetMutation,
+  type CatalogPresetListItem,
+} from '#/lib/services-queries'
 
 export type ApplyPresetResult = {
   importedCategoryIds: string[]
@@ -60,7 +59,7 @@ function variantKey(c: number, f: number, v: number) {
   return `${c}:${f}:${v}`
 }
 
-function allVariantKeys(tree: CatalogPresetTree) {
+function allVariantKeys(tree: CatalogPresetListItem['tree']) {
   const keys: string[] = []
   tree.forEach((category, c) =>
     category.families.forEach((family, f) =>
@@ -71,12 +70,12 @@ function allVariantKeys(tree: CatalogPresetTree) {
 }
 
 function buildSelection(
-  tree: CatalogPresetTree,
+  tree: CatalogPresetListItem['tree'],
   checked: Set<string>,
-): ApplyCatalogPresetSelection {
-  const selection: ApplyCatalogPresetSelection = []
+): ApplyCatalogPresetBody['selection'] {
+  const selection: ApplyCatalogPresetBody['selection'] = []
   tree.forEach((category, c) => {
-    const families: ApplyCatalogPresetSelection[number]['families'] = []
+    const families: ApplyCatalogPresetBody['selection'][number]['families'] = []
     category.families.forEach((family, f) => {
       const variantIndices: number[] = []
       family.variants.forEach((_, v) => {
@@ -109,12 +108,7 @@ export const CatalogPresetPicker = forwardRef<
   },
   ref,
 ) {
-  const dc = useManagerDataClient()
-  const presetsQuery = useQuery({
-    queryKey: catalogPresetsQueryKey,
-    queryFn: () => dc!.services.listCatalogPresets(),
-    enabled: !!dc,
-  })
+  const presetsQuery = useQuery(catalogPresetsQueryOptions())
   const presets = presetsQuery.data ?? []
   const [selected, setSelected] = useState<CatalogPresetListItem | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
@@ -122,20 +116,7 @@ export const CatalogPresetPicker = forwardRef<
     {},
   )
 
-  const applyPreset = useMutation({
-    mutationFn: ({
-      presetId,
-      selection,
-    }: {
-      presetId: string
-      selection: ApplyCatalogPresetSelection
-    }) => {
-      if (!dc) throw new Error('اتصال داده برقرار نیست')
-      return dc.services.applyCatalogPreset(presetId, selection)
-    },
-    meta: { skipToast: true, errorMessage: 'افزودن قالب انجام نشد' },
-    onSuccess: (result) => onApplied(result),
-  })
+  const applyPreset = useApplyCatalogPresetMutation()
 
   const openPreset = (preset: CatalogPresetListItem) => {
     applyPreset.reset()
@@ -169,7 +150,7 @@ export const CatalogPresetPicker = forwardRef<
     })
   }
 
-  const toggleFamily = (tree: CatalogPresetTree, c: number, f: number) => {
+  const toggleFamily = (tree: CatalogPresetListItem['tree'], c: number, f: number) => {
     const family = tree[c].families[f]
     const keys = family.variants.map((_, v) => variantKey(c, f, v))
     const allOn = keys.every((k) => checked.has(k))
@@ -180,7 +161,7 @@ export const CatalogPresetPicker = forwardRef<
     })
   }
 
-  const toggleCategory = (tree: CatalogPresetTree, c: number) => {
+  const toggleCategory = (tree: CatalogPresetListItem['tree'], c: number) => {
     const keys: string[] = []
     tree[c].families.forEach((family, f) =>
       family.variants.forEach((_, v) => keys.push(variantKey(c, f, v))),
@@ -193,20 +174,21 @@ export const CatalogPresetPicker = forwardRef<
     })
   }
 
-  const canApply = Boolean(dc && selected && selection.length > 0)
+  const canApply = Boolean(selected && selection.length > 0)
 
   const onApply = useCallback(async (): Promise<boolean> => {
     if (!selected || selection.length === 0) return false
     try {
-      await applyPreset.mutateAsync({
+      const result = await applyPreset.mutateAsync({
         presetId: selected.id,
         selection,
       })
+      onApplied(result)
       return true
     } catch {
       return false
     }
-  }, [applyPreset, selected, selection])
+  }, [applyPreset, onApplied, selected, selection])
 
   useImperativeHandle(
     ref,

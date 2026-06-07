@@ -29,10 +29,10 @@ import { getMutationErrorMessage } from '#/lib/query-client'
 import { authQueryKey, useAuth } from '#/lib/auth'
 import { homePathForRole } from '#/lib/navigation'
 import { getApiV1ClientsQueryKey } from '#/lib/clients-queries'
+import { getApiV1ServicesQueryKey } from '#/lib/services-queries'
 import { getApiV1StaffQueryKey } from '#/lib/staff-queries'
 import {
   managerBusinessSettingsQueryKey,
-  managerServicesQueryKey,
   onboardingQueryKey,
   salonPresenceQueryKey,
   salonPublicSettingsQueryKey,
@@ -108,7 +108,7 @@ function SignupPage() {
       await queryClient.removeQueries({
         queryKey: managerBusinessSettingsQueryKey,
       })
-      await queryClient.removeQueries({ queryKey: managerServicesQueryKey })
+      await queryClient.removeQueries({ queryKey: getApiV1ServicesQueryKey() })
       await queryClient.removeQueries({ queryKey: getApiV1StaffQueryKey() })
       await queryClient.removeQueries({ queryKey: getApiV1ClientsQueryKey() })
       await queryClient.removeQueries({ queryKey: salonPresenceQueryKey })

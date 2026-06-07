@@ -17,7 +17,7 @@ import { useDismissGuard } from '#/lib/use-dismiss-guard'
 import { serviceCategoryFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceCategoryCreateInput } from '@repo/salon-core/forms/service'
 import type { ServiceCategory } from '@repo/salon-core/types'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import { useSaveServiceCategoryMutation } from '#/lib/services-queries'
 
 interface ServiceCategoryDrawerProps {
   open: boolean
@@ -59,17 +59,7 @@ export function ServiceCategoryDrawer({
 
   const nameValue = useWatch({ control, name: 'name' })
 
-  const saveCategory = useManagerWriteMutation('serviceCategory.save', {
-    dataClientFn: async (dataClient, values: ServiceCategoryCreateInput) => {
-      const payload = serviceCategoryFormSchema.parse(values)
-      if (category) {
-        await dataClient.services.categories.update(category.id, payload)
-      } else {
-        await dataClient.services.categories.create(payload)
-      }
-    },
-    meta: { errorMessage: 'ذخیره بخش انجام نشد' },
-  })
+  const saveCategory = useSaveServiceCategoryMutation(category?.id)
 
   const onSubmit = handleSubmit(async (values) => {
     try {

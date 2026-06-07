@@ -49,9 +49,7 @@ import type {
 } from '@repo/api-client'
 
 import { api } from '#/lib/api-client'
-import {
-  useManagerServicesQuery,
-} from '#/lib/manager-data-queries'
+import { servicesListQueryOptions } from '#/lib/services-queries'
 import { staffListQueryOptions } from '#/lib/staff-queries'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
 import { ClientAvatar } from '#/components/clients/client-visuals'
@@ -299,7 +297,10 @@ function RequestsList({
     ...staffListQueryOptions(),
     enabled: status === 'pending',
   })
-  const { data: servicesData } = useManagerServicesQuery(status === 'pending')
+  const { data: servicesData } = useQuery({
+    ...servicesListQueryOptions(),
+    enabled: status === 'pending',
+  })
 
   const requests = data?.requests
 

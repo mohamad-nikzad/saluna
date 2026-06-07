@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import {
   ChevronDown,
   ChevronLeft,
@@ -34,8 +33,8 @@ import type {
   ServiceFamily,
 } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import { useManagerDataClient } from '#/lib/manager-data-client'
 import { CatalogPresetPicker } from '#/components/catalog-preset-picker'
+import { useImportStarterTemplatesMutation } from '#/lib/services-queries'
 import { ServiceCategoryDrawer } from './service-category-drawer'
 import { ServiceDrawer } from './service-drawer'
 import { ServiceFamilyDrawer } from './service-family-drawer'
@@ -61,7 +60,6 @@ export function ServiceCatalogManager({
   starterImportKey = STARTER_SERVICES_USED_KEY,
   onChanged,
 }: ServiceCatalogManagerProps) {
-  const dc = useManagerDataClient()
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false)
   const [familyDrawerOpen, setFamilyDrawerOpen] = useState(false)
   const [serviceDrawerOpen, setServiceDrawerOpen] = useState(false)
@@ -89,24 +87,16 @@ export function ServiceCatalogManager({
       window.localStorage.getItem(starterImportKey) === '1',
   )
 
-  const importTemplatesMutation = useMutation({
-    mutationFn: () => {
-      if (!dc) {
-        throw new Error('اتصال داده برقرار نیست')
-      }
-      return dc.services.importStarterTemplates()
-    },
-    meta: { errorMessage: 'افزودن لیست آماده انجام نشد' },
-    onSuccess: () => {
-      window.localStorage.setItem(starterImportKey, '1')
-      setStarterImportUsed(true)
-      onChanged()
-    },
-  })
+  const importTemplatesMutation = useImportStarterTemplatesMutation()
 
   const importTemplates = () => {
-    if (!dc) return
-    importTemplatesMutation.mutate()
+    importTemplatesMutation.mutate(undefined, {
+      onSuccess: () => {
+        window.localStorage.setItem(starterImportKey, '1')
+        setStarterImportUsed(true)
+        onChanged()
+      },
+    })
   }
 
   const importing = importTemplatesMutation.isPending

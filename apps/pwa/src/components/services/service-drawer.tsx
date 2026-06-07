@@ -34,9 +34,11 @@ import { calendarColorOptions } from '@repo/brand-tokens/calendar-colors'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { serviceFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceFormInput } from '@repo/salon-core/forms/service'
-import { DataClientHttpError } from '@repo/data-client'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
-import { useComboComponentsQuery } from '#/lib/manager-data-queries'
+import { useQuery } from '@tanstack/react-query'
+import {
+  comboComponentsQueryOptions,
+  useSaveServiceMutation,
+} from '#/lib/services-queries'
 import { LocalizedNumberInput } from '#/components/localized-number-input'
 import { ServicePicker } from './service-picker'
 
@@ -102,7 +104,10 @@ export function ServiceDrawer({
   const [componentIds, setComponentIds] = useState<string[]>([])
   const [initialComponentIds, setInitialComponentIds] = useState<string[]>([])
   const isComboService = service?.kind === 'combo'
-  const comboQuery = useComboComponentsQuery(service?.id, open, isComboService)
+  const comboQuery = useQuery({
+    ...comboComponentsQueryOptions(service!.id),
+    enabled: open && !!service?.id && isComboService,
+  })
   const loadingComponents = comboQuery.isFetching
   const {
     register,
@@ -178,52 +183,7 @@ export function ServiceDrawer({
     setInitialComponentIds(ids)
   }, [comboQuery.data, isComboService, open])
 
-  const saveService = useManagerWriteMutation('service.save', {
-    dataClientFn: async (dataClient, values: ServiceFormInput) => {
-      const payload = serviceFormSchema.parse(values)
-      if (!payload.categoryId) {
-        throw new DataClientHttpError('بخش خدمات را انتخاب کنید', 0, null)
-      }
-      const familyId = payload.familyId ?? null
-      if (isEditing) {
-        const shouldStageComboActivation =
-          payload.kind === 'combo' && payload.active && componentIds.length > 0
-        await dataClient.services.update(service.id, {
-          ...payload,
-          familyId,
-          color: normalizeCalendarColorId(payload.color),
-          active: shouldStageComboActivation ? false : payload.active,
-        })
-        if (payload.kind === 'combo') {
-          await dataClient.services.comboComponents.update(service.id, {
-            componentServiceIds: componentIds,
-          })
-          if (shouldStageComboActivation) {
-            await dataClient.services.update(service.id, { active: true })
-          }
-        }
-        return
-      }
-
-      const shouldStageComboActivation =
-        payload.kind === 'combo' && payload.active && componentIds.length > 0
-      const created = await dataClient.services.create({
-        ...payload,
-        familyId,
-        color: normalizeCalendarColorId(payload.color),
-        active: shouldStageComboActivation ? false : payload.active,
-      })
-      if (payload.kind === 'combo') {
-        await dataClient.services.comboComponents.update(created.id, {
-          componentServiceIds: componentIds,
-        })
-        if (shouldStageComboActivation) {
-          await dataClient.services.update(created.id, { active: true })
-        }
-      }
-    },
-    meta: { errorMessage: 'ذخیره خدمت انجام نشد' },
-  })
+  const saveService = useSaveServiceMutation(service?.id)
 
   const onSubmit = handleSubmit(async (values) => {
     const payload = serviceFormSchema.safeParse(values)
@@ -232,7 +192,7 @@ export function ServiceDrawer({
       return
     }
     try {
-      await saveService.mutateAsync(values)
+      await saveService.mutateAsync({ values, componentIds })
       onSuccess()
     } catch {
       // Toast handled by mutation cache.

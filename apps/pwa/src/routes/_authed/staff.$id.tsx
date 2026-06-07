@@ -16,9 +16,7 @@ import { StaffDetailSkeleton } from '#/components/staff/staff-detail-skeleton'
 import { StaffDetailView } from '#/components/staff/staff-detail-view'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '#/lib/auth'
-import {
-  useManagerServicesQuery,
-} from '#/lib/manager-data-queries'
+import { servicesListQueryOptions } from '#/lib/services-queries'
 import {
   staffListQueryOptions,
   staffScheduleBundleQueryOptions,
@@ -47,7 +45,7 @@ function StaffDetailPage() {
   const navigate = useNavigate()
 
   const staffQuery = useQuery(staffListQueryOptions())
-  const servicesQuery = useManagerServicesQuery()
+  const servicesQuery = useQuery(servicesListQueryOptions())
   const staff = staffQuery.data ?? []
   const servicesList = servicesQuery.data ?? []
 

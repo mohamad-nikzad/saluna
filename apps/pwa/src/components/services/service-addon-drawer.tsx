@@ -35,7 +35,7 @@ import type {
   ServiceAddonFormPayload,
   ServiceAddonScopeInput,
 } from '@repo/salon-core/forms/service'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import { useSaveServiceAddonMutation } from '#/lib/services-queries'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
 import { LocalizedNumberInput } from '#/components/localized-number-input'
 
@@ -166,19 +166,7 @@ export function ServiceAddonDrawer({
     )
   }
 
-  const saveAddon = useManagerWriteMutation('serviceAddon.save', {
-    dataClientFn: async (dataClient, values: ServiceAddonFormPayload) => {
-      if (isEditing && addon) {
-        await dataClient.services.addons.update(addon.id, values)
-      } else {
-        await dataClient.services.addons.create(values)
-      }
-    },
-    meta: {
-      errorMessage: 'ذخیره افزودنی انجام نشد',
-      invalidatesQuery: ['manager', 'addons'],
-    },
-  })
+  const saveAddon = useSaveServiceAddonMutation(addon?.id)
 
   const onSubmit = handleSubmit(async (values) => {
     try {

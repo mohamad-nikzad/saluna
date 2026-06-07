@@ -56,10 +56,4 @@ describe('manager-write-policy', () => {
     ).not.toThrow()
   })
 
-  it('queues catalog writes offline', () => {
-    expect(getWritePolicy('serviceCategory.save')).toBe('queue-offline')
-    expect(getWritePolicy('serviceFamily.save')).toBe('queue-offline')
-    expect(getWritePolicy('serviceAddon.save')).toBe('queue-offline')
-    expect(writePolicyUsesDataClient('serviceCategory.save')).toBe(true)
-  })
 })

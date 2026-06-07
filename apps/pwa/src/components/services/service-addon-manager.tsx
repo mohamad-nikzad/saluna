@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Banknote, Clock3, Pencil, Plus, Search, Sparkles } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
@@ -13,10 +12,12 @@ import type {
   ServiceFamily,
 } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import { useManagerAddonsQuery } from '#/lib/manager-data-queries'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  addonsListQueryOptions,
+  getApiV1ServiceAddonsQueryKey,
+} from '#/lib/services-queries'
 import { getMutationErrorMessage } from '#/lib/query-client'
-import { managerAddonsQueryKey } from '#/lib/query-keys'
 import { ServiceAddonDrawer } from './service-addon-drawer'
 
 interface ServiceAddonManagerProps {
@@ -51,9 +52,12 @@ export function ServiceAddonManager({
   services,
   onChanged,
 }: ServiceAddonManagerProps) {
-  const dc = useManagerDataClient()
   const queryClient = useQueryClient()
-  const { data: addons = [], isPending, error } = useManagerAddonsQuery(!!dc)
+  const {
+    data: addons = [],
+    isPending,
+    error,
+  } = useQuery(addonsListQueryOptions())
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedAddon, setSelectedAddon] = useState<ServiceAddon | null>(null)
   const [search, setSearch] = useState('')
@@ -82,7 +86,9 @@ export function ServiceAddonManager({
   const handleSuccess = () => {
     setDrawerOpen(false)
     setSelectedAddon(null)
-    void queryClient.invalidateQueries({ queryKey: managerAddonsQueryKey })
+    void queryClient.invalidateQueries({
+      queryKey: getApiV1ServiceAddonsQueryKey({ query: { all: '1' } }),
+    })
     onChanged()
   }
 

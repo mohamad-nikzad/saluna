@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@repo/ui/button'
@@ -9,12 +9,7 @@ import { brand } from '@repo/brand'
 import { ServiceAddonManager } from '#/components/services/service-addon-manager'
 import { ServiceCatalogManager } from '#/components/services/service-catalog-manager'
 import { useAuth } from '#/lib/auth'
-import {
-  useBumpOfflineData,
-  useManagerDataClient,
-} from '#/lib/manager-data-client'
-import { useManagerServiceCatalogQuery } from '#/lib/manager-data-queries'
-import { managerServiceCatalogQueryKey, managerServicesQueryKey } from '#/lib/query-keys'
+import { serviceCatalogQueryOptions } from '#/lib/services-queries'
 
 export const Route = createFileRoute('/_authed/services')({
   beforeLoad: ({ context }) => {
@@ -60,26 +55,22 @@ function ServicesPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user } = useAuth()
-  const dc = useManagerDataClient()
-  const bumpOfflineData = useBumpOfflineData()
 
-  const catalogQuery = useManagerServiceCatalogQuery(
-    !!dc && user?.role === 'manager',
-  )
+  const catalogQuery = useQuery({
+    ...serviceCatalogQueryOptions(),
+    enabled: user?.role === 'manager',
+  })
   const categories = catalogQuery.data?.categories ?? []
   const families = catalogQuery.data?.families ?? []
   const services = catalogQuery.data?.services ?? []
 
   const refreshCatalog = () => {
     void queryClient.invalidateQueries({
-      queryKey: managerServiceCatalogQueryKey,
-    })
-    void queryClient.invalidateQueries({
-      queryKey: managerServicesQueryKey,
+      queryKey: serviceCatalogQueryOptions().queryKey,
     })
   }
 
-  if (catalogQuery.isPending && !!dc) {
+  if (catalogQuery.isPending) {
     return <ServicesSkeleton />
   }
 
@@ -110,19 +101,14 @@ function ServicesPage() {
           services={services}
           categories={categories}
           families={families}
-          onChanged={() => {
-            bumpOfflineData()
-          }}
+          onChanged={refreshCatalog}
         />
         <ServiceCatalogManager
           services={services}
           categories={categories}
           families={families}
           starterImportKey={brand.storage.starterServicesUsed(user.salonId)}
-          onChanged={() => {
-            refreshCatalog()
-            bumpOfflineData()
-          }}
+          onChanged={refreshCatalog}
         />
       </div>
     </div>

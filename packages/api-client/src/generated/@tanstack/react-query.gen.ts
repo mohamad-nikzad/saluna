@@ -3,8 +3,8 @@
 import { queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { deleteApiV1StaffById, getApiV1Clients, getApiV1ClientsById, getApiV1ClientsByIdSummary, getApiV1Staff, getApiV1StaffBookingAvailability, getApiV1StaffByIdSchedule, type Options, patchApiV1ClientsById, patchApiV1StaffById, patchApiV1StaffByIdPassword, patchApiV1StaffByIdServices, postApiV1Clients, postApiV1ClientsByIdFollowUps, postApiV1Staff, putApiV1StaffByIdSchedule } from '../sdk.gen';
-import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdError, DeleteApiV1StaffByIdResponse, GetApiV1ClientsByIdData, GetApiV1ClientsByIdError, GetApiV1ClientsByIdResponse, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryError, GetApiV1ClientsByIdSummaryResponse, GetApiV1ClientsData, GetApiV1ClientsError, GetApiV1ClientsResponse, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityError, GetApiV1StaffBookingAvailabilityResponse, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleError, GetApiV1StaffByIdScheduleResponse, GetApiV1StaffData, GetApiV1StaffError, GetApiV1StaffResponse, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdError, PatchApiV1ClientsByIdResponse, PatchApiV1StaffByIdData, PatchApiV1StaffByIdError, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordError, PatchApiV1StaffByIdPasswordResponse, PatchApiV1StaffByIdResponse, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesError, PatchApiV1StaffByIdServicesResponse, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsError, PostApiV1ClientsByIdFollowUpsResponse, PostApiV1ClientsData, PostApiV1ClientsError, PostApiV1ClientsResponse, PostApiV1StaffData, PostApiV1StaffError, PostApiV1StaffResponse, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleError, PutApiV1StaffByIdScheduleResponse } from '../types.gen';
+import { deleteApiV1StaffById, getApiV1CatalogPresets, getApiV1Clients, getApiV1ClientsById, getApiV1ClientsByIdSummary, getApiV1ServiceAddons, getApiV1ServiceCategories, getApiV1ServiceFamilies, getApiV1Services, getApiV1ServicesById, getApiV1ServicesByIdAddons, getApiV1ServicesByIdComboComponents, getApiV1Staff, getApiV1StaffBookingAvailability, getApiV1StaffByIdSchedule, type Options, patchApiV1ClientsById, patchApiV1ServiceAddonsById, patchApiV1ServiceCategoriesById, patchApiV1ServiceFamiliesById, patchApiV1ServicesById, patchApiV1StaffById, patchApiV1StaffByIdPassword, patchApiV1StaffByIdServices, postApiV1CatalogPresetsByIdApply, postApiV1Clients, postApiV1ClientsByIdFollowUps, postApiV1ServiceAddons, postApiV1ServiceCategories, postApiV1ServiceFamilies, postApiV1Services, postApiV1ServicesImportStarterTemplates, postApiV1Staff, putApiV1ServicesByIdComboComponents, putApiV1StaffByIdSchedule } from '../sdk.gen';
+import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdError, DeleteApiV1StaffByIdResponse, GetApiV1CatalogPresetsData, GetApiV1CatalogPresetsError, GetApiV1CatalogPresetsResponse, GetApiV1ClientsByIdData, GetApiV1ClientsByIdError, GetApiV1ClientsByIdResponse, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryError, GetApiV1ClientsByIdSummaryResponse, GetApiV1ClientsData, GetApiV1ClientsError, GetApiV1ClientsResponse, GetApiV1ServiceAddonsData, GetApiV1ServiceAddonsError, GetApiV1ServiceAddonsResponse, GetApiV1ServiceCategoriesData, GetApiV1ServiceCategoriesError, GetApiV1ServiceCategoriesResponse, GetApiV1ServiceFamiliesData, GetApiV1ServiceFamiliesError, GetApiV1ServiceFamiliesResponse, GetApiV1ServicesByIdAddonsData, GetApiV1ServicesByIdAddonsError, GetApiV1ServicesByIdAddonsResponse, GetApiV1ServicesByIdComboComponentsData, GetApiV1ServicesByIdComboComponentsError, GetApiV1ServicesByIdComboComponentsResponse, GetApiV1ServicesByIdData, GetApiV1ServicesByIdError, GetApiV1ServicesByIdResponse, GetApiV1ServicesData, GetApiV1ServicesError, GetApiV1ServicesResponse, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityError, GetApiV1StaffBookingAvailabilityResponse, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleError, GetApiV1StaffByIdScheduleResponse, GetApiV1StaffData, GetApiV1StaffError, GetApiV1StaffResponse, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdError, PatchApiV1ClientsByIdResponse, PatchApiV1ServiceAddonsByIdData, PatchApiV1ServiceAddonsByIdError, PatchApiV1ServiceAddonsByIdResponse, PatchApiV1ServiceCategoriesByIdData, PatchApiV1ServiceCategoriesByIdError, PatchApiV1ServiceCategoriesByIdResponse, PatchApiV1ServiceFamiliesByIdData, PatchApiV1ServiceFamiliesByIdError, PatchApiV1ServiceFamiliesByIdResponse, PatchApiV1ServicesByIdData, PatchApiV1ServicesByIdError, PatchApiV1ServicesByIdResponse, PatchApiV1StaffByIdData, PatchApiV1StaffByIdError, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordError, PatchApiV1StaffByIdPasswordResponse, PatchApiV1StaffByIdResponse, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesError, PatchApiV1StaffByIdServicesResponse, PostApiV1CatalogPresetsByIdApplyData, PostApiV1CatalogPresetsByIdApplyError, PostApiV1CatalogPresetsByIdApplyResponse, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsError, PostApiV1ClientsByIdFollowUpsResponse, PostApiV1ClientsData, PostApiV1ClientsError, PostApiV1ClientsResponse, PostApiV1ServiceAddonsData, PostApiV1ServiceAddonsError, PostApiV1ServiceAddonsResponse, PostApiV1ServiceCategoriesData, PostApiV1ServiceCategoriesError, PostApiV1ServiceCategoriesResponse, PostApiV1ServiceFamiliesData, PostApiV1ServiceFamiliesError, PostApiV1ServiceFamiliesResponse, PostApiV1ServicesData, PostApiV1ServicesError, PostApiV1ServicesImportStarterTemplatesData, PostApiV1ServicesImportStarterTemplatesError, PostApiV1ServicesImportStarterTemplatesResponse, PostApiV1ServicesResponse, PostApiV1StaffData, PostApiV1StaffError, PostApiV1StaffResponse, PutApiV1ServicesByIdComboComponentsData, PutApiV1ServicesByIdComboComponentsError, PutApiV1ServicesByIdComboComponentsResponse, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleError, PutApiV1StaffByIdScheduleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -294,6 +294,337 @@ export const patchApiV1StaffByIdServicesMutation = (options?: Partial<Options<Pa
     const mutationOptions: UseMutationOptions<PatchApiV1StaffByIdServicesResponse, PatchApiV1StaffByIdServicesError, Options<PatchApiV1StaffByIdServicesData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await patchApiV1StaffByIdServices({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServicesQueryKey = (options?: Options<GetApiV1ServicesData>) => createQueryKey('getApiV1Services', options);
+
+/**
+ * List services
+ */
+export const getApiV1ServicesOptions = (options?: Options<GetApiV1ServicesData>) => queryOptions<GetApiV1ServicesResponse, GetApiV1ServicesError, GetApiV1ServicesResponse, ReturnType<typeof getApiV1ServicesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1Services({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServicesQueryKey(options)
+});
+
+/**
+ * Create service
+ */
+export const postApiV1ServicesMutation = (options?: Partial<Options<PostApiV1ServicesData>>): UseMutationOptions<PostApiV1ServicesResponse, PostApiV1ServicesError, Options<PostApiV1ServicesData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1ServicesResponse, PostApiV1ServicesError, Options<PostApiV1ServicesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1Services({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Import starter service templates
+ */
+export const postApiV1ServicesImportStarterTemplatesMutation = (options?: Partial<Options<PostApiV1ServicesImportStarterTemplatesData>>): UseMutationOptions<PostApiV1ServicesImportStarterTemplatesResponse, PostApiV1ServicesImportStarterTemplatesError, Options<PostApiV1ServicesImportStarterTemplatesData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1ServicesImportStarterTemplatesResponse, PostApiV1ServicesImportStarterTemplatesError, Options<PostApiV1ServicesImportStarterTemplatesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1ServicesImportStarterTemplates({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServicesByIdQueryKey = (options: Options<GetApiV1ServicesByIdData>) => createQueryKey('getApiV1ServicesById', options);
+
+/**
+ * Get service
+ */
+export const getApiV1ServicesByIdOptions = (options: Options<GetApiV1ServicesByIdData>) => queryOptions<GetApiV1ServicesByIdResponse, GetApiV1ServicesByIdError, GetApiV1ServicesByIdResponse, ReturnType<typeof getApiV1ServicesByIdQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServicesById({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServicesByIdQueryKey(options)
+});
+
+/**
+ * Update service
+ */
+export const patchApiV1ServicesByIdMutation = (options?: Partial<Options<PatchApiV1ServicesByIdData>>): UseMutationOptions<PatchApiV1ServicesByIdResponse, PatchApiV1ServicesByIdError, Options<PatchApiV1ServicesByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1ServicesByIdResponse, PatchApiV1ServicesByIdError, Options<PatchApiV1ServicesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1ServicesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServicesByIdAddonsQueryKey = (options: Options<GetApiV1ServicesByIdAddonsData>) => createQueryKey('getApiV1ServicesByIdAddons', options);
+
+/**
+ * List active addons for a service
+ */
+export const getApiV1ServicesByIdAddonsOptions = (options: Options<GetApiV1ServicesByIdAddonsData>) => queryOptions<GetApiV1ServicesByIdAddonsResponse, GetApiV1ServicesByIdAddonsError, GetApiV1ServicesByIdAddonsResponse, ReturnType<typeof getApiV1ServicesByIdAddonsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServicesByIdAddons({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServicesByIdAddonsQueryKey(options)
+});
+
+export const getApiV1ServicesByIdComboComponentsQueryKey = (options: Options<GetApiV1ServicesByIdComboComponentsData>) => createQueryKey('getApiV1ServicesByIdComboComponents', options);
+
+/**
+ * Get combo service components
+ */
+export const getApiV1ServicesByIdComboComponentsOptions = (options: Options<GetApiV1ServicesByIdComboComponentsData>) => queryOptions<GetApiV1ServicesByIdComboComponentsResponse, GetApiV1ServicesByIdComboComponentsError, GetApiV1ServicesByIdComboComponentsResponse, ReturnType<typeof getApiV1ServicesByIdComboComponentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServicesByIdComboComponents({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServicesByIdComboComponentsQueryKey(options)
+});
+
+/**
+ * Replace combo service components
+ */
+export const putApiV1ServicesByIdComboComponentsMutation = (options?: Partial<Options<PutApiV1ServicesByIdComboComponentsData>>): UseMutationOptions<PutApiV1ServicesByIdComboComponentsResponse, PutApiV1ServicesByIdComboComponentsError, Options<PutApiV1ServicesByIdComboComponentsData>> => {
+    const mutationOptions: UseMutationOptions<PutApiV1ServicesByIdComboComponentsResponse, PutApiV1ServicesByIdComboComponentsError, Options<PutApiV1ServicesByIdComboComponentsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putApiV1ServicesByIdComboComponents({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServiceCategoriesQueryKey = (options?: Options<GetApiV1ServiceCategoriesData>) => createQueryKey('getApiV1ServiceCategories', options);
+
+/**
+ * List service categories
+ */
+export const getApiV1ServiceCategoriesOptions = (options?: Options<GetApiV1ServiceCategoriesData>) => queryOptions<GetApiV1ServiceCategoriesResponse, GetApiV1ServiceCategoriesError, GetApiV1ServiceCategoriesResponse, ReturnType<typeof getApiV1ServiceCategoriesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServiceCategories({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServiceCategoriesQueryKey(options)
+});
+
+/**
+ * Create service category
+ */
+export const postApiV1ServiceCategoriesMutation = (options?: Partial<Options<PostApiV1ServiceCategoriesData>>): UseMutationOptions<PostApiV1ServiceCategoriesResponse, PostApiV1ServiceCategoriesError, Options<PostApiV1ServiceCategoriesData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1ServiceCategoriesResponse, PostApiV1ServiceCategoriesError, Options<PostApiV1ServiceCategoriesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1ServiceCategories({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update service category
+ */
+export const patchApiV1ServiceCategoriesByIdMutation = (options?: Partial<Options<PatchApiV1ServiceCategoriesByIdData>>): UseMutationOptions<PatchApiV1ServiceCategoriesByIdResponse, PatchApiV1ServiceCategoriesByIdError, Options<PatchApiV1ServiceCategoriesByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1ServiceCategoriesByIdResponse, PatchApiV1ServiceCategoriesByIdError, Options<PatchApiV1ServiceCategoriesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1ServiceCategoriesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServiceFamiliesQueryKey = (options?: Options<GetApiV1ServiceFamiliesData>) => createQueryKey('getApiV1ServiceFamilies', options);
+
+/**
+ * List service families
+ */
+export const getApiV1ServiceFamiliesOptions = (options?: Options<GetApiV1ServiceFamiliesData>) => queryOptions<GetApiV1ServiceFamiliesResponse, GetApiV1ServiceFamiliesError, GetApiV1ServiceFamiliesResponse, ReturnType<typeof getApiV1ServiceFamiliesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServiceFamilies({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServiceFamiliesQueryKey(options)
+});
+
+/**
+ * Create service family
+ */
+export const postApiV1ServiceFamiliesMutation = (options?: Partial<Options<PostApiV1ServiceFamiliesData>>): UseMutationOptions<PostApiV1ServiceFamiliesResponse, PostApiV1ServiceFamiliesError, Options<PostApiV1ServiceFamiliesData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1ServiceFamiliesResponse, PostApiV1ServiceFamiliesError, Options<PostApiV1ServiceFamiliesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1ServiceFamilies({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update service family
+ */
+export const patchApiV1ServiceFamiliesByIdMutation = (options?: Partial<Options<PatchApiV1ServiceFamiliesByIdData>>): UseMutationOptions<PatchApiV1ServiceFamiliesByIdResponse, PatchApiV1ServiceFamiliesByIdError, Options<PatchApiV1ServiceFamiliesByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1ServiceFamiliesByIdResponse, PatchApiV1ServiceFamiliesByIdError, Options<PatchApiV1ServiceFamiliesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1ServiceFamiliesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1ServiceAddonsQueryKey = (options?: Options<GetApiV1ServiceAddonsData>) => createQueryKey('getApiV1ServiceAddons', options);
+
+/**
+ * List service addons
+ */
+export const getApiV1ServiceAddonsOptions = (options?: Options<GetApiV1ServiceAddonsData>) => queryOptions<GetApiV1ServiceAddonsResponse, GetApiV1ServiceAddonsError, GetApiV1ServiceAddonsResponse, ReturnType<typeof getApiV1ServiceAddonsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1ServiceAddons({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1ServiceAddonsQueryKey(options)
+});
+
+/**
+ * Create service addon
+ */
+export const postApiV1ServiceAddonsMutation = (options?: Partial<Options<PostApiV1ServiceAddonsData>>): UseMutationOptions<PostApiV1ServiceAddonsResponse, PostApiV1ServiceAddonsError, Options<PostApiV1ServiceAddonsData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1ServiceAddonsResponse, PostApiV1ServiceAddonsError, Options<PostApiV1ServiceAddonsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1ServiceAddons({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update service addon
+ */
+export const patchApiV1ServiceAddonsByIdMutation = (options?: Partial<Options<PatchApiV1ServiceAddonsByIdData>>): UseMutationOptions<PatchApiV1ServiceAddonsByIdResponse, PatchApiV1ServiceAddonsByIdError, Options<PatchApiV1ServiceAddonsByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1ServiceAddonsByIdResponse, PatchApiV1ServiceAddonsByIdError, Options<PatchApiV1ServiceAddonsByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1ServiceAddonsById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1CatalogPresetsQueryKey = (options?: Options<GetApiV1CatalogPresetsData>) => createQueryKey('getApiV1CatalogPresets', options);
+
+/**
+ * List active catalog presets
+ */
+export const getApiV1CatalogPresetsOptions = (options?: Options<GetApiV1CatalogPresetsData>) => queryOptions<GetApiV1CatalogPresetsResponse, GetApiV1CatalogPresetsError, GetApiV1CatalogPresetsResponse, ReturnType<typeof getApiV1CatalogPresetsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1CatalogPresets({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1CatalogPresetsQueryKey(options)
+});
+
+/**
+ * Apply catalog preset selection
+ */
+export const postApiV1CatalogPresetsByIdApplyMutation = (options?: Partial<Options<PostApiV1CatalogPresetsByIdApplyData>>): UseMutationOptions<PostApiV1CatalogPresetsByIdApplyResponse, PostApiV1CatalogPresetsByIdApplyError, Options<PostApiV1CatalogPresetsByIdApplyData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1CatalogPresetsByIdApplyResponse, PostApiV1CatalogPresetsByIdApplyError, Options<PostApiV1CatalogPresetsByIdApplyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1CatalogPresetsByIdApply({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

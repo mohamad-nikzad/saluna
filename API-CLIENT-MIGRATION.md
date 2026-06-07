@@ -21,7 +21,8 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 | 7. App foundation | ✅ Done | `generated-api-client.ts` wired at PWA startup; dual-run with legacy |
 | 8. Clients (pilot) | ✅ Done | List/detail/CRUD on generated query/mutation options; online-only |
 | 9. Staff | ✅ Done | OpenAPI staff routes; PWA staff screens on generated query/mutation options |
-| 10–16. Vertical slices | ⏳ Planned | OpenAPI + app migration per route group (see below) |
+| 10. Services catalog | ✅ Done | OpenAPI services/categories/families/addons/catalog-presets; PWA catalog on generated options |
+| 11–16. Vertical slices | ⏳ Planned | OpenAPI + app migration per route group (see below) |
 | 17. data-client removal | ⏳ Planned | Drop offline layer after CRUD slices proven |
 | 18. Web public API | ⏳ Planned | `apps/web` raw fetch → generated SDK |
 | 19. Native app | ⏳ Deferred | Not in prod — migrate when scoped |
@@ -519,8 +520,8 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 | Route group | OpenAPI | Legacy module | data-client module |
 |-------------|---------|---------------|-------------------|
 | clients | ✅ | `legacy/clients.ts` | `clients-module` |
-| staff | ❌ | `legacy/staff.ts` | `staff-module` |
-| services (+ categories, families, addons) | ❌ | `legacy/services.ts` | `services-module` |
+| staff | ✅ | `legacy/staff.ts` | `staff-module` |
+| services (+ categories, families, addons) | ✅ | `legacy/services.ts` | `services-module` |
 | appointments (+ availability) | ❌ | `legacy/appointments.ts` | `appointments-module` |
 | appointment-requests | ❌ | `legacy/appointment-requests.ts` | — |
 | business-settings | ❌ | `legacy/business-settings.ts` | `business-settings-module` |
@@ -568,7 +569,9 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 
 **Phase 8 (clients) done:** no `client.save` in write policy; no offline guards in `clients-queries.ts` or clients screens.
 
-**Phase 9+ (staff, services, …):** same rule — generated `*-queries.ts` hooks use `postApiV1*Mutation` / `patchApiV1*Mutation` directly; drop `staff.create` / `staff.update` / etc. from write policy when staff slice migrates.
+**Phase 9 (staff) done:** no `staff.*` in write policy; staff screens use `staff-queries.ts`.
+
+**Phase 10 (services) done:** no `service.save` / `serviceCategory.save` / `serviceFamily.save` / `serviceAddon.save` in write policy; catalog screens use `services-queries.ts`.
 
 ---
 
@@ -895,7 +898,7 @@ Phase 20  Legacy cleanup
  ✅ 7.  Wire configureGeneratedApiClient() in PWA (dual-run; no screen changes)
  ✅ 8.  Clients slice (OpenAPI ✅) — replace legacy + data-client
  ✅ 9.  OpenAPI staff → migrate staff screens
- → 10. OpenAPI services → migrate catalog
+ ✅ 10. OpenAPI services → migrate catalog
  → 11. OpenAPI appointments → migrate calendar
  → 12. OpenAPI appointment-requests → migrate requests inbox
  → 13. OpenAPI settings/public → migrate settings + public page
@@ -936,7 +939,7 @@ Phase 20  Legacy cleanup
 - [x] Phase 7: Wire `configureGeneratedApiClient()` in PWA (dual-run with legacy)
 - [x] Phase 8: Clients slice — generated query/mutation + invalidation; drop clients data-client path
 - [x] Phase 9: OpenAPI staff + migrate staff screens
-- [ ] Phase 10: OpenAPI services catalog + migrate services screens
+- [x] Phase 10: OpenAPI services catalog + migrate services screens
 - [ ] Phase 11: OpenAPI appointments + migrate calendar
 - [ ] Phase 12: OpenAPI appointment-requests + migrate requests
 - [ ] Phase 13: OpenAPI settings/public + migrate settings & public page

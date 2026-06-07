@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdErrors, DeleteApiV1StaffByIdResponses, GetApiV1ClientsByIdData, GetApiV1ClientsByIdErrors, GetApiV1ClientsByIdResponses, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryErrors, GetApiV1ClientsByIdSummaryResponses, GetApiV1ClientsData, GetApiV1ClientsErrors, GetApiV1ClientsResponses, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityErrors, GetApiV1StaffBookingAvailabilityResponses, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleErrors, GetApiV1StaffByIdScheduleResponses, GetApiV1StaffData, GetApiV1StaffErrors, GetApiV1StaffResponses, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdErrors, PatchApiV1ClientsByIdResponses, PatchApiV1StaffByIdData, PatchApiV1StaffByIdErrors, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordErrors, PatchApiV1StaffByIdPasswordResponses, PatchApiV1StaffByIdResponses, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesErrors, PatchApiV1StaffByIdServicesResponses, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsErrors, PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsData, PostApiV1ClientsErrors, PostApiV1ClientsResponses, PostApiV1StaffData, PostApiV1StaffErrors, PostApiV1StaffResponses, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleErrors, PutApiV1StaffByIdScheduleResponses } from './types.gen';
+import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdErrors, DeleteApiV1StaffByIdResponses, GetApiV1CatalogPresetsData, GetApiV1CatalogPresetsErrors, GetApiV1CatalogPresetsResponses, GetApiV1ClientsByIdData, GetApiV1ClientsByIdErrors, GetApiV1ClientsByIdResponses, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryErrors, GetApiV1ClientsByIdSummaryResponses, GetApiV1ClientsData, GetApiV1ClientsErrors, GetApiV1ClientsResponses, GetApiV1ServiceAddonsData, GetApiV1ServiceAddonsErrors, GetApiV1ServiceAddonsResponses, GetApiV1ServiceCategoriesData, GetApiV1ServiceCategoriesErrors, GetApiV1ServiceCategoriesResponses, GetApiV1ServiceFamiliesData, GetApiV1ServiceFamiliesErrors, GetApiV1ServiceFamiliesResponses, GetApiV1ServicesByIdAddonsData, GetApiV1ServicesByIdAddonsErrors, GetApiV1ServicesByIdAddonsResponses, GetApiV1ServicesByIdComboComponentsData, GetApiV1ServicesByIdComboComponentsErrors, GetApiV1ServicesByIdComboComponentsResponses, GetApiV1ServicesByIdData, GetApiV1ServicesByIdErrors, GetApiV1ServicesByIdResponses, GetApiV1ServicesData, GetApiV1ServicesErrors, GetApiV1ServicesResponses, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityErrors, GetApiV1StaffBookingAvailabilityResponses, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleErrors, GetApiV1StaffByIdScheduleResponses, GetApiV1StaffData, GetApiV1StaffErrors, GetApiV1StaffResponses, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdErrors, PatchApiV1ClientsByIdResponses, PatchApiV1ServiceAddonsByIdData, PatchApiV1ServiceAddonsByIdErrors, PatchApiV1ServiceAddonsByIdResponses, PatchApiV1ServiceCategoriesByIdData, PatchApiV1ServiceCategoriesByIdErrors, PatchApiV1ServiceCategoriesByIdResponses, PatchApiV1ServiceFamiliesByIdData, PatchApiV1ServiceFamiliesByIdErrors, PatchApiV1ServiceFamiliesByIdResponses, PatchApiV1ServicesByIdData, PatchApiV1ServicesByIdErrors, PatchApiV1ServicesByIdResponses, PatchApiV1StaffByIdData, PatchApiV1StaffByIdErrors, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordErrors, PatchApiV1StaffByIdPasswordResponses, PatchApiV1StaffByIdResponses, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesErrors, PatchApiV1StaffByIdServicesResponses, PostApiV1CatalogPresetsByIdApplyData, PostApiV1CatalogPresetsByIdApplyErrors, PostApiV1CatalogPresetsByIdApplyResponses, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsErrors, PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsData, PostApiV1ClientsErrors, PostApiV1ClientsResponses, PostApiV1ServiceAddonsData, PostApiV1ServiceAddonsErrors, PostApiV1ServiceAddonsResponses, PostApiV1ServiceCategoriesData, PostApiV1ServiceCategoriesErrors, PostApiV1ServiceCategoriesResponses, PostApiV1ServiceFamiliesData, PostApiV1ServiceFamiliesErrors, PostApiV1ServiceFamiliesResponses, PostApiV1ServicesData, PostApiV1ServicesErrors, PostApiV1ServicesImportStarterTemplatesData, PostApiV1ServicesImportStarterTemplatesErrors, PostApiV1ServicesImportStarterTemplatesResponses, PostApiV1ServicesResponses, PostApiV1StaffData, PostApiV1StaffErrors, PostApiV1StaffResponses, PutApiV1ServicesByIdComboComponentsData, PutApiV1ServicesByIdComboComponentsErrors, PutApiV1ServicesByIdComboComponentsResponses, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleErrors, PutApiV1StaffByIdScheduleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -146,6 +146,171 @@ export const putApiV1StaffByIdSchedule = <ThrowOnError extends boolean = false>(
  */
 export const patchApiV1StaffByIdServices = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1StaffByIdServicesData, ThrowOnError>): RequestResult<PatchApiV1StaffByIdServicesResponses, PatchApiV1StaffByIdServicesErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1StaffByIdServicesResponses, PatchApiV1StaffByIdServicesErrors, ThrowOnError>({
     url: '/api/v1/staff/{id}/services',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List services
+ */
+export const getApiV1Services = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1ServicesData, ThrowOnError>): RequestResult<GetApiV1ServicesResponses, GetApiV1ServicesErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1ServicesResponses, GetApiV1ServicesErrors, ThrowOnError>({ url: '/api/v1/services', ...options });
+
+/**
+ * Create service
+ */
+export const postApiV1Services = <ThrowOnError extends boolean = false>(options: Options<PostApiV1ServicesData, ThrowOnError>): RequestResult<PostApiV1ServicesResponses, PostApiV1ServicesErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1ServicesResponses, PostApiV1ServicesErrors, ThrowOnError>({
+    url: '/api/v1/services',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Import starter service templates
+ */
+export const postApiV1ServicesImportStarterTemplates = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1ServicesImportStarterTemplatesData, ThrowOnError>): RequestResult<PostApiV1ServicesImportStarterTemplatesResponses, PostApiV1ServicesImportStarterTemplatesErrors, ThrowOnError> => (options?.client ?? client).post<PostApiV1ServicesImportStarterTemplatesResponses, PostApiV1ServicesImportStarterTemplatesErrors, ThrowOnError>({ url: '/api/v1/services/import-starter-templates', ...options });
+
+/**
+ * Get service
+ */
+export const getApiV1ServicesById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1ServicesByIdData, ThrowOnError>): RequestResult<GetApiV1ServicesByIdResponses, GetApiV1ServicesByIdErrors, ThrowOnError> => (options.client ?? client).get<GetApiV1ServicesByIdResponses, GetApiV1ServicesByIdErrors, ThrowOnError>({ url: '/api/v1/services/{id}', ...options });
+
+/**
+ * Update service
+ */
+export const patchApiV1ServicesById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1ServicesByIdData, ThrowOnError>): RequestResult<PatchApiV1ServicesByIdResponses, PatchApiV1ServicesByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1ServicesByIdResponses, PatchApiV1ServicesByIdErrors, ThrowOnError>({
+    url: '/api/v1/services/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List active addons for a service
+ */
+export const getApiV1ServicesByIdAddons = <ThrowOnError extends boolean = false>(options: Options<GetApiV1ServicesByIdAddonsData, ThrowOnError>): RequestResult<GetApiV1ServicesByIdAddonsResponses, GetApiV1ServicesByIdAddonsErrors, ThrowOnError> => (options.client ?? client).get<GetApiV1ServicesByIdAddonsResponses, GetApiV1ServicesByIdAddonsErrors, ThrowOnError>({ url: '/api/v1/services/{id}/addons', ...options });
+
+/**
+ * Get combo service components
+ */
+export const getApiV1ServicesByIdComboComponents = <ThrowOnError extends boolean = false>(options: Options<GetApiV1ServicesByIdComboComponentsData, ThrowOnError>): RequestResult<GetApiV1ServicesByIdComboComponentsResponses, GetApiV1ServicesByIdComboComponentsErrors, ThrowOnError> => (options.client ?? client).get<GetApiV1ServicesByIdComboComponentsResponses, GetApiV1ServicesByIdComboComponentsErrors, ThrowOnError>({ url: '/api/v1/services/{id}/combo-components', ...options });
+
+/**
+ * Replace combo service components
+ */
+export const putApiV1ServicesByIdComboComponents = <ThrowOnError extends boolean = false>(options: Options<PutApiV1ServicesByIdComboComponentsData, ThrowOnError>): RequestResult<PutApiV1ServicesByIdComboComponentsResponses, PutApiV1ServicesByIdComboComponentsErrors, ThrowOnError> => (options.client ?? client).put<PutApiV1ServicesByIdComboComponentsResponses, PutApiV1ServicesByIdComboComponentsErrors, ThrowOnError>({
+    url: '/api/v1/services/{id}/combo-components',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List service categories
+ */
+export const getApiV1ServiceCategories = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1ServiceCategoriesData, ThrowOnError>): RequestResult<GetApiV1ServiceCategoriesResponses, GetApiV1ServiceCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1ServiceCategoriesResponses, GetApiV1ServiceCategoriesErrors, ThrowOnError>({ url: '/api/v1/service-categories', ...options });
+
+/**
+ * Create service category
+ */
+export const postApiV1ServiceCategories = <ThrowOnError extends boolean = false>(options: Options<PostApiV1ServiceCategoriesData, ThrowOnError>): RequestResult<PostApiV1ServiceCategoriesResponses, PostApiV1ServiceCategoriesErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1ServiceCategoriesResponses, PostApiV1ServiceCategoriesErrors, ThrowOnError>({
+    url: '/api/v1/service-categories',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update service category
+ */
+export const patchApiV1ServiceCategoriesById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1ServiceCategoriesByIdData, ThrowOnError>): RequestResult<PatchApiV1ServiceCategoriesByIdResponses, PatchApiV1ServiceCategoriesByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1ServiceCategoriesByIdResponses, PatchApiV1ServiceCategoriesByIdErrors, ThrowOnError>({
+    url: '/api/v1/service-categories/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List service families
+ */
+export const getApiV1ServiceFamilies = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1ServiceFamiliesData, ThrowOnError>): RequestResult<GetApiV1ServiceFamiliesResponses, GetApiV1ServiceFamiliesErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1ServiceFamiliesResponses, GetApiV1ServiceFamiliesErrors, ThrowOnError>({ url: '/api/v1/service-families', ...options });
+
+/**
+ * Create service family
+ */
+export const postApiV1ServiceFamilies = <ThrowOnError extends boolean = false>(options: Options<PostApiV1ServiceFamiliesData, ThrowOnError>): RequestResult<PostApiV1ServiceFamiliesResponses, PostApiV1ServiceFamiliesErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1ServiceFamiliesResponses, PostApiV1ServiceFamiliesErrors, ThrowOnError>({
+    url: '/api/v1/service-families',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update service family
+ */
+export const patchApiV1ServiceFamiliesById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1ServiceFamiliesByIdData, ThrowOnError>): RequestResult<PatchApiV1ServiceFamiliesByIdResponses, PatchApiV1ServiceFamiliesByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1ServiceFamiliesByIdResponses, PatchApiV1ServiceFamiliesByIdErrors, ThrowOnError>({
+    url: '/api/v1/service-families/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List service addons
+ */
+export const getApiV1ServiceAddons = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1ServiceAddonsData, ThrowOnError>): RequestResult<GetApiV1ServiceAddonsResponses, GetApiV1ServiceAddonsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1ServiceAddonsResponses, GetApiV1ServiceAddonsErrors, ThrowOnError>({ url: '/api/v1/service-addons', ...options });
+
+/**
+ * Create service addon
+ */
+export const postApiV1ServiceAddons = <ThrowOnError extends boolean = false>(options: Options<PostApiV1ServiceAddonsData, ThrowOnError>): RequestResult<PostApiV1ServiceAddonsResponses, PostApiV1ServiceAddonsErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1ServiceAddonsResponses, PostApiV1ServiceAddonsErrors, ThrowOnError>({
+    url: '/api/v1/service-addons',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update service addon
+ */
+export const patchApiV1ServiceAddonsById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1ServiceAddonsByIdData, ThrowOnError>): RequestResult<PatchApiV1ServiceAddonsByIdResponses, PatchApiV1ServiceAddonsByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1ServiceAddonsByIdResponses, PatchApiV1ServiceAddonsByIdErrors, ThrowOnError>({
+    url: '/api/v1/service-addons/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List active catalog presets
+ */
+export const getApiV1CatalogPresets = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1CatalogPresetsData, ThrowOnError>): RequestResult<GetApiV1CatalogPresetsResponses, GetApiV1CatalogPresetsErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1CatalogPresetsResponses, GetApiV1CatalogPresetsErrors, ThrowOnError>({ url: '/api/v1/catalog-presets', ...options });
+
+/**
+ * Apply catalog preset selection
+ */
+export const postApiV1CatalogPresetsByIdApply = <ThrowOnError extends boolean = false>(options: Options<PostApiV1CatalogPresetsByIdApplyData, ThrowOnError>): RequestResult<PostApiV1CatalogPresetsByIdApplyResponses, PostApiV1CatalogPresetsByIdApplyErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1CatalogPresetsByIdApplyResponses, PostApiV1CatalogPresetsByIdApplyErrors, ThrowOnError>({
+    url: '/api/v1/catalog-presets/{id}/apply',
     ...options,
     headers: {
         'Content-Type': 'application/json',

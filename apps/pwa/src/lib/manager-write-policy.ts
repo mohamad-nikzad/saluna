@@ -13,10 +13,6 @@ export const MANAGER_WRITE_OPERATIONS = [
   'appointment.delete',
   'appointment.updateStatus',
   'appointment.completePlaceholderClient',
-  'service.save',
-  'serviceCategory.save',
-  'serviceFamily.save',
-  'serviceAddon.save',
   'staffToday.appointment.updateStatus',
   'appointmentRequest.approve',
   'appointmentRequest.reject',
@@ -34,10 +30,6 @@ export const MANAGER_WRITE_POLICIES: Record<
   'appointment.delete': 'queue-offline',
   'appointment.updateStatus': 'queue-offline',
   'appointment.completePlaceholderClient': 'queue-offline',
-  'service.save': 'queue-offline',
-  'serviceCategory.save': 'queue-offline',
-  'serviceFamily.save': 'queue-offline',
-  'serviceAddon.save': 'queue-offline',
   /** Staff /today status changes — online API only (no offline queue). */
   'staffToday.appointment.updateStatus': 'require-online',
   /** ADR-0001 / ADR-0002: intake at approval; no offline queue or soft-hold. */

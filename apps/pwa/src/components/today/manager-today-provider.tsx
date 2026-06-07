@@ -4,10 +4,7 @@ import type { TodayData } from '@repo/salon-core/types'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 import { api } from '#/lib/api-client'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import {
-  useManagerServicesQuery,
-} from '#/lib/manager-data-queries'
+import { servicesListQueryOptions } from '#/lib/services-queries'
 import { clientsListQueryOptions } from '#/lib/clients-queries'
 import { staffListQueryOptions } from '#/lib/staff-queries'
 import { useNetworkStatus } from '#/lib/network-status'
@@ -30,7 +27,6 @@ export function ManagerTodayProvider({
   userName: string
   children: React.ReactNode
 }) {
-  const dc = useManagerDataClient()
   const isOnline = useNetworkStatus()
   const initialToday = useMemo(() => salonTodayYmd(), [])
   const [date, setDate] = useState(initialToday)
@@ -42,7 +38,7 @@ export function ManagerTodayProvider({
   })
 
   const staffQuery = useQuery(staffListQueryOptions())
-  const servicesQuery = useManagerServicesQuery(Boolean(dc))
+  const servicesQuery = useQuery(servicesListQueryOptions())
   const clientsQuery = useQuery(clientsListQueryOptions())
 
   const idb = useManagerTodayIndexedDbSources(

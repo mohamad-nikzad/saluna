@@ -24,7 +24,7 @@ import { useDismissGuard } from '#/lib/use-dismiss-guard'
 import { serviceFamilyFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceFamilyCreateInput } from '@repo/salon-core/forms/service'
 import type { ServiceCategory, ServiceFamily } from '@repo/salon-core/types'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import { useSaveServiceFamilyMutation } from '#/lib/services-queries'
 
 interface ServiceFamilyDrawerProps {
   open: boolean
@@ -77,17 +77,7 @@ export function ServiceFamilyDrawer({
   const nameValue = useWatch({ control, name: 'name' })
   const categoryValue = useWatch({ control, name: 'categoryId' })
 
-  const saveFamily = useManagerWriteMutation('serviceFamily.save', {
-    dataClientFn: async (dataClient, values: ServiceFamilyCreateInput) => {
-      const payload = serviceFamilyFormSchema.parse(values)
-      if (family) {
-        await dataClient.services.families.update(family.id, payload)
-      } else {
-        await dataClient.services.families.create(payload)
-      }
-    },
-    meta: { errorMessage: 'ذخیره گروه خدمات انجام نشد' },
-  })
+  const saveFamily = useSaveServiceFamilyMutation(family?.id)
 
   const onSubmit = handleSubmit(async (values) => {
     try {

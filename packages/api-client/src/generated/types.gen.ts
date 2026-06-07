@@ -263,6 +263,258 @@ export type StaffServiceIdsRequest = {
     serviceIds?: Array<string> | null;
 };
 
+export type ServicesListResponse = {
+    services: Array<Service>;
+};
+
+export type ServiceResponse = {
+    service: Service;
+};
+
+export type ServiceCreateRequest = {
+    name: string;
+    categoryId: string;
+    familyId?: string | null;
+    category?: LegacyServiceCategoryKey;
+    duration: number;
+    price: number;
+    color?: string;
+    active?: boolean;
+    description?: string;
+    kind?: ServiceKind;
+    id?: string;
+};
+
+export type LegacyServiceCategoryKey = 'hair' | 'nails' | 'skincare' | 'spa';
+
+export type ServiceKind = 'standard' | 'combo';
+
+export type ImportStarterTemplatesResponse = {
+    categories: Array<ServiceCategory>;
+    families: Array<ServiceFamily>;
+    services: Array<Service>;
+};
+
+export type ServiceCategory = {
+    id: string;
+    name: string;
+    active: boolean;
+    createdAt: string | string;
+    updatedAt: string | string;
+    [key: string]: unknown;
+};
+
+export type ServiceFamily = {
+    id: string;
+    categoryId: string;
+    categoryName?: string | null;
+    name: string;
+    active: boolean;
+    createdAt: string | string;
+    updatedAt: string | string;
+    [key: string]: unknown;
+};
+
+export type ServiceUpdateRequest = {
+    name?: string;
+    categoryId?: string;
+    familyId?: string | null;
+    duration?: number;
+    price?: number;
+    color?: string;
+    active?: boolean;
+    description?: string;
+    kind?: ServiceKind;
+};
+
+export type ServiceAddonsListResponse = {
+    addons: Array<ServiceAddon>;
+};
+
+export type ServiceAddon = {
+    id: string;
+    salonId: string;
+    name: string;
+    priceDelta: number;
+    durationDelta: number;
+    active: boolean;
+    sortOrder: number;
+    description?: string | null;
+    color?: string | null;
+    scopes: Array<ServiceAddonScope>;
+    createdAt: string | string;
+    updatedAt: string | string;
+    [key: string]: unknown;
+};
+
+export type ServiceAddonScope = {
+    type: 'category';
+    categoryId: string;
+    categoryName: string;
+    active: boolean;
+} | {
+    type: 'family';
+    familyId: string;
+    familyName: string;
+    categoryId: string;
+    active: boolean;
+} | {
+    type: 'service';
+    serviceId: string;
+    serviceName: string;
+    familyId: string | null;
+    active: boolean;
+};
+
+export type ComboComponentsResponse = {
+    combo: ComboComponentsSummary;
+};
+
+export type ComboComponentsSummary = {
+    comboServiceId: string;
+    components: Array<ComboComponent>;
+    totalDuration: number;
+    totalPrice: number;
+};
+
+export type ComboComponent = {
+    id: string;
+    salonId: string;
+    comboServiceId: string;
+    componentServiceId: string;
+    sortOrder: number;
+    service: Service;
+    createdAt: string | string;
+    updatedAt: string | string;
+    [key: string]: unknown;
+};
+
+export type ComboComponentsUpdateRequest = {
+    componentServiceIds: Array<string>;
+};
+
+export type ServiceCategoriesListResponse = {
+    categories: Array<ServiceCategory>;
+};
+
+export type ServiceCategoryResponse = {
+    category: ServiceCategory;
+};
+
+export type ServiceCategoryCreateRequest = {
+    name: string;
+    active?: boolean;
+    id?: string;
+};
+
+export type ServiceCategoryUpdateRequest = {
+    name?: string;
+    active?: boolean;
+};
+
+export type ServiceFamiliesListResponse = {
+    families: Array<ServiceFamily>;
+};
+
+export type ServiceFamilyResponse = {
+    family: ServiceFamily;
+};
+
+export type ServiceFamilyCreateRequest = {
+    categoryId: string;
+    name: string;
+    active?: boolean;
+    id?: string;
+};
+
+export type ServiceFamilyUpdateRequest = {
+    categoryId?: string;
+    name?: string;
+    active?: boolean;
+};
+
+export type ServiceAddonResponse = {
+    addon: ServiceAddon;
+};
+
+export type ServiceAddonCreateRequest = {
+    name: string;
+    priceDelta?: number;
+    durationDelta?: number;
+    active?: boolean;
+    sortOrder?: number;
+    description?: string;
+    color?: string | null;
+    scopes?: Array<ServiceAddonScopeInput>;
+    id?: string;
+};
+
+export type ServiceAddonScopeInput = {
+    type: 'category';
+    categoryId: string;
+} | {
+    type: 'family';
+    familyId: string;
+} | {
+    type: 'service';
+    serviceId: string;
+};
+
+export type ServiceAddonUpdateRequest = {
+    name?: string;
+    priceDelta?: number;
+    durationDelta?: number;
+    active?: boolean;
+    sortOrder?: number;
+    description?: string;
+    color?: string | null;
+    scopes?: Array<ServiceAddonScopeInput>;
+};
+
+export type CatalogPresetsListResponse = {
+    presets: Array<CatalogPresetListItem>;
+};
+
+export type CatalogPresetListItem = {
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+    tree: CatalogPresetTree;
+    sortOrder: number;
+    disabled: boolean;
+    disabledReason: 'collision' | null;
+};
+
+export type CatalogPresetTree = Array<{
+    name: string;
+    families: Array<{
+        name: string;
+        variants: Array<{
+            name: string;
+            duration: number;
+            price: number;
+            color: string;
+            description?: string;
+        }>;
+    }>;
+}>;
+
+export type ApplyCatalogPresetResponse = {
+    importedCategoryIds: Array<string>;
+    importedVariantIds: Array<string>;
+};
+
+export type ApplyCatalogPresetRequest = {
+    selection: Array<{
+        categoryIndex: number;
+        families: Array<{
+            familyIndex: number;
+            variantIndices: Array<number>;
+        }>;
+    }>;
+};
+
 export type GetApiV1ClientsData = {
     body?: never;
     path?: never;
@@ -817,3 +1069,700 @@ export type PatchApiV1StaffByIdServicesResponses = {
 };
 
 export type PatchApiV1StaffByIdServicesResponse = PatchApiV1StaffByIdServicesResponses[keyof PatchApiV1StaffByIdServicesResponses];
+
+export type GetApiV1ServicesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * When set to "1" and the caller is a manager, inactive catalog rows are included
+         */
+        all?: string;
+    };
+    url: '/api/v1/services';
+};
+
+export type GetApiV1ServicesErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1ServicesError = GetApiV1ServicesErrors[keyof GetApiV1ServicesErrors];
+
+export type GetApiV1ServicesResponses = {
+    /**
+     * Services list
+     */
+    200: ServicesListResponse;
+};
+
+export type GetApiV1ServicesResponse = GetApiV1ServicesResponses[keyof GetApiV1ServicesResponses];
+
+export type PostApiV1ServicesData = {
+    body: ServiceCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/services';
+};
+
+export type PostApiV1ServicesErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PostApiV1ServicesError = PostApiV1ServicesErrors[keyof PostApiV1ServicesErrors];
+
+export type PostApiV1ServicesResponses = {
+    /**
+     * Created service
+     */
+    200: ServiceResponse;
+};
+
+export type PostApiV1ServicesResponse = PostApiV1ServicesResponses[keyof PostApiV1ServicesResponses];
+
+export type PostApiV1ServicesImportStarterTemplatesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/services/import-starter-templates';
+};
+
+export type PostApiV1ServicesImportStarterTemplatesErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type PostApiV1ServicesImportStarterTemplatesError = PostApiV1ServicesImportStarterTemplatesErrors[keyof PostApiV1ServicesImportStarterTemplatesErrors];
+
+export type PostApiV1ServicesImportStarterTemplatesResponses = {
+    /**
+     * Imported starter catalog
+     */
+    200: ImportStarterTemplatesResponse;
+};
+
+export type PostApiV1ServicesImportStarterTemplatesResponse = PostApiV1ServicesImportStarterTemplatesResponses[keyof PostApiV1ServicesImportStarterTemplatesResponses];
+
+export type GetApiV1ServicesByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{id}';
+};
+
+export type GetApiV1ServicesByIdErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1ServicesByIdError = GetApiV1ServicesByIdErrors[keyof GetApiV1ServicesByIdErrors];
+
+export type GetApiV1ServicesByIdResponses = {
+    /**
+     * Service
+     */
+    200: ServiceResponse;
+};
+
+export type GetApiV1ServicesByIdResponse = GetApiV1ServicesByIdResponses[keyof GetApiV1ServicesByIdResponses];
+
+export type PatchApiV1ServicesByIdData = {
+    body: ServiceUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{id}';
+};
+
+export type PatchApiV1ServicesByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service not found
+     */
+    404: ApiError;
+    /**
+     * Service name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PatchApiV1ServicesByIdError = PatchApiV1ServicesByIdErrors[keyof PatchApiV1ServicesByIdErrors];
+
+export type PatchApiV1ServicesByIdResponses = {
+    /**
+     * Updated service
+     */
+    200: ServiceResponse;
+};
+
+export type PatchApiV1ServicesByIdResponse = PatchApiV1ServicesByIdResponses[keyof PatchApiV1ServicesByIdResponses];
+
+export type GetApiV1ServicesByIdAddonsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{id}/addons';
+};
+
+export type GetApiV1ServicesByIdAddonsErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1ServicesByIdAddonsError = GetApiV1ServicesByIdAddonsErrors[keyof GetApiV1ServicesByIdAddonsErrors];
+
+export type GetApiV1ServicesByIdAddonsResponses = {
+    /**
+     * Active addons applicable to the service
+     */
+    200: ServiceAddonsListResponse;
+};
+
+export type GetApiV1ServicesByIdAddonsResponse = GetApiV1ServicesByIdAddonsResponses[keyof GetApiV1ServicesByIdAddonsResponses];
+
+export type GetApiV1ServicesByIdComboComponentsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{id}/combo-components';
+};
+
+export type GetApiV1ServicesByIdComboComponentsErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1ServicesByIdComboComponentsError = GetApiV1ServicesByIdComboComponentsErrors[keyof GetApiV1ServicesByIdComboComponentsErrors];
+
+export type GetApiV1ServicesByIdComboComponentsResponses = {
+    /**
+     * Combo components summary
+     */
+    200: ComboComponentsResponse;
+};
+
+export type GetApiV1ServicesByIdComboComponentsResponse = GetApiV1ServicesByIdComboComponentsResponses[keyof GetApiV1ServicesByIdComboComponentsResponses];
+
+export type PutApiV1ServicesByIdComboComponentsData = {
+    body: ComboComponentsUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/services/{id}/combo-components';
+};
+
+export type PutApiV1ServicesByIdComboComponentsErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service not found
+     */
+    404: ApiError;
+};
+
+export type PutApiV1ServicesByIdComboComponentsError = PutApiV1ServicesByIdComboComponentsErrors[keyof PutApiV1ServicesByIdComboComponentsErrors];
+
+export type PutApiV1ServicesByIdComboComponentsResponses = {
+    /**
+     * Updated combo components
+     */
+    200: ComboComponentsResponse;
+};
+
+export type PutApiV1ServicesByIdComboComponentsResponse = PutApiV1ServicesByIdComboComponentsResponses[keyof PutApiV1ServicesByIdComboComponentsResponses];
+
+export type GetApiV1ServiceCategoriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * When set to "1" and the caller is a manager, inactive catalog rows are included
+         */
+        all?: string;
+    };
+    url: '/api/v1/service-categories';
+};
+
+export type GetApiV1ServiceCategoriesErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1ServiceCategoriesError = GetApiV1ServiceCategoriesErrors[keyof GetApiV1ServiceCategoriesErrors];
+
+export type GetApiV1ServiceCategoriesResponses = {
+    /**
+     * Service categories list
+     */
+    200: ServiceCategoriesListResponse;
+};
+
+export type GetApiV1ServiceCategoriesResponse = GetApiV1ServiceCategoriesResponses[keyof GetApiV1ServiceCategoriesResponses];
+
+export type PostApiV1ServiceCategoriesData = {
+    body: ServiceCategoryCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/service-categories';
+};
+
+export type PostApiV1ServiceCategoriesErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Category name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PostApiV1ServiceCategoriesError = PostApiV1ServiceCategoriesErrors[keyof PostApiV1ServiceCategoriesErrors];
+
+export type PostApiV1ServiceCategoriesResponses = {
+    /**
+     * Created category
+     */
+    200: ServiceCategoryResponse;
+};
+
+export type PostApiV1ServiceCategoriesResponse = PostApiV1ServiceCategoriesResponses[keyof PostApiV1ServiceCategoriesResponses];
+
+export type PatchApiV1ServiceCategoriesByIdData = {
+    body: ServiceCategoryUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/service-categories/{id}';
+};
+
+export type PatchApiV1ServiceCategoriesByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service category not found
+     */
+    404: ApiError;
+    /**
+     * Category name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PatchApiV1ServiceCategoriesByIdError = PatchApiV1ServiceCategoriesByIdErrors[keyof PatchApiV1ServiceCategoriesByIdErrors];
+
+export type PatchApiV1ServiceCategoriesByIdResponses = {
+    /**
+     * Updated category
+     */
+    200: ServiceCategoryResponse;
+};
+
+export type PatchApiV1ServiceCategoriesByIdResponse = PatchApiV1ServiceCategoriesByIdResponses[keyof PatchApiV1ServiceCategoriesByIdResponses];
+
+export type GetApiV1ServiceFamiliesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * When set to "1" and the caller is a manager, inactive catalog rows are included
+         */
+        all?: string;
+    };
+    url: '/api/v1/service-families';
+};
+
+export type GetApiV1ServiceFamiliesErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1ServiceFamiliesError = GetApiV1ServiceFamiliesErrors[keyof GetApiV1ServiceFamiliesErrors];
+
+export type GetApiV1ServiceFamiliesResponses = {
+    /**
+     * Service families list
+     */
+    200: ServiceFamiliesListResponse;
+};
+
+export type GetApiV1ServiceFamiliesResponse = GetApiV1ServiceFamiliesResponses[keyof GetApiV1ServiceFamiliesResponses];
+
+export type PostApiV1ServiceFamiliesData = {
+    body: ServiceFamilyCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/service-families';
+};
+
+export type PostApiV1ServiceFamiliesErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Family name already registered for this category
+     */
+    409: ApiError;
+};
+
+export type PostApiV1ServiceFamiliesError = PostApiV1ServiceFamiliesErrors[keyof PostApiV1ServiceFamiliesErrors];
+
+export type PostApiV1ServiceFamiliesResponses = {
+    /**
+     * Created family
+     */
+    200: ServiceFamilyResponse;
+};
+
+export type PostApiV1ServiceFamiliesResponse = PostApiV1ServiceFamiliesResponses[keyof PostApiV1ServiceFamiliesResponses];
+
+export type PatchApiV1ServiceFamiliesByIdData = {
+    body: ServiceFamilyUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/service-families/{id}';
+};
+
+export type PatchApiV1ServiceFamiliesByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service family not found
+     */
+    404: ApiError;
+    /**
+     * Family name already registered for this category
+     */
+    409: ApiError;
+};
+
+export type PatchApiV1ServiceFamiliesByIdError = PatchApiV1ServiceFamiliesByIdErrors[keyof PatchApiV1ServiceFamiliesByIdErrors];
+
+export type PatchApiV1ServiceFamiliesByIdResponses = {
+    /**
+     * Updated family
+     */
+    200: ServiceFamilyResponse;
+};
+
+export type PatchApiV1ServiceFamiliesByIdResponse = PatchApiV1ServiceFamiliesByIdResponses[keyof PatchApiV1ServiceFamiliesByIdResponses];
+
+export type GetApiV1ServiceAddonsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * When set to "1" and the caller is a manager, inactive catalog rows are included
+         */
+        all?: string;
+    };
+    url: '/api/v1/service-addons';
+};
+
+export type GetApiV1ServiceAddonsErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1ServiceAddonsError = GetApiV1ServiceAddonsErrors[keyof GetApiV1ServiceAddonsErrors];
+
+export type GetApiV1ServiceAddonsResponses = {
+    /**
+     * Service addons list
+     */
+    200: ServiceAddonsListResponse;
+};
+
+export type GetApiV1ServiceAddonsResponse = GetApiV1ServiceAddonsResponses[keyof GetApiV1ServiceAddonsResponses];
+
+export type PostApiV1ServiceAddonsData = {
+    body: ServiceAddonCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/service-addons';
+};
+
+export type PostApiV1ServiceAddonsErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Addon name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PostApiV1ServiceAddonsError = PostApiV1ServiceAddonsErrors[keyof PostApiV1ServiceAddonsErrors];
+
+export type PostApiV1ServiceAddonsResponses = {
+    /**
+     * Created addon
+     */
+    200: ServiceAddonResponse;
+};
+
+export type PostApiV1ServiceAddonsResponse = PostApiV1ServiceAddonsResponses[keyof PostApiV1ServiceAddonsResponses];
+
+export type PatchApiV1ServiceAddonsByIdData = {
+    body: ServiceAddonUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/service-addons/{id}';
+};
+
+export type PatchApiV1ServiceAddonsByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service addon not found
+     */
+    404: ApiError;
+    /**
+     * Addon name already registered for this salon
+     */
+    409: ApiError;
+};
+
+export type PatchApiV1ServiceAddonsByIdError = PatchApiV1ServiceAddonsByIdErrors[keyof PatchApiV1ServiceAddonsByIdErrors];
+
+export type PatchApiV1ServiceAddonsByIdResponses = {
+    /**
+     * Updated addon
+     */
+    200: ServiceAddonResponse;
+};
+
+export type PatchApiV1ServiceAddonsByIdResponse = PatchApiV1ServiceAddonsByIdResponses[keyof PatchApiV1ServiceAddonsByIdResponses];
+
+export type GetApiV1CatalogPresetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog-presets';
+};
+
+export type GetApiV1CatalogPresetsErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1CatalogPresetsError = GetApiV1CatalogPresetsErrors[keyof GetApiV1CatalogPresetsErrors];
+
+export type GetApiV1CatalogPresetsResponses = {
+    /**
+     * Catalog presets available to the salon
+     */
+    200: CatalogPresetsListResponse;
+};
+
+export type GetApiV1CatalogPresetsResponse = GetApiV1CatalogPresetsResponses[keyof GetApiV1CatalogPresetsResponses];
+
+export type PostApiV1CatalogPresetsByIdApplyData = {
+    body: ApplyCatalogPresetRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog-presets/{id}/apply';
+};
+
+export type PostApiV1CatalogPresetsByIdApplyErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Catalog preset not found or inactive
+     */
+    404: ApiError;
+    /**
+     * Preset collides with existing salon catalog
+     */
+    409: ApiError;
+};
+
+export type PostApiV1CatalogPresetsByIdApplyError = PostApiV1CatalogPresetsByIdApplyErrors[keyof PostApiV1CatalogPresetsByIdApplyErrors];
+
+export type PostApiV1CatalogPresetsByIdApplyResponses = {
+    /**
+     * Imported preset services
+     */
+    200: ApplyCatalogPresetResponse;
+};
+
+export type PostApiV1CatalogPresetsByIdApplyResponse = PostApiV1CatalogPresetsByIdApplyResponses[keyof PostApiV1CatalogPresetsByIdApplyResponses];
