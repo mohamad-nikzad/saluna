@@ -80,12 +80,14 @@
       "src": "/screenshots/manifest-calendar.png",
       "sizes": "1080x1920",
       "type": "image/png",
+      "form_factor": "narrow",
       "label": "نمای تقویم و برنامه روزانه سالونا"
     },
     {
       "src": "/screenshots/manifest-clients.png",
       "sizes": "1080x1920",
       "type": "image/png",
+      "form_factor": "narrow",
       "label": "نمای مشتریان و پیگیری‌های سالن در سالونا"
     }
   ],

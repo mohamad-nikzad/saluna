@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs'
+import { copyFileSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 
 import { devices, expect, test } from '@playwright/test'
@@ -8,6 +8,10 @@ import { SEEDED_MANAGER, login } from './helpers/auth'
 const OUT_DIR = path.join(
   process.cwd(),
   'apps/pwa/public/screenshots/bale',
+)
+const MANIFEST_SCREENSHOTS_DIR = path.join(
+  process.cwd(),
+  'apps/pwa/public/screenshots',
 )
 
 /** 9:16 phone viewport; @3x → 1080×1920 PNGs for Bale previews. */
@@ -43,6 +47,13 @@ async function capturePageScreenshot(
   })
 }
 
+function syncManifestScreenshot(sourceFilename: string, manifestFilename: string) {
+  copyFileSync(
+    path.join(OUT_DIR, sourceFilename),
+    path.join(MANIFEST_SCREENSHOTS_DIR, manifestFilename),
+  )
+}
+
 test.describe('Bale bot preview screenshots', () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -65,6 +76,7 @@ test.describe('Bale bot preview screenshots', () => {
       await expect(page.locator('.calendar-header-gradient')).toBeVisible()
       await page.waitForTimeout(800)
       await capturePageScreenshot(page, 'calendar.png')
+      syncManifestScreenshot('calendar.png', 'manifest-calendar.png')
     })
 
     await test.step('requests', async () => {
@@ -85,6 +97,7 @@ test.describe('Bale bot preview screenshots', () => {
       })
       await page.waitForTimeout(800)
       await capturePageScreenshot(page, 'clients.png')
+      syncManifestScreenshot('clients.png', 'manifest-clients.png')
     })
 
     await test.step('settings — Bale connect', async () => {
