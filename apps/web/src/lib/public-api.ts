@@ -1,5 +1,23 @@
 import { PUBLIC_API_URL } from 'astro:env/client'
+import { configureGeneratedApiClient } from '@repo/api-client/generated-client'
+import { ApiError } from '@repo/api-client/errors'
+import {
+  getApiV1PublicSalonsBySlug,
+  getApiV1PublicSalonsBySlugAvailability,
+  getApiV1PublicSalonsBySlugAppointmentRequestsByToken,
+  postApiV1PublicSalonsBySlugAppointmentRequests,
+  postApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancel,
+} from '@repo/api-client/sdk'
 import type { Service } from '@repo/salon-core/types'
+import type {
+  AppointmentRequestStatus,
+  AvailabilitySlot,
+  DayAvailabilityResponse,
+  PublicAppointmentRequestBody,
+  PublicAppointmentRequestStatusView,
+} from '@repo/api-client/types'
+
+configureGeneratedApiClient({ baseUrl: PUBLIC_API_URL })
 
 export type PublicSalonView = {
   salon: {
@@ -19,104 +37,41 @@ export type PublicSalonView = {
   }
   services: Service[]
 }
-
-export type PublicAvailabilitySlot = {
-  date: string
-  startTime: string
-  endTime: string
-  staffId: string
-  staffName: string
-}
-
-export type PublicAvailabilityDayResponse = {
-  mode: 'day'
-  slots: PublicAvailabilitySlot[]
-  emptyReason?: string
-}
-
-export type AppointmentRequestStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'cancelled'
-  | 'expired'
-
-export type AppointmentRequestStatusView = {
-  id: string
-  status: AppointmentRequestStatus
-  bookedServiceName: string
-  bookedServiceDuration: number
-  bookedServicePrice: number
-  requestedDate: string
-  requestedStartTime: string
-  requestedEndTime: string
-  salon: { name: string; phone: string | null }
-  createdAt: string
-  reviewedAt: string | null
-  rejectionReason: string | null
-}
-
-type ApiError = { error: string }
-
-const DEFAULT_ERROR_MESSAGE = 'خطایی رخ داد. لطفاً دوباره تلاش کنید.'
-const EMPTY_SUCCESS_MESSAGE = 'پاسخی از سرور دریافت نشد.'
+export type PublicAvailabilitySlot = AvailabilitySlot
+export type PublicAvailabilityDayResponse = DayAvailabilityResponse
+export type { AppointmentRequestStatus }
+export type AppointmentRequestStatusView = PublicAppointmentRequestStatusView
 
 export class PublicApiError extends Error {
   status: number
+
   constructor(message: string, status: number) {
     super(message)
     this.status = status
   }
 }
 
-function isApiError(value: unknown): value is ApiError {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'error' in value &&
-    typeof value.error === 'string'
-  )
-}
-
-function apiUrl(path: string): string {
-  return new URL(path, PUBLIC_API_URL).toString()
-}
-
-async function parseJson<T>(res: Response): Promise<T> {
-  const text = await res.text()
-
-  if (!res.ok) {
-    if (!text) {
-      throw new PublicApiError(DEFAULT_ERROR_MESSAGE, res.status)
-    }
-    try {
-      const body: unknown = JSON.parse(text)
-      throw new PublicApiError(
-        isApiError(body) ? body.error : DEFAULT_ERROR_MESSAGE,
-        res.status,
-      )
-    } catch (error) {
-      if (error instanceof PublicApiError) throw error
-      throw new PublicApiError(DEFAULT_ERROR_MESSAGE, res.status)
-    }
+function rethrowPublicApiError(error: unknown): never {
+  if (error instanceof ApiError) {
+    throw new PublicApiError(error.message, error.status)
   }
-
-  if (!text) {
-    throw new PublicApiError(EMPTY_SUCCESS_MESSAGE, res.status)
-  }
-
-  return JSON.parse(text) as T
+  throw error
 }
 
 export async function fetchPublicSalon(
   slug: string,
   init?: RequestInit,
 ): Promise<PublicSalonView> {
-  const res = await fetch(apiUrl(`/api/v1/public/salons/${slug}`), {
-    cache: 'no-store',
-    ...init,
-  })
-  return parseJson<PublicSalonView>(res)
+  try {
+    const { data } = await getApiV1PublicSalonsBySlug({
+      path: { slug },
+      signal: init?.signal ?? undefined,
+      throwOnError: true,
+    })
+    return data as unknown as PublicSalonView
+  } catch (error) {
+    rethrowPublicApiError(error)
+  }
 }
 
 export async function fetchPublicAvailability(
@@ -124,32 +79,40 @@ export async function fetchPublicAvailability(
   params: { serviceId: string; date: string },
   init?: RequestInit,
 ): Promise<PublicAvailabilityDayResponse> {
-  const url = new URL(apiUrl(`/api/v1/public/salons/${slug}/availability`))
-  url.searchParams.set('serviceId', params.serviceId)
-  url.searchParams.set('date', params.date)
-  url.searchParams.set('mode', 'day')
-  const res = await fetch(url.toString(), { cache: 'no-store', ...init })
-  return parseJson<PublicAvailabilityDayResponse>(res)
+  try {
+    const { data } = await getApiV1PublicSalonsBySlugAvailability({
+      path: { slug },
+      query: {
+        serviceId: params.serviceId,
+        date: params.date,
+        mode: 'day',
+      },
+      signal: init?.signal ?? undefined,
+      throwOnError: true,
+    })
+    if (data.mode !== 'day') {
+      throw new PublicApiError('پاسخی از سرور دریافت نشد.', 500)
+    }
+    return data
+  } catch (error) {
+    rethrowPublicApiError(error)
+  }
 }
 
 export async function submitAppointmentRequest(
   slug: string,
-  body: {
-    serviceId: string
-    date: string
-    startTime: string
-    endTime: string
-    customerName: string
-    customerPhone: string
-    notes?: string
-  },
+  body: PublicAppointmentRequestBody,
 ): Promise<{ token: string }> {
-  const res = await fetch(apiUrl(`/api/v1/public/salons/${slug}/appointment-requests`), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  return parseJson<{ token: string }>(res)
+  try {
+    const { data } = await postApiV1PublicSalonsBySlugAppointmentRequests({
+      path: { slug },
+      body,
+      throwOnError: true,
+    })
+    return data
+  } catch (error) {
+    rethrowPublicApiError(error)
+  }
 }
 
 export async function fetchAppointmentRequest(
@@ -157,20 +120,28 @@ export async function fetchAppointmentRequest(
   token: string,
   init?: RequestInit,
 ): Promise<AppointmentRequestStatusView> {
-  const res = await fetch(
-    apiUrl(`/api/v1/public/salons/${slug}/appointment-requests/${token}`),
-    { cache: 'no-store', ...init },
-  )
-  return parseJson<AppointmentRequestStatusView>(res)
+  try {
+    const { data } = await getApiV1PublicSalonsBySlugAppointmentRequestsByToken({
+      path: { slug, token },
+      signal: init?.signal ?? undefined,
+      throwOnError: true,
+    })
+    return data
+  } catch (error) {
+    rethrowPublicApiError(error)
+  }
 }
 
 export async function cancelAppointmentRequest(
   slug: string,
   token: string,
 ): Promise<void> {
-  const res = await fetch(
-    apiUrl(`/api/v1/public/salons/${slug}/appointment-requests/${token}/cancel`),
-    { method: 'POST' },
-  )
-  await parseJson<{ ok: true }>(res)
+  try {
+    await postApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancel({
+      path: { slug, token },
+      throwOnError: true,
+    })
+  } catch (error) {
+    rethrowPublicApiError(error)
+  }
 }

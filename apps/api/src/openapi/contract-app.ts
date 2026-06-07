@@ -101,6 +101,13 @@ import {
   getNotificationPreferencesRoute,
   updateNotificationPreferencesRoute,
 } from './routes/notification-preferences'
+import {
+  cancelPublicAppointmentRequestRoute,
+  createPublicAppointmentRequestRoute,
+  getPublicAppointmentRequestRoute,
+  getPublicAvailabilityRoute,
+  getPublicSalonRoute,
+} from './routes/public'
 
 const stubClient = {
   id: 'stub',
@@ -660,6 +667,58 @@ const updateNotificationPreferencesStub: RouteHandler<
   typeof updateNotificationPreferencesRoute
 > = (c) => c.json({ preferences: stubNotificationPreferences }, 200)
 
+const stubPublicSalonView = {
+  salon: {
+    id: 'stub',
+    slug: 'stub-salon',
+    name: 'stub',
+    phone: null,
+    timezone: 'Asia/Tehran',
+    locale: 'fa-IR',
+  },
+  publicSettings: {
+    enabled: true,
+    bioText: null,
+    themeId: 'rose',
+    layoutId: 'agenda',
+    appointmentRequestsEnabled: true,
+  },
+  services: [] as Array<typeof stubService>,
+}
+
+const stubPublicAppointmentRequestStatus = {
+  id: 'stub',
+  status: 'pending' as const,
+  bookedServiceName: 'stub',
+  bookedServiceDuration: 45,
+  bookedServicePrice: 0,
+  requestedDate: '2026-06-07',
+  requestedStartTime: '10:00',
+  requestedEndTime: '11:00',
+  salon: { name: 'stub', phone: null },
+  createdAt: new Date().toISOString(),
+  reviewedAt: null,
+  rejectionReason: null,
+}
+
+const getPublicSalonStub: RouteHandler<typeof getPublicSalonRoute> = (c) =>
+  c.json(stubPublicSalonView, 200)
+
+const getPublicAvailabilityStub: RouteHandler<typeof getPublicAvailabilityRoute> = (c) =>
+  c.json({ mode: 'day' as const, slots: [] }, 200)
+
+const createPublicAppointmentRequestStub: RouteHandler<
+  typeof createPublicAppointmentRequestRoute
+> = (c) => c.json({ token: 'stub' }, 201)
+
+const getPublicAppointmentRequestStub: RouteHandler<
+  typeof getPublicAppointmentRequestRoute
+> = (c) => c.json(stubPublicAppointmentRequestStatus, 200)
+
+const cancelPublicAppointmentRequestStub: RouteHandler<
+  typeof cancelPublicAppointmentRequestRoute
+> = (c) => c.json({ ok: true as const }, 200)
+
 /**
  * Minimal OpenAPI app used only for contract generation.
  * Stub handlers avoid loading auth/database modules at generate time.
@@ -804,6 +863,15 @@ export const contractApp = new OpenAPIHono()
       .openapi(getNotificationPreferencesRoute, getNotificationPreferencesStub)
       .openapi(updateNotificationPreferencesRoute, updateNotificationPreferencesStub),
   )
+  .route(
+    '/api/v1/public',
+    new OpenAPIHono()
+      .openapi(getPublicSalonRoute, getPublicSalonStub)
+      .openapi(getPublicAvailabilityRoute, getPublicAvailabilityStub)
+      .openapi(createPublicAppointmentRequestRoute, createPublicAppointmentRequestStub)
+      .openapi(getPublicAppointmentRequestRoute, getPublicAppointmentRequestStub)
+      .openapi(cancelPublicAppointmentRequestRoute, cancelPublicAppointmentRequestStub),
+  )
 
 export const openApiDocumentConfig = {
   openapi: '3.0.0' as const,
@@ -812,7 +880,7 @@ export const openApiDocumentConfig = {
     version: '0.7.0',
     description:
       'Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. ' +
-      'This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, and notification-preferences route groups are documented.',
+      'This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, notification-preferences, and public booking route groups are documented.',
   },
   servers: [{ url: '', description: 'Saluna API (paths include /api/v1 prefix)' }],
   tags: [
@@ -867,6 +935,10 @@ export const openApiDocumentConfig = {
     {
       name: 'Notification preferences',
       description: 'Per-user notification channel preferences',
+    },
+    {
+      name: 'Public booking',
+      description: 'Unauthenticated public salon page and appointment request flows',
     },
   ],
   components: {

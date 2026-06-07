@@ -3,7 +3,7 @@
   "info": {
     "title": "Saluna API",
     "version": "0.7.0",
-    "description": "Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, and notification-preferences route groups are documented."
+    "description": "Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, notification-preferences, and public booking route groups are documented."
   },
   "servers": [
     {
@@ -87,6 +87,10 @@
     {
       "name": "Notification preferences",
       "description": "Per-user notification channel preferences"
+    },
+    {
+      "name": "Public booking",
+      "description": "Unauthenticated public salon page and appointment request flows"
     }
   ],
   "components": {
@@ -3907,6 +3911,238 @@
             "type": "boolean"
           }
         }
+      },
+      "PublicSalonView": {
+        "type": "object",
+        "properties": {
+          "salon": {
+            "$ref": "#/components/schemas/PublicSalonInfo"
+          },
+          "publicSettings": {
+            "$ref": "#/components/schemas/PublicSalonSettings"
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Service"
+            }
+          }
+        },
+        "required": [
+          "salon",
+          "publicSettings",
+          "services"
+        ]
+      },
+      "PublicSalonInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "phone",
+          "timezone",
+          "locale"
+        ]
+      },
+      "PublicSalonSettings": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "bioText": {
+            "type": "string",
+            "nullable": true
+          },
+          "themeId": {
+            "type": "string"
+          },
+          "layoutId": {
+            "type": "string"
+          },
+          "appointmentRequestsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled",
+          "bioText",
+          "themeId",
+          "layoutId",
+          "appointmentRequestsEnabled"
+        ]
+      },
+      "PublicAppointmentRequestCreated": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "PublicAppointmentRequestBody": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "endTime": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceId",
+          "date",
+          "startTime",
+          "endTime",
+          "customerName",
+          "customerPhone"
+        ]
+      },
+      "PublicAppointmentRequestStatusView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentRequestStatus"
+          },
+          "bookedServiceName": {
+            "type": "string"
+          },
+          "bookedServiceDuration": {
+            "type": "integer"
+          },
+          "bookedServicePrice": {
+            "type": "integer"
+          },
+          "requestedDate": {
+            "type": "string"
+          },
+          "requestedStartTime": {
+            "type": "string"
+          },
+          "requestedEndTime": {
+            "type": "string"
+          },
+          "salon": {
+            "$ref": "#/components/schemas/PublicSalonSummary"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "reviewedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "bookedServiceName",
+          "bookedServiceDuration",
+          "bookedServicePrice",
+          "requestedDate",
+          "requestedStartTime",
+          "requestedEndTime",
+          "salon",
+          "createdAt",
+          "reviewedAt",
+          "rejectionReason"
+        ]
+      },
+      "PublicSalonSummary": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "phone"
+        ]
+      },
+      "PublicCancelAppointmentRequestResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
       }
     },
     "parameters": {}
@@ -8905,6 +9141,342 @@
           },
           "403": {
             "description": "Authenticated but missing tenant context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons/{slug}": {
+      "get": {
+        "tags": [
+          "Public booking"
+        ],
+        "summary": "Get public salon page data",
+        "description": "Unauthenticated salon profile, public page settings, and visible services for the booking site.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "my-salon"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public salon view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSalonView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon, service, or appointment request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons/{slug}/availability": {
+      "get": {
+        "tags": [
+          "Public booking"
+        ],
+        "summary": "Search public booking availability",
+        "description": "Returns unioned free slots across staff qualified for the service. Customers do not pick staff in v1.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "my-salon"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "serviceId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "example": "2026-06-07"
+            },
+            "required": true,
+            "name": "date",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "nearest"
+              ],
+              "default": "day",
+              "example": "day"
+            },
+            "required": false,
+            "name": "mode",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Nearest-mode search window in days (max 60)."
+            },
+            "required": false,
+            "description": "Nearest-mode search window in days (max 60).",
+            "name": "days",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Day or nearest availability slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Public booking is disabled for this salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon, service, or appointment request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons/{slug}/appointment-requests": {
+      "post": {
+        "tags": [
+          "Public booking"
+        ],
+        "summary": "Submit a public appointment request",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "my-salon"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicAppointmentRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Request created; token authorizes status lookup and cancel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAppointmentRequestCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon, service, or appointment request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many public booking submissions from this IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons/{slug}/appointment-requests/{token}": {
+      "get": {
+        "tags": [
+          "Public booking"
+        ],
+        "summary": "Get public appointment request status",
+        "description": "Token-authorized status view. Customer identity fields are intentionally omitted.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "my-salon"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment request status for the customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAppointmentRequestStatusView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon, service, or appointment request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons/{slug}/appointment-requests/{token}/cancel": {
+      "post": {
+        "tags": [
+          "Public booking"
+        ],
+        "summary": "Cancel a pending public appointment request",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "my-salon"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCancelAppointmentRequestResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Salon, service, or appointment request not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Appointment request cannot be cancelled in its current state",
             "content": {
               "application/json": {
                 "schema": {

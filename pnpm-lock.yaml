@@ -377,6 +377,9 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.7.0
         version: 3.7.3
+      '@repo/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@repo/brand':
         specifier: workspace:*
         version: link:../../packages/brand

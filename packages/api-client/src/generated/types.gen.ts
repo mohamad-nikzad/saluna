@@ -1006,6 +1006,67 @@ export type UpdateNotificationPreferencesRequest = {
     smsAlertsEnabled?: boolean;
 };
 
+export type PublicSalonView = {
+    salon: PublicSalonInfo;
+    publicSettings: PublicSalonSettings;
+    services: Array<Service>;
+};
+
+export type PublicSalonInfo = {
+    id: string;
+    slug: string;
+    name: string;
+    phone: string | null;
+    timezone: string;
+    locale: string;
+};
+
+export type PublicSalonSettings = {
+    enabled: boolean;
+    bioText: string | null;
+    themeId: string;
+    layoutId: string;
+    appointmentRequestsEnabled: boolean;
+};
+
+export type PublicAppointmentRequestCreated = {
+    token: string;
+};
+
+export type PublicAppointmentRequestBody = {
+    serviceId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    customerName: string;
+    customerPhone: string;
+    notes?: string;
+};
+
+export type PublicAppointmentRequestStatusView = {
+    id: string;
+    status: AppointmentRequestStatus;
+    bookedServiceName: string;
+    bookedServiceDuration: number;
+    bookedServicePrice: number;
+    requestedDate: string;
+    requestedStartTime: string;
+    requestedEndTime: string;
+    salon: PublicSalonSummary;
+    createdAt: string | string;
+    reviewedAt: string | string | unknown;
+    rejectionReason: string | null;
+};
+
+export type PublicSalonSummary = {
+    name: string;
+    phone: string | null;
+};
+
+export type PublicCancelAppointmentRequestResponse = {
+    ok: true;
+};
+
 export type GetApiV1ClientsData = {
     body?: never;
     path?: never;
@@ -3424,3 +3485,168 @@ export type PatchApiV1NotificationPreferencesResponses = {
 };
 
 export type PatchApiV1NotificationPreferencesResponse = PatchApiV1NotificationPreferencesResponses[keyof PatchApiV1NotificationPreferencesResponses];
+
+export type GetApiV1PublicSalonsBySlugData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/salons/{slug}';
+};
+
+export type GetApiV1PublicSalonsBySlugErrors = {
+    /**
+     * Salon, service, or appointment request not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1PublicSalonsBySlugError = GetApiV1PublicSalonsBySlugErrors[keyof GetApiV1PublicSalonsBySlugErrors];
+
+export type GetApiV1PublicSalonsBySlugResponses = {
+    /**
+     * Public salon view
+     */
+    200: PublicSalonView;
+};
+
+export type GetApiV1PublicSalonsBySlugResponse = GetApiV1PublicSalonsBySlugResponses[keyof GetApiV1PublicSalonsBySlugResponses];
+
+export type GetApiV1PublicSalonsBySlugAvailabilityData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query: {
+        serviceId: string;
+        date: string;
+        mode?: 'day' | 'nearest';
+        /**
+         * Nearest-mode search window in days (max 60).
+         */
+        days?: string;
+    };
+    url: '/api/v1/public/salons/{slug}/availability';
+};
+
+export type GetApiV1PublicSalonsBySlugAvailabilityErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Public booking is disabled for this salon
+     */
+    403: ApiError;
+    /**
+     * Salon, service, or appointment request not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1PublicSalonsBySlugAvailabilityError = GetApiV1PublicSalonsBySlugAvailabilityErrors[keyof GetApiV1PublicSalonsBySlugAvailabilityErrors];
+
+export type GetApiV1PublicSalonsBySlugAvailabilityResponses = {
+    /**
+     * Day or nearest availability slots
+     */
+    200: AvailabilityResponse;
+};
+
+export type GetApiV1PublicSalonsBySlugAvailabilityResponse = GetApiV1PublicSalonsBySlugAvailabilityResponses[keyof GetApiV1PublicSalonsBySlugAvailabilityResponses];
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsData = {
+    body: PublicAppointmentRequestBody;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/salons/{slug}/appointment-requests';
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Salon, service, or appointment request not found
+     */
+    404: ApiError;
+    /**
+     * Too many public booking submissions from this IP
+     */
+    429: ApiError;
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsError = PostApiV1PublicSalonsBySlugAppointmentRequestsErrors[keyof PostApiV1PublicSalonsBySlugAppointmentRequestsErrors];
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsResponses = {
+    /**
+     * Request created; token authorizes status lookup and cancel
+     */
+    201: PublicAppointmentRequestCreated;
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsResponse = PostApiV1PublicSalonsBySlugAppointmentRequestsResponses[keyof PostApiV1PublicSalonsBySlugAppointmentRequestsResponses];
+
+export type GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenData = {
+    body?: never;
+    path: {
+        slug: string;
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/public/salons/{slug}/appointment-requests/{token}';
+};
+
+export type GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenErrors = {
+    /**
+     * Salon, service, or appointment request not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenError = GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenErrors[keyof GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenErrors];
+
+export type GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenResponses = {
+    /**
+     * Appointment request status for the customer
+     */
+    200: PublicAppointmentRequestStatusView;
+};
+
+export type GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenResponse = GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenResponses[keyof GetApiV1PublicSalonsBySlugAppointmentRequestsByTokenResponses];
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelData = {
+    body?: never;
+    path: {
+        slug: string;
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/public/salons/{slug}/appointment-requests/{token}/cancel';
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelErrors = {
+    /**
+     * Salon, service, or appointment request not found
+     */
+    404: ApiError;
+    /**
+     * Appointment request cannot be cancelled in its current state
+     */
+    409: ApiError;
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelError = PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelErrors[keyof PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelErrors];
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelResponses = {
+    /**
+     * Request cancelled
+     */
+    200: PublicCancelAppointmentRequestResponse;
+};
+
+export type PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelResponse = PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelResponses[keyof PostApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancelResponses];

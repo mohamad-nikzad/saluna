@@ -29,7 +29,7 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 | 15. Dashboard, today & retention | ✅ Done | OpenAPI dashboard/today/retention; PWA on generated options |
 | 16. Messaging & notifications | ✅ Done | OpenAPI messaging/notifications/notification-preferences; PWA connect + prefs on generated options |
 | 17. data-client removal | ✅ Done | Removed `@repo/data-client`, offline UX, and IndexedDB sync layer |
-| 18. Web public API | ⏳ Planned | `apps/web` raw fetch → generated SDK |
+| 18. Web public API | ✅ Done | OpenAPI public booking; `apps/web` on generated SDK |
 | 19. Native app | ⏳ Deferred | Not in prod — migrate when scoped |
 | 20. Legacy cleanup | ⏳ Planned | Remove `src/legacy/` when no consumers remain |
 
@@ -106,8 +106,8 @@ Phase 1 must change **zero app imports**.
 
 ### Web
 
-- `apps/web/src/lib/public-api.ts` uses raw `fetch`, not `@repo/api-client`
-- Public booking API migration is a later pass (Phase 7+)
+- `apps/web/src/lib/public-api.ts` wraps `@repo/api-client/sdk` (generated public booking routes)
+- `configureGeneratedApiClient({ baseUrl: PUBLIC_API_URL })` at module load
 
 ---
 
@@ -496,7 +496,7 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 | App | HTTP today | Scope |
 |-----|------------|-------|
 | **PWA** (`apps/pwa`) | Legacy `api` object (`#/lib/api-client.ts`) + `@repo/data-client` offline layer | Primary migration target |
-| **Web** (`apps/web`) | Raw `fetch` in `public-api.ts` | Phase 18 |
+| **Web** (`apps/web`) | Generated SDK in `public-api.ts` | ✅ Phase 18 |
 | **Native** (`apps/native`) | Legacy `createApiClient` in `lib/api.ts` | Phase 19 (not in prod) |
 
 ### PWA: dual path today
@@ -535,7 +535,7 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 | dashboard / today / retention | ✅ | `legacy/dashboard.ts`, `today.ts`, `retention.ts` | `today-module` (removed from today views) |
 | messaging / notifications | ✅ | `legacy/messaging.ts`, `notifications.ts` | — |
 | auth | ❌ (stay legacy) | `legacy/auth.ts` | `session-module` |
-| public booking | ❌ (Phase 18) | — | — |
+| public booking | ✅ | — | — |
 | push / webhooks / health | ❌ (excluded) | — | — |
 
 ### Per-slice migration pattern
@@ -832,6 +832,8 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 - Public salon view, availability, appointment request flows use generated SDK.
 - Server-side Astro loaders use `@repo/api-client/sdk` with `configureGeneratedApiClient` or per-request client config.
 
+**Done:** Added OpenAPI `public` route group (`/api/v1/public/*`). `apps/web/src/lib/public-api.ts` now configures the generated client and delegates to SDK functions; Astro SSR and React islands unchanged at the call-site layer.
+
 ---
 
 ### Phase 19: Native app (when scoped)
@@ -925,7 +927,7 @@ Phase 20  Legacy cleanup
  ✅ 15. OpenAPI dashboard/today/retention → migrate aggregates
  ✅ 16. OpenAPI messaging/notifications → migrate connect + prefs
  → 17. Remove @repo/data-client + offline UX ✅
- → 18. OpenAPI public → migrate apps/web
+ → 18. OpenAPI public → migrate apps/web ✅
  → 19. Native (when scoped)
  → 20. Delete src/legacy/
 ```
@@ -966,7 +968,7 @@ Phase 20  Legacy cleanup
 - [x] Phase 15: OpenAPI dashboard/today/retention + migrate reads
 - [x] Phase 16: OpenAPI messaging/notifications + migrate connect/prefs
 - [x] Phase 17: Remove `@repo/data-client` and offline UX
-- [ ] Phase 18: OpenAPI public + migrate `apps/web`
+- [x] Phase 18: OpenAPI public + migrate `apps/web`
 - [ ] Phase 19: Native (when scoped)
 - [ ] Phase 20: Delete `src/legacy/` when grep clean
 - [ ] Prefer generated query options over endpoint wrapper hooks
@@ -1024,7 +1026,7 @@ Apps                 → compose behavior locally with generated options
 - Migrate by vertical slice — not big-bang.
 - OpenAPI before app screens for each route group.
 - Better Auth passthrough stays legacy until Saluna-owned wrapper routes have stable OpenAPI schemas.
-- Public booking (Phase 18), push, messaging webhooks, and health excluded until their phases.
+- Push, messaging webhooks, and health excluded until their phases.
 - Prefer generated query options directly; custom hooks only for shared domain behavior.
 - Migrated slices are online-only: no `assertOnlineForWrite` / `useNetworkStatus` in generated `*-queries.ts` hooks; remove write-policy entries per domain as each slice lands.
 - `@repo/data-client` removal is Phase 17 — after CRUD domains are on generated client.
