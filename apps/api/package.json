@@ -19,6 +19,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "pnpm run test:unit",
     "test:unit": "vitest run --config vitest.config.ts",
+    "generate:openapi": "tsx src/openapi/generate-openapi.ts",
     "boundaries": "eslint . --max-warnings=0",
     "expire-requests": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/cli/expire-requests.ts",
     "cli:messaging-set-webhook": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts",
@@ -28,9 +29,10 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@hono/zod-openapi": "^1.4.0",
     "@hono/zod-validator": "^0.8.0",
-    "@repo/brand": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/brand": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/notifications": "workspace:*",
     "@repo/salon-core": "workspace:*",
@@ -39,13 +41,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250115.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22",
     "tsx": "^4.19.2",
     "typescript": "5.7.3",
     "vitest": "^3.0.5",
-    "wrangler": "^3.99.0",
-    "@cloudflare/workers-types": "^4.20250115.0"
+    "wrangler": "^3.99.0"
   }
 }

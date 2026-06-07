@@ -55,7 +55,8 @@
     "bench:local": "BASE_URL=http://localhost:3000 ./benchmarks/run.sh",
     "bench:prod": "BASE_URL=https://saluna.vercel.app ./benchmarks/run.sh",
     "bench:summary": "node benchmarks/summarize.mjs",
-    "bench:compare": "node benchmarks/compare.mjs"
+    "bench:compare": "node benchmarks/compare.mjs",
+    "generate:api-contract": "pnpm --filter @repo/api generate:openapi"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

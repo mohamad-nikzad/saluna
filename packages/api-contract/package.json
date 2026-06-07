@@ -1,0 +1,9 @@
+{
+  "name": "@repo/api-contract",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generated OpenAPI contract for the Saluna API (do not hand-edit openapi.json)",
+  "exports": {
+    "./openapi.json": "./openapi.json"
+  }
+}

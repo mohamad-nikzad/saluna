@@ -321,7 +321,7 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 
 **Acceptance criteria:**
 
-- `openapi.json` generated with one command.
+- `openapi.json` generated with one command (`pnpm generate:api-contract` — see `packages/api-contract/README.md`).
 - Clients routes documented with path params, request bodies, response bodies, and auth requirements.
 - No hand-editing of `openapi.json`.
 - No repo-wide salon-core forms refactor.

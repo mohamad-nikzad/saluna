@@ -8,6 +8,7 @@ import { bodyLimit } from 'hono/body-limit'
 import type { AppEnv } from './factory'
 import { getEnv } from './env'
 import { errorHandler, notFoundHandler } from './middleware/error'
+import { requireTenant } from './middleware/auth'
 import { health } from './routes/health'
 import { clients } from './routes/clients'
 import { catalogPresets } from './routes/catalog-presets'
@@ -68,6 +69,8 @@ const app = new Hono<AppEnv>()
   .route('/api/v1/auth', authRoute)
   .on(['GET', 'POST'], '/api/v1/auth/*', (c) => authServer.handler(c.req.raw))
   .route('/health', health)
+  .use('/api/v1/clients', requireTenant('manage_clients'))
+  .use('/api/v1/clients/*', requireTenant('manage_clients'))
   .route('/api/v1/clients', clients)
   .route('/api/v1/catalog-presets', catalogPresets)
   .route('/api/v1/service-categories', serviceCategories)

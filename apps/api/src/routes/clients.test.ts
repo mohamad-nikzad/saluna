@@ -88,4 +88,22 @@ describe('clients router', () => {
       code: 'duplicate-phone',
     })
   })
+
+  it('accepts unknown follow-up reason and defaults to manual', async () => {
+    vi.mocked(db.getClientById).mockResolvedValue({ id: 'c1', name: 'Ali' } as never)
+    vi.mocked(db.createClientFollowUp).mockResolvedValue({
+      id: 'f1',
+      reason: 'manual',
+      status: 'open',
+    } as never)
+
+    const res = await app.request('/api/v1/clients/c1/follow-ups', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'bogus' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.createClientFollowUp).toHaveBeenCalledWith('s1', 'c1', 'manual', undefined)
+  })
 })
