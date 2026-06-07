@@ -118,13 +118,60 @@ wait_for_postgres() {
   exit 1
 }
 
+wait_for_service_health() {
+  local service="$1"
+  local container="saluna-${service}"
+
+  echo "Waiting for ${service} to become healthy"
+  for _ in $(seq 1 60); do
+    local status
+    status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || true)"
+
+    if [[ "$status" == "healthy" ]]; then
+      return
+    fi
+
+    if [[ "$status" == "exited" || "$status" == "dead" ]]; then
+      echo "${service} stopped while waiting for health." >&2
+      compose ps "$service" >&2 || true
+      compose logs --tail=80 "$service" >&2 || true
+      exit 1
+    fi
+
+    sleep 2
+  done
+
+  echo "${service} did not become healthy in time." >&2
+  compose ps "$service" >&2 || true
+  compose logs --tail=80 "$service" >&2 || true
+  exit 1
+}
+
 smoke_check() {
   local host="$1"
   local path="$2"
+  local service="${3:-}"
+
   echo "Smoke check: ${host}${path}"
-  compose exec -T gateway wget -q -O /dev/null \
-    --header="Host: ${host}" \
-    "http://127.0.0.1${path}"
+  for attempt in $(seq 1 15); do
+    if compose exec -T gateway wget -q -O /dev/null \
+      --header="Host: ${host}" \
+      "http://127.0.0.1${path}"; then
+      return
+    fi
+
+    if [[ "$attempt" -lt 15 ]]; then
+      sleep 2
+    fi
+  done
+
+  echo "Smoke check failed after retries: ${host}${path}" >&2
+  compose ps >&2 || true
+  compose logs --tail=80 gateway >&2 || true
+  if [[ -n "$service" && "$service" != "gateway" ]]; then
+    compose logs --tail=80 "$service" >&2 || true
+  fi
+  exit 1
 }
 
 if [[ "$LOAD_INFRA" == "1" ]]; then
@@ -162,10 +209,14 @@ fi
 
 echo "Starting application stack"
 compose up -d
+wait_for_service_health api
+wait_for_service_health web
+wait_for_service_health pwa
+wait_for_service_health gateway
 
-smoke_check "${API_DOMAIN:-api.saluna.ir}" /health
-smoke_check "${APP_DOMAIN:-app.saluna.ir}" /healthz
-smoke_check "${PUBLIC_DOMAIN:-saluna.ir}" /
+smoke_check "${API_DOMAIN:-api.saluna.ir}" /health api
+smoke_check "${APP_DOMAIN:-app.saluna.ir}" /healthz pwa
+smoke_check "${PUBLIC_DOMAIN:-saluna.ir}" / web
 
 echo "Release ${SALUNA_IMAGE_TAG} is running:"
 echo "  api: ${SALUNA_API_IMAGE_TAG}"

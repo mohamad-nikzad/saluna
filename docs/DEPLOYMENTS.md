@@ -1,6 +1,6 @@
 # Saluna deployments
 
-Last updated: **2026-06-06**
+Last updated: **2026-06-07**
 
 This is the current production deployment model for Saluna. The normal path is
 registry-first CI/CD through HamGit/Hamravesh-style GitLab CI jobs. The old
@@ -35,8 +35,10 @@ push to HamGit main
   -> CI pushes the image to registry.hamdocker.ir
   -> operator starts the matching manual deploy job
   -> CI SSHs to deploy@195.177.255.24
+  -> CI refreshes compose, Nginx template, and the deploy script on the VPS
   -> VPS pulls only that app image
-  -> VPS restarts only that app service and ensures gateway is running
+  -> VPS restarts only that app service and waits for Docker health
+  -> VPS ensures gateway is running and healthy
   -> VPS smoke-checks the affected public host
   -> VPS records the deployed tag in .env.production
 ```
@@ -175,8 +177,9 @@ For every app deploy it:
 - exports only the selected app tag
 - runs `docker compose pull <app>`
 - restarts only the selected app with `docker compose up -d --no-deps <app>`
-- ensures `gateway` is running
-- smoke-checks the affected host through the gateway
+- waits for the selected app's Docker healthcheck to pass
+- ensures `gateway` is running and healthy
+- smoke-checks the affected host through the gateway, with short retries
 - writes the selected app tag back to `.env.production` after the smoke check
 
 For API deploys only, before restarting `api`, it also:
@@ -263,4 +266,3 @@ connected builder builds all app images
 
 Normal releases should not create or keep large `deploy/releases/*.tar.gz`
 bundles on a developer machine.
-

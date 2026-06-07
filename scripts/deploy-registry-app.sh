@@ -136,13 +136,60 @@ wait_for_postgres() {
   exit 1
 }
 
+wait_for_service_health() {
+  local service="$1"
+  local container="saluna-${service}"
+
+  echo "Waiting for ${service} to become healthy"
+  for _ in $(seq 1 60); do
+    local status
+    status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || true)"
+
+    if [[ "$status" == "healthy" ]]; then
+      return
+    fi
+
+    if [[ "$status" == "exited" || "$status" == "dead" ]]; then
+      echo "${service} stopped while waiting for health." >&2
+      compose ps "$service" >&2 || true
+      compose logs --tail=80 "$service" >&2 || true
+      exit 1
+    fi
+
+    sleep 2
+  done
+
+  echo "${service} did not become healthy in time." >&2
+  compose ps "$service" >&2 || true
+  compose logs --tail=80 "$service" >&2 || true
+  exit 1
+}
+
 smoke_check() {
   local host="$1"
   local path="$2"
+  local service="${3:-}"
+
   echo "Smoke check: ${host}${path}"
-  compose exec -T gateway wget -q -O /dev/null \
-    --header="Host: ${host}" \
-    "http://127.0.0.1${path}"
+  for attempt in $(seq 1 15); do
+    if compose exec -T gateway wget -q -O /dev/null \
+      --header="Host: ${host}" \
+      "http://127.0.0.1${path}"; then
+      return
+    fi
+
+    if [[ "$attempt" -lt 15 ]]; then
+      sleep 2
+    fi
+  done
+
+  echo "Smoke check failed after retries: ${host}${path}" >&2
+  compose ps >&2 || true
+  compose logs --tail=80 gateway >&2 || true
+  if [[ -n "$service" && "$service" != "gateway" ]]; then
+    compose logs --tail=80 "$service" >&2 || true
+  fi
+  exit 1
 }
 
 case "$app" in
@@ -191,11 +238,13 @@ fi
 
 echo "Restarting ${app}"
 compose up -d --no-deps "$app"
+wait_for_service_health "$app"
 
 echo "Ensuring gateway is running"
 compose up -d --no-deps gateway
+wait_for_service_health gateway
 
-smoke_check "$smoke_host" "$smoke_path"
+smoke_check "$smoke_host" "$smoke_path" "$app"
 
 set_env_value "$tag_var" "$image_tag" "$ENV_FILE"
 if [[ -n "$version_value" ]]; then

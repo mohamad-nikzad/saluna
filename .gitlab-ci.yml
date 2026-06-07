@@ -36,6 +36,11 @@ variables:
     - printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
     - ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+    - ssh "$VPS_SSH_USER@$VPS_HOST" "mkdir -p /opt/saluna/scripts /opt/saluna/deploy/nginx/templates"
+    - scp docker-compose.prod.yml "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/docker-compose.prod.yml"
+    - scp scripts/deploy-registry-app.sh "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/scripts/deploy-registry-app.sh"
+    - scp deploy/nginx/templates/saluna.conf.template "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/deploy/nginx/templates/"
+    - ssh "$VPS_SSH_USER@$VPS_HOST" "chmod +x /opt/saluna/scripts/deploy-registry-app.sh"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
@@ -59,6 +64,7 @@ build-api:
         - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
   script:
     - export SALUNA_API_VERSION="$(sed -n 's/.*"version":[[:space:]]*"\([^"]*\)".*/\1/p' apps/api/package.json | head -n 1)"
     - export SALUNA_API_IMAGE_TAG="${SALUNA_API_VERSION}-${CI_COMMIT_SHORT_SHA}"
@@ -96,6 +102,7 @@ build-web:
         - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
   script:
     - export SALUNA_WEB_VERSION="$(sed -n 's/.*"version":[[:space:]]*"\([^"]*\)".*/\1/p' apps/web/package.json | head -n 1)"
     - export SALUNA_WEB_IMAGE_TAG="${SALUNA_WEB_VERSION}-${CI_COMMIT_SHORT_SHA}"
@@ -140,6 +147,7 @@ build-pwa:
         - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
   script:
     - export SALUNA_PWA_VERSION="$(sed -n 's/.*"version":[[:space:]]*"\([^"]*\)".*/\1/p' apps/pwa/package.json | head -n 1)"
     - export SALUNA_PWA_IMAGE_TAG="${SALUNA_PWA_VERSION}-${CI_COMMIT_SHORT_SHA}"
@@ -182,8 +190,10 @@ deploy-api:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
       when: manual
     - when: never
   needs:
@@ -204,8 +214,10 @@ deploy-web:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
       when: manual
     - when: never
   needs:
@@ -231,8 +243,10 @@ deploy-pwa:
         - package.json
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
+        - .gitlab-ci.yml
         - docker-compose.prod.yml
         - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
       when: manual
     - when: never
   needs:
