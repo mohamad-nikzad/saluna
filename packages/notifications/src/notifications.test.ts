@@ -5,6 +5,9 @@ const mocks = vi.hoisted(() => ({
   dispatchNotification: vi.fn(),
   findAccountByUserAndProvider: vi.fn(),
   getEnabledMessagingProvidersForSalon: vi.fn(),
+  getBaleSafirConfig: vi.fn(),
+  getUserById: vi.fn(),
+  sendBaleSafirMessage: vi.fn(),
   sendSmsNotification: vi.fn(),
   getNotificationPreferences: vi.fn(),
 }))
@@ -27,8 +30,17 @@ vi.mock('@repo/database/public', () => ({
   getEnabledMessagingProvidersForSalon: mocks.getEnabledMessagingProvidersForSalon,
 }))
 
+vi.mock('@repo/database/auth-users', () => ({
+  getUserById: mocks.getUserById,
+}))
+
 vi.mock('./sms', () => ({
   sendSmsNotification: mocks.sendSmsNotification,
+}))
+
+vi.mock('./providers/bale-safir', () => ({
+  getBaleSafirConfig: mocks.getBaleSafirConfig,
+  sendBaleSafirMessage: mocks.sendBaleSafirMessage,
 }))
 
 import { createNotificationForUser } from './notifications'
@@ -55,6 +67,23 @@ beforeEach(() => {
   mocks.createNotificationForUser.mockResolvedValue(notification)
   mocks.dispatchNotification.mockResolvedValue(undefined)
   mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue(['telegram'])
+  mocks.getBaleSafirConfig.mockReturnValue(null)
+  mocks.getUserById.mockResolvedValue({
+    id: 'user-1',
+    salonId: 'salon-1',
+    name: 'Staff',
+    fullName: 'Staff',
+    nickname: null,
+    phone: '09123456789',
+    role: 'staff',
+    color: 'rose',
+    createdAt: new Date(),
+  })
+  mocks.sendBaleSafirMessage.mockResolvedValue({
+    status: 'sent',
+    providerMessageId: 'safir-1',
+    phone: '989123456789',
+  })
   mocks.sendSmsNotification.mockResolvedValue({
     status: 'skipped',
     provider: null,
@@ -365,5 +394,123 @@ describe('createNotificationForUser', () => {
         buttons: [[{ label: 'Open', url: 'https://app.example/requests/1' }]],
       })
     )
+  })
+
+  it('does not send Safir when a linked enabled Bale bot account exists', async () => {
+    const send = vi.fn().mockResolvedValue({
+      status: 'sent',
+      providerMessageId: 'bale-bot-1',
+    })
+    registerMessagingProvider({
+      id: 'bale',
+      displayName: 'Bale',
+      supportsInlineButtons: true,
+      supportsInbound: true,
+      isConfigured: () => true,
+      buildAccountLinkUrl: () => null,
+      send,
+    })
+    mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue(['bale'])
+    mocks.getBaleSafirConfig.mockReturnValue({
+      apiAccessKey: 'access-key',
+      botId: '123456',
+    })
+    mocks.findAccountByUserAndProvider.mockResolvedValue({
+      id: 'acc-bale-1',
+      userId: 'user-1',
+      provider: 'bale',
+      externalId: 'chat-9',
+      displayName: null,
+      enabled: true,
+      linkedAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    await createNotificationForUser({
+      salonId: 'salon-1',
+      userId: 'user-1',
+      type: 'appointment_created',
+      title: 'نوبت جدید',
+      body: 'مشتری، سرویس، 2026-06-07 ساعت 10:00',
+      route: '/x',
+    })
+
+    expect(send).toHaveBeenCalled()
+    expect(mocks.sendBaleSafirMessage).not.toHaveBeenCalled()
+    const baleCalls = mocks.dispatchNotification.mock.calls.filter(
+      (c) => c[1] === 'bale',
+    )
+    expect(baleCalls).toHaveLength(1)
+    expect(baleCalls[0]![2]).toBe('sent')
+    expect(baleCalls[0]![3]).toMatchObject({ provider: 'bale' })
+  })
+
+  it('sends appointment-created Safir fallback when Bale is enabled and the staff has no linked Bale account', async () => {
+    mocks.createNotificationForUser.mockResolvedValue({
+      ...notification,
+      title: 'نوبت جدید',
+      body: 'مشتری، سرویس، 2026-06-07 ساعت 10:00',
+    })
+    mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue(['bale'])
+    mocks.getBaleSafirConfig.mockReturnValue({
+      apiAccessKey: 'access-key',
+      botId: '123456',
+    })
+
+    await createNotificationForUser({
+      salonId: 'salon-1',
+      userId: 'user-1',
+      type: 'appointment_created',
+      title: 'نوبت جدید',
+      body: 'مشتری، سرویس، 2026-06-07 ساعت 10:00',
+      route: '/x',
+    })
+
+    expect(mocks.getUserById).toHaveBeenCalledWith('user-1')
+    expect(mocks.sendBaleSafirMessage).toHaveBeenCalledWith({
+      phone: '09123456789',
+      text: 'نوبت جدید\nمشتری، سرویس، 2026-06-07 ساعت 10:00',
+      requestId: 'notification:n-1:bale_safir',
+    })
+    const safirCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'bale' && c[3]?.provider === 'bale_safir',
+    )!
+    expect(safirCall[2]).toBe('sent')
+    expect(safirCall[3]).toMatchObject({
+      provider: 'bale_safir',
+      providerMessageId: 'safir-1',
+    })
+  })
+
+  it('records Safir NotBaleUser as failed without blocking appointment-created notification creation', async () => {
+    mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue(['bale'])
+    mocks.getBaleSafirConfig.mockReturnValue({
+      apiAccessKey: 'access-key',
+      botId: '123456',
+    })
+    mocks.sendBaleSafirMessage.mockResolvedValue({
+      status: 'failed',
+      error: 'not_bale_user',
+      phone: '989123456789',
+    })
+
+    const result = await createNotificationForUser({
+      salonId: 'salon-1',
+      userId: 'user-1',
+      type: 'appointment_created',
+      title: 'نوبت جدید',
+      body: 'مشتری، سرویس، 2026-06-07 ساعت 10:00',
+      route: '/x',
+    })
+
+    expect(result).toEqual(notification)
+    const safirCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'bale' && c[3]?.provider === 'bale_safir',
+    )!
+    expect(safirCall[2]).toBe('failed')
+    expect(safirCall[3]).toMatchObject({
+      provider: 'bale_safir',
+      error: 'not_bale_user',
+    })
   })
 })

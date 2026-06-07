@@ -15,7 +15,12 @@ import {
   type MessagingProviderId,
 } from '@repo/database/messaging'
 import { getEnabledMessagingProvidersForSalon } from '@repo/database/public'
+import { getUserById } from '@repo/database/auth-users'
 import { listConfiguredMessagingProviders } from './providers/registry'
+import {
+  getBaleSafirConfig,
+  sendBaleSafirMessage,
+} from './providers/bale-safir'
 import type { MessagingButton } from './providers/types'
 import { sendSmsNotification } from './sms'
 
@@ -27,6 +32,10 @@ export type CreateNotificationForUserInput = CreateNotificationInput & {
 
 function isAppointmentRequestNotification(type: string): boolean {
   return type === 'appointment_request_pending' || type.startsWith('appointment_request_')
+}
+
+function isStaffAppointmentCreatedNotification(type: string): boolean {
+  return type === 'appointment_created'
 }
 
 async function deliverInApp(notification: AppNotification) {
@@ -120,6 +129,64 @@ async function deliverMessagingChannels(
   }
 }
 
+async function deliverBaleSafirStaffFallback(
+  notification: AppNotification,
+  salonEnabledProviders: Set<MessagingProviderId>
+) {
+  if (!isStaffAppointmentCreatedNotification(notification.type)) return
+
+  const safirConfig = getBaleSafirConfig()
+  const salonHasBaleEnabled = salonEnabledProviders.has('bale')
+  if (!salonHasBaleEnabled && !safirConfig) return
+
+  if (!salonHasBaleEnabled) {
+    await recordNotificationDelivery(notification.id, 'bale', 'skipped', {
+      provider: 'bale_safir',
+      error: 'salon_disabled',
+    })
+    return
+  }
+
+  const account = await findAccountByUserAndProvider(notification.userId, 'bale')
+  if (account?.enabled) return
+  if (account && !account.enabled) {
+    await recordNotificationDelivery(notification.id, 'bale', 'skipped', {
+      provider: 'bale_safir',
+      error: 'user_disabled',
+    })
+    return
+  }
+
+  if (!safirConfig) {
+    await recordNotificationDelivery(notification.id, 'bale', 'skipped', {
+      provider: 'bale_safir',
+      error: 'safir_not_configured',
+    })
+    return
+  }
+
+  const staff = await getUserById(notification.userId)
+  const phone = staff?.phone.trim()
+  if (!phone) {
+    await recordNotificationDelivery(notification.id, 'bale', 'skipped', {
+      provider: 'bale_safir',
+      error: 'missing_phone',
+    })
+    return
+  }
+
+  const result = await sendBaleSafirMessage({
+    phone,
+    text: `${notification.title}\n${notification.body}`,
+    requestId: `notification:${notification.id}:bale_safir`,
+  })
+  await recordNotificationDelivery(notification.id, 'bale', result.status, {
+    provider: 'bale_safir',
+    providerMessageId: result.providerMessageId ?? null,
+    error: result.error ?? null,
+  })
+}
+
 export async function createNotificationForUser(input: CreateNotificationForUserInput) {
   const { enabledProviders: enabledProvidersOverride, messagingButtons, ...createInput } = input
   const notification = await createNotificationRecordForUser(createInput)
@@ -141,6 +208,7 @@ export async function createNotificationForUser(input: CreateNotificationForUser
     salonEnabledProviders,
     messagingButtons
   )
+  await deliverBaleSafirStaffFallback(notification, salonEnabledProviders)
 
   return notification
 }
