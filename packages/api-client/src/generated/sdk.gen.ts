@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetApiV1ClientsByIdData, GetApiV1ClientsByIdErrors, GetApiV1ClientsByIdResponses, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryErrors, GetApiV1ClientsByIdSummaryResponses, GetApiV1ClientsData, GetApiV1ClientsErrors, GetApiV1ClientsResponses, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdErrors, PatchApiV1ClientsByIdResponses, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsErrors, PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsData, PostApiV1ClientsErrors, PostApiV1ClientsResponses } from './types.gen';
+import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdErrors, DeleteApiV1StaffByIdResponses, GetApiV1ClientsByIdData, GetApiV1ClientsByIdErrors, GetApiV1ClientsByIdResponses, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryErrors, GetApiV1ClientsByIdSummaryResponses, GetApiV1ClientsData, GetApiV1ClientsErrors, GetApiV1ClientsResponses, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityErrors, GetApiV1StaffBookingAvailabilityResponses, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleErrors, GetApiV1StaffByIdScheduleResponses, GetApiV1StaffData, GetApiV1StaffErrors, GetApiV1StaffResponses, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdErrors, PatchApiV1ClientsByIdResponses, PatchApiV1StaffByIdData, PatchApiV1StaffByIdErrors, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordErrors, PatchApiV1StaffByIdPasswordResponses, PatchApiV1StaffByIdResponses, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesErrors, PatchApiV1StaffByIdServicesResponses, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsErrors, PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsData, PostApiV1ClientsErrors, PostApiV1ClientsResponses, PostApiV1StaffData, PostApiV1StaffErrors, PostApiV1StaffResponses, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleErrors, PutApiV1StaffByIdScheduleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -64,6 +64,88 @@ export const getApiV1ClientsByIdSummary = <ThrowOnError extends boolean = false>
  */
 export const postApiV1ClientsByIdFollowUps = <ThrowOnError extends boolean = false>(options: Options<PostApiV1ClientsByIdFollowUpsData, ThrowOnError>): RequestResult<PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsByIdFollowUpsErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1ClientsByIdFollowUpsResponses, PostApiV1ClientsByIdFollowUpsErrors, ThrowOnError>({
     url: '/api/v1/clients/{id}/follow-ups',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List staff
+ *
+ * Returns all active staff and managers for the authenticated salon tenant.
+ */
+export const getApiV1Staff = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1StaffData, ThrowOnError>): RequestResult<GetApiV1StaffResponses, GetApiV1StaffErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1StaffResponses, GetApiV1StaffErrors, ThrowOnError>({ url: '/api/v1/staff', ...options });
+
+/**
+ * Create staff member
+ */
+export const postApiV1Staff = <ThrowOnError extends boolean = false>(options: Options<PostApiV1StaffData, ThrowOnError>): RequestResult<PostApiV1StaffResponses, PostApiV1StaffErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1StaffResponses, PostApiV1StaffErrors, ThrowOnError>({
+    url: '/api/v1/staff',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Staff booking availability for a slot
+ */
+export const getApiV1StaffBookingAvailability = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1StaffBookingAvailabilityData, ThrowOnError>): RequestResult<GetApiV1StaffBookingAvailabilityResponses, GetApiV1StaffBookingAvailabilityErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1StaffBookingAvailabilityResponses, GetApiV1StaffBookingAvailabilityErrors, ThrowOnError>({ url: '/api/v1/staff/booking-availability', ...options });
+
+/**
+ * Deactivate staff member
+ */
+export const deleteApiV1StaffById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiV1StaffByIdData, ThrowOnError>): RequestResult<DeleteApiV1StaffByIdResponses, DeleteApiV1StaffByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteApiV1StaffByIdResponses, DeleteApiV1StaffByIdErrors, ThrowOnError>({ url: '/api/v1/staff/{id}', ...options });
+
+/**
+ * Update staff member
+ */
+export const patchApiV1StaffById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1StaffByIdData, ThrowOnError>): RequestResult<PatchApiV1StaffByIdResponses, PatchApiV1StaffByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1StaffByIdResponses, PatchApiV1StaffByIdErrors, ThrowOnError>({
+    url: '/api/v1/staff/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update staff password
+ */
+export const patchApiV1StaffByIdPassword = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1StaffByIdPasswordData, ThrowOnError>): RequestResult<PatchApiV1StaffByIdPasswordResponses, PatchApiV1StaffByIdPasswordErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1StaffByIdPasswordResponses, PatchApiV1StaffByIdPasswordErrors, ThrowOnError>({
+    url: '/api/v1/staff/{id}/password',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get staff schedule bundle
+ */
+export const getApiV1StaffByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<GetApiV1StaffByIdScheduleData, ThrowOnError>): RequestResult<GetApiV1StaffByIdScheduleResponses, GetApiV1StaffByIdScheduleErrors, ThrowOnError> => (options.client ?? client).get<GetApiV1StaffByIdScheduleResponses, GetApiV1StaffByIdScheduleErrors, ThrowOnError>({ url: '/api/v1/staff/{id}/schedule', ...options });
+
+/**
+ * Update staff schedule
+ */
+export const putApiV1StaffByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<PutApiV1StaffByIdScheduleData, ThrowOnError>): RequestResult<PutApiV1StaffByIdScheduleResponses, PutApiV1StaffByIdScheduleErrors, ThrowOnError> => (options.client ?? client).put<PutApiV1StaffByIdScheduleResponses, PutApiV1StaffByIdScheduleErrors, ThrowOnError>({
+    url: '/api/v1/staff/{id}/schedule',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update staff service assignments
+ */
+export const patchApiV1StaffByIdServices = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1StaffByIdServicesData, ThrowOnError>): RequestResult<PatchApiV1StaffByIdServicesResponses, PatchApiV1StaffByIdServicesErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1StaffByIdServicesResponses, PatchApiV1StaffByIdServicesErrors, ThrowOnError>({
+    url: '/api/v1/staff/{id}/services',
     ...options,
     headers: {
         'Content-Type': 'application/json',

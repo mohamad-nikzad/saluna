@@ -14,16 +14,15 @@ import {
 } from '#/components/staff/staff-actions-provider'
 import { StaffDetailSkeleton } from '#/components/staff/staff-detail-skeleton'
 import { StaffDetailView } from '#/components/staff/staff-detail-view'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '#/lib/auth'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import type { ManagerStaffList } from '#/lib/manager-data-queries'
 import {
   useManagerServicesQuery,
-  useManagerStaffQuery,
-  useStaffScheduleBundleQuery,
 } from '#/lib/manager-data-queries'
-import { api } from '#/lib/api-client'
-import { managerStaffQueryKey } from '#/lib/query-keys'
+import {
+  staffListQueryOptions,
+  staffScheduleBundleQueryOptions,
+} from '#/lib/staff-queries'
 
 export const Route = createFileRoute('/_authed/staff/$id')({
   beforeLoad: ({ context }) => {
@@ -32,10 +31,7 @@ export const Route = createFileRoute('/_authed/staff/$id')({
     }
   },
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData<ManagerStaffList>({
-      queryKey: managerStaffQueryKey,
-      queryFn: async ({ signal }) => (await api.staff.list({ signal })).staff,
-    }),
+    context.queryClient.ensureQueryData(staffListQueryOptions()),
   component: StaffDetailPage,
   pendingComponent: StaffDetailSkeleton,
 })
@@ -49,10 +45,9 @@ type ScheduleBundle = {
 function StaffDetailPage() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
-  const dc = useManagerDataClient()
 
-  const staffQuery = useManagerStaffQuery(!!dc)
-  const servicesQuery = useManagerServicesQuery(!!dc)
+  const staffQuery = useQuery(staffListQueryOptions())
+  const servicesQuery = useManagerServicesQuery()
   const staff = staffQuery.data ?? []
   const servicesList = servicesQuery.data ?? []
 
@@ -62,10 +57,10 @@ function StaffDetailPage() {
   )
 
   const isStaffRole = member?.role === 'staff'
-  const scheduleQuery = useStaffScheduleBundleQuery(
-    member?.id,
-    Boolean(member && isStaffRole),
-  )
+  const scheduleQuery = useQuery({
+    ...staffScheduleBundleQueryOptions(member?.id ?? ''),
+    enabled: Boolean(member && isStaffRole),
+  })
 
   if (staffQuery.isPending || servicesQuery.isPending) {
     return <StaffDetailSkeleton />

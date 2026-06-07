@@ -51,8 +51,8 @@ import type {
 import { api } from '#/lib/api-client'
 import {
   useManagerServicesQuery,
-  useManagerStaffQuery,
 } from '#/lib/manager-data-queries'
+import { staffListQueryOptions } from '#/lib/staff-queries'
 import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
 import { ClientAvatar } from '#/components/clients/client-visuals'
 
@@ -295,7 +295,10 @@ function RequestsList({
     queryFn: ({ signal }) => api.appointmentRequests.list({ status, signal }),
   })
 
-  const { data: staffData } = useManagerStaffQuery(status === 'pending')
+  const { data: staffData } = useQuery({
+    ...staffListQueryOptions(),
+    enabled: status === 'pending',
+  })
   const { data: servicesData } = useManagerServicesQuery(status === 'pending')
 
   const requests = data?.requests

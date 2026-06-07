@@ -20,12 +20,12 @@ import { useAuth } from '#/lib/auth'
 import { useManagerDataClient } from '#/lib/manager-data-client'
 import {
   useManagerServicesQuery,
-  useManagerStaffQuery,
 } from '#/lib/manager-data-queries'
 import {
   clientsListQueryOptions,
   getApiV1ClientsQueryKey,
 } from '#/lib/clients-queries'
+import { staffListQueryOptions } from '#/lib/staff-queries'
 import { useNetworkStatus } from '#/lib/network-status'
 import { useCalendarIndexedDbSources } from '#/lib/use-calendar-indexeddb-sources'
 import { CalendarHeader } from '#/components/calendar/calendar-header'
@@ -131,7 +131,7 @@ function CalendarPage() {
     placeholderData: (prev) => prev,
   })
 
-  const staffQuery = useManagerStaffQuery(!!dc)
+  const staffQuery = useQuery(staffListQueryOptions())
   const servicesQuery = useManagerServicesQuery(!!dc)
 
   const clientsQuery = useQuery({

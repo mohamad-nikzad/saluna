@@ -7,9 +7,9 @@ import { api } from '#/lib/api-client'
 import { useManagerDataClient } from '#/lib/manager-data-client'
 import {
   useManagerServicesQuery,
-  useManagerStaffQuery,
 } from '#/lib/manager-data-queries'
 import { clientsListQueryOptions } from '#/lib/clients-queries'
+import { staffListQueryOptions } from '#/lib/staff-queries'
 import { useNetworkStatus } from '#/lib/network-status'
 import { firstNameOf } from '#/lib/today-view-model'
 import { useManagerTodayIndexedDbSources } from '#/lib/use-manager-today-indexeddb'
@@ -41,12 +41,9 @@ export function ManagerTodayProvider({
     enabled: true,
   })
 
-  const staffQuery = useManagerStaffQuery(Boolean(dc))
+  const staffQuery = useQuery(staffListQueryOptions())
   const servicesQuery = useManagerServicesQuery(Boolean(dc))
-  const clientsQuery = useQuery({
-    ...clientsListQueryOptions(),
-    enabled: Boolean(dc),
-  })
+  const clientsQuery = useQuery(clientsListQueryOptions())
 
   const idb = useManagerTodayIndexedDbSources(
     true,

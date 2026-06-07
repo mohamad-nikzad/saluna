@@ -20,7 +20,8 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 | 6. Documentation | ✅ Done | `packages/api-client/README.md` |
 | 7. App foundation | ✅ Done | `generated-api-client.ts` wired at PWA startup; dual-run with legacy |
 | 8. Clients (pilot) | ✅ Done | List/detail/CRUD on generated query/mutation options; online-only |
-| 9–16. Vertical slices | ⏳ Planned | OpenAPI + app migration per route group (see below) |
+| 9. Staff | ✅ Done | OpenAPI staff routes; PWA staff screens on generated query/mutation options |
+| 10–16. Vertical slices | ⏳ Planned | OpenAPI + app migration per route group (see below) |
 | 17. data-client removal | ⏳ Planned | Drop offline layer after CRUD slices proven |
 | 18. Web public API | ⏳ Planned | `apps/web` raw fetch → generated SDK |
 | 19. Native app | ⏳ Deferred | Not in prod — migrate when scoped |
@@ -893,7 +894,7 @@ Phase 20  Legacy cleanup
 ```txt
  ✅ 7.  Wire configureGeneratedApiClient() in PWA (dual-run; no screen changes)
  ✅ 8.  Clients slice (OpenAPI ✅) — replace legacy + data-client
- → 9.  OpenAPI staff → migrate staff screens
+ ✅ 9.  OpenAPI staff → migrate staff screens
  → 10. OpenAPI services → migrate catalog
  → 11. OpenAPI appointments → migrate calendar
  → 12. OpenAPI appointment-requests → migrate requests inbox
@@ -934,7 +935,7 @@ Phase 20  Legacy cleanup
 
 - [x] Phase 7: Wire `configureGeneratedApiClient()` in PWA (dual-run with legacy)
 - [x] Phase 8: Clients slice — generated query/mutation + invalidation; drop clients data-client path
-- [ ] Phase 9: OpenAPI staff + migrate staff screens
+- [x] Phase 9: OpenAPI staff + migrate staff screens
 - [ ] Phase 10: OpenAPI services catalog + migrate services screens
 - [ ] Phase 11: OpenAPI appointments + migrate calendar
 - [ ] Phase 12: OpenAPI appointment-requests + migrate requests

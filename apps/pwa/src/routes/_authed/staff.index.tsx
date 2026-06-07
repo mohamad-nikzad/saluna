@@ -13,12 +13,12 @@ import { StaffMiniStat } from '#/components/staff/staff-mini-stat'
 import { StaffSkeleton } from '#/components/staff/staff-skeleton'
 import type { ManagerServicesList } from '#/lib/manager-data-queries'
 import { staffServiceCount } from '#/components/staff/staff-utils'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '#/lib/auth'
-import { useManagerDataClient } from '#/lib/manager-data-client'
 import {
   useManagerServicesQuery,
-  useManagerStaffQuery,
 } from '#/lib/manager-data-queries'
+import { staffListQueryOptions } from '#/lib/staff-queries'
 
 export const Route = createFileRoute('/_authed/staff/')({
   component: StaffListPage,
@@ -26,10 +26,8 @@ export const Route = createFileRoute('/_authed/staff/')({
 })
 
 function StaffListPage() {
-  const dc = useManagerDataClient()
-
-  const staffQuery = useManagerStaffQuery(!!dc)
-  const servicesQuery = useManagerServicesQuery(!!dc)
+  const staffQuery = useQuery(staffListQueryOptions())
+  const servicesQuery = useManagerServicesQuery()
   const staff = staffQuery.data ?? []
   const servicesList = servicesQuery.data ?? []
 

@@ -19,12 +19,11 @@ import type { BusinessHours, User } from '@repo/salon-core/types'
 import { formatPersianTime } from '@repo/salon-core/persian-digits'
 import { z } from 'zod'
 import { staffScheduleSchema } from '@repo/salon-core/forms/staff'
-import type { StaffScheduleFormInput } from '@repo/salon-core/forms/staff'
-import { useQueryClient } from '@tanstack/react-query'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
-import { useStaffScheduleBundleQuery } from '#/lib/manager-data-queries'
-import { staffScheduleBundleQueryKey } from '#/lib/query-keys'
+import { useQuery } from '@tanstack/react-query'
+import {
+  staffScheduleBundleQueryOptions,
+  useUpdateStaffScheduleMutation,
+} from '#/lib/staff-queries'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
 import {
   defaultScheduleRows,
@@ -76,10 +75,11 @@ export function StaffScheduleDrawer({
   staff,
   onSuccess,
 }: StaffScheduleDrawerProps) {
-  const dc = useManagerDataClient()
-  const queryClient = useQueryClient()
   const [salonHours, setSalonHours] = useState<BusinessHours | null>(null)
-  const bundleQuery = useStaffScheduleBundleQuery(staff?.id, open)
+  const bundleQuery = useQuery({
+    ...staffScheduleBundleQueryOptions(staff?.id ?? ''),
+    enabled: open && !!staff?.id,
+  })
   const bundleLoading = bundleQuery.isPending
 
   const {
@@ -121,29 +121,12 @@ export function StaffScheduleDrawer({
     })
   }
 
-  const saveSchedule = useManagerWriteMutation('staff.saveSchedule', {
-    dataClientFn: (
-      dataClient,
-      {
-        staffId,
-        rows,
-      }: {
-        staffId: string
-        rows: StaffScheduleFormInput
-      },
-    ) => dataClient.staff.setSchedule(staffId, rows),
-    meta: { errorMessage: 'ذخیره برنامه کاری انجام نشد' },
-    onSuccess: (_data, { staffId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: staffScheduleBundleQueryKey(staffId),
-      })
-    },
-  })
+  const saveSchedule = useUpdateStaffScheduleMutation(staff?.id ?? '')
 
   const onSubmit = handleSubmit(async ({ rows }) => {
-    if (!staff || !dc) return
+    if (!staff) return
     try {
-      await saveSchedule.mutateAsync({ staffId: staff.id, rows })
+      await saveSchedule.mutateAsync(rows)
       onSuccess()
     } catch {
       // Toast handled by mutation cache.

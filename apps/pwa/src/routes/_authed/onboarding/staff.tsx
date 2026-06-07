@@ -16,7 +16,8 @@ import type { OnboardingResponse } from '@repo/api-client'
 import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
 import { getMutationErrorMessage } from '#/lib/query-client'
-import { managerStaffQueryKey, onboardingQueryKey } from '#/lib/query-keys'
+import { onboardingQueryKey } from '#/lib/query-keys'
+import { useCreateStaffMutation } from '#/lib/staff-queries'
 import { PillCTA, StepBody } from './-shell'
 import { guardStep, ONBOARDING_STEP_BY_ID } from './-steps'
 
@@ -62,26 +63,7 @@ function StaffScreen() {
     password.length > 0 ||
     confirmPassword.length > 0
 
-  const createStaff = useMutation({
-    mutationFn: (values: StaffCreateFormInput) =>
-      api.staff.create({
-        name: values.name,
-        phone: values.phone,
-        password: values.password,
-        role: values.role ?? 'staff',
-      }),
-    meta: {
-      skipToast: true,
-      invalidatesQuery: managerStaffQueryKey,
-    },
-    onSuccess: async () => {
-      await queryClient.fetchQuery({
-        queryKey: onboardingQueryKey,
-        queryFn: ({ signal }) => api.onboarding.get({ signal }),
-      })
-      await navigate({ to: '/onboarding/presence' })
-    },
-  })
+  const createStaff = useCreateStaffMutation({ skipToast: true })
 
   const setManagerStaff = useMutation({
     mutationFn: () => api.onboarding.update('set-manager-staff'),
@@ -98,6 +80,13 @@ function StaffScreen() {
         setError('root', {
           message: getMutationErrorMessage(err, 'افزودن پرسنل انجام نشد'),
         })
+      },
+      onSuccess: async () => {
+        await queryClient.fetchQuery({
+          queryKey: onboardingQueryKey,
+          queryFn: ({ signal }) => api.onboarding.get({ signal }),
+        })
+        await navigate({ to: '/onboarding/presence' })
       },
     })
   })

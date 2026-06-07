@@ -4,7 +4,6 @@ import type {
   ServiceAddon,
   ServiceCategory,
   ServiceFamily,
-  User,
 } from '@repo/salon-core/types'
 
 import {
@@ -13,8 +12,6 @@ import {
   managerBusinessSettingsQueryKey,
   managerServiceCatalogQueryKey,
   managerServicesQueryKey,
-  managerStaffQueryKey,
-  staffScheduleBundleQueryKey,
 } from '#/lib/query-keys'
 import { useManagerDataClient } from '#/lib/manager-data-client'
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
@@ -24,16 +21,6 @@ export type ManagerServiceCatalog = {
   categories: ServiceCategory[]
   families: ServiceFamily[]
   services: Service[]
-}
-
-export function useManagerStaffQuery(enabled = true) {
-  return useManagerCollection(
-    managerStaffQueryKey,
-    (dc) => dc.staff.list(),
-    (dc, sync) => dc.staff.subscribe(sync),
-    enabled,
-    HEAVY_QUERY_STALE_TIME_MS,
-  )
 }
 
 export function useManagerServicesQuery(enabled = true) {
@@ -46,7 +33,6 @@ export function useManagerServicesQuery(enabled = true) {
   )
 }
 
-export type ManagerStaffList = User[]
 export type ManagerServicesList = Service[]
 
 export function useManagerServiceCatalogQuery(enabled = true) {
@@ -89,19 +75,6 @@ export function useManagerBusinessSettingsQuery(enabled = true) {
     enabled,
     HEAVY_QUERY_STALE_TIME_MS,
   )
-}
-
-export function useStaffScheduleBundleQuery(
-  staffId: string | undefined,
-  enabled: boolean,
-) {
-  const dc = useManagerDataClient()
-
-  return useQuery({
-    queryKey: staffScheduleBundleQueryKey(staffId ?? ''),
-    queryFn: () => dc!.staff.getScheduleBundle(staffId!),
-    enabled: enabled && !!staffId && !!dc,
-  })
 }
 
 export function useComboComponentsQuery(

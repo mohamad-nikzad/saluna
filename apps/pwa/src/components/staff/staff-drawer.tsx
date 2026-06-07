@@ -36,9 +36,10 @@ import type {
   StaffCreateFormInput,
   StaffUpdateFormInput,
 } from '@repo/salon-core/forms/staff'
-import { DataClientHttpError } from '@repo/data-client'
-import { api } from '#/lib/api-client'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import {
+  useCreateStaffMutation,
+  useUpdateStaffMutation,
+} from '#/lib/staff-queries'
 import { PasswordInput } from '#/components/password-input'
 import { cn } from '@repo/ui/utils'
 
@@ -126,60 +127,24 @@ export function StaffDrawer({
     requestClose(false)
   }
 
-  const createStaff = useManagerWriteMutation('staff.create', {
-    apiFn: async (values: StaffCreateFormInput) => {
-      try {
-        await api.staff.create({
-          name: values.name,
-          phone: values.phone,
-          password: values.password,
-          role: roleLocked ?? values.role ?? 'staff',
-        })
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new DataClientHttpError(
-            error.message || 'افزودن پرسنل انجام نشد',
-            0,
-            null,
-          )
-        }
-        throw error
-      }
-    },
-    meta: { errorMessage: 'افزودن پرسنل انجام نشد' },
-  })
+  const createStaff = useCreateStaffMutation()
+  const updateStaff = useUpdateStaffMutation(staff?.id ?? '')
 
-  const updateStaff = useManagerWriteMutation('staff.update', {
-    apiFn: async (values: StaffFormValues) => {
-      if (!staff) return
-      try {
-        await api.staff.update(staff.id, {
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      if (staff) {
+        await updateStaff.mutateAsync({
           name: values.name,
           nickname: values.nickname ?? null,
           phone: values.phone,
           role: roleLocked ?? values.role,
           color: normalizeCalendarColorId(values.color),
         })
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new DataClientHttpError(
-            error.message || 'ذخیره اطلاعات انجام نشد',
-            0,
-            null,
-          )
-        }
-        throw error
-      }
-    },
-    meta: { errorMessage: 'ذخیره اطلاعات انجام نشد' },
-  })
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      if (staff) {
-        await updateStaff.mutateAsync(values)
       } else {
-        await createStaff.mutateAsync(values)
+        await createStaff.mutateAsync({
+          ...values,
+          role: roleLocked ?? values.role ?? 'staff',
+        })
       }
       onSuccess()
     } catch {

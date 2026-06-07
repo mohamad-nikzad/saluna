@@ -19,8 +19,7 @@ import { staffServiceIdsSchema } from '@repo/salon-core/forms/staff'
 import type { StaffServiceIdsInput } from '@repo/salon-core/forms/staff'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { cn } from '@repo/ui/utils'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
-import { managerStaffQueryKey } from '#/lib/query-keys'
+import { useUpdateStaffServicesMutation } from '#/lib/staff-queries'
 import { groupServicesByCatalog } from '#/components/services/service-catalog-groups'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
 
@@ -94,17 +93,7 @@ export function StaffServicesDrawer({
     )
   }
 
-  const saveServices = useManagerWriteMutation<
-    User,
-    { staffId: string; serviceIds: string[] | null }
-  >('staff.setServiceIds', {
-    dataClientFn: (dataClient, { staffId, serviceIds: nextServiceIds }) =>
-      dataClient.staff.setServiceIds(staffId, nextServiceIds),
-    meta: {
-      errorMessage: 'ذخیره خدمات پرسنل انجام نشد',
-      invalidatesQuery: managerStaffQueryKey,
-    },
-  })
+  const saveServices = useUpdateStaffServicesMutation()
 
   const handleSave = handleSubmit(async (values) => {
     if (!staff) return

@@ -56,20 +56,10 @@ describe('manager-write-policy', () => {
     ).not.toThrow()
   })
 
-  it('queues catalog and staff service writes offline', () => {
+  it('queues catalog writes offline', () => {
     expect(getWritePolicy('serviceCategory.save')).toBe('queue-offline')
     expect(getWritePolicy('serviceFamily.save')).toBe('queue-offline')
     expect(getWritePolicy('serviceAddon.save')).toBe('queue-offline')
-    expect(getWritePolicy('staff.setServiceIds')).toBe('queue-offline')
     expect(writePolicyUsesDataClient('serviceCategory.save')).toBe(true)
   })
-
-  it('requires online for staff account creation', () => {
-    expect(getWritePolicy('staff.create')).toBe('require-online')
-    expect(writePolicyRequiresOnline('staff.create')).toBe(true)
-    expect(() => assertOnlineForWrite('staff.create', false)).toThrow(
-      OFFLINE_WRITE_BLOCKED_MESSAGE,
-    )
-  })
-
 })

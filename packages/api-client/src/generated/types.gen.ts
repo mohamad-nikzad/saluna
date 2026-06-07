@@ -154,6 +154,115 @@ export type ClientFollowUpCreateRequest = {
     dueDate?: string;
 };
 
+export type StaffListResponse = {
+    staff: Array<StaffUser>;
+};
+
+export type StaffUser = {
+    id: string;
+    salonId: string;
+    name: string;
+    fullName?: string;
+    nickname?: string | null;
+    role: StaffRole;
+    color: string;
+    phone: string;
+    createdAt: string | string;
+    serviceIds?: Array<string> | null;
+    [key: string]: unknown;
+};
+
+export type StaffRole = 'staff' | 'manager';
+
+export type StaffCreateResponse = {
+    user: StaffUser;
+};
+
+export type StaffCreateRequest = {
+    name: string;
+    phone: string;
+    password: string;
+    role?: StaffRole & unknown;
+};
+
+export type StaffBookingAvailabilityResponse = {
+    staff: Array<StaffBookingAvailabilityRow>;
+};
+
+export type StaffBookingAvailabilityRow = {
+    staffId: string;
+    available: boolean;
+    reason?: string;
+};
+
+export type StaffMemberResponse = {
+    staff: StaffUser;
+};
+
+export type StaffUpdateRequest = {
+    name: string;
+    nickname?: string | null;
+    phone: string;
+    role: StaffRole & unknown;
+    color?: string;
+};
+
+export type SuccessResponse = {
+    success: true;
+};
+
+export type StaffPasswordUpdateRequest = {
+    password: string;
+};
+
+export type StaffScheduleBundleResponse = {
+    schedule: Array<StaffSchedule>;
+    businessHours: BusinessHours;
+};
+
+export type StaffSchedule = {
+    id: string;
+    salonId: string;
+    staffId: string;
+    dayOfWeek: number;
+    workingStart: string;
+    workingEnd: string;
+    active: boolean;
+    createdAt: string | string;
+    updatedAt: string | string;
+    [key: string]: unknown;
+};
+
+export type BusinessHours = {
+    workingStart: string;
+    workingEnd: string;
+    slotDurationMinutes: number;
+    workingDays: number;
+    [key: string]: unknown;
+};
+
+export type StaffScheduleUpdateResponse = {
+    schedule: Array<StaffSchedule>;
+};
+
+export type StaffScheduleUpdateRequest = {
+    /**
+     * Weekly schedule rows (one per day of week)
+     */
+    schedule: Array<StaffScheduleDay>;
+};
+
+export type StaffScheduleDay = {
+    dayOfWeek: number;
+    active: boolean;
+    workingStart: string;
+    workingEnd: string;
+};
+
+export type StaffServiceIdsRequest = {
+    serviceIds?: Array<string> | null;
+};
+
 export type GetApiV1ClientsData = {
     body?: never;
     path?: never;
@@ -371,3 +480,340 @@ export type PostApiV1ClientsByIdFollowUpsResponses = {
 };
 
 export type PostApiV1ClientsByIdFollowUpsResponse = PostApiV1ClientsByIdFollowUpsResponses[keyof PostApiV1ClientsByIdFollowUpsResponses];
+
+export type GetApiV1StaffData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/staff';
+};
+
+export type GetApiV1StaffErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1StaffError = GetApiV1StaffErrors[keyof GetApiV1StaffErrors];
+
+export type GetApiV1StaffResponses = {
+    /**
+     * Staff list
+     */
+    200: StaffListResponse;
+};
+
+export type GetApiV1StaffResponse = GetApiV1StaffResponses[keyof GetApiV1StaffResponses];
+
+export type PostApiV1StaffData = {
+    body: StaffCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/staff';
+};
+
+export type PostApiV1StaffErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Phone number already registered
+     */
+    409: ApiError & unknown;
+};
+
+export type PostApiV1StaffError = PostApiV1StaffErrors[keyof PostApiV1StaffErrors];
+
+export type PostApiV1StaffResponses = {
+    /**
+     * Created staff user
+     */
+    200: StaffCreateResponse;
+};
+
+export type PostApiV1StaffResponse = PostApiV1StaffResponses[keyof PostApiV1StaffResponses];
+
+export type GetApiV1StaffBookingAvailabilityData = {
+    body?: never;
+    path?: never;
+    query?: {
+        date?: string;
+        startTime?: string;
+        endTime?: string;
+    };
+    url: '/api/v1/staff/booking-availability';
+};
+
+export type GetApiV1StaffBookingAvailabilityErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+};
+
+export type GetApiV1StaffBookingAvailabilityError = GetApiV1StaffBookingAvailabilityErrors[keyof GetApiV1StaffBookingAvailabilityErrors];
+
+export type GetApiV1StaffBookingAvailabilityResponses = {
+    /**
+     * Per-staff availability for the requested slot
+     */
+    200: StaffBookingAvailabilityResponse;
+};
+
+export type GetApiV1StaffBookingAvailabilityResponse = GetApiV1StaffBookingAvailabilityResponses[keyof GetApiV1StaffBookingAvailabilityResponses];
+
+export type DeleteApiV1StaffByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}';
+};
+
+export type DeleteApiV1StaffByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+};
+
+export type DeleteApiV1StaffByIdError = DeleteApiV1StaffByIdErrors[keyof DeleteApiV1StaffByIdErrors];
+
+export type DeleteApiV1StaffByIdResponses = {
+    /**
+     * Staff deactivated
+     */
+    200: SuccessResponse;
+};
+
+export type DeleteApiV1StaffByIdResponse = DeleteApiV1StaffByIdResponses[keyof DeleteApiV1StaffByIdResponses];
+
+export type PatchApiV1StaffByIdData = {
+    body: StaffUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}';
+};
+
+export type PatchApiV1StaffByIdErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+    /**
+     * Phone number already registered
+     */
+    409: ApiError & unknown;
+};
+
+export type PatchApiV1StaffByIdError = PatchApiV1StaffByIdErrors[keyof PatchApiV1StaffByIdErrors];
+
+export type PatchApiV1StaffByIdResponses = {
+    /**
+     * Updated staff member
+     */
+    200: StaffMemberResponse;
+};
+
+export type PatchApiV1StaffByIdResponse = PatchApiV1StaffByIdResponses[keyof PatchApiV1StaffByIdResponses];
+
+export type PatchApiV1StaffByIdPasswordData = {
+    body: StaffPasswordUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/password';
+};
+
+export type PatchApiV1StaffByIdPasswordErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+};
+
+export type PatchApiV1StaffByIdPasswordError = PatchApiV1StaffByIdPasswordErrors[keyof PatchApiV1StaffByIdPasswordErrors];
+
+export type PatchApiV1StaffByIdPasswordResponses = {
+    /**
+     * Password updated
+     */
+    200: SuccessResponse;
+};
+
+export type PatchApiV1StaffByIdPasswordResponse = PatchApiV1StaffByIdPasswordResponses[keyof PatchApiV1StaffByIdPasswordResponses];
+
+export type GetApiV1StaffByIdScheduleData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/schedule';
+};
+
+export type GetApiV1StaffByIdScheduleErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+};
+
+export type GetApiV1StaffByIdScheduleError = GetApiV1StaffByIdScheduleErrors[keyof GetApiV1StaffByIdScheduleErrors];
+
+export type GetApiV1StaffByIdScheduleResponses = {
+    /**
+     * Weekly schedule and salon business hours
+     */
+    200: StaffScheduleBundleResponse;
+};
+
+export type GetApiV1StaffByIdScheduleResponse = GetApiV1StaffByIdScheduleResponses[keyof GetApiV1StaffByIdScheduleResponses];
+
+export type PutApiV1StaffByIdScheduleData = {
+    body: StaffScheduleUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/schedule';
+};
+
+export type PutApiV1StaffByIdScheduleErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+};
+
+export type PutApiV1StaffByIdScheduleError = PutApiV1StaffByIdScheduleErrors[keyof PutApiV1StaffByIdScheduleErrors];
+
+export type PutApiV1StaffByIdScheduleResponses = {
+    /**
+     * Updated weekly schedule
+     */
+    200: StaffScheduleUpdateResponse;
+};
+
+export type PutApiV1StaffByIdScheduleResponse = PutApiV1StaffByIdScheduleResponses[keyof PutApiV1StaffByIdScheduleResponses];
+
+export type PatchApiV1StaffByIdServicesData = {
+    body: StaffServiceIdsRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/services';
+};
+
+export type PatchApiV1StaffByIdServicesErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Staff member not found
+     */
+    404: ApiError;
+};
+
+export type PatchApiV1StaffByIdServicesError = PatchApiV1StaffByIdServicesErrors[keyof PatchApiV1StaffByIdServicesErrors];
+
+export type PatchApiV1StaffByIdServicesResponses = {
+    /**
+     * Updated staff with service assignments
+     */
+    200: StaffMemberResponse;
+};
+
+export type PatchApiV1StaffByIdServicesResponse = PatchApiV1StaffByIdServicesResponses[keyof PatchApiV1StaffByIdServicesResponses];

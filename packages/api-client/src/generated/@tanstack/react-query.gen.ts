@@ -3,8 +3,8 @@
 import { queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getApiV1Clients, getApiV1ClientsById, getApiV1ClientsByIdSummary, type Options, patchApiV1ClientsById, postApiV1Clients, postApiV1ClientsByIdFollowUps } from '../sdk.gen';
-import type { GetApiV1ClientsByIdData, GetApiV1ClientsByIdError, GetApiV1ClientsByIdResponse, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryError, GetApiV1ClientsByIdSummaryResponse, GetApiV1ClientsData, GetApiV1ClientsError, GetApiV1ClientsResponse, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdError, PatchApiV1ClientsByIdResponse, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsError, PostApiV1ClientsByIdFollowUpsResponse, PostApiV1ClientsData, PostApiV1ClientsError, PostApiV1ClientsResponse } from '../types.gen';
+import { deleteApiV1StaffById, getApiV1Clients, getApiV1ClientsById, getApiV1ClientsByIdSummary, getApiV1Staff, getApiV1StaffBookingAvailability, getApiV1StaffByIdSchedule, type Options, patchApiV1ClientsById, patchApiV1StaffById, patchApiV1StaffByIdPassword, patchApiV1StaffByIdServices, postApiV1Clients, postApiV1ClientsByIdFollowUps, postApiV1Staff, putApiV1StaffByIdSchedule } from '../sdk.gen';
+import type { DeleteApiV1StaffByIdData, DeleteApiV1StaffByIdError, DeleteApiV1StaffByIdResponse, GetApiV1ClientsByIdData, GetApiV1ClientsByIdError, GetApiV1ClientsByIdResponse, GetApiV1ClientsByIdSummaryData, GetApiV1ClientsByIdSummaryError, GetApiV1ClientsByIdSummaryResponse, GetApiV1ClientsData, GetApiV1ClientsError, GetApiV1ClientsResponse, GetApiV1StaffBookingAvailabilityData, GetApiV1StaffBookingAvailabilityError, GetApiV1StaffBookingAvailabilityResponse, GetApiV1StaffByIdScheduleData, GetApiV1StaffByIdScheduleError, GetApiV1StaffByIdScheduleResponse, GetApiV1StaffData, GetApiV1StaffError, GetApiV1StaffResponse, PatchApiV1ClientsByIdData, PatchApiV1ClientsByIdError, PatchApiV1ClientsByIdResponse, PatchApiV1StaffByIdData, PatchApiV1StaffByIdError, PatchApiV1StaffByIdPasswordData, PatchApiV1StaffByIdPasswordError, PatchApiV1StaffByIdPasswordResponse, PatchApiV1StaffByIdResponse, PatchApiV1StaffByIdServicesData, PatchApiV1StaffByIdServicesError, PatchApiV1StaffByIdServicesResponse, PostApiV1ClientsByIdFollowUpsData, PostApiV1ClientsByIdFollowUpsError, PostApiV1ClientsByIdFollowUpsResponse, PostApiV1ClientsData, PostApiV1ClientsError, PostApiV1ClientsResponse, PostApiV1StaffData, PostApiV1StaffError, PostApiV1StaffResponse, PutApiV1StaffByIdScheduleData, PutApiV1StaffByIdScheduleError, PutApiV1StaffByIdScheduleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -136,6 +136,164 @@ export const postApiV1ClientsByIdFollowUpsMutation = (options?: Partial<Options<
     const mutationOptions: UseMutationOptions<PostApiV1ClientsByIdFollowUpsResponse, PostApiV1ClientsByIdFollowUpsError, Options<PostApiV1ClientsByIdFollowUpsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await postApiV1ClientsByIdFollowUps({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1StaffQueryKey = (options?: Options<GetApiV1StaffData>) => createQueryKey('getApiV1Staff', options);
+
+/**
+ * List staff
+ *
+ * Returns all active staff and managers for the authenticated salon tenant.
+ */
+export const getApiV1StaffOptions = (options?: Options<GetApiV1StaffData>) => queryOptions<GetApiV1StaffResponse, GetApiV1StaffError, GetApiV1StaffResponse, ReturnType<typeof getApiV1StaffQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1Staff({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1StaffQueryKey(options)
+});
+
+/**
+ * Create staff member
+ */
+export const postApiV1StaffMutation = (options?: Partial<Options<PostApiV1StaffData>>): UseMutationOptions<PostApiV1StaffResponse, PostApiV1StaffError, Options<PostApiV1StaffData>> => {
+    const mutationOptions: UseMutationOptions<PostApiV1StaffResponse, PostApiV1StaffError, Options<PostApiV1StaffData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiV1Staff({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1StaffBookingAvailabilityQueryKey = (options?: Options<GetApiV1StaffBookingAvailabilityData>) => createQueryKey('getApiV1StaffBookingAvailability', options);
+
+/**
+ * Staff booking availability for a slot
+ */
+export const getApiV1StaffBookingAvailabilityOptions = (options?: Options<GetApiV1StaffBookingAvailabilityData>) => queryOptions<GetApiV1StaffBookingAvailabilityResponse, GetApiV1StaffBookingAvailabilityError, GetApiV1StaffBookingAvailabilityResponse, ReturnType<typeof getApiV1StaffBookingAvailabilityQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1StaffBookingAvailability({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1StaffBookingAvailabilityQueryKey(options)
+});
+
+/**
+ * Deactivate staff member
+ */
+export const deleteApiV1StaffByIdMutation = (options?: Partial<Options<DeleteApiV1StaffByIdData>>): UseMutationOptions<DeleteApiV1StaffByIdResponse, DeleteApiV1StaffByIdError, Options<DeleteApiV1StaffByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteApiV1StaffByIdResponse, DeleteApiV1StaffByIdError, Options<DeleteApiV1StaffByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteApiV1StaffById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update staff member
+ */
+export const patchApiV1StaffByIdMutation = (options?: Partial<Options<PatchApiV1StaffByIdData>>): UseMutationOptions<PatchApiV1StaffByIdResponse, PatchApiV1StaffByIdError, Options<PatchApiV1StaffByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1StaffByIdResponse, PatchApiV1StaffByIdError, Options<PatchApiV1StaffByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1StaffById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update staff password
+ */
+export const patchApiV1StaffByIdPasswordMutation = (options?: Partial<Options<PatchApiV1StaffByIdPasswordData>>): UseMutationOptions<PatchApiV1StaffByIdPasswordResponse, PatchApiV1StaffByIdPasswordError, Options<PatchApiV1StaffByIdPasswordData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1StaffByIdPasswordResponse, PatchApiV1StaffByIdPasswordError, Options<PatchApiV1StaffByIdPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1StaffByIdPassword({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiV1StaffByIdScheduleQueryKey = (options: Options<GetApiV1StaffByIdScheduleData>) => createQueryKey('getApiV1StaffByIdSchedule', options);
+
+/**
+ * Get staff schedule bundle
+ */
+export const getApiV1StaffByIdScheduleOptions = (options: Options<GetApiV1StaffByIdScheduleData>) => queryOptions<GetApiV1StaffByIdScheduleResponse, GetApiV1StaffByIdScheduleError, GetApiV1StaffByIdScheduleResponse, ReturnType<typeof getApiV1StaffByIdScheduleQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiV1StaffByIdSchedule({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiV1StaffByIdScheduleQueryKey(options)
+});
+
+/**
+ * Update staff schedule
+ */
+export const putApiV1StaffByIdScheduleMutation = (options?: Partial<Options<PutApiV1StaffByIdScheduleData>>): UseMutationOptions<PutApiV1StaffByIdScheduleResponse, PutApiV1StaffByIdScheduleError, Options<PutApiV1StaffByIdScheduleData>> => {
+    const mutationOptions: UseMutationOptions<PutApiV1StaffByIdScheduleResponse, PutApiV1StaffByIdScheduleError, Options<PutApiV1StaffByIdScheduleData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putApiV1StaffByIdSchedule({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update staff service assignments
+ */
+export const patchApiV1StaffByIdServicesMutation = (options?: Partial<Options<PatchApiV1StaffByIdServicesData>>): UseMutationOptions<PatchApiV1StaffByIdServicesResponse, PatchApiV1StaffByIdServicesError, Options<PatchApiV1StaffByIdServicesData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiV1StaffByIdServicesResponse, PatchApiV1StaffByIdServicesError, Options<PatchApiV1StaffByIdServicesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiV1StaffByIdServices({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

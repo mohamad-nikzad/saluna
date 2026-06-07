@@ -17,12 +17,6 @@ export const MANAGER_WRITE_OPERATIONS = [
   'serviceCategory.save',
   'serviceFamily.save',
   'serviceAddon.save',
-  'staff.create',
-  'staff.update',
-  'staff.updatePassword',
-  'staff.delete',
-  'staff.setServiceIds',
-  'staff.saveSchedule',
   'staffToday.appointment.updateStatus',
   'appointmentRequest.approve',
   'appointmentRequest.reject',
@@ -44,16 +38,6 @@ export const MANAGER_WRITE_POLICIES: Record<
   'serviceCategory.save': 'queue-offline',
   'serviceFamily.save': 'queue-offline',
   'serviceAddon.save': 'queue-offline',
-  /** Staff account creation — server-side auth; no offline queue. */
-  'staff.create': 'require-online',
-  /** Staff/account profile editing — server-side auth identity; no offline queue. */
-  'staff.update': 'require-online',
-  /** Staff credential updates — server-side auth identity; no offline queue. */
-  'staff.updatePassword': 'require-online',
-  /** Staff access removal — server-side auth identity; no offline queue. */
-  'staff.delete': 'require-online',
-  'staff.setServiceIds': 'queue-offline',
-  'staff.saveSchedule': 'queue-offline',
   /** Staff /today status changes — online API only (no offline queue). */
   'staffToday.appointment.updateStatus': 'require-online',
   /** ADR-0001 / ADR-0002: intake at approval; no offline queue or soft-hold. */

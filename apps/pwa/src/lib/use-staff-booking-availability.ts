@@ -2,24 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { validateAppointmentWindow } from '@repo/salon-core/appointment-time'
 
-import { api } from '#/lib/api-client'
-import { staffBookingAvailabilityQueryKey } from '#/lib/query-keys'
+import { staffBookingAvailabilityQueryOptions } from '#/lib/staff-queries'
 
 type BookingSlot = { date: string; startTime: string; endTime: string }
-
-type StaffBookingRow = { staffId: string; available: boolean }
 
 export function useStaffBookingAvailability(
   open: boolean,
   date: string,
   startTime: string,
   endTime: string,
-  isOnline: boolean,
 ) {
   const [debouncedSlot, setDebouncedSlot] = useState<BookingSlot | null>(null)
 
   useEffect(() => {
-    if (!open || !date || !startTime || !endTime || !isOnline) {
+    if (!open || !date || !startTime || !endTime) {
       setDebouncedSlot(null)
       return
     }
@@ -32,19 +28,13 @@ export function useStaffBookingAvailability(
       setDebouncedSlot({ date, startTime, endTime })
     }, 280)
     return () => window.clearTimeout(timer)
-  }, [open, date, startTime, endTime, isOnline])
+  }, [open, date, startTime, endTime])
 
   const query = useQuery({
-    queryKey: debouncedSlot
-      ? staffBookingAvailabilityQueryKey(debouncedSlot)
-      : (['staff', 'booking-availability', 'idle'] as const),
-    queryFn: async ({ signal }) => {
-      const res = await api.staff.bookingAvailability(debouncedSlot!, {
-        signal,
-      })
-      return (res as unknown as { staff?: StaffBookingRow[] }).staff ?? []
-    },
-    enabled: open && isOnline && debouncedSlot != null,
+    ...staffBookingAvailabilityQueryOptions(
+      debouncedSlot ?? { date: '', startTime: '', endTime: '' },
+    ),
+    enabled: open && debouncedSlot != null,
   })
 
   const staffSlotOk = useMemo(() => {

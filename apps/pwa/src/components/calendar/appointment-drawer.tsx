@@ -50,7 +50,6 @@ import {
 import { useServiceAddons } from '#/lib/use-service-addons'
 import { useAppointmentIntakeMutations } from '#/lib/use-appointment-intake-mutations'
 import { ServicePicker } from '#/components/services/service-picker'
-import { useNetworkStatus } from '#/lib/network-status'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
 import { TimePicker } from '@repo/ui/time-picker'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
@@ -92,7 +91,6 @@ export function AppointmentDrawer({
   onSuccess,
   onClientsChanged,
 }: AppointmentDrawerProps) {
-  const isOnline = useNetworkStatus()
   const [localClients, setLocalClients] = useState<Client[]>(clients)
   const form = useForm<AppointmentFormInput>({
     resolver: zodResolver(appointmentFormSchema, undefined, { raw: true }),
@@ -141,7 +139,6 @@ export function AppointmentDrawer({
     date,
     startTime,
     endTime,
-    isOnline,
   )
   const { data: availableAddons = [], isPending: addonsLoading } =
     useServiceAddons(serviceId ?? '', open && !!serviceId)

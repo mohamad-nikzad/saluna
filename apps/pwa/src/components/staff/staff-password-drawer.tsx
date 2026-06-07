@@ -19,9 +19,7 @@ import {
   staffPasswordUpdateSchema,
   type StaffPasswordUpdateInput,
 } from '@repo/salon-core/forms/staff'
-import { DataClientHttpError } from '@repo/data-client'
-import { api } from '#/lib/api-client'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import { useUpdateStaffPasswordMutation } from '#/lib/staff-queries'
 import { PasswordInput } from '#/components/password-input'
 
 interface StaffPasswordDrawerProps {
@@ -63,24 +61,7 @@ export function StaffPasswordDrawer({
   const password = watch('password')
   const confirmPassword = watch('confirmPassword')
 
-  const updatePassword = useManagerWriteMutation('staff.updatePassword', {
-    apiFn: async (values: { password: string }) => {
-      if (!staff) return
-      try {
-        await api.staff.updatePassword(staff.id, values)
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new DataClientHttpError(
-            error.message || 'تغییر رمز عبور انجام نشد',
-            0,
-            null,
-          )
-        }
-        throw error
-      }
-    },
-    meta: { errorMessage: 'تغییر رمز عبور انجام نشد' },
-  })
+  const updatePassword = useUpdateStaffPasswordMutation(staff?.id ?? '')
 
   const { requestClose, confirmDialog } = useDismissGuard({
     isDirty: isDirty && !updatePassword.isPending,

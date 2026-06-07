@@ -5,30 +5,23 @@ import { QueryClient } from '@tanstack/react-query'
 import {
   managerReadQueryKeys,
   managerServicesQueryKey,
-  managerStaffQueryKey,
 } from '#/lib/query-keys'
 
 describe('manager read query keys', () => {
-  it('uses distinct manager-scoped keys for staff and services', () => {
-    expect(managerReadQueryKeys.staff).toEqual(['manager', 'staff'])
+  it('uses manager-scoped key for services collection', () => {
     expect(managerReadQueryKeys.services).toEqual(['manager', 'services'])
   })
 
-  it('invalidates each collection independently in the shared cache', () => {
+  it('invalidates services collection independently in the shared cache', () => {
     const queryClient = new QueryClient()
-    const staff = [{ id: 'staff-1' }]
     const services = [{ id: 'service-1' }]
 
-    queryClient.setQueryData(managerStaffQueryKey, staff)
     queryClient.setQueryData(managerServicesQueryKey, services)
 
-    void queryClient.invalidateQueries({ queryKey: managerStaffQueryKey })
+    void queryClient.invalidateQueries({ queryKey: managerServicesQueryKey })
 
-    expect(queryClient.getQueryState(managerStaffQueryKey)?.isInvalidated).toBe(
-      true,
-    )
     expect(
       queryClient.getQueryState(managerServicesQueryKey)?.isInvalidated,
-    ).toBeFalsy()
+    ).toBe(true)
   })
 })

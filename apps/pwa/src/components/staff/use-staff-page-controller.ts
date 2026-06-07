@@ -2,10 +2,11 @@ import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { User } from '@repo/salon-core/types'
 
-import { api } from '#/lib/api-client'
-import { useManagerDataClient } from '#/lib/manager-data-client'
-import { staffScheduleBundleQueryKey } from '#/lib/query-keys'
-import { useManagerWriteMutation } from '#/lib/use-manager-mutation'
+import {
+  getApiV1StaffByIdScheduleQueryKey,
+  getApiV1StaffQueryKey,
+  useDeleteStaffMutation,
+} from '#/lib/staff-queries'
 
 type StaffPageControllerOptions = {
   onDeleteSuccess?: (staff: User) => void
@@ -13,7 +14,6 @@ type StaffPageControllerOptions = {
 
 export function useStaffPageController(options: StaffPageControllerOptions = {}) {
   const { onDeleteSuccess } = options
-  const dc = useManagerDataClient()
   const queryClient = useQueryClient()
 
   const [profileOpen, setProfileOpen] = useState(false)
@@ -24,29 +24,19 @@ export function useStaffPageController(options: StaffPageControllerOptions = {})
   const [deletingStaff, setDeletingStaff] = useState<User | null>(null)
 
   const refreshRoster = useCallback(() => {
-    void dc?.staff.refresh()
-  }, [dc])
+    void queryClient.invalidateQueries({ queryKey: getApiV1StaffQueryKey() })
+  }, [queryClient])
 
   const refreshSchedule = useCallback(
     (staffId: string) => {
       void queryClient.invalidateQueries({
-        queryKey: staffScheduleBundleQueryKey(staffId),
+        queryKey: getApiV1StaffByIdScheduleQueryKey({ path: { id: staffId } }),
       })
     },
     [queryClient],
   )
 
-  const deleteStaff = useManagerWriteMutation('staff.delete', {
-    apiFn: async (member: User) => {
-      await api.staff.delete(member.id)
-    },
-    meta: { errorMessage: 'حذف پرسنل انجام نشد' },
-    onSuccess: (_data, member) => {
-      setDeletingStaff(null)
-      refreshRoster()
-      onDeleteSuccess?.(member)
-    },
-  })
+  const deleteStaff = useDeleteStaffMutation()
 
   const openCreateProfile = useCallback(() => {
     setProfileStaff(null)
@@ -97,8 +87,14 @@ export function useStaffPageController(options: StaffPageControllerOptions = {})
 
   const confirmDelete = useCallback(() => {
     if (!deletingStaff) return
-    deleteStaff.mutate(deletingStaff)
-  }, [deleteStaff, deletingStaff])
+    deleteStaff.mutate(deletingStaff.id, {
+      onSuccess: () => {
+        setDeletingStaff(null)
+        refreshRoster()
+        onDeleteSuccess?.(deletingStaff)
+      },
+    })
+  }, [deleteStaff, deletingStaff, onDeleteSuccess, refreshRoster])
 
   return {
     profileOpen,
