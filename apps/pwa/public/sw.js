@@ -54,6 +54,7 @@ function isStaticMediaRequest(request, url) {
       request.destination === 'font' ||
       url.pathname.startsWith('/icons/') ||
       url.pathname.startsWith('/brand/') ||
+      url.pathname.startsWith('/fonts/') ||
       url.pathname.startsWith('/screenshots/'))
   )
 }

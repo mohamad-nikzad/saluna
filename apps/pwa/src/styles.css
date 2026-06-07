@@ -1,3 +1,4 @@
+@import './fonts.css';
 @import '@repo/ui/styles.css';
 
 @source "../src/**/*.{ts,tsx}";
