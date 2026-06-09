@@ -11,8 +11,6 @@ import {
 } from '#/components/form-sheet'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
 import { Button } from '@repo/ui/button'
-import { Input } from '@repo/ui/input'
-import { Checkbox } from '@repo/ui/checkbox'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
@@ -32,15 +30,17 @@ import {
   formatTimeHm,
   parseTimeHm,
 } from '@repo/salon-core/appointment-time'
-import { ClientPicker } from '#/components/calendar/client-picker'
+import { AppointmentClientField } from '#/components/calendar/appointment-client-field'
 import {
   appointmentCreateFormDefaults,
+  applyTemporaryClientModePatch,
   buildAppointmentCreateViewModel,
   clampAppointmentDuration,
   durationFromEndTime,
   resolveIntakeAddonToggle,
   resolveIntakeServiceChange,
   resolveIntakeStaffChange,
+  resolveTemporaryClientModeChange,
   validateAppointmentIntakeSubmit,
 } from '#/lib/appointment-intake'
 import {
@@ -132,7 +132,8 @@ export function AppointmentDrawer({
   const endTime =
     watch('endTime') || endTimeFromDuration(startTime, durationMinutes)
   const useTemporaryClient = Boolean(watch('useTemporaryClient'))
-  const temporaryClientName = watch('temporaryClientName')
+  const temporaryClientName = watch('temporaryClientName') ?? ''
+  const temporaryClientNotes = watch('temporaryClientNotes') ?? ''
   const addonIds = watch('addonIds') ?? []
   const staffSlotOk = useStaffBookingAvailability(
     open,
@@ -350,6 +351,13 @@ export function AppointmentDrawer({
     onClientsChanged?.()
   }
 
+  const handleTemporaryClientModeChange = (enabled: boolean) => {
+    applyTemporaryClientModePatch(
+      resolveTemporaryClientModeChange(enabled),
+      setValue,
+    )
+  }
+
   const { createAppointment } = useAppointmentIntakeMutations()
 
   const onSubmit = handleSubmit(async (values) => {
@@ -394,97 +402,44 @@ export function AppointmentDrawer({
 
         <form
           onSubmit={onSubmit}
-          className="min-h-0 flex-1 overflow-auto px-5 pb-4"
+          className="min-h-0 flex-1 overflow-auto px-5 pt-3 pb-4"
         >
           <FieldGroup className="gap-4">
             <Field>
               <FieldLabel>
                 مشتری <span className="text-destructive">*</span>
               </FieldLabel>
-              <div className="space-y-3">
-                <label
-                  htmlFor="temporary-client-mode"
-                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-blush-soft px-3 py-3"
-                >
-                  <Checkbox
-                    id="temporary-client-mode"
-                    checked={useTemporaryClient}
-                    onCheckedChange={(checked) => {
-                      const enabled = checked === true
-                      setValue('useTemporaryClient', enabled, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                      if (enabled) {
-                        setValue('clientId', '', { shouldDirty: true })
-                        return
-                      }
-                      setValue('temporaryClientName', '', {
-                        shouldDirty: true,
-                      })
-                      setValue('temporaryClientNotes', '', {
-                        shouldDirty: true,
-                      })
-                    }}
-                    className="mt-0.5"
-                  />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      بعداً اطلاعات مشتری را کامل می‌کنم
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      برای این حالت فقط نام لازم است و بعداً می‌توانید شماره را
-                      تکمیل کنید.
-                    </p>
-                  </div>
-                </label>
-
-                {useTemporaryClient ? (
-                  <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                    <Field className="gap-2">
-                      <FieldLabel htmlFor="temporary-client-name">
-                        نام مشتری
-                      </FieldLabel>
-                      <Input
-                        id="temporary-client-name"
-                        {...register('temporaryClientName')}
-                        placeholder="مثلاً دوستِ سارا"
-                      />
-                      {errors.temporaryClientName && (
-                        <FieldError>
-                          {errors.temporaryClientName.message}
-                        </FieldError>
-                      )}
-                    </Field>
-
-                    <Field className="gap-2">
-                      <FieldLabel htmlFor="temporary-client-notes">
-                        یادداشت (اختیاری)
-                      </FieldLabel>
-                      <Input
-                        id="temporary-client-notes"
-                        {...register('temporaryClientNotes')}
-                        placeholder="مثلاً شماره را بعداً می‌گیرم"
-                      />
-                    </Field>
-                  </div>
-                ) : (
-                  <ClientPicker
-                    clients={localClients}
-                    value={clientId ?? ''}
-                    onChange={(id) =>
-                      setValue('clientId', id, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                    onClientCreated={handleClientCreated}
-                  />
-                )}
-                {errors.clientId && (
-                  <FieldError>{errors.clientId.message}</FieldError>
-                )}
-              </div>
+              <AppointmentClientField
+                checkboxId="temporary-client-mode"
+                useTemporaryClient={useTemporaryClient}
+                onTemporaryClientModeChange={handleTemporaryClientModeChange}
+                togglePlacement="below"
+                toggleVariant="subtle"
+                clients={localClients}
+                clientId={clientId ?? ''}
+                hostActive={open}
+                contactActionPlacement="beside"
+                onClientChange={(id) =>
+                  setValue('clientId', id, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                onClientCreated={handleClientCreated}
+                clientIdError={errors.clientId?.message}
+                temporaryClientName={temporaryClientName}
+                onTemporaryClientNameChange={(value) =>
+                  setValue('temporaryClientName', value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                temporaryClientNameError={errors.temporaryClientName?.message}
+                temporaryClientNotes={temporaryClientNotes}
+                onTemporaryClientNotesChange={(value) =>
+                  setValue('temporaryClientNotes', value, { shouldDirty: true })
+                }
+              />
             </Field>
 
             <div className="flex min-w-0 flex-col gap-4">

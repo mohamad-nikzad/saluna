@@ -31,10 +31,12 @@ export type {
   IntakeAddonToggleResult,
   IntakeServiceChangeResult,
   IntakeStaffChangeResult,
+  TemporaryClientModeChangeResult,
 } from '#/lib/appointment-intake'
 
 export {
   appointmentCreateFormDefaults,
+  applyTemporaryClientModePatch,
   availabilitySelectionToCreateIntent,
   buildAppointmentCreateViewModel,
   buildStatusActionState,
@@ -45,6 +47,7 @@ export {
   resolveIntakeAddonToggle,
   resolveIntakeServiceChange,
   resolveIntakeStaffChange,
+  resolveTemporaryClientModeChange,
   serviceIdsWithStaffSet,
   validateAppointmentIntakeSubmit,
 } from '#/lib/appointment-intake'

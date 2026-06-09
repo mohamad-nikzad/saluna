@@ -12,6 +12,7 @@ import {
   resolveIntakeAddonToggle,
   resolveIntakeServiceChange,
   resolveIntakeStaffChange,
+  resolveTemporaryClientModeChange,
   validateAppointmentIntakeSubmit,
 } from './appointment-intake'
 
@@ -160,6 +161,38 @@ describe('resolveIntakeStaffChange', () => {
       staffId: 's1',
       serviceId: 'svc1',
       durationMinutes: 45,
+    })
+  })
+})
+
+describe('resolveTemporaryClientModeChange', () => {
+  it('clears client selection and optional fields when enabling fill-later mode', () => {
+    expect(resolveTemporaryClientModeChange(true)).toEqual({
+      useTemporaryClient: true,
+      clientId: '',
+      temporaryClientName: '',
+      temporaryClientNotes: '',
+    })
+  })
+
+  it('prefills placeholder client details when enabling edit flow', () => {
+    expect(
+      resolveTemporaryClientModeChange(true, {
+        prefill: { name: 'دوست سارا', notes: 'بعدا تماس' },
+      }),
+    ).toEqual({
+      useTemporaryClient: true,
+      clientId: '',
+      temporaryClientName: 'دوست سارا',
+      temporaryClientNotes: 'بعدا تماس',
+    })
+  })
+
+  it('clears temporary fields without touching clientId when disabling', () => {
+    expect(resolveTemporaryClientModeChange(false)).toEqual({
+      useTemporaryClient: false,
+      temporaryClientName: '',
+      temporaryClientNotes: '',
     })
   })
 })

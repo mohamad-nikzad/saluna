@@ -343,6 +343,58 @@ export function resolveIntakeStaffChange({
   return { staffId, serviceId: '' }
 }
 
+export type TemporaryClientModeChangeResult = {
+  useTemporaryClient: boolean
+  clientId?: string
+  temporaryClientName: string
+  temporaryClientNotes: string
+}
+
+/** Atomic patch when toggling placeholder / fill-later client mode. */
+export function resolveTemporaryClientModeChange(
+  enabled: boolean,
+  options?: {
+    prefill?: { name: string; notes?: string }
+  },
+): TemporaryClientModeChangeResult {
+  if (enabled) {
+    return {
+      useTemporaryClient: true,
+      clientId: '',
+      temporaryClientName: options?.prefill?.name ?? '',
+      temporaryClientNotes: options?.prefill?.notes ?? '',
+    }
+  }
+  return {
+    useTemporaryClient: false,
+    temporaryClientName: '',
+    temporaryClientNotes: '',
+  }
+}
+
+export function applyTemporaryClientModePatch(
+  patch: TemporaryClientModeChangeResult,
+  setValue: (
+    name: keyof AppointmentFormInput,
+    value: AppointmentFormInput[keyof AppointmentFormInput],
+    options?: { shouldDirty?: boolean; shouldValidate?: boolean },
+  ) => void,
+) {
+  setValue('useTemporaryClient', patch.useTemporaryClient, {
+    shouldDirty: true,
+    shouldValidate: true,
+  })
+  if (patch.clientId !== undefined) {
+    setValue('clientId', patch.clientId, { shouldDirty: true })
+  }
+  setValue('temporaryClientName', patch.temporaryClientName, {
+    shouldDirty: true,
+  })
+  setValue('temporaryClientNotes', patch.temporaryClientNotes, {
+    shouldDirty: true,
+  })
+}
+
 export type IntakeAddonToggleResult = {
   addonIds: string[]
   durationMinutes: number

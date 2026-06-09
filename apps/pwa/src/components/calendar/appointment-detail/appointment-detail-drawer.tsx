@@ -79,6 +79,7 @@ export function AppointmentDetailDrawer({
             onClientCreated={drawer.handleClientCreated}
             useTemporaryClient={drawer.useTemporaryClient}
             temporaryClientName={drawer.temporaryClientName}
+            temporaryClientNotes={drawer.temporaryClientNotes}
             temporaryClientNameRef={drawer.temporaryClientNameRef}
             clientId={drawer.clientId}
             staffId={drawer.staffId}

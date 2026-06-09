@@ -22,7 +22,7 @@ import type {
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
 import { endTimeFromDuration } from '@repo/salon-core/appointment-time'
 import type { AppointmentFormInput } from '@repo/salon-core/forms/appointment'
-import { ClientPicker } from '#/components/calendar/client-picker'
+import { AppointmentClientField } from '#/components/calendar/appointment-client-field'
 import { ServicePicker } from '#/components/services/service-picker'
 import { StaffPicker } from '#/components/calendar/staff-picker'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
@@ -42,6 +42,7 @@ interface AppointmentDetailEditFormProps {
   onClientCreated: (client: Client) => void
   useTemporaryClient: boolean
   temporaryClientName: string
+  temporaryClientNotes: string
   temporaryClientNameRef: RefObject<HTMLInputElement | null>
   clientId: string
   staffId: string
@@ -80,6 +81,7 @@ export function AppointmentDetailEditForm({
   onClientCreated,
   useTemporaryClient,
   temporaryClientName,
+  temporaryClientNotes,
   temporaryClientNameRef,
   clientId,
   staffId,
@@ -113,7 +115,6 @@ export function AppointmentDetailEditForm({
   const {
     register: registerEdit,
     setValue: setEditValue,
-    watch: watchEdit,
     formState: { errors: editErrors },
   } = editForm
 
@@ -125,88 +126,34 @@ export function AppointmentDetailEditForm({
       <FieldGroup>
         <Field>
           <FieldLabel>مشتری</FieldLabel>
-          <div className="space-y-3">
-            <label
-              htmlFor="edit-temporary-client-mode"
-              className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/60 bg-card px-3 py-3"
-            >
-              <Checkbox
-                id="edit-temporary-client-mode"
-                checked={useTemporaryClient}
-                onCheckedChange={(checked) =>
-                  onTemporaryClientModeChange(checked === true)
-                }
-                className="mt-0.5"
-              />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">
-                  بعداً اطلاعات مشتری را کامل می‌کنم
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  در حالت موقت فقط یک نام نمایشی نگه می‌داریم و شماره تماس بعداً
-                  تکمیل می‌شود.
-                </p>
-              </div>
-            </label>
-
-            {useTemporaryClient ? (
-              <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                <Field className="gap-2">
-                  <FieldLabel htmlFor="edit-temporary-client-name">
-                    نام مشتری
-                  </FieldLabel>
-                  <Input
-                    id="edit-temporary-client-name"
-                    ref={temporaryClientNameRef}
-                    value={temporaryClientName}
-                    onChange={(event) =>
-                      setEditValue('temporaryClientName', event.target.value, {
-                        shouldDirty: true,
-                        shouldValidate: false,
-                      })
-                    }
-                    placeholder="مثلاً دوستِ سارا"
-                  />
-                  {editErrors.temporaryClientName && (
-                    <FieldError>
-                      {editErrors.temporaryClientName.message}
-                    </FieldError>
-                  )}
-                </Field>
-
-                <Field className="gap-2">
-                  <FieldLabel htmlFor="edit-temporary-client-notes">
-                    یادداشت (اختیاری)
-                  </FieldLabel>
-                  <Input
-                    id="edit-temporary-client-notes"
-                    value={watchEdit('temporaryClientNotes') ?? ''}
-                    onChange={(event) =>
-                      setEditValue('temporaryClientNotes', event.target.value, {
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="مثلاً شماره را بعداً می‌گیرم"
-                  />
-                </Field>
-              </div>
-            ) : (
-              <ClientPicker
-                clients={localClients}
-                value={clientId}
-                onChange={(id) =>
-                  setEditValue('clientId', id, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                onClientCreated={onClientCreated}
-              />
-            )}
-            {editErrors.clientId && (
-              <FieldError>{editErrors.clientId.message}</FieldError>
-            )}
-          </div>
+          <AppointmentClientField
+            checkboxId="edit-temporary-client-mode"
+            useTemporaryClient={useTemporaryClient}
+            onTemporaryClientModeChange={onTemporaryClientModeChange}
+            clients={localClients}
+            clientId={clientId}
+            onClientChange={(id) =>
+              setEditValue('clientId', id, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onClientCreated={onClientCreated}
+            clientIdError={editErrors.clientId?.message}
+            temporaryClientName={temporaryClientName}
+            temporaryClientNameRef={temporaryClientNameRef}
+            onTemporaryClientNameChange={(value) =>
+              setEditValue('temporaryClientName', value, {
+                shouldDirty: true,
+                shouldValidate: false,
+              })
+            }
+            temporaryClientNameError={editErrors.temporaryClientName?.message}
+            temporaryClientNotes={temporaryClientNotes}
+            onTemporaryClientNotesChange={(value) =>
+              setEditValue('temporaryClientNotes', value, { shouldDirty: true })
+            }
+          />
         </Field>
 
         <div className="flex min-w-0 flex-col gap-7">

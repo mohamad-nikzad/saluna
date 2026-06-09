@@ -26,9 +26,11 @@ import {
   clientsForAppointmentEdit,
   clampAppointmentDuration,
   durationFromEndTime,
+  applyTemporaryClientModePatch,
   resolveIntakeAddonToggle,
   resolveIntakeServiceChange,
   resolveIntakeStaffChange,
+  resolveTemporaryClientModeChange,
   validateAppointmentIntakeSubmit,
 } from '#/lib/appointment-surface'
 import type {
@@ -108,6 +110,7 @@ export function useAppointmentDetailDrawer({
   const clientId = watchEdit('clientId') ?? ''
   const useTemporaryClient = Boolean(watchEdit('useTemporaryClient'))
   const temporaryClientName = watchEdit('temporaryClientName') ?? ''
+  const temporaryClientNotes = watchEdit('temporaryClientNotes') ?? ''
   const staffId = watchEdit('staffId') ?? ''
   const serviceId = watchEdit('serviceId') ?? ''
   const date = watchEdit('date')
@@ -350,28 +353,18 @@ export function useAppointmentDetailDrawer({
 
   const handleTemporaryClientModeChange = (enabled: boolean) => {
     if (!appointment) return
-    setEditValue('useTemporaryClient', enabled, {
-      shouldDirty: true,
-      shouldValidate: true,
-    })
-    if (enabled) {
-      setEditValue('clientId', '', { shouldDirty: true })
-      setEditValue(
-        'temporaryClientName',
-        appointment.client.isPlaceholder ? appointment.client.name : '',
-        { shouldDirty: true },
-      )
-      setEditValue(
-        'temporaryClientNotes',
-        appointment.client.isPlaceholder
-          ? (appointment.client.notes ?? '')
-          : '',
-        { shouldDirty: true },
-      )
-      return
-    }
-    setEditValue('temporaryClientName', '', { shouldDirty: true })
-    setEditValue('temporaryClientNotes', '', { shouldDirty: true })
+    applyTemporaryClientModePatch(
+      resolveTemporaryClientModeChange(enabled, {
+        prefill:
+          enabled && appointment.client.isPlaceholder
+            ? {
+                name: appointment.client.name,
+                notes: appointment.client.notes ?? '',
+              }
+            : undefined,
+      }),
+      setEditValue,
+    )
   }
 
   const {
@@ -540,6 +533,7 @@ export function useAppointmentDetailDrawer({
     localClients,
     useTemporaryClient,
     temporaryClientName,
+    temporaryClientNotes,
     clientId,
     staffId,
     serviceId,
