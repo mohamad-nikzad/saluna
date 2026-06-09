@@ -16,6 +16,7 @@ import {
   toPreviewSkipReason,
 } from './client-import'
 import type {
+  ClientImportClassifySkipped,
   ClientImportContactInput,
   ClientImportCounts,
   ClientImportPreviewRow,
@@ -103,7 +104,7 @@ describe('classifyImportContact', () => {
     label: string
     input: ClientImportContactInput
     context?: { canonicalExistingPhones: ReadonlySet<string> }
-    expected: { eligible: false; reason: string }
+    expected: ClientImportClassifySkipped
   }>)('$label', ({ input, context, expected }) => {
     const result = classifyImportContact(input, {
       canonicalExistingPhones: context?.canonicalExistingPhones ?? existing,

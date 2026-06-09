@@ -882,7 +882,7 @@ export const openApiDocumentConfig = {
   openapi: '3.0.0' as const,
   info: {
     title: 'Saluna API',
-    version: '0.7.0',
+    version: '0.8.0',
     description:
       'Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. ' +
       'This contract is expanded incrementally; clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, notification-preferences, and public booking route groups are documented.',
