@@ -65,6 +65,19 @@ The appointment-owned copy of a selected `ServiceAddon`: name, duration delta, p
 **AppointmentTotalsSnapshot**:
 The appointment-owned total duration and price after applying the `BookedServiceSnapshot` and any `BookedAddonSnapshot`s. Authoritative for revenue and retention spend.
 
+### Clients
+
+**Client**:
+A salon's customer record — name, phone, notes, tags — used for appointments, retention, and messaging. Persian UI: `مشتری`.
+_Avoid_: contact (phone address book), customer (public booking copy)
+
+**Device Contact**:
+An entry from the manager's phone address book. May become a `Client` after import or pick; not tenant-scoped until created on the server.
+_Avoid_: client, مخاطب (use only in UI copy for the phone picker, not in domain language)
+
+**Client Import**:
+Bulk or single flow that turns `Device Contact` data (VCF file or Contact Picker) into new `Client` rows, with dedup against existing salon phones.
+
 ### Salon
 
 **Salon Working Days**:
@@ -73,11 +86,6 @@ Salon-level open-day mask — which weekdays the salon is open. DB: `business_se
 **Salon Presence**:
 Public contact surface: address, map links, and social links. DB: typed nullable columns on `salon_profile`. Persian UI: `حضور آنلاین`.
 _Avoid_: contact info, social block
-
-### Sync
-
-**Offline Projection**:
-The data-client view produced by merging the last server snapshot with pending mutation rows so manager screens can render salon state while writes are queued.
 
 ## Naming rules
 
