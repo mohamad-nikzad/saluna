@@ -9,10 +9,12 @@ import {
   getApiV1ClientsByIdSummaryQueryKey,
   getApiV1ClientsQueryKey,
   patchApiV1ClientsByIdMutation,
+  postApiV1ClientsBulkMutation,
   postApiV1ClientsMutation,
 } from '@repo/api-client/query'
 import type {
   Client as GeneratedClient,
+  ClientBulkCreateResponse,
   ClientSummary as GeneratedClientSummary,
 } from '@repo/api-client/types'
 
@@ -78,6 +80,28 @@ export function useCreateClientMutation() {
     meta: {
       errorMessage: 'ذخیره مشتری انجام نشد',
       invalidatesQuery: getApiV1ClientsQueryKey(),
+    },
+  })
+}
+
+export function useBulkCreateClientsMutation() {
+  const generated = postApiV1ClientsBulkMutation()
+
+  return useMutation<
+    ClientBulkCreateResponse,
+    unknown,
+    Array<{ name: string; phone: string }>
+  >({
+    mutationFn: async (clients, mutationContext) => {
+      return generated.mutationFn!(
+        { body: { clients } },
+        mutationContext,
+      )
+    },
+    meta: {
+      skipToast: true,
+      invalidatesQuery: getApiV1ClientsQueryKey(),
+      errorMessage: 'افزودن گروهی مشتریان انجام نشد',
     },
   })
 }

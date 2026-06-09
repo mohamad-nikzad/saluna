@@ -18,6 +18,7 @@ import {
 } from '#/lib/clients-queries'
 import { retentionListQueryOptions } from '#/lib/retention-queries'
 import { ClientDrawer } from '#/components/clients/client-drawer'
+import { ClientImportSheet } from '#/components/clients/client-import-sheet'
 import {
   ClientAvatar,
   clientAccent,
@@ -89,6 +90,8 @@ function ClientsPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterId>('all')
   const [showDrawer, setShowDrawer] = useState(false)
+  const [importSheetOpen, setImportSheetOpen] = useState(false)
+  const [importPickOnOpen, setImportPickOnOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
   const { data: clients = [], isPending } = useQuery(clientsListQueryOptions())
@@ -155,6 +158,10 @@ function ClientsPage() {
     void queryClient.invalidateQueries({ queryKey: getApiV1ClientsQueryKey() })
   }
 
+  const handleImportSuccess = () => {
+    void queryClient.invalidateQueries({ queryKey: getApiV1ClientsQueryKey() })
+  }
+
   if (isPending) {
     return <ClientsSkeleton />
   }
@@ -174,6 +181,18 @@ function ClientsPage() {
               مشتری فعال
             </p>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => {
+              setImportPickOnOpen(true)
+              setImportSheetOpen(true)
+            }}
+          >
+            افزودن گروهی با فایل
+          </Button>
         </div>
 
         <div className="relative mt-3.5">
@@ -343,6 +362,15 @@ function ClientsPage() {
         onOpenChange={setShowDrawer}
         client={selectedClient}
         onSuccess={handleSuccess}
+      />
+
+      <ClientImportSheet
+        open={importSheetOpen}
+        onOpenChange={setImportSheetOpen}
+        pickFileOnOpen={importPickOnOpen}
+        onPickFileConsumed={() => setImportPickOnOpen(false)}
+        existingClients={clients}
+        onSuccess={handleImportSuccess}
       />
     </div>
   )
