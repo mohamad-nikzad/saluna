@@ -22,7 +22,7 @@ Reads only. Safe to run against production.
 brew install k6
 ```
 
-Seeded credentials (`packages/database/src/seed.ts`) are the defaults:
+Seeded credentials (`scripts/db-seed.ts`) are the defaults:
 - phone `09120000000`, password `admin123`. Override via `BENCH_PHONE` / `BENCH_PASSWORD`.
 
 ## How tagging works
