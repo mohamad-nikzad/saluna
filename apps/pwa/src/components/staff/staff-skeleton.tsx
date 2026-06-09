@@ -1,5 +1,7 @@
 import { Skeleton } from '@repo/ui/skeleton'
-import { ArrowRight, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { pageHeaderBackButtonClassName } from '#/components/page-header-back-button'
+import { cn } from '@repo/ui/utils'
 import { Button } from '@repo/ui/button'
 
 function StaffCardSkeleton() {
@@ -24,14 +26,7 @@ export function StaffSkeleton() {
       <header className="border-b border-line-soft bg-card px-[18px] pb-4 pt-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled
-              className="mt-0.5 size-10 rounded-2xl"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <Skeleton className={cn(pageHeaderBackButtonClassName)} />
             <div className="space-y-1.5">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-3 w-20" />

@@ -1,7 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowRight,
   Banknote,
   CalendarCheck,
   CalendarClock,
@@ -12,7 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
-import { Button } from '@repo/ui/button'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Spinner } from '@repo/ui/spinner'
 import { APPOINTMENT_STATUS } from '@repo/salon-core/types'
@@ -150,15 +149,10 @@ function DashboardPage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-3 border-b border-border/50 bg-card px-3 py-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="بازگشت"
+        <PageHeaderBackButton
+          aria-label="بازگشت به بیشتر"
           onClick={() => navigate({ to: '/settings' })}
-          className="h-10 w-10 shrink-0 rounded-2xl touch-manipulation"
-        >
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+        />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold">داشبورد</h1>
           <p className="truncate text-xs text-muted-foreground">

@@ -1,19 +1,12 @@
 import { Skeleton } from '@repo/ui/skeleton'
-import { Button } from '@repo/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { pageHeaderBackButtonClassName } from '#/components/page-header-back-button'
+import { cn } from '@repo/ui/utils'
 
 export function StaffDetailSkeleton() {
   return (
     <div className="flex h-full flex-col bg-card">
       <header className="flex items-center gap-3 border-b border-line-soft px-[18px] py-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled
-          className="size-10 rounded-2xl"
-        >
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+        <Skeleton className={cn(pageHeaderBackButtonClassName)} />
         <div className="min-w-0 flex-1 space-y-1.5">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-3 w-28" />

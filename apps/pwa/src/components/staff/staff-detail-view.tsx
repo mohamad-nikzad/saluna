@@ -1,6 +1,5 @@
-import { Link } from '@tanstack/react-router'
-import { ArrowRight, KeyRound, Trash2, User as UserIcon } from 'lucide-react'
-import { Button } from '@repo/ui/button'
+import { KeyRound, Trash2, User as UserIcon } from 'lucide-react'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { displayPhone } from '@repo/salon-core/phone'
@@ -57,16 +56,7 @@ export function StaffDetailView({
   return (
     <div className="flex h-full flex-col bg-card">
       <header className="flex items-center gap-3 border-b border-line-soft px-[18px] py-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="size-10 shrink-0 touch-manipulation rounded-2xl"
-          asChild
-        >
-          <Link to="/staff" aria-label="بازگشت">
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </Button>
+        <PageHeaderBackButton to="/staff" aria-label="بازگشت" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-bold text-foreground">
             ویرایش پرسنل

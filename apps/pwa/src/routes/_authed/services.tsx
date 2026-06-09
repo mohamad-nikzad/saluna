@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
-import { Button } from '@repo/ui/button'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Card, CardContent, CardHeader } from '@repo/ui/card'
 import { Skeleton } from '@repo/ui/skeleton'
 
@@ -24,7 +23,7 @@ function ServicesSkeleton() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-2 bg-card px-3 py-2 border-b border-border/50">
-        <Skeleton className="h-9 w-9 rounded-xl" />
+        <Skeleton className="h-10 w-10 rounded-2xl shrink-0" />
         <div className="min-w-0 space-y-2">
           <Skeleton className="h-5 w-24" />
           <Skeleton className="hidden h-3 w-40 sm:block" />
@@ -79,15 +78,10 @@ function ServicesPage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-2 bg-card px-3 py-2 border-b border-border/50">
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <PageHeaderBackButton
           aria-label="بازگشت به بیشتر"
           onClick={() => navigate({ to: '/settings' })}
-          className="h-9 w-9 shrink-0 rounded-xl touch-manipulation"
-        >
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+        />
         <div className="min-w-0">
           <h1 className="truncate text-base font-bold sm:text-lg">خدمات</h1>
           <p className="hidden truncate text-xs text-muted-foreground sm:block">

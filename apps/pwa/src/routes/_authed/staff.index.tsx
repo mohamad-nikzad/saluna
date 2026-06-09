@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, Plus } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { Button } from '@repo/ui/button'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { User } from '@repo/salon-core/types'
 
@@ -63,16 +64,10 @@ function StaffListContent({
       <header className="border-b border-line-soft bg-card px-[18px] pb-4 pt-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              asChild
-              className="mt-0.5 size-10 shrink-0 rounded-2xl touch-manipulation"
-            >
-              <Link to="/settings" aria-label="بازگشت به بیشتر">
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
+            <PageHeaderBackButton
+              to="/settings"
+              aria-label="بازگشت به بیشتر"
+            />
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold text-foreground">
                 پرسنل و نقش‌ها

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  ArrowRight,
   CalendarPlus,
   Check,
   ClipboardList,
@@ -13,6 +12,7 @@ import {
   User,
 } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
 import { cn } from '@repo/ui/utils'
@@ -151,16 +151,7 @@ function ClientDetailPage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-3 border-b border-line-soft bg-card px-3 py-2.5">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="shrink-0 touch-manipulation"
-          asChild
-        >
-          <Link to="/clients" aria-label="بازگشت">
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </Button>
+        <PageHeaderBackButton to="/clients" aria-label="بازگشت" />
         <ClientAvatar name={client.name} accent={accent} size={40} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-bold">{client.name}</h1>

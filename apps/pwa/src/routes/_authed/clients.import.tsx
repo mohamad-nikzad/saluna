@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
 import { Button } from '@repo/ui/button'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Spinner } from '@repo/ui/spinner'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
@@ -44,14 +44,11 @@ function ClientImportPage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-3 border-b border-line-soft bg-card px-4 py-3">
-        <button
-          type="button"
+        <PageHeaderBackButton
+          aria-label="بازگشت"
           onClick={handleBack}
           disabled={importFlow.bulkCreate.isPending}
-          className="flex size-9 items-center justify-center rounded-xl border border-line-soft active:bg-accent/40 disabled:opacity-50"
-        >
-          <ArrowLeft className="size-5" />
-        </button>
+        />
         <div className="min-w-0">
           <h1 className="text-lg font-extrabold text-foreground">
             ورود از فایل مخاطبین

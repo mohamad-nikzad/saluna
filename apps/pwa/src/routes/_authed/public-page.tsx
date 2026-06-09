@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { ChevronRight, Globe, Layers, MapPin } from 'lucide-react'
+import { Globe, Layers, MapPin } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Spinner } from '@repo/ui/spinner'
 import { Switch } from '@repo/ui/switch'
@@ -24,6 +24,7 @@ import { serviceCategoryName } from '@repo/salon-core/service-catalog'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { Service } from '@repo/salon-core/types'
 
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { BottomDrawer } from '#/components/public-page/bottom-drawer'
 import { PublicBioCard } from '#/components/public-page/public-page-basics'
 import { countFilledPresenceFields } from '#/components/public-page/presence-fields'
@@ -172,14 +173,10 @@ function PublicPageRoute() {
   return (
     <div className="flex h-full flex-col bg-background" dir="rtl">
       <header className="flex items-center gap-2 border-b bg-card/95 px-4 py-3 backdrop-blur">
-        <button
-          type="button"
+        <PageHeaderBackButton
+          aria-label="بازگشت به بیشتر"
           onClick={() => router.history.back()}
-          className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
-          aria-label="بازگشت"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        />
         <h1 className="text-base font-bold">صفحه عمومی</h1>
       </header>
 

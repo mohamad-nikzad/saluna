@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, CalendarPlus, Check, Phone, Send, X } from 'lucide-react'
+import { CalendarPlus, Check, Phone, Send, X } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@repo/ui/alert-dialog'
 import { Badge } from '@repo/ui/badge'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Button } from '@repo/ui/button'
 import { Card, CardContent } from '@repo/ui/card'
 import { Spinner } from '@repo/ui/spinner'
@@ -121,15 +122,10 @@ function RetentionPage() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-start gap-3 border-b border-border/50 bg-card px-3 py-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <PageHeaderBackButton
           aria-label="بازگشت به بیشتر"
           onClick={() => navigate({ to: '/settings' })}
-          className="h-10 w-10 shrink-0 rounded-2xl touch-manipulation"
-        >
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+        />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-bold">پیگیری مشتریان</h1>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">

@@ -8,7 +8,6 @@ import {
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowRight,
   ChevronDown,
   ChevronLeft,
   LayoutGrid,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
+import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Card } from '@repo/ui/card'
 import { Checkbox } from '@repo/ui/checkbox'
 import {
@@ -251,15 +251,10 @@ export const CatalogPresetPicker = forwardRef<
     return (
       <div className={cn('space-y-3', className)} dir="rtl">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="h-9 w-9 shrink-0 rounded-xl"
+          <PageHeaderBackButton
             onClick={closePreset}
             aria-label="بازگشت به قالب‌ها"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </Button>
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">{selected.name}</p>
             <p className="text-xs text-muted-foreground">
