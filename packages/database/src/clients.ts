@@ -1,6 +1,7 @@
 export {
   isClientProvidedEntityId,
   createClient,
+  createClientsBulk,
   deleteClient,
   getAllClients,
   getClientById,
@@ -9,6 +10,13 @@ export {
   getClientTagsForClients,
   setClientTags,
   updateClient,
+} from './internal/client-queries'
+export { isDuplicatePhoneError } from './internal/db-errors'
+export type {
+  BulkCreateClientInput,
+  BulkCreateClientSkipped,
+  BulkCreateClientSkipReason,
+  BulkCreateClientsResult,
 } from './internal/client-queries'
 
 export {

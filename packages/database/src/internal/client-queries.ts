@@ -1,9 +1,46 @@
 import { and, asc, eq, inArray } from 'drizzle-orm'
+import {
+  clientBulkCreateItemSchema,
+  type ClientBulkCreateItemPayload,
+} from '@repo/salon-core/forms/client'
+import { canonicalSalonPhone, phoneLookupVariants } from '@repo/salon-core/phone'
 import type { Client, ClientTag } from '@repo/salon-core/types'
-import { normalizePhone } from '@repo/salon-core/phone'
 import { getDb } from '../client'
 import { clients, clientTags } from '../schema'
+import {
+  isDuplicatePhoneError,
+  type BulkCreateClientSkipped,
+  type BulkCreateClientSkipReason,
+} from './db-errors'
 import { rowToClient, rowToClientTag } from './row-mappers'
+
+export type { ClientBulkCreateItemPayload as BulkCreateClientInput } from '@repo/salon-core/forms/client'
+export type { BulkCreateClientSkipped, BulkCreateClientSkipReason }
+export type BulkCreateClientsResult = {
+  created: Client[]
+  skipped: BulkCreateClientSkipped[]
+}
+
+async function getExistingCanonicalPhones(
+  salonId: string,
+  phones: string[],
+): Promise<Set<string>> {
+  const uniquePhones = [...new Set(phones)]
+  if (uniquePhones.length === 0) return new Set()
+
+  const db = getDb()
+  const allVariants = [...new Set(uniquePhones.flatMap(phoneLookupVariants))]
+  const rows = await db
+    .select({ phone: clients.phone })
+    .from(clients)
+    .where(and(eq(clients.salonId, salonId), inArray(clients.phone, allVariants)))
+
+  const existing = new Set<string>()
+  for (const row of rows) {
+    if (row.phone) existing.add(canonicalSalonPhone(row.phone))
+  }
+  return existing
+}
 
 function mapTagsByClient(rows: ClientTag[]): Map<string, ClientTag[]> {
   const byClient = new Map<string, ClientTag[]>()
@@ -61,11 +98,11 @@ export async function getClientByPhone(
   salonId: string
 ): Promise<Client | undefined> {
   const db = getDb()
-  const normalized = normalizePhone(phone)
+  const variants = phoneLookupVariants(phone)
   const rows = await db
     .select()
     .from(clients)
-    .where(and(eq(clients.salonId, salonId), eq(clients.phone, normalized)))
+    .where(and(eq(clients.salonId, salonId), inArray(clients.phone, variants)))
     .limit(1)
   const row = rows[0]
   return row ? rowToClient(row) : undefined
@@ -93,7 +130,7 @@ export async function createClient(
   const values: typeof clients.$inferInsert = {
     salonId: input.salonId,
     name: input.name,
-    phone: input.phone ? normalizePhone(input.phone) : null,
+    phone: input.phone ? canonicalSalonPhone(input.phone) : null,
     isPlaceholder: input.isPlaceholder ?? false,
     notes: input.notes,
   }
@@ -104,6 +141,55 @@ export async function createClient(
   return rowToClient(row)
 }
 
+export async function createClientsBulk(
+  salonId: string,
+  items: ClientBulkCreateItemPayload[],
+): Promise<BulkCreateClientsResult> {
+  const created: Client[] = []
+  const skipped: BulkCreateClientSkipped[] = []
+  const pending: Array<{ name: string; phone: string }> = []
+
+  for (const item of items) {
+    const parsed = clientBulkCreateItemSchema.safeParse(item)
+    if (!parsed.success) {
+      skipped.push({
+        phone: typeof item.phone === 'string' ? item.phone : '',
+        reason: 'invalid',
+      })
+      continue
+    }
+    pending.push({ name: parsed.data.name, phone: parsed.data.phone })
+  }
+
+  const existingPhones = await getExistingCanonicalPhones(
+    salonId,
+    pending.map((item) => item.phone),
+  )
+  const seenInBatch = new Set<string>()
+
+  for (const { name, phone } of pending) {
+    if (existingPhones.has(phone) || seenInBatch.has(phone)) {
+      skipped.push({ phone, reason: 'duplicate-phone' })
+      continue
+    }
+
+    try {
+      const row = await createClient({ salonId, name, phone })
+      created.push(row)
+      seenInBatch.add(phone)
+    } catch (err) {
+      if (isDuplicatePhoneError(err)) {
+        skipped.push({ phone, reason: 'duplicate-phone' })
+        existingPhones.add(phone)
+        continue
+      }
+      skipped.push({ phone, reason: 'invalid' })
+    }
+  }
+
+  return { created, skipped }
+}
+
 export async function updateClient(
   id: string,
   salonId: string,
@@ -112,7 +198,7 @@ export async function updateClient(
   const db = getDb()
   const patch: Partial<typeof clients.$inferInsert> = {}
   if (data.name !== undefined) patch.name = data.name
-  if (data.phone !== undefined) patch.phone = data.phone ? normalizePhone(data.phone) : null
+  if (data.phone !== undefined) patch.phone = data.phone ? canonicalSalonPhone(data.phone) : null
   if (data.notes !== undefined) patch.notes = data.notes
   if (data.isPlaceholder !== undefined) patch.isPlaceholder = data.isPlaceholder
 
