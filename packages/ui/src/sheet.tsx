@@ -60,19 +60,19 @@ function SheetContent({
         className={cn(
           'bg-card data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
           side === 'right' &&
-            'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
+            'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-dvh max-h-dvh w-3/4 border-l sm:max-w-sm',
           side === 'left' &&
-            'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
+            'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-dvh max-h-dvh w-3/4 border-r sm:max-w-sm',
           side === 'top' &&
             'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
           side === 'bottom' &&
-            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto max-h-[88dvh] overflow-hidden border-t',
           className,
         )}
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="focus-visible:ring-ring/50 absolute top-4 left-4 flex size-9 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none">
+        <SheetPrimitive.Close className="focus-visible:ring-ring/50 absolute top-[calc(1rem+env(safe-area-inset-top))] inset-e-4 flex size-9 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none">
           <XIcon className="size-4" />
           <span className="sr-only">بستن</span>
         </SheetPrimitive.Close>
@@ -95,7 +95,10 @@ function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+      className={cn(
+        'shrink-0 mt-auto flex flex-col gap-2 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]',
+        className,
+      )}
       {...props}
     />
   )

@@ -10,7 +10,13 @@ function Drawer({
   repositionInputs = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" repositionInputs={repositionInputs} {...props} />
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      repositionInputs={repositionInputs}
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({
@@ -61,10 +67,10 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          'group/drawer-content bg-card fixed z-50 flex h-auto flex-col',
+          'group/drawer-content bg-card fixed z-50 flex h-auto min-h-0 flex-col overflow-hidden',
           'overscroll-contain',
-          'data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80lvh] data-[vaul-drawer-direction=top]:rounded-b-[28px] data-[vaul-drawer-direction=top]:shadow-[0_12px_48px_-16px_rgba(42,20,25,0.28)]',
-          'data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[88lvh] data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:shadow-[0_-12px_48px_-16px_rgba(42,20,25,0.28)]',
+          'data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80dvh] data-[vaul-drawer-direction=top]:rounded-b-[28px] data-[vaul-drawer-direction=top]:shadow-[0_12px_48px_-16px_rgba(42,20,25,0.28)]',
+          'data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:shadow-[0_-12px_48px_-16px_rgba(42,20,25,0.28)]',
           'data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:sm:max-w-sm',
           'data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm',
           className,
@@ -75,7 +81,7 @@ function DrawerContent({
         {showClose && (
           <DrawerPrimitive.Close
             data-slot="drawer-close-x"
-            className="absolute top-4 left-4 z-10 flex size-9 touch:size-11 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none"
+            className="absolute top-[calc(1rem+env(safe-area-inset-top))] inset-e-4 z-10 flex size-9 touch:size-11 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none"
           >
             <XIcon className="size-4" />
             <span className="sr-only">بستن</span>
@@ -92,7 +98,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="drawer-header"
       className={cn(
-        'flex flex-col gap-0.5 border-b border-line-soft px-5 pt-2.5 pb-4 pe-14 text-right',
+        'shrink-0 flex flex-col gap-0.5 border-b border-line-soft px-5 pt-[calc(0.625rem+env(safe-area-inset-top))] pb-4 pe-14 text-right',
         className,
       )}
       {...props}
@@ -105,8 +111,8 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="drawer-footer"
       className={cn(
-        'mt-auto flex flex-col gap-2 border-t border-line-soft bg-card/95 px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]',
-        className
+        'shrink-0 mt-auto flex flex-col gap-2 border-t border-line-soft bg-card/95 px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]',
+        className,
       )}
       {...props}
     />
