@@ -63,7 +63,6 @@ build-api:
         - packages/notifications/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
@@ -98,10 +97,10 @@ build-web:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - apps/web/**/*
+        - packages/api-client/**/*
         - packages/brand/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
@@ -145,7 +144,6 @@ build-pwa:
         - packages/brand-tokens/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
@@ -191,7 +189,6 @@ deploy-api:
         - packages/notifications/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
@@ -212,10 +209,10 @@ deploy-web:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - apps/web/**/*
+        - packages/api-client/**/*
         - packages/brand/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
@@ -243,7 +240,6 @@ deploy-pwa:
         - packages/brand-tokens/**/*
         - packages/salon-core/**/*
         - package.json
-        - pnpm-lock.yaml
         - pnpm-workspace.yaml
         - .gitlab-ci.yml
         - docker-compose.prod.yml
