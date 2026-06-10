@@ -21,6 +21,7 @@ import {
 } from '@repo/ui/select'
 import { Spinner } from '@repo/ui/spinner'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 import { serviceFamilyFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceFamilyCreateInput } from '@repo/salon-core/forms/service'
 import type { ServiceCategory, ServiceFamily } from '@repo/salon-core/types'
@@ -101,9 +102,11 @@ export function ServiceFamilyDrawer({
     requestClose(false)
   }
 
+  useKeyboardInset(open)
+
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>
             {isEditing ? 'ویرایش گروه خدمات' : 'گروه خدمات جدید'}
@@ -112,7 +115,10 @@ export function ServiceFamilyDrawer({
             خدمات مشابه را در یک گروه بگذارید
           </DrawerDescription>
         </DrawerHeader>
-        <form onSubmit={onSubmit} className="px-4">
+        <form
+          onSubmit={onSubmit}
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+        >
           <FieldGroup>
             <Field>
               <FieldLabel>بخش</FieldLabel>
@@ -150,7 +156,7 @@ export function ServiceFamilyDrawer({
             onClick={onSubmit}
             disabled={isSubmitting || !nameValue || !categoryValue}
           >
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? '…' : isEditing ? 'ذخیره' : 'افزودن'}
           </Button>
           <Button

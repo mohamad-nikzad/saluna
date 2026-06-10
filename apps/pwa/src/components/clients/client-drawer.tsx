@@ -42,6 +42,7 @@ import { findClientByCanonicalPhone } from '@repo/salon-core/device-contacts'
 import { isDeviceContactPickerSupported } from '#/lib/device-contacts'
 import { useSingleDeviceContactPick } from '#/lib/use-single-device-contact-pick'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 
 const tagOptions = [
   'VIP',
@@ -153,7 +154,9 @@ export function ClientDrawer({
     }
   })
 
-  const applyPickedContactRef = useRef<(name: string, phone: string) => void>(() => {})
+  const applyPickedContactRef = useRef<(name: string, phone: string) => void>(
+    () => {},
+  )
 
   const applyPickedContact = (name: string, phone: string) => {
     const existing = findClientByCanonicalPhone(clientsRef.current, phone)
@@ -209,7 +212,8 @@ export function ClientDrawer({
 
         <form
           onSubmit={onSubmit}
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+          onFocus={handleFormFocusScroll}
         >
           {!isEditing && isDeviceContactPickerSupported() && (
             <DeviceContactPickButton onClick={() => void pickFromDevice()} />
@@ -304,7 +308,7 @@ export function ClientDrawer({
             disabled={isSubmitting || !nameValue || !phoneValue}
             className="touch-manipulation"
           >
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting
               ? 'در حال ذخیره…'
               : isEditing

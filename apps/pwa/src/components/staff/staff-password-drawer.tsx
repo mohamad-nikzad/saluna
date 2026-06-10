@@ -11,6 +11,7 @@ import {
   FormSheetFooter,
 } from '#/components/form-sheet'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 import { Button } from '@repo/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { Spinner } from '@repo/ui/spinner'
@@ -99,7 +100,8 @@ export function StaffPasswordDrawer({
 
         <form
           onSubmit={onSubmit}
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+          onFocus={handleFormFocusScroll}
         >
           <FieldGroup>
             <Field>
@@ -138,7 +140,7 @@ export function StaffPasswordDrawer({
             disabled={updatePassword.isPending || !password || !confirmPassword}
             className="touch-manipulation"
           >
-            {updatePassword.isPending && <Spinner className="ml-2" />}
+            {updatePassword.isPending && <Spinner className="ms-2" />}
             {updatePassword.isPending ? 'در حال ذخیره…' : 'تغییر رمز عبور'}
           </Button>
           <Button

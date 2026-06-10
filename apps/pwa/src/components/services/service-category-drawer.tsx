@@ -14,6 +14,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { Input } from '@repo/ui/input'
 import { Spinner } from '@repo/ui/spinner'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 import { serviceCategoryFormSchema } from '@repo/salon-core/forms/service'
 import type { ServiceCategoryCreateInput } from '@repo/salon-core/forms/service'
 import type { ServiceCategory } from '@repo/salon-core/types'
@@ -83,16 +84,21 @@ export function ServiceCategoryDrawer({
     requestClose(false)
   }
 
+  useKeyboardInset(open)
+
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>{isEditing ? 'ویرایش بخش' : 'بخش جدید'}</DrawerTitle>
           <DrawerDescription>
             یک نام ساده مثل مو، ناخن یا پوست وارد کنید
           </DrawerDescription>
         </DrawerHeader>
-        <form onSubmit={onSubmit} className="p-4">
+        <form
+          onSubmit={onSubmit}
+          className="min-h-0 flex-1 overflow-y-auto p-4"
+        >
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="service-category-name">نام بخش</FieldLabel>
@@ -103,7 +109,7 @@ export function ServiceCategoryDrawer({
         </form>
         <DrawerFooter>
           <Button onClick={onSubmit} disabled={isSubmitting || !nameValue}>
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? '…' : isEditing ? 'ذخیره' : 'افزودن'}
           </Button>
           <Button

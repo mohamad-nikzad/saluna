@@ -134,7 +134,7 @@ export function StaffServicesDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="box-border flex min-h-0 max-h-[80lvh] w-full flex-col overflow-hidden">
+      <DrawerContent className="box-border flex min-h-0 max-h-[80dvh] w-full flex-col overflow-hidden">
         <DrawerHeader className="shrink-0 text-start md:text-start">
           <DrawerTitle className="text-start">خدمات مجاز</DrawerTitle>
           <DrawerDescription className="text-start text-pretty leading-relaxed">
@@ -248,7 +248,7 @@ export function StaffServicesDrawer({
             disabled={isSubmitting || !staff}
             className="touch-manipulation"
           >
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? 'در حال ذخیره…' : 'ذخیره'}
           </Button>
           <Button

@@ -126,7 +126,7 @@ export function ServicePicker({
             }}
           >
             <CommandInput placeholder="جستجوی بخش، گروه یا خدمت..." />
-            <CommandList className="max-h-[min(22rem,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto">
+            <CommandList className="max-h-[min(70dvh,24rem,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto">
               <CommandEmpty>خدمتی پیدا نشد.</CommandEmpty>
               {groups.map((category) => (
                 <CommandGroup

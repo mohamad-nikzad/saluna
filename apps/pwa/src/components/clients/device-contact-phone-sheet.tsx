@@ -71,7 +71,7 @@ export function DeviceContactPhoneSheet({
       >
         <DrawerContent
           showClose={false}
-          className="max-h-[88lvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
+          className="max-h-[88dvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
         >
           <DrawerHeader className="pe-5">
             <DrawerTitle>کدام شماره؟</DrawerTitle>

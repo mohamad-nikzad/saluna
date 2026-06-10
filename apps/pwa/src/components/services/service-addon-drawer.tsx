@@ -37,6 +37,7 @@ import type {
 } from '@repo/salon-core/forms/service'
 import { useSaveServiceAddonMutation } from '#/lib/services-queries'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 import { LocalizedNumberInput } from '#/components/localized-number-input'
 
 interface ServiceAddonDrawerProps {
@@ -190,9 +191,11 @@ export function ServiceAddonDrawer({
     requestClose(false)
   }
 
+  useKeyboardInset(open)
+
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>
             {isEditing ? 'ویرایش افزودنی' : 'افزودنی جدید'}
@@ -204,7 +207,7 @@ export function ServiceAddonDrawer({
         </DrawerHeader>
         <form
           onSubmit={onSubmit}
-          className="flex flex-col gap-4 overflow-auto p-4"
+          className="min-h-0 flex-1 flex flex-col gap-4 overflow-y-auto p-4"
         >
           <FieldGroup>
             <Field>

@@ -205,10 +205,7 @@ export function ServiceCatalogManager({
 
   useEffect(() => {
     if (highlightedCategoryIds.length === 0) return
-    const timer = window.setTimeout(
-      () => setHighlightedCategoryIds([]),
-      4000,
-    )
+    const timer = window.setTimeout(() => setHighlightedCategoryIds([]), 4000)
     return () => window.clearTimeout(timer)
   }, [highlightedCategoryIds])
 
@@ -514,108 +511,110 @@ export function ServiceCatalogManager({
                       </div>
                     ) : null}
                     {category.families.map((family) => {
-                        const familyOpen = openFamilies[family.id] ?? true
-                        return (
-                          <Collapsible
-                            key={family.id}
-                            open={familyOpen}
-                            onOpenChange={(open) =>
-                              setOpenFamilies((current) => ({
-                                ...current,
-                                [family.id]: open,
-                              }))
-                            }
-                            className="overflow-hidden rounded-lg border border-border/50 bg-card"
-                          >
-                            <div className="flex items-center gap-2 px-1.5 py-1.5 sm:px-2 sm:py-2">
-                              <CollapsibleTrigger asChild>
+                      const familyOpen = openFamilies[family.id] ?? true
+                      return (
+                        <Collapsible
+                          key={family.id}
+                          open={familyOpen}
+                          onOpenChange={(open) =>
+                            setOpenFamilies((current) => ({
+                              ...current,
+                              [family.id]: open,
+                            }))
+                          }
+                          className="overflow-hidden rounded-lg border border-border/50 bg-card"
+                        >
+                          <div className="flex items-center gap-2 px-1.5 py-1.5 sm:px-2 sm:py-2">
+                            <CollapsibleTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
+                                aria-label={
+                                  familyOpen ? 'بستن گروه' : 'باز کردن گروه'
+                                }
+                              >
+                                {familyOpen ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronLeft className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="truncate text-sm font-medium">
+                                  {family.name}
+                                </p>
+                                {!family.active && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px]"
+                                  >
+                                    غیرفعال
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-[11px] leading-4 text-muted-foreground sm:text-xs">
+                                {toPersianDigits(family.services.length)} خدمت
+                              </p>
+                            </div>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
+                              aria-label={`ویرایش گروه ${family.name}`}
+                              onClick={() => {
+                                setSelectedFamily(family)
+                                setFamilyDrawerOpen(true)
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
+                              aria-label={`افزودن خدمت به ${family.name}`}
+                              onClick={() => addService(category.id, family.id)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <CollapsibleContent className="space-y-1 border-t border-border/40 bg-muted/20 p-1.5 sm:space-y-1.5 sm:p-2">
+                            {family.services.length === 0 ? (
+                              <div className="rounded-md border border-dashed border-border/60 bg-background px-3 py-3 text-center sm:py-4">
+                                <p className="text-xs text-muted-foreground">
+                                  خدمتی در این گروه نیست.
+                                </p>
                                 <Button
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                                  aria-label={
-                                    familyOpen ? 'بستن گروه' : 'باز کردن گروه'
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-3 gap-1 touch-manipulation"
+                                  onClick={() =>
+                                    addService(category.id, family.id)
                                   }
                                 >
-                                  {familyOpen ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronLeft className="h-4 w-4" />
-                                  )}
+                                  <Plus className="h-4 w-4" />
+                                  افزودن خدمت
                                 </Button>
-                              </CollapsibleTrigger>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="truncate text-sm font-medium">
-                                    {family.name}
-                                  </p>
-                                  {!family.active && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px]"
-                                    >
-                                      غیرفعال
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-[11px] leading-4 text-muted-foreground sm:text-xs">
-                                  {toPersianDigits(family.services.length)} خدمت
-                                </p>
                               </div>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                                aria-label={`ویرایش گروه ${family.name}`}
-                                onClick={() => {
-                                  setSelectedFamily(family)
-                                  setFamilyDrawerOpen(true)
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                                aria-label={`افزودن خدمت به ${family.name}`}
-                                onClick={() => addService(category.id, family.id)}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <CollapsibleContent className="space-y-1 border-t border-border/40 bg-muted/20 p-1.5 sm:space-y-1.5 sm:p-2">
-                              {family.services.length === 0 ? (
-                                <div className="rounded-md border border-dashed border-border/60 bg-background px-3 py-3 text-center sm:py-4">
-                                  <p className="text-xs text-muted-foreground">
-                                    خدمتی در این گروه نیست.
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="mt-3 gap-1 touch-manipulation"
-                                    onClick={() => addService(category.id, family.id)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    افزودن خدمت
-                                  </Button>
-                                </div>
-                              ) : (
-                                family.services.map((service) => (
-                                  <ServiceRow
-                                    key={service.id}
-                                    service={service}
-                                    onEdit={() => {
-                                      setSelectedService(service)
-                                      setServiceDrawerOpen(true)
-                                    }}
-                                  />
-                                ))
-                              )}
-                            </CollapsibleContent>
-                          </Collapsible>
-                        )
-                      })}
+                            ) : (
+                              family.services.map((service) => (
+                                <ServiceRow
+                                  key={service.id}
+                                  service={service}
+                                  onEdit={() => {
+                                    setSelectedService(service)
+                                    setServiceDrawerOpen(true)
+                                  }}
+                                />
+                              ))
+                            )}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )
+                    })}
                   </CollapsibleContent>
                 </Collapsible>
               )
@@ -674,7 +673,7 @@ export function ServiceCatalogManager({
       <Sheet open={presetSheetOpen} onOpenChange={setPresetSheetOpen}>
         <SheetContent
           side="bottom"
-          className="max-h-[90vh] overflow-y-auto"
+          className="max-h-[90dvh] overflow-y-auto"
           dir="rtl"
         >
           <SheetHeader className="text-right">

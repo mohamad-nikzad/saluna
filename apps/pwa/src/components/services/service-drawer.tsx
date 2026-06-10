@@ -11,6 +11,7 @@ import {
   FormSheetFooter,
 } from '#/components/form-sheet'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Textarea } from '@repo/ui/textarea'
@@ -230,7 +231,8 @@ export function ServiceDrawer({
 
         <form
           onSubmit={onSubmit}
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+          onFocus={handleFormFocusScroll}
         >
           <FieldGroup>
             <Field>
@@ -551,7 +553,7 @@ export function ServiceDrawer({
             }
             className="touch-manipulation"
           >
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? '…' : isEditing ? 'ذخیره' : 'افزودن'}
           </Button>
           <Button

@@ -25,6 +25,7 @@ import {
   useUpdateStaffScheduleMutation,
 } from '#/lib/staff-queries'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 import {
   defaultScheduleRows,
   mergeSavedScheduleRows,
@@ -146,9 +147,11 @@ export function StaffScheduleDrawer({
     requestClose(false)
   }
 
+  useKeyboardInset(open)
+
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>برنامه کاری {staff?.name ?? ''}</DrawerTitle>
           <DrawerDescription>
@@ -156,7 +159,10 @@ export function StaffScheduleDrawer({
           </DrawerDescription>
         </DrawerHeader>
 
-        <form onSubmit={onSubmit} className="space-y-3 overflow-auto p-4">
+        <form
+          onSubmit={onSubmit}
+          className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
+        >
           <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
             <div className="text-sm">
               <p className="font-medium">ساعت سالن</p>
@@ -250,7 +256,7 @@ export function StaffScheduleDrawer({
 
         <DrawerFooter>
           <Button onClick={onSubmit} disabled={isSubmitting || bundleLoading}>
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? 'در حال ذخیره…' : 'ذخیره برنامه کاری'}
           </Button>
           <Button
