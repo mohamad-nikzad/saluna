@@ -59,7 +59,7 @@ export function DaySummarySheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[86vh] rounded-t-[24px] border-border/70 p-0 sm:inset-x-auto sm:left-4 sm:right-auto sm:bottom-4 sm:max-h-[calc(100vh-2rem)] sm:w-[420px] sm:rounded-[24px] sm:border"
+        className="max-h-[86dvh] rounded-t-[24px] border-border/70 p-0 sm:inset-x-auto sm:left-4 sm:right-auto sm:bottom-4 sm:max-h-[calc(100dvh-2rem)] sm:w-[420px] sm:rounded-[24px] sm:border"
       >
         <SheetHeader className="border-b border-border/50 px-5 pb-4 pt-5 text-right">
           <div className="flex items-center justify-end gap-2 text-muted-foreground">

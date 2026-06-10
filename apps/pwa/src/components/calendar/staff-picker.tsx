@@ -124,7 +124,7 @@ export function StaffPicker({
             }}
           >
             <CommandInput placeholder="جستجوی پرسنل..." />
-            <CommandList className="max-h-[min(22rem,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto">
+            <CommandList className="max-h-[min(70dvh,24rem,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto">
               <CommandEmpty>پرسنلی پیدا نشد.</CommandEmpty>
               <CommandGroup className="py-1">
                 {staff.map((member) => {

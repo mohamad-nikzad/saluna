@@ -18,6 +18,7 @@ import { AppointmentDetailReadView } from '#/components/calendar/appointment-det
 import { AppointmentDetailPlaceholderClient } from '#/components/calendar/appointment-detail/appointment-detail-placeholder-client'
 import { AppointmentDetailDrawerFooter } from '#/components/calendar/appointment-detail/appointment-detail-drawer-footer'
 import { useAppointmentDetailDrawer } from '#/components/calendar/appointment-detail/use-appointment-detail-drawer'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 
 export type { AppointmentDetailChange } from '#/lib/appointment-surface'
 
@@ -55,11 +56,13 @@ export function AppointmentDetailDrawer({
     readOnly,
   })
 
+  useKeyboardInset(!!appointment)
+
   if (!appointment) return null
 
   return (
     <Drawer open={!!appointment} onOpenChange={drawer.handleOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="flex min-h-0 flex-col overflow-hidden pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>
             {drawer.isEditingCurrentAppointment ? 'ویرایش نوبت' : 'جزئیات نوبت'}

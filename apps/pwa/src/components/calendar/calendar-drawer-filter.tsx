@@ -12,6 +12,7 @@ import {
 } from '@repo/ui/drawer'
 import { useIsTouch } from '@repo/ui/use-mobile'
 import { cn } from '@repo/ui/utils'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 
 export interface CalendarFilterOption {
   id: string
@@ -55,6 +56,8 @@ export function CalendarDrawerFilter({
 }: CalendarDrawerFilterProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+
+  useKeyboardInset(open)
   const [draftSelectedIds, setDraftSelectedIds] =
     useState<string[]>(selectedIds)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -119,8 +122,8 @@ export function CalendarDrawerFilter({
         </button>
       </DrawerTrigger>
 
-      <DrawerContent className="max-h-[88lvh]">
-        <DrawerHeader>
+      <DrawerContent className="max-h-[88dvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
+        <DrawerHeader className="shrink-0">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription className="sr-only">
             {description}

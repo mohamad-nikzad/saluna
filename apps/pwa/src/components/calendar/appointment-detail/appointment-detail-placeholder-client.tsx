@@ -16,6 +16,7 @@ import { FormRootError } from '@repo/ui/form'
 import type { Client } from '@repo/salon-core/types'
 import type { CompletePlaceholderClientInput } from '@repo/salon-core/forms/appointment'
 import { displayPhone } from '@repo/salon-core/phone'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 
 interface AppointmentDetailPlaceholderClientProps {
   open: boolean
@@ -46,9 +47,11 @@ export function AppointmentDetailPlaceholderClient({
 }: AppointmentDetailPlaceholderClientProps) {
   const { setValue: setCompleteValue, watch: watchComplete } = completeForm
 
+  useKeyboardInset(open)
+
   return (
     <DrawerNested open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[92lvh]">
+      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[92dvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader>
           <DrawerTitle>تکمیل اطلاعات مشتری</DrawerTitle>
           <DrawerDescription>
@@ -77,7 +80,9 @@ export function AppointmentDetailPlaceholderClient({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="complete-client-phone">شماره تماس</FieldLabel>
+              <FieldLabel htmlFor="complete-client-phone">
+                شماره تماس
+              </FieldLabel>
               <Input
                 id="complete-client-phone"
                 type="tel"
@@ -138,7 +143,9 @@ export function AppointmentDetailPlaceholderClient({
           <Button
             onClick={onSubmit}
             disabled={
-              isPending || !completeClientName.trim() || !completeClientPhone.trim()
+              isPending ||
+              !completeClientName.trim() ||
+              !completeClientPhone.trim()
             }
           >
             {isPending ? 'در حال ذخیره…' : 'ثبت اطلاعات'}

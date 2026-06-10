@@ -53,6 +53,7 @@ import { ServicePicker } from '#/components/services/service-picker'
 import { fetchAppointmentAvailability } from '#/lib/appointments-queries'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 
 type AvailabilitySearchMode = 'day' | 'nearest'
 
@@ -275,6 +276,8 @@ export function AvailabilityDrawer({
     [date, searchAvailability, serviceId],
   )
 
+  useKeyboardInset(open)
+
   const { requestClose, confirmDialog } = useDismissGuard({
     isDirty: false,
     onClose: () => {
@@ -343,7 +346,7 @@ export function AvailabilityDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[96lvh] flex min-h-0 flex-col">
+      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[96dvh] flex min-h-0 flex-col pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150">
         <DrawerHeader className="pb-3 text-start">
           <DrawerTitle>بررسی زمان خالی</DrawerTitle>
           <DrawerDescription>
@@ -511,9 +514,7 @@ export function AvailabilityDrawer({
                       type="button"
                       variant="outline"
                       className="w-full gap-2 rounded-2xl"
-                      disabled={
-                        !serviceId || loadingMode === 'nearest'
-                      }
+                      disabled={!serviceId || loadingMode === 'nearest'}
                       onClick={() => void runSearch('nearest')}
                     >
                       {loadingMode === 'nearest' ? (

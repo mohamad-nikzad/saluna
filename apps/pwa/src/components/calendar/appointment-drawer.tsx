@@ -10,6 +10,7 @@ import {
   FormSheetFooter,
 } from '#/components/form-sheet'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 import { Button } from '@repo/ui/button'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
@@ -402,7 +403,8 @@ export function AppointmentDrawer({
 
         <form
           onSubmit={onSubmit}
-          className="min-h-0 flex-1 overflow-auto px-5 pt-3 pb-4"
+          className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-4"
+          onFocus={handleFormFocusScroll}
         >
           <FieldGroup className="gap-4">
             <Field>
@@ -662,7 +664,7 @@ export function AppointmentDrawer({
               (useTemporaryClient ? !temporaryClientName?.trim() : !clientId)
             }
           >
-            {isSubmitting && <Spinner className="ml-2" />}
+            {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting ? 'در حال ثبت…' : 'ثبت نوبت'}
           </Button>
           <Button

@@ -1,5 +1,6 @@
 import type { RefObject } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 import { Checkbox } from '@repo/ui/checkbox'
 import { Input } from '@repo/ui/input'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@repo/ui/field'
@@ -121,7 +122,8 @@ export function AppointmentDetailEditForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-4 overflow-auto px-4"
+      className="min-h-0 flex-1 flex flex-col gap-4 overflow-y-auto px-4"
+      onFocus={handleFormFocusScroll}
     >
       <FieldGroup>
         <Field>

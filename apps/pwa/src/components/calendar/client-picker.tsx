@@ -124,7 +124,8 @@ export function ClientPicker({
   const { pickFromDevice, phoneSheetProps, resetPhoneSheet } =
     useSingleDeviceContactPick({
       isActive: () => hostActive && modeRef.current !== 'closed',
-      onReady: (name, phone) => continueWithDeviceContactRef.current(name, phone),
+      onReady: (name, phone) =>
+        continueWithDeviceContactRef.current(name, phone),
       onChoosePhone: () => {},
     })
 
@@ -469,7 +470,7 @@ export function ClientPicker({
             <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
             <DrawerContent
               showClose={false}
-              className="max-h-[88lvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
+              className="max-h-[88dvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
             >
               <DrawerHeader>
                 <DrawerTitle>
