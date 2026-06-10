@@ -25,19 +25,17 @@ export function useAppointmentFlow(defaults?: {
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [detailAppointment, setDetailAppointment] =
     useState<AppointmentWithDetails | null>(null)
-  const [createIntent, setCreateIntent] = useState<AppointmentCreateIntent>(() =>
-    emptyCreateIntent(
-      defaults?.defaultDate ?? '',
-      defaults?.defaultTime ?? '09:00',
-    ),
+  const [createIntent, setCreateIntent] = useState<AppointmentCreateIntent>(
+    () =>
+      emptyCreateIntent(
+        defaults?.defaultDate ?? '',
+        defaults?.defaultTime ?? '09:00',
+      ),
   )
 
-  const resetCreateIntent = useCallback(
-    (date: string, time: string) => {
-      setCreateIntent(emptyCreateIntent(date, time))
-    },
-    [],
-  )
+  const resetCreateIntent = useCallback((date: string, time: string) => {
+    setCreateIntent(emptyCreateIntent(date, time))
+  }, [])
 
   const openCreateIntent = useCallback((intent: AppointmentCreateIntent) => {
     setCreateIntent(intent)

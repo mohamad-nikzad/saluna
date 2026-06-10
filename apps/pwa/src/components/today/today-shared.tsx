@@ -16,7 +16,7 @@ import {
   greetingFa,
 } from '#/lib/today-view-model'
 import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
-import type {GroupedAttentionItem} from '#/lib/today-view-model';
+import type { GroupedAttentionItem } from '#/lib/today-view-model'
 import { StatusPill } from '#/components/status-pill'
 
 export function HeaderGreeting({

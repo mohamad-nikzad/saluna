@@ -103,7 +103,11 @@ export function useClientImport({
 
   useEffect(() => {
     if (!counts) return
-    if (filter === 'eligible' && counts.eligible === 0 && skippedRows.length > 0) {
+    if (
+      filter === 'eligible' &&
+      counts.eligible === 0 &&
+      skippedRows.length > 0
+    ) {
       setFilter(defaultImportPreviewFilter(counts))
     }
   }, [counts, filter, skippedRows.length])
@@ -141,12 +145,15 @@ export function useClientImport({
       event.target.value = ''
       if (!file) return
 
-      void file.text().then(loadFileText).catch(() => {
-        toast({
-          variant: 'destructive',
-          title: 'خواندن فایل انجام نشد',
+      void file
+        .text()
+        .then(loadFileText)
+        .catch(() => {
+          toast({
+            variant: 'destructive',
+            title: 'خواندن فایل انجام نشد',
+          })
         })
-      })
     },
     [loadFileText],
   )
@@ -214,7 +221,9 @@ export function useClientImport({
       return {
         ...prev,
         rows: prev.rows.map((row) =>
-          visibleIds.has(row.localId) ? { ...row, selected: shouldSelect } : row,
+          visibleIds.has(row.localId)
+            ? { ...row, selected: shouldSelect }
+            : row,
         ),
       }
     })

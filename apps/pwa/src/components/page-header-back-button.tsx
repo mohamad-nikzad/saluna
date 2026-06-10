@@ -10,10 +10,7 @@ type PageHeaderBackButtonProps = {
   'aria-label'?: string
   className?: string
   disabled?: boolean
-} & (
-  | { to: string; onClick?: never }
-  | { onClick: () => void; to?: never }
-)
+} & ({ to: string; onClick?: never } | { onClick: () => void; to?: never })
 
 export function PageHeaderBackButton({
   'aria-label': ariaLabel = 'بازگشت',

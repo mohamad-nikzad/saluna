@@ -44,9 +44,7 @@ export function BrandIconTile({
   size?: number
 }) {
   return (
-    <div
-      className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-line-soft bg-foreground/[0.06]"
-    >
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-line-soft bg-foreground/[0.06]">
       <BrandIcon slug={slug} size={size} title={title} />
     </div>
   )

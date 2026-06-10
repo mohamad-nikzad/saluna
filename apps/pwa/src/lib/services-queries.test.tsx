@@ -41,5 +41,4 @@ describe('services-queries', () => {
 
     expect(data).toEqual([{ id: 'svc-1', name: 'رنگ مو' }])
   })
-
 })

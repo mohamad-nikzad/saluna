@@ -93,10 +93,7 @@ export function useBulkCreateClientsMutation() {
     Array<{ name: string; phone: string }>
   >({
     mutationFn: async (clients, mutationContext) => {
-      return generated.mutationFn!(
-        { body: { clients } },
-        mutationContext,
-      )
+      return generated.mutationFn!({ body: { clients } }, mutationContext)
     },
     meta: {
       skipToast: true,

@@ -13,14 +13,8 @@ import type {
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
-export {
-  getApiV1OnboardingQueryKey,
-}
-export type {
-  OnboardingAction,
-  OnboardingResponse,
-  OnboardingStatus,
-}
+export { getApiV1OnboardingQueryKey }
+export type { OnboardingAction, OnboardingResponse, OnboardingStatus }
 
 export function onboardingInvalidationKeys() {
   return [[{ _id: 'getApiV1Onboarding' }]] as const
@@ -55,10 +49,7 @@ export function useUpdateOnboardingMutation(
       action: OnboardingAction,
       mutationContext,
     ): Promise<OnboardingResponse> => {
-      return generated.mutationFn!(
-        { body: { action } },
-        mutationContext,
-      )
+      return generated.mutationFn!({ body: { action } }, mutationContext)
     },
     meta: {
       ...(options.skipToast ? { skipToast: true } : {}),

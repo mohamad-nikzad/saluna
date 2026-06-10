@@ -52,7 +52,9 @@ export function StaffDetailHero({
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <StaffRosterChip icon={Scissors}>
-              <span className="tabular-nums">{toPersianDigits(serviceCount)}</span>{' '}
+              <span className="tabular-nums">
+                {toPersianDigits(serviceCount)}
+              </span>{' '}
               خدمت
             </StaffRosterChip>
             {member.role === 'staff' && workDaysCount != null ? (

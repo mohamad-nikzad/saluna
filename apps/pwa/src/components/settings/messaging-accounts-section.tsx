@@ -116,11 +116,7 @@ function MessagingProviderRow({
         <ToggleRow
           icon={Send}
           label={config.toggleLabel}
-          hint={
-            account.displayName
-              ? `متصل به ${account.displayName}`
-              : 'متصل'
-          }
+          hint={account.displayName ? `متصل به ${account.displayName}` : 'متصل'}
           checked={account.enabled}
           disabled={toggleAccount.isPending}
           onChange={(next) =>

@@ -71,19 +71,16 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
     revealInvalidPresenceField(firstInvalidField, { setOpen, setFocus })
   }
 
-  const onSubmit = handleSubmit(
-    (formValues) => {
-      savePresence.mutate(formValues, {
-        onSuccess: () => options.onSuccess?.(),
-        onError: (err) => {
-          setError('root', {
-            message: getMutationErrorMessage(err, 'ذخیره اطلاعات انجام نشد'),
-          })
-        },
-      })
-    },
-    onInvalid,
-  )
+  const onSubmit = handleSubmit((formValues) => {
+    savePresence.mutate(formValues, {
+      onSuccess: () => options.onSuccess?.(),
+      onError: (err) => {
+        setError('root', {
+          message: getMutationErrorMessage(err, 'ذخیره اطلاعات انجام نشد'),
+        })
+      },
+    })
+  }, onInvalid)
 
   return {
     open,

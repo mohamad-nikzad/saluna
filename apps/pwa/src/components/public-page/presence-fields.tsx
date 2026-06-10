@@ -9,20 +9,14 @@ import {
   Plus,
   Send,
 } from 'lucide-react'
-import type {
-  FieldErrors,
-  UseFormRegister,
-} from 'react-hook-form'
+import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { Input } from '@repo/ui/input'
 import { Textarea } from '@repo/ui/textarea'
 import { FieldError } from '@repo/ui/field'
 import { cn } from '@repo/ui/utils'
 import type { PresenceInput } from '@repo/salon-core/forms/presence'
 
-import {
-  presenceFieldInputId,
-  type PresenceField,
-} from './presence-validation'
+import { presenceFieldInputId, type PresenceField } from './presence-validation'
 
 export type { PresenceField }
 
@@ -162,17 +156,11 @@ export function PresenceFields({
               dir={config.dir}
               className={cn(
                 'block truncate text-xs',
-                hasError
-                  ? 'text-destructive'
-                  : 'text-muted-foreground',
+                hasError ? 'text-destructive' : 'text-muted-foreground',
                 config.dir === 'ltr' && 'text-left',
               )}
             >
-              {hasError
-                ? fieldError?.message
-                : filled
-                  ? value
-                  : 'افزودن'}
+              {hasError ? fieldError?.message : filled ? value : 'افزودن'}
             </span>
           </span>
           {hasError ? (

@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import type { ClientImportCounts, ClientImportPreviewRow } from '@repo/salon-core'
+import type {
+  ClientImportCounts,
+  ClientImportPreviewRow,
+} from '@repo/salon-core'
 
-import {
-  formatImportCounts,
-  getBulkImportSubmitClients,
-} from './client-import'
+import { formatImportCounts, getBulkImportSubmitClients } from './client-import'
 import { formatBulkImportToast } from './client-import-toast'
 
 function row(
-  overrides: Partial<ClientImportPreviewRow> & Pick<ClientImportPreviewRow, 'localId'>,
+  overrides: Partial<ClientImportPreviewRow> &
+    Pick<ClientImportPreviewRow, 'localId'>,
 ): ClientImportPreviewRow {
   return {
     name: 'Test',
@@ -18,7 +19,9 @@ function row(
   }
 }
 
-function counts(overrides: Partial<ClientImportCounts> = {}): ClientImportCounts {
+function counts(
+  overrides: Partial<ClientImportCounts> = {},
+): ClientImportCounts {
   return {
     totalInFile: 0,
     eligible: 0,
@@ -84,9 +87,19 @@ describe('formatImportCounts', () => {
 describe('getBulkImportSubmitClients', () => {
   it('includes all selected valid rows regardless of search visibility', () => {
     const rows: ClientImportPreviewRow[] = [
-      row({ localId: '1', name: 'Alice', phone: '09121111111', selected: true }),
+      row({
+        localId: '1',
+        name: 'Alice',
+        phone: '09121111111',
+        selected: true,
+      }),
       row({ localId: '2', name: 'Bob', phone: '09122222222', selected: true }),
-      row({ localId: '3', name: 'Carol', phone: '09123333333', selected: false }),
+      row({
+        localId: '3',
+        name: 'Carol',
+        phone: '09123333333',
+        selected: false,
+      }),
     ]
 
     expect(getBulkImportSubmitClients(rows)).toEqual([
@@ -97,9 +110,19 @@ describe('getBulkImportSubmitClients', () => {
 
   it('excludes unselected and invalid rows from submit count', () => {
     const rows: ClientImportPreviewRow[] = [
-      row({ localId: '1', name: 'Valid', phone: '09121111111', selected: true }),
+      row({
+        localId: '1',
+        name: 'Valid',
+        phone: '09121111111',
+        selected: true,
+      }),
       row({ localId: '2', name: '', phone: '09122222222', selected: true }),
-      row({ localId: '3', name: 'Hidden', phone: '09123333333', selected: true }),
+      row({
+        localId: '3',
+        name: 'Hidden',
+        phone: '09123333333',
+        selected: true,
+      }),
       row({ localId: '4', name: 'Off', phone: '09124444444', selected: false }),
     ]
 
@@ -136,9 +159,7 @@ describe('formatBulkImportToast', () => {
         { phone: '09121111111', reason: 'duplicate-phone' },
         { phone: '09122222222', reason: 'invalid' },
       ]),
-    ).toBe(
-      '۶ اضافه شد · ۱ تکراری نادیده گرفته شد · ۱ نامعتبر نادیده گرفته شد',
-    )
+    ).toBe('۶ اضافه شد · ۱ تکراری نادیده گرفته شد · ۱ نامعتبر نادیده گرفته شد')
   })
 
   it('formats duplicate-only toast', () => {

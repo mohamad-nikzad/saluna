@@ -1,9 +1,6 @@
 import { Spinner } from '@repo/ui/spinner'
-import {
-  STATUS_CHANGE_SEGMENTS
-  
-} from '#/lib/appointment-surface'
-import type {AppointmentStatusActionState} from '#/lib/appointment-surface';
+import { STATUS_CHANGE_SEGMENTS } from '#/lib/appointment-surface'
+import type { AppointmentStatusActionState } from '#/lib/appointment-surface'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 import { cn } from '@repo/ui/utils'
 

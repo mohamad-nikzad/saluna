@@ -221,9 +221,12 @@ function SettingsPage() {
 
   const toggleLocalAlerts = (next: boolean) => {
     setLocalAlerts(next)
-    updateLocalAlerts.mutate({ localAlertsEnabled: next }, {
-      onError: () => setLocalAlerts(!next),
-    })
+    updateLocalAlerts.mutate(
+      { localAlertsEnabled: next },
+      {
+        onError: () => setLocalAlerts(!next),
+      },
+    )
   }
 
   const saveBusinessHours = handleBusinessHoursSubmit(async (values) => {

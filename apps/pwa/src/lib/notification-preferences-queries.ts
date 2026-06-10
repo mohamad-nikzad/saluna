@@ -34,12 +34,10 @@ export function notificationPreferencesQueryOptions() {
   })
 }
 
-export function useUpdateNotificationPreferencesMutation(
-  options?: {
-    skipSuccessToast?: boolean
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function useUpdateNotificationPreferencesMutation(options?: {
+  skipSuccessToast?: boolean
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = patchApiV1NotificationPreferencesMutation()
 
   return useMutation({

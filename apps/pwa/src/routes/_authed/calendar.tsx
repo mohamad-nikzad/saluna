@@ -432,8 +432,7 @@ function CalendarPage() {
           getApiV1AppointmentsQueryKey({
             query: { startDate, endDate },
           }),
-          (current) =>
-            current?.filter((a) => a.id !== change.id),
+          (current) => current?.filter((a) => a.id !== change.id),
         )
         appointmentFlow.actions.closeDetail()
       } else {

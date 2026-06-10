@@ -1,8 +1,6 @@
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
-export type {
-  AppointmentDetailEditViewModel,
-} from '#/lib/appointment-detail-view-model'
+export type { AppointmentDetailEditViewModel } from '#/lib/appointment-detail-view-model'
 
 export {
   STATUS_CHANGE_SEGMENTS,
@@ -56,5 +54,9 @@ export type AppointmentDetailChangeSource = 'edit' | 'status' | 'completeClient'
 
 /** Result of a detail drawer mutation (edit, status, complete client). */
 export type AppointmentDetailChange =
-  | { type: 'updated'; appointment: AppointmentWithDetails; source: AppointmentDetailChangeSource }
+  | {
+      type: 'updated'
+      appointment: AppointmentWithDetails
+      source: AppointmentDetailChangeSource
+    }
   | { type: 'deleted'; id: string }

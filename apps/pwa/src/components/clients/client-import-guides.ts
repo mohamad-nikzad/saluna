@@ -110,14 +110,16 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
     difficulty: 'easy',
     stepCount: 5,
     steps: [
-      [fa('اپ '), en('Contacts'), fa(' ('), en('Google Contacts'), fa(') را باز کنید.')],
+      [
+        fa('اپ '),
+        en('Contacts'),
+        fa(' ('),
+        en('Google Contacts'),
+        fa(') را باز کنید.'),
+      ],
       [en('Fix & manage'), fa(' (پایین صفحه) را بزنید.')],
       [en('Export to file'), fa(' را انتخاب کنید.')],
-      [
-        fa('حساب(های) '),
-        en('Google'),
-        fa(' موردنظر را انتخاب کنید.'),
-      ],
+      [fa('حساب(های) '), en('Google'), fa(' موردنظر را انتخاب کنید.')],
       [
         en('Export to .VCF file'),
         fa(' → فایل در '),
@@ -169,13 +171,15 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
         en('Phone'),
         fa(').'),
       ],
-      [en('☰'), fa(' یا '), en('⋮'), fa(' → '), en('Manage contacts'), fa('.')],
       [
-        en('Import or export contacts'),
+        en('☰'),
+        fa(' یا '),
+        en('⋮'),
         fa(' → '),
-        en('Export'),
+        en('Manage contacts'),
         fa('.'),
       ],
+      [en('Import or export contacts'), fa(' → '), en('Export'), fa('.')],
       [
         en('Internal storage'),
         fa(' / '),
@@ -229,7 +233,12 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
     steps: [
       [en('Contacts'), fa(' را باز کنید.')],
       [en('Manage'), fa(' (پایین یا منو) را بزنید.')],
-      [en('Export to file'), fa(' / '), en('Export to storage'), fa(' را انتخاب کنید.')],
+      [
+        en('Export to file'),
+        fa(' / '),
+        en('Export to storage'),
+        fa(' را انتخاب کنید.'),
+      ],
       [
         fa('حساب ('),
         en('Google'),
@@ -260,11 +269,7 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
         fa('.'),
       ],
     ],
-    outputSegments: [
-      fa('یک فایل '),
-      en('.vcf'),
-      fa(' per حساب'),
-    ],
+    outputSegments: [fa('یک فایل '), en('.vcf'), fa(' per حساب')],
   },
   {
     id: 'huawei',
@@ -356,25 +361,14 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
         en('.vcf'),
         fa(' دنبال کنید.'),
       ],
-      [
-        fa('فایل '),
-        en('.vcf'),
-        fa(' را اینجا بارگذاری کنید.'),
-      ],
+      [fa('فایل '), en('.vcf'), fa(' را اینجا بارگذاری کنید.')],
     ],
     pitfalls: [
       [fa('دکمه گرفتن همه مخاطبین یا اعضای گروه یک‌جا نیست.')],
-      [
-        fa('نام نمایشی واتساپ ≠ نام ذخیره‌شده در '),
-        en('Contacts'),
-        fa('.'),
-      ],
+      [fa('نام نمایشی واتساپ ≠ نام ذخیره‌شده در '), en('Contacts'), fa('.')],
       [fa('برای لیست سلامون از '), en('Contacts'), fa(' گوشی استفاده کنید.')],
     ],
-    outputSegments: [
-      fa('فایل گروهی نداره — فقط '),
-      en('per-contact share'),
-    ],
+    outputSegments: [fa('فایل گروهی نداره — فقط '), en('per-contact share')],
     notRecommended: true,
   },
 ]

@@ -67,7 +67,6 @@ export function StaffListCard({
             </StaffRosterChip>
           </div>
         </div>
-
       </button>
 
       <StaffListRowMenu

@@ -8,9 +8,7 @@ import { Spinner } from '@repo/ui/spinner'
 import { Skeleton } from '@repo/ui/skeleton'
 import { cn } from '@repo/ui/utils'
 import { formatJalaliFullDate } from '@repo/salon-core/jalali'
-import {
-  formatPersianTime,
-} from '@repo/salon-core/persian-digits'
+import { formatPersianTime } from '@repo/salon-core/persian-digits'
 import { salonCurrentHm } from '@repo/salon-core/salon-local-time'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
@@ -23,11 +21,8 @@ import {
 } from '#/lib/today-view-model'
 import { StatusPill } from '#/components/status-pill'
 import { StaffTodaySkeleton } from '#/components/today-skeleton'
-import {
-  StaffTodayContext
-  
-} from '#/components/today/staff-today-context'
-import type {StatusActionFeedback} from '#/components/today/staff-today-context';
+import { StaffTodayContext } from '#/components/today/staff-today-context'
+import type { StatusActionFeedback } from '#/components/today/staff-today-context'
 import { HeaderGreeting } from '#/components/today/today-shared'
 
 function StaffAppointmentCard({
@@ -199,9 +194,8 @@ export function StaffTodayScreen() {
   const { mutateToday, mutateTomorrow } = actions
 
   const [clockHm, setClockHm] = useState(() => salonCurrentHm())
-  const { statusFeedback, patchStatus } = useStaffTodayStatusMutation(
-    mutateToday,
-  )
+  const { statusFeedback, patchStatus } =
+    useStaffTodayStatusMutation(mutateToday)
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockHm(salonCurrentHm()), 60_000)
@@ -250,11 +244,7 @@ export function StaffTodayScreen() {
           className="size-11 shrink-0 rounded-2xl"
           asChild
         >
-          <Link
-            to="/calendar"
-            search={{ date: todayDate }}
-            aria-label="تقویم"
-          >
+          <Link to="/calendar" search={{ date: todayDate }} aria-label="تقویم">
             <CalendarDays className="size-5" />
           </Link>
         </Button>

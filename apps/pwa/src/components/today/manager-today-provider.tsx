@@ -7,9 +7,7 @@ import { servicesListQueryOptions } from '#/lib/services-queries'
 import { staffListQueryOptions } from '#/lib/staff-queries'
 import { todayQueryOptions } from '#/lib/today-queries'
 import { firstNameOf } from '#/lib/today-view-model'
-import {
-  ManagerTodayContext,
-} from '#/components/today/manager-today-context'
+import { ManagerTodayContext } from '#/components/today/manager-today-context'
 import type { ManagerTodayContextValue } from '#/components/today/manager-today-context'
 
 export function ManagerTodayProvider({
@@ -64,7 +62,5 @@ export function ManagerTodayProvider({
     ],
   )
 
-  return (
-    <ManagerTodayContext value={value}>{children}</ManagerTodayContext>
-  )
+  return <ManagerTodayContext value={value}>{children}</ManagerTodayContext>
 }

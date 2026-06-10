@@ -8,7 +8,9 @@ export function formatBulkImportToast(
   const duplicateCount = skipped.filter(
     (item) => item.reason === 'duplicate-phone',
   ).length
-  const invalidCount = skipped.filter((item) => item.reason === 'invalid').length
+  const invalidCount = skipped.filter(
+    (item) => item.reason === 'invalid',
+  ).length
 
   const skippedParts: string[] = []
   if (duplicateCount > 0) {

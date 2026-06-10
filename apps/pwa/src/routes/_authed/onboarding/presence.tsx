@@ -42,7 +42,11 @@ function PresenceScreen() {
   }
 
   return (
-    <form onSubmit={presence.onSubmit} noValidate className="flex h-full flex-col">
+    <form
+      onSubmit={presence.onSubmit}
+      noValidate
+      className="flex h-full flex-col"
+    >
       <StepBody
         eyebrow="اختیاری — هر زمان می‌توانید"
         question={step.question}

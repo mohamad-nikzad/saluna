@@ -50,7 +50,8 @@ export function resolveScheduleDayActive(
   scheduleByDay: Map<number, StaffSchedule>,
 ): boolean {
   return (
-    scheduleByDay.get(dayOfWeek)?.active ?? isDefaultScheduleDayActive(dayOfWeek)
+    scheduleByDay.get(dayOfWeek)?.active ??
+    isDefaultScheduleDayActive(dayOfWeek)
   )
 }
 

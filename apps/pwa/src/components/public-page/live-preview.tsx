@@ -3,8 +3,8 @@ import type { PublicTheme } from '@repo/salon-core/public-themes'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
 import { monogramFor } from './public-url'
-import { formatTomansPrice  } from './types'
-import type {ServiceRow} from './types';
+import { formatTomansPrice } from './types'
+import type { ServiceRow } from './types'
 
 export function LivePreview({
   theme,

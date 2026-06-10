@@ -5,4 +5,3 @@ export const managerBusinessSettingsQueryKey = [
   'manager',
   'business-settings',
 ] as const
-

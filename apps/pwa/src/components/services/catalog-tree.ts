@@ -1,4 +1,8 @@
-import type { Service, ServiceCategory, ServiceFamily } from '@repo/salon-core/types'
+import type {
+  Service,
+  ServiceCategory,
+  ServiceFamily,
+} from '@repo/salon-core/types'
 
 export type CategoryNode = ServiceCategory & {
   families: Array<ServiceFamily & { services: Service[] }>

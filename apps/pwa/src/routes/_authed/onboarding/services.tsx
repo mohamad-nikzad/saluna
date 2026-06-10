@@ -44,7 +44,9 @@ function ServicesScreen() {
   const hasService = activeCount > 0
 
   const refreshServices = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: getApiV1ServicesQueryKey() })
+    await queryClient.invalidateQueries({
+      queryKey: getApiV1ServicesQueryKey(),
+    })
     await queryClient.invalidateQueries({
       queryKey: getApiV1OnboardingQueryKey(),
     })

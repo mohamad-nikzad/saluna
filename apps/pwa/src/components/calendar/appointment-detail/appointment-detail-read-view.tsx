@@ -20,11 +20,8 @@ import {
   formatPersianTime,
   toPersianDigits,
 } from '@repo/salon-core/persian-digits'
-import {
-  tomansFormatter
-  
-} from '#/lib/appointment-surface'
-import type {AppointmentStatusActionState} from '#/lib/appointment-surface';
+import { tomansFormatter } from '#/lib/appointment-surface'
+import type { AppointmentStatusActionState } from '#/lib/appointment-surface'
 import { AppointmentDetailStatusActions } from '#/components/calendar/appointment-detail/appointment-detail-status-actions'
 
 interface AppointmentDetailReadViewProps {

@@ -12,7 +12,9 @@ type StaffPageControllerOptions = {
   onDeleteSuccess?: (staff: User) => void
 }
 
-export function useStaffPageController(options: StaffPageControllerOptions = {}) {
+export function useStaffPageController(
+  options: StaffPageControllerOptions = {},
+) {
   const { onDeleteSuccess } = options
   const queryClient = useQueryClient()
 

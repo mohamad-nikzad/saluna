@@ -183,11 +183,16 @@ export function buildAppointmentDetailEditViewModel({
   durationMinutes: number
 }): AppointmentDetailEditViewModel {
   const staffRoleOnly = filterStaffRoleOnly(staff)
-  const selectedEditService = services.find((service) => service.id === serviceId)
+  const selectedEditService = services.find(
+    (service) => service.id === serviceId,
+  )
   const historicalAddonOptions = historicalAddonsFromAppointment(
     appointment?.bookedAddons,
   )
-  const addonOptions = mergeAddonOptions(availableAddons, historicalAddonOptions)
+  const addonOptions = mergeAddonOptions(
+    availableAddons,
+    historicalAddonOptions,
+  )
   const selectedAddons = selectAddonsByIds(addonOptions, addonIds)
   const { previewDuration, previewPrice } = computeEditPreview({
     serviceDuration: selectedEditService?.duration,

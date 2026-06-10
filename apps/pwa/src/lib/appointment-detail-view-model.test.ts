@@ -175,7 +175,9 @@ describe('clientsForAppointmentEdit', () => {
     })
 
     expect(
-      clientsForAppointmentEdit(appointment, [{ id: 'c2', name: 'دیگر' } as never]),
+      clientsForAppointmentEdit(appointment, [
+        { id: 'c2', name: 'دیگر' } as never,
+      ]),
     ).toEqual([appointment.client, { id: 'c2', name: 'دیگر' }])
   })
 })

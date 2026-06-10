@@ -70,7 +70,9 @@ function mapService(service: GeneratedService): Service {
   return service as unknown as Service
 }
 
-function mapServiceCategory(category: GeneratedServiceCategory): ServiceCategory {
+function mapServiceCategory(
+  category: GeneratedServiceCategory,
+): ServiceCategory {
   return category as unknown as ServiceCategory
 }
 
@@ -98,13 +100,13 @@ export type ManagerServiceCatalog = {
 
 export type CatalogPresetListItem = GeneratedCatalogPresetListItem
 
-export function servicesListQueryOptions(options?: { includeInactive?: boolean }) {
+export function servicesListQueryOptions(options?: {
+  includeInactive?: boolean
+}) {
   const query = options?.includeInactive ? includeInactiveQuery : undefined
 
   return queryOptions({
-    queryKey: getApiV1ServicesQueryKey(
-      query ? { query } : undefined,
-    ),
+    queryKey: getApiV1ServicesQueryKey(query ? { query } : undefined),
     staleTime: HEAVY_QUERY_STALE_TIME_MS,
     queryFn: async ({ signal }): Promise<Service[]> => {
       const { data } = await getApiV1Services({

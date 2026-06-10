@@ -2,9 +2,7 @@ import { queryOptions, useMutation } from '@tanstack/react-query'
 import type { QueryKey } from '@tanstack/react-query'
 import type { PublicSettingsInput } from '@repo/salon-core/forms/public'
 import type { PublicSettingsUpdateRequest } from '@repo/api-client/types'
-import {
-  getApiV1SalonPublicSettings,
-} from '@repo/api-client/sdk'
+import { getApiV1SalonPublicSettings } from '@repo/api-client/sdk'
 import {
   getApiV1SalonPublicSettingsQueryKey,
   patchApiV1SalonPublicSettingsSlugMutation,
@@ -31,12 +29,10 @@ export function salonPublicSettingsQueryOptions() {
   })
 }
 
-export function useUpdateSalonPublicSettingsMutation(
-  options?: {
-    skipToast?: boolean
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function useUpdateSalonPublicSettingsMutation(options?: {
+  skipToast?: boolean
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = putApiV1SalonPublicSettingsMutation()
 
   return useMutation({
@@ -66,10 +62,7 @@ export function useUpdateSalonSlugMutation() {
       slug: string,
       mutationContext,
     ): Promise<ManagerPublicSettingsResult> => {
-      return generated.mutationFn!(
-        { body: { slug } },
-        mutationContext,
-      )
+      return generated.mutationFn!({ body: { slug } }, mutationContext)
     },
     meta: {
       skipToast: true,

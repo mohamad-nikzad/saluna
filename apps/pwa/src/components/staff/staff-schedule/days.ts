@@ -10,7 +10,6 @@ export const STAFF_SCHEDULE_DAYS = [
 
 export function staffScheduleDayLabel(dayOfWeek: number): string {
   return (
-    STAFF_SCHEDULE_DAYS.find((day) => day.dayOfWeek === dayOfWeek)?.label ??
-    '—'
+    STAFF_SCHEDULE_DAYS.find((day) => day.dayOfWeek === dayOfWeek)?.label ?? '—'
   )
 }

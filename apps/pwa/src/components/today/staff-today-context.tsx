@@ -1,8 +1,5 @@
 import { createContext } from 'react'
-import type {
-  AppointmentWithDetails,
-  TodayData,
-} from '@repo/salon-core/types'
+import type { AppointmentWithDetails, TodayData } from '@repo/salon-core/types'
 
 export type StatusActionFeedback = {
   appointmentId: string

@@ -2,10 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
 
-import {
-  getApiV1TodayQueryKey,
-  todayQueryOptions,
-} from '#/lib/today-queries'
+import { getApiV1TodayQueryKey, todayQueryOptions } from '#/lib/today-queries'
 
 const getApiV1Today = vi.fn()
 
@@ -46,9 +43,7 @@ describe('today-queries', () => {
       defaultOptions: { queries: { retry: false } },
     })
 
-    const data = await queryClient.fetchQuery(
-      todayQueryOptions('2026-06-07'),
-    )
+    const data = await queryClient.fetchQuery(todayQueryOptions('2026-06-07'))
 
     expect(data.date).toBe('2026-06-07')
     expect(getApiV1Today).toHaveBeenCalledWith(

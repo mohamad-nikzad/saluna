@@ -180,8 +180,7 @@ export function buildManagerTodayViewModel({
   const queue = sortAppointments(
     data.appointments.filter(
       (appointment) =>
-        appointment.status !== 'cancelled' &&
-        appointment.status !== 'no-show',
+        appointment.status !== 'cancelled' && appointment.status !== 'no-show',
     ),
   )
 

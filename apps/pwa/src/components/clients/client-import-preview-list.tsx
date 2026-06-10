@@ -27,10 +27,7 @@ type ClientImportPreviewListProps = {
   onSearchChange: (value: string) => void
   filter: ImportPreviewFilter
   onFilterChange: (filter: ImportPreviewFilter) => void
-  onUpdateRow: (
-    localId: string,
-    patch: Partial<ClientImportPreviewRow>,
-  ) => void
+  onUpdateRow: (localId: string, patch: Partial<ClientImportPreviewRow>) => void
   onRowBlur: (localId: string) => void
   onToggleSelectAll: () => void
   selectAllState: boolean | 'indeterminate'
@@ -93,12 +90,7 @@ export function ClientImportPreviewList({
     }
 
     return all
-  }, [
-    counts.eligible,
-    counts.invalid,
-    duplicateCount,
-    skippedCount,
-  ])
+  }, [counts.eligible, counts.invalid, duplicateCount, skippedCount])
 
   const visibleEligible = useMemo(
     () => rows.filter((row) => matchesImportRowSearch(row, search)),
@@ -230,9 +222,7 @@ function EligibleImportRow({
     <div className="flex items-start gap-3 border-b border-line-soft px-3 py-3 last:border-b-0">
       <Checkbox
         checked={row.selected}
-        onCheckedChange={(checked) =>
-          onUpdate({ selected: checked === true })
-        }
+        onCheckedChange={(checked) => onUpdate({ selected: checked === true })}
         aria-label={`انتخاب ${row.name}`}
         className="mt-2.5"
       />
@@ -291,4 +281,3 @@ function SkippedImportRow({ row }: { row: ClientImportSkippedRow }) {
     </div>
   )
 }
-

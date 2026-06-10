@@ -100,7 +100,9 @@ function SignupPage() {
     meta: { skipToast: true },
     onSuccess: async (data) => {
       setUser(data.user)
-      await queryClient.removeQueries({ queryKey: getApiV1OnboardingQueryKey() })
+      await queryClient.removeQueries({
+        queryKey: getApiV1OnboardingQueryKey(),
+      })
       await queryClient.removeQueries({
         queryKey: getApiV1SettingsBusinessQueryKey(),
       })

@@ -5,8 +5,8 @@ import { Input } from '@repo/ui/input'
 import { cn } from '@repo/ui/utils'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
-import { formatTomansPrice  } from './types'
-import type {ServiceRow} from './types';
+import { formatTomansPrice } from './types'
+import type { ServiceRow } from './types'
 
 export function ServicesPanel({
   services,

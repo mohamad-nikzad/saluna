@@ -38,14 +38,12 @@ export function messagingAccountsQueryOptions() {
   })
 }
 
-export function useCreateMessagingLinkMutation(
-  options?: {
-    skipErrorToast?: boolean
-    skipSuccessToast?: boolean
-    errorMessage?: string
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function useCreateMessagingLinkMutation(options?: {
+  skipErrorToast?: boolean
+  skipSuccessToast?: boolean
+  errorMessage?: string
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = postApiV1MessagingLinkMutation()
 
   return useMutation({
@@ -53,10 +51,7 @@ export function useCreateMessagingLinkMutation(
       provider: MessagingProviderId,
       mutationContext,
     ): Promise<CreateMessagingLinkResponse> => {
-      return generated.mutationFn!(
-        { body: { provider } },
-        mutationContext,
-      )
+      return generated.mutationFn!({ body: { provider } }, mutationContext)
     },
     meta: {
       skipSuccessToast: options?.skipSuccessToast ?? true,
@@ -69,13 +64,11 @@ export function useCreateMessagingLinkMutation(
   })
 }
 
-export function usePatchMessagingAccountMutation(
-  options?: {
-    skipSuccessToast?: boolean
-    errorMessage?: string
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function usePatchMessagingAccountMutation(options?: {
+  skipSuccessToast?: boolean
+  errorMessage?: string
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = patchApiV1MessagingAccountsByIdMutation()
 
   return useMutation({
@@ -100,13 +93,11 @@ export function usePatchMessagingAccountMutation(
   })
 }
 
-export function useDeleteMessagingAccountMutation(
-  options?: {
-    successMessage?: string
-    errorMessage?: string
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function useDeleteMessagingAccountMutation(options?: {
+  successMessage?: string
+  errorMessage?: string
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = deleteApiV1MessagingAccountsByIdMutation()
 
   return useMutation({

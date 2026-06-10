@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import {
-  createFileRoute,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
@@ -70,7 +66,10 @@ function DoneScreen() {
   return (
     <HeroShell
       footer={
-        <HeroPillCTA pending={completeOnboarding.isPending} onClick={onComplete}>
+        <HeroPillCTA
+          pending={completeOnboarding.isPending}
+          onClick={onComplete}
+        >
           بزن بریم سراغ اولین نوبت
         </HeroPillCTA>
       }

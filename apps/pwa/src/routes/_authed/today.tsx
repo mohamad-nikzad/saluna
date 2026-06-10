@@ -18,7 +18,5 @@ function TodayPage() {
     return <ManagerToday userName={user.name} />
   }
 
-  return (
-    <StaffToday userName={user.name} enabled />
-  )
+  return <StaffToday userName={user.name} enabled />
 }

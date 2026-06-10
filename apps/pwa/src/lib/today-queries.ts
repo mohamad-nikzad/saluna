@@ -15,9 +15,7 @@ function mapTodayData(data: GeneratedTodayData): TodayData {
 
 export function todayQueryOptions(date?: string) {
   return queryOptions({
-    queryKey: getApiV1TodayQueryKey(
-      date ? { query: { date } } : undefined,
-    ),
+    queryKey: getApiV1TodayQueryKey(date ? { query: { date } } : undefined),
     staleTime: HEAVY_QUERY_STALE_TIME_MS,
     queryFn: async ({ signal }): Promise<TodayData> => {
       const { data } = await getApiV1Today({

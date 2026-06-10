@@ -64,10 +64,7 @@ function StaffListContent({
       <header className="border-b border-line-soft bg-card px-[18px] pb-4 pt-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
-            <PageHeaderBackButton
-              to="/settings"
-              aria-label="بازگشت به بیشتر"
-            />
+            <PageHeaderBackButton to="/settings" aria-label="بازگشت به بیشتر" />
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold text-foreground">
                 پرسنل و نقش‌ها

@@ -389,7 +389,9 @@ function ClientDetailPage() {
           void queryClient.invalidateQueries({
             queryKey: getApiV1ClientsByIdSummaryQueryKey({ path: { id } }),
           })
-          void queryClient.invalidateQueries({ queryKey: getApiV1ClientsQueryKey() })
+          void queryClient.invalidateQueries({
+            queryKey: getApiV1ClientsQueryKey(),
+          })
         }}
       />
     </div>

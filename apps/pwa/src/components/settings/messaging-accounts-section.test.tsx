@@ -1,12 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  cleanup,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mocks = vi.hoisted(() => ({
@@ -21,7 +16,9 @@ vi.mock('#/lib/auth', () => ({
 }))
 
 vi.mock('#/lib/messaging-queries', () => ({
-  getApiV1MessagingAccountsQueryKey: () => [{ _id: 'getApiV1MessagingAccounts' }],
+  getApiV1MessagingAccountsQueryKey: () => [
+    { _id: 'getApiV1MessagingAccounts' },
+  ],
   messagingAccountsQueryOptions: () => ({
     queryKey: [{ _id: 'getApiV1MessagingAccounts' }],
     queryFn: mocks.listAccounts,

@@ -31,12 +31,10 @@ export function businessSettingsQueryOptions() {
   })
 }
 
-export function useUpdateBusinessSettingsMutation(
-  options?: {
-    skipToast?: boolean
-    invalidatesQuery?: QueryKey | readonly QueryKey[]
-  },
-) {
+export function useUpdateBusinessSettingsMutation(options?: {
+  skipToast?: boolean
+  invalidatesQuery?: QueryKey | readonly QueryKey[]
+}) {
   const generated = patchApiV1SettingsBusinessMutation()
 
   return useMutation({

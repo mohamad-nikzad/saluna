@@ -1,4 +1,9 @@
-import type { AppointmentWithDetails, Client, Service, User } from '@repo/salon-core/types'
+import type {
+  AppointmentWithDetails,
+  Client,
+  Service,
+  User,
+} from '@repo/salon-core/types'
 
 import { AppointmentDrawer } from '#/components/calendar/appointment-drawer'
 import { AppointmentDetailDrawer } from '#/components/calendar/appointment-detail-drawer'

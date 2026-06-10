@@ -7,11 +7,7 @@ import type {
   StaffServiceIdsPayload,
   StaffUpdateFormPayload,
 } from '@repo/salon-core/forms/staff'
-import type {
-  BusinessHours,
-  StaffSchedule,
-  User,
-} from '@repo/salon-core/types'
+import type { BusinessHours, StaffSchedule, User } from '@repo/salon-core/types'
 import {
   getApiV1Staff,
   getApiV1StaffBookingAvailability,
@@ -191,10 +187,7 @@ export function useDeleteStaffMutation() {
 
   return useMutation<void, unknown, string>({
     mutationFn: async (staffId, mutationContext) => {
-      await generated.mutationFn!(
-        { path: { id: staffId } },
-        mutationContext,
-      )
+      await generated.mutationFn!({ path: { id: staffId } }, mutationContext)
     },
     meta: {
       errorMessage: 'حذف پرسنل انجام نشد',

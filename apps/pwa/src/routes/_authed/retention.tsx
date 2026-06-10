@@ -19,10 +19,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Spinner } from '@repo/ui/spinner'
 import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import type {
-  FollowUpReason,
-  RetentionItem,
-} from '@repo/salon-core/types'
+import type { FollowUpReason, RetentionItem } from '@repo/salon-core/types'
 
 import {
   retentionListQueryOptions,
@@ -337,8 +334,7 @@ function RetentionPage() {
                         ...current,
                         [confirmItem.id]: {
                           status: 'failed',
-                          error:
-                            error instanceof Error ? error.message : null,
+                          error: error instanceof Error ? error.message : null,
                         },
                       }))
                     },

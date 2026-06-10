@@ -13,8 +13,7 @@ const COUNT_MESSAGES: Record<
   ImportCountSummary,
   (counts: ClientImportCounts) => string
 > = {
-  [ImportCountSummary.EmptyEligible]: () =>
-    'هیچ مخاطب قابل افزودنی نیست',
+  [ImportCountSummary.EmptyEligible]: () => 'هیچ مخاطب قابل افزودنی نیست',
   [ImportCountSummary.AllEligible]: (counts) =>
     `${toPersianDigits(counts.totalInFile)} مخاطب · همه قابل افزودن${counts.truncated ? TRUNCATED_SUFFIX : ''}`,
   [ImportCountSummary.Mixed]: (counts) => {

@@ -20,9 +20,9 @@ describe('pickDeviceContacts', () => {
   it('returns mapped rows on success', async () => {
     vi.stubGlobal('navigator', {
       contacts: {
-        select: vi.fn().mockResolvedValue([
-          { name: ['مریم احمدی'], tel: ['09123456789'] },
-        ]),
+        select: vi
+          .fn()
+          .mockResolvedValue([{ name: ['مریم احمدی'], tel: ['09123456789'] }]),
       },
     })
 

@@ -113,9 +113,7 @@ function TemporaryClientFields({
           id={nameInputId}
           ref={temporaryClientNameRef}
           value={temporaryClientName}
-          onChange={(event) =>
-            onTemporaryClientNameChange(event.target.value)
-          }
+          onChange={(event) => onTemporaryClientNameChange(event.target.value)}
           placeholder="مثلاً دوستِ سارا"
         />
         {temporaryClientNameError && (
@@ -128,9 +126,7 @@ function TemporaryClientFields({
         <Input
           id={notesInputId}
           value={temporaryClientNotes}
-          onChange={(event) =>
-            onTemporaryClientNotesChange(event.target.value)
-          }
+          onChange={(event) => onTemporaryClientNotesChange(event.target.value)}
           placeholder="مثلاً شماره را بعداً می‌گیرم"
         />
       </Field>

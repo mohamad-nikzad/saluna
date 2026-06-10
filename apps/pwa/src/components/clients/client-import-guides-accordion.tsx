@@ -16,13 +16,9 @@ import { GuideText } from '#/lib/guide-text'
 function GuidePitfalls({ guide }: { guide: ImportGuidePlatform }) {
   if (guide.pitfalls.length === 0) return null
   return (
-    <Card
-      className="border-amber-200/70 bg-amber-50 p-3 dark:border-amber-800/80 dark:bg-amber-950/40"
-    >
+    <Card className="border-amber-200/70 bg-amber-50 p-3 dark:border-amber-800/80 dark:bg-amber-950/40">
       <div className="flex items-start gap-2">
-        <AlertTriangle
-          className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400"
-        />
+        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" />
         <div className="min-w-0">
           <p className="text-xs font-bold text-amber-900 dark:text-amber-100">
             نکته مهم
@@ -190,10 +186,7 @@ export function ClientImportGuidesAccordion({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <GuideSearchHeader query={query} onQueryChange={setQuery} />
-      <div
-        ref={guidesRef}
-        className="flex-1 space-y-2 overflow-auto px-4 py-3"
-      >
+      <div ref={guidesRef} className="flex-1 space-y-2 overflow-auto px-4 py-3">
         {filtered.map((g) => {
           const open = expandedId === g.id
           return (

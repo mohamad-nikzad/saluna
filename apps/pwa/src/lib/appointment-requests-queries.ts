@@ -13,9 +13,7 @@ import type {
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
-export {
-  getApiV1AppointmentRequestsQueryKey,
-}
+export { getApiV1AppointmentRequestsQueryKey }
 export type {
   AppointmentRequestListItem,
   AppointmentRequestStatus,
@@ -75,18 +73,13 @@ export function useRejectAppointmentRequestMutation() {
 
   return useMutation({
     mutationFn: async (
-      {
-        requestId,
-        reason,
-      }: { requestId: string; reason?: string },
+      { requestId, reason }: { requestId: string; reason?: string },
       mutationContext,
     ) => {
       return generated.mutationFn!(
         {
           path: { id: requestId },
-          ...(reason?.trim()
-            ? { body: { reason: reason.trim() } }
-            : {}),
+          ...(reason?.trim() ? { body: { reason: reason.trim() } } : {}),
         },
         mutationContext,
       )

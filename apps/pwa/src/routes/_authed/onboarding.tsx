@@ -14,11 +14,8 @@ import {
   type OnboardingStatus,
 } from '#/lib/onboarding-queries'
 import { ThinProgress } from './onboarding/-shell'
-import {
-  ONBOARDING_STEPS
-  
-} from './onboarding/-steps'
-import type {OnboardingStepId} from './onboarding/-steps';
+import { ONBOARDING_STEPS } from './onboarding/-steps'
+import type { OnboardingStepId } from './onboarding/-steps'
 
 // ── Onboarding layout route ────────────────────────────────────────────────
 // This file is the LAYOUT route for `/_authed/onboarding`. The actual step

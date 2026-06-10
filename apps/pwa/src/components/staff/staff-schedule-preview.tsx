@@ -1,8 +1,16 @@
 import { Clock3, Scissors } from 'lucide-react'
 import { Skeleton } from '@repo/ui/skeleton'
 import { eligibleServicesForStaff } from '@repo/salon-core/staff-service-autofill'
-import type { BusinessHours, Service, StaffSchedule, User } from '@repo/salon-core/types'
-import { formatPersianTime, toPersianDigits } from '@repo/salon-core/persian-digits'
+import type {
+  BusinessHours,
+  Service,
+  StaffSchedule,
+  User,
+} from '@repo/salon-core/types'
+import {
+  formatPersianTime,
+  toPersianDigits,
+} from '@repo/salon-core/persian-digits'
 import { cn } from '@repo/ui/utils'
 
 import {
@@ -37,14 +45,18 @@ export function StaffSchedulePreview({
 }: StaffSchedulePreviewProps) {
   const eligibleServices = eligibleServicesForStaff(member, services)
   const unrestrictedServices = member.serviceIds == null
-  const activeServicesCount = services.filter((service) => service.active).length
+  const activeServicesCount = services.filter(
+    (service) => service.active,
+  ).length
 
   const summary = getScheduleSummary(scheduleBundle.schedule, {
     businessHours: scheduleBundle.businessHours,
   })
   const firstActiveDay = summary.activeDays[0]
   const firstRowTimes = firstActiveDay
-    ? summary.displayRows.find((row) => row.dayOfWeek === firstActiveDay.dayOfWeek)
+    ? summary.displayRows.find(
+        (row) => row.dayOfWeek === firstActiveDay.dayOfWeek,
+      )
     : null
 
   return (
@@ -53,7 +65,9 @@ export function StaffSchedulePreview({
         title="خدمات قابل ارائه"
         icon={Scissors}
         action={
-          <StaffSectionAction onClick={onOpenServices}>مدیریت</StaffSectionAction>
+          <StaffSectionAction onClick={onOpenServices}>
+            مدیریت
+          </StaffSectionAction>
         }
       >
         <div className="flex flex-col gap-1.5">
@@ -81,7 +95,9 @@ export function StaffSchedulePreview({
             {toPersianDigits(eligibleServices.length)}
           </span>{' '}
           از{' '}
-          <span className="tabular-nums">{toPersianDigits(activeServicesCount)}</span>{' '}
+          <span className="tabular-nums">
+            {toPersianDigits(activeServicesCount)}
+          </span>{' '}
           خدمت سالن
           {unrestrictedServices ? ' (همه خدمات فعال)' : ''} به این پرسنل اختصاص
           دارد.
@@ -92,7 +108,9 @@ export function StaffSchedulePreview({
         title="روزها و ساعات کاری"
         icon={Clock3}
         action={
-          <StaffSectionAction onClick={onOpenSchedule}>ویرایش</StaffSectionAction>
+          <StaffSectionAction onClick={onOpenSchedule}>
+            ویرایش
+          </StaffSectionAction>
         }
       >
         {scheduleBundle.isPending ? (
@@ -136,8 +154,7 @@ export function StaffSchedulePreview({
                 {formatPersianTime(
                   firstRowTimes?.start ?? DEFAULT_WORKING_START,
                 )}{' '}
-                –{' '}
-                {formatPersianTime(firstRowTimes?.end ?? DEFAULT_WORKING_END)}
+                – {formatPersianTime(firstRowTimes?.end ?? DEFAULT_WORKING_END)}
               </div>
             </div>
             <div className="mt-2 flex flex-col gap-1">
@@ -146,10 +163,16 @@ export function StaffSchedulePreview({
                   key={row.dayOfWeek}
                   className="flex items-center justify-between gap-3 text-[12px]"
                 >
-                  <span className="font-semibold text-foreground">{row.label}</span>
+                  <span className="font-semibold text-foreground">
+                    {row.label}
+                  </span>
                   {row.active ? (
-                    <span className="tabular-nums text-muted-foreground" dir="ltr">
-                      {formatPersianTime(row.start)} – {formatPersianTime(row.end)}
+                    <span
+                      className="tabular-nums text-muted-foreground"
+                      dir="ltr"
+                    >
+                      {formatPersianTime(row.start)} –{' '}
+                      {formatPersianTime(row.end)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">تعطیل</span>

@@ -1,10 +1,5 @@
 import { createContext } from 'react'
-import type {
-  Client,
-  Service,
-  TodayData,
-  User,
-} from '@repo/salon-core/types'
+import type { Client, Service, TodayData, User } from '@repo/salon-core/types'
 
 export interface ManagerTodayState {
   date: string

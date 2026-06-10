@@ -5,7 +5,10 @@ import type {
   CompletePlaceholderClientInput,
 } from '@repo/salon-core/forms/appointment'
 import { appointmentFormSchema } from '@repo/salon-core/forms/appointment'
-import type { AvailabilityMode, AvailabilityResponse } from '@repo/salon-core/availability'
+import type {
+  AvailabilityMode,
+  AvailabilityResponse,
+} from '@repo/salon-core/availability'
 import type { AppointmentWithDetails, Client } from '@repo/salon-core/types'
 import {
   getApiV1Appointments,
@@ -106,10 +109,7 @@ export function useCreateAppointmentMutation() {
   return useMutation<AppointmentWithDetails, unknown, AppointmentFormInput>({
     mutationFn: async (values, mutationContext) => {
       const body = appointmentFormSchema.parse(values)
-      const response = await generated.mutationFn!(
-        { body },
-        mutationContext,
-      )
+      const response = await generated.mutationFn!({ body }, mutationContext)
       return mapAppointment(response.appointment)
     },
     meta: {

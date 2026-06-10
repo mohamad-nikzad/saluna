@@ -68,9 +68,7 @@ export function PublicBioField({
       <div
         className={cn(
           'px-1',
-          label
-            ? 'flex items-center justify-between'
-            : 'flex justify-end',
+          label ? 'flex items-center justify-between' : 'flex justify-end',
         )}
       >
         {label && (
@@ -146,7 +144,9 @@ export function PublicBioCard({
   return (
     <div className="rounded-2xl bg-card p-3">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-xs font-semibold text-muted-foreground">درباره</div>
+        <div className="text-xs font-semibold text-muted-foreground">
+          درباره
+        </div>
         <BioCharCounter length={bio.length} maxLength={maxLength} />
       </div>
       <Textarea

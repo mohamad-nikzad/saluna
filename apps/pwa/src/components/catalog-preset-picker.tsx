@@ -92,20 +92,14 @@ function buildSelection(
 export const CatalogPresetPicker = forwardRef<
   CatalogPresetPickerHandle,
   {
-  onApplied: (result: ApplyPresetResult) => void
-  onManual?: () => void
-  onStateChange?: (state: CatalogPresetPickerState) => void
-  showApplyButton?: boolean
-  className?: string
+    onApplied: (result: ApplyPresetResult) => void
+    onManual?: () => void
+    onStateChange?: (state: CatalogPresetPickerState) => void
+    showApplyButton?: boolean
+    className?: string
   }
 >(function CatalogPresetPicker(
-  {
-    onApplied,
-    onManual,
-    onStateChange,
-    showApplyButton = true,
-    className,
-  },
+  { onApplied, onManual, onStateChange, showApplyButton = true, className },
   ref,
 ) {
   const presetsQuery = useQuery(catalogPresetsQueryOptions())
@@ -150,7 +144,11 @@ export const CatalogPresetPicker = forwardRef<
     })
   }
 
-  const toggleFamily = (tree: CatalogPresetListItem['tree'], c: number, f: number) => {
+  const toggleFamily = (
+    tree: CatalogPresetListItem['tree'],
+    c: number,
+    f: number,
+  ) => {
     const family = tree[c].families[f]
     const keys = family.variants.map((_, v) => variantKey(c, f, v))
     const allOn = keys.every((k) => checked.has(k))

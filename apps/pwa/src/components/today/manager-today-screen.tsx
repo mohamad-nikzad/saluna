@@ -1,12 +1,6 @@
 import { use, useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import {
-  AlertTriangle,
-  CalendarDays,
-  Clock,
-  Plus,
-  Users,
-} from 'lucide-react'
+import { AlertTriangle, CalendarDays, Clock, Plus, Users } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
@@ -17,7 +11,10 @@ import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
-import { buildManagerTodayViewModel, buildWeekStrip } from '#/lib/today-view-model'
+import {
+  buildManagerTodayViewModel,
+  buildWeekStrip,
+} from '#/lib/today-view-model'
 import type { AppointmentDetailChange } from '#/lib/appointment-surface'
 import {
   AppointmentFlowDrawers,
@@ -134,7 +131,9 @@ function ManagerTodayHeader({
 export function ManagerTodayScreen() {
   const ctx = use(ManagerTodayContext)
   if (!ctx) {
-    throw new Error('ManagerTodayScreen must be used within ManagerTodayProvider')
+    throw new Error(
+      'ManagerTodayScreen must be used within ManagerTodayProvider',
+    )
   }
 
   const { state, actions } = ctx
@@ -168,10 +167,7 @@ export function ManagerTodayScreen() {
     doneCount,
     droppedCount,
     defaultCreateTime,
-  } = useMemo(
-    () => buildManagerTodayViewModel({ data, staff }),
-    [data, staff],
-  )
+  } = useMemo(() => buildManagerTodayViewModel({ data, staff }), [data, staff])
 
   const handleRetry = () => {
     mutateToday()
@@ -354,7 +350,9 @@ export function ManagerTodayScreen() {
                     key={appointment.id}
                     appointment={appointment}
                     isFirst={index === 0}
-                    onOpen={() => appointmentFlow.actions.openDetail(appointment)}
+                    onOpen={() =>
+                      appointmentFlow.actions.openDetail(appointment)
+                    }
                   />
                 ))
               )}
@@ -370,7 +368,9 @@ export function ManagerTodayScreen() {
                   size="sm"
                   className="h-auto p-0 text-xs text-primary"
                   disabled={!createReady}
-                  onClick={() => appointmentFlow.actions.setAvailabilityOpen(true)}
+                  onClick={() =>
+                    appointmentFlow.actions.setAvailabilityOpen(true)
+                  }
                 >
                   بررسی زمان خالی
                 </Button>

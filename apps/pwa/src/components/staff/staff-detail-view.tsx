@@ -3,7 +3,12 @@ import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { displayPhone } from '@repo/salon-core/phone'
-import type { BusinessHours, Service, StaffSchedule, User } from '@repo/salon-core/types'
+import type {
+  BusinessHours,
+  Service,
+  StaffSchedule,
+  User,
+} from '@repo/salon-core/types'
 import { cn } from '@repo/ui/utils'
 
 import { StaffDetailHero } from '#/components/staff/staff-detail-hero'
@@ -14,7 +19,10 @@ import {
 } from '#/components/staff/staff-detail-section'
 import { StaffSchedulePreview } from '#/components/staff/staff-schedule-preview'
 import { getScheduleSummary } from '#/components/staff/staff-schedule'
-import { staffRoleLabel, staffServiceCount } from '#/components/staff/staff-utils'
+import {
+  staffRoleLabel,
+  staffServiceCount,
+} from '#/components/staff/staff-utils'
 import { staffAccentVar } from '#/lib/roster-visuals'
 
 export interface StaffDetailViewProps {

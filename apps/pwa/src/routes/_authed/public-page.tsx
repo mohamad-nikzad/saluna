@@ -90,7 +90,9 @@ function PublicPageRoute() {
     setDirty(false)
   }
 
-  const { data: serverData, isPending } = useQuery(salonPublicSettingsQueryOptions())
+  const { data: serverData, isPending } = useQuery(
+    salonPublicSettingsQueryOptions(),
+  )
 
   const presenceQuery = useQuery(salonPresenceQueryOptions())
 

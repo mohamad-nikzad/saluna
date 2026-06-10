@@ -37,7 +37,13 @@ function appt(
     status: 'scheduled',
     createdAt: new Date(),
     updatedAt: new Date(),
-    client: { id: 'c1', name: 'مشتری', phone: null, isPlaceholder: false, createdAt: new Date() },
+    client: {
+      id: 'c1',
+      name: 'مشتری',
+      phone: null,
+      isPlaceholder: false,
+      createdAt: new Date(),
+    },
     staff: { id: 's1', name: 'کارمند' } as User,
     service: { id: 'svc1' } as AppointmentWithDetails['service'],
     ...overrides,
@@ -45,7 +51,8 @@ function appt(
 }
 
 function attention(
-  overrides: Partial<TodayAttentionItem> & Pick<TodayAttentionItem, 'id' | 'type' | 'priority'>,
+  overrides: Partial<TodayAttentionItem> &
+    Pick<TodayAttentionItem, 'id' | 'type' | 'priority'>,
 ): TodayAttentionItem {
   return {
     title: 'عنوان',
@@ -75,9 +82,24 @@ function todayData(overrides: Partial<TodayData>): TodayData {
 describe('sortAppointments', () => {
   it('sorts by date then start time without mutating the input', () => {
     const input = [
-      appt({ id: 'b', date: '2026-06-02', startTime: '11:00', endTime: '11:30' }),
-      appt({ id: 'a', date: '2026-06-02', startTime: '09:00', endTime: '09:30' }),
-      appt({ id: 'c', date: '2026-06-01', startTime: '23:00', endTime: '23:30' }),
+      appt({
+        id: 'b',
+        date: '2026-06-02',
+        startTime: '11:00',
+        endTime: '11:30',
+      }),
+      appt({
+        id: 'a',
+        date: '2026-06-02',
+        startTime: '09:00',
+        endTime: '09:30',
+      }),
+      appt({
+        id: 'c',
+        date: '2026-06-01',
+        startTime: '23:00',
+        endTime: '23:30',
+      }),
     ]
     const sorted = sortAppointments(input)
     expect(sorted.map((a) => a.id)).toEqual(['c', 'a', 'b'])
@@ -89,7 +111,12 @@ describe('bookedServiceWithAddonCount', () => {
   it('returns the bare service name when there are no addons', () => {
     expect(
       bookedServiceWithAddonCount(
-        appt({ id: '1', date: '2026-06-02', startTime: '09:00', endTime: '09:30' }),
+        appt({
+          id: '1',
+          date: '2026-06-02',
+          startTime: '09:00',
+          endTime: '09:30',
+        }),
       ),
     ).toBe('کوتاهی')
   })
@@ -142,8 +169,20 @@ describe('summarizeNextOpenSlot', () => {
 describe('groupAttentionItems', () => {
   it('merges items sharing a key, dedupes labels, and keeps the highest-priority copy', () => {
     const result = groupAttentionItems([
-      attention({ id: '1', appointmentId: 'apt', type: 'soon', priority: 5, title: 'دیرتر' }),
-      attention({ id: '2', appointmentId: 'apt', type: 'vip', priority: 1, title: 'زودتر' }),
+      attention({
+        id: '1',
+        appointmentId: 'apt',
+        type: 'soon',
+        priority: 5,
+        title: 'دیرتر',
+      }),
+      attention({
+        id: '2',
+        appointmentId: 'apt',
+        type: 'vip',
+        priority: 1,
+        title: 'زودتر',
+      }),
       attention({ id: '3', appointmentId: 'apt', type: 'soon', priority: 9 }),
     ])
     expect(result).toHaveLength(1)
@@ -213,19 +252,61 @@ describe('buildManagerTodayViewModel', () => {
         'no-show': 1,
       },
       appointments: [
-        appt({ id: 'done', date: '2026-06-02', startTime: '08:00', endTime: '08:30', status: 'completed' }),
-        appt({ id: 'cancelled', date: '2026-06-02', startTime: '09:00', endTime: '09:30', status: 'cancelled' }),
-        appt({ id: 'noshow', date: '2026-06-02', startTime: '10:00', endTime: '10:30', status: 'no-show' }),
-        appt({ id: 'active', date: '2026-06-02', startTime: '07:00', endTime: '07:30', status: 'confirmed' }),
+        appt({
+          id: 'done',
+          date: '2026-06-02',
+          startTime: '08:00',
+          endTime: '08:30',
+          status: 'completed',
+        }),
+        appt({
+          id: 'cancelled',
+          date: '2026-06-02',
+          startTime: '09:00',
+          endTime: '09:30',
+          status: 'cancelled',
+        }),
+        appt({
+          id: 'noshow',
+          date: '2026-06-02',
+          startTime: '10:00',
+          endTime: '10:30',
+          status: 'no-show',
+        }),
+        appt({
+          id: 'active',
+          date: '2026-06-02',
+          startTime: '07:00',
+          endTime: '07:30',
+          status: 'confirmed',
+        }),
       ],
       attentionItems: [attention({ id: 'x', type: 'vip', priority: 1 })],
       staffLoad: [
-        { staffId: 's1', staffName: 'الف', appointmentCount: 2, bookedMinutes: 60 },
-        { staffId: 'sX', staffName: 'ب', appointmentCount: 1, bookedMinutes: 30 },
+        {
+          staffId: 's1',
+          staffName: 'الف',
+          appointmentCount: 2,
+          bookedMinutes: 60,
+        },
+        {
+          staffId: 'sX',
+          staffName: 'ب',
+          appointmentCount: 1,
+          bookedMinutes: 30,
+        },
       ],
       openSlots: [
-        { staffId: 's1', staffName: 'الف', ranges: [{ startTime: '14:00', endTime: '15:00' }] },
-        { staffId: 's2', staffName: 'ب', ranges: [{ startTime: '10:00', endTime: '11:00' }] },
+        {
+          staffId: 's1',
+          staffName: 'الف',
+          ranges: [{ startTime: '14:00', endTime: '15:00' }],
+        },
+        {
+          staffId: 's2',
+          staffName: 'ب',
+          ranges: [{ startTime: '10:00', endTime: '11:00' }],
+        },
       ],
     })
     const staff: User[] = [{ id: 's1', name: 'الف', color: 'rose' } as User]
@@ -251,7 +332,9 @@ describe('buildManagerTodayViewModel', () => {
         attention({ id: `a${i}`, type: 'soon', priority: i }),
       ),
     })
-    expect(buildManagerTodayViewModel({ data, staff: [] }).attentionItems).toHaveLength(5)
+    expect(
+      buildManagerTodayViewModel({ data, staff: [] }).attentionItems,
+    ).toHaveLength(5)
   })
 })
 
@@ -259,10 +342,34 @@ describe('buildStaffTodayViewModel', () => {
   it('selects the in-progress and upcoming appointments by clock time', () => {
     const data = todayData({
       appointments: [
-        appt({ id: 'past', date: '2026-06-02', startTime: '08:00', endTime: '09:00', status: 'confirmed' }),
-        appt({ id: 'now', date: '2026-06-02', startTime: '09:30', endTime: '10:30', status: 'confirmed' }),
-        appt({ id: 'next', date: '2026-06-02', startTime: '11:00', endTime: '12:00', status: 'scheduled' }),
-        appt({ id: 'done', date: '2026-06-02', startTime: '13:00', endTime: '14:00', status: 'completed' }),
+        appt({
+          id: 'past',
+          date: '2026-06-02',
+          startTime: '08:00',
+          endTime: '09:00',
+          status: 'confirmed',
+        }),
+        appt({
+          id: 'now',
+          date: '2026-06-02',
+          startTime: '09:30',
+          endTime: '10:30',
+          status: 'confirmed',
+        }),
+        appt({
+          id: 'next',
+          date: '2026-06-02',
+          startTime: '11:00',
+          endTime: '12:00',
+          status: 'scheduled',
+        }),
+        appt({
+          id: 'done',
+          date: '2026-06-02',
+          startTime: '13:00',
+          endTime: '14:00',
+          status: 'completed',
+        }),
       ],
     })
 
@@ -282,8 +389,19 @@ describe('buildStaffTodayViewModel', () => {
     const tomorrow = todayData({
       date: '2026-06-03',
       appointments: [
-        appt({ id: 'keep', date: '2026-06-03', startTime: '09:00', endTime: '09:30' }),
-        appt({ id: 'gone', date: '2026-06-03', startTime: '10:00', endTime: '10:30', status: 'cancelled' }),
+        appt({
+          id: 'keep',
+          date: '2026-06-03',
+          startTime: '09:00',
+          endTime: '09:30',
+        }),
+        appt({
+          id: 'gone',
+          date: '2026-06-03',
+          startTime: '10:00',
+          endTime: '10:30',
+          status: 'cancelled',
+        }),
       ],
     })
     const vm = buildStaffTodayViewModel({

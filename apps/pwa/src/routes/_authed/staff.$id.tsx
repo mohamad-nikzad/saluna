@@ -6,7 +6,12 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { Button } from '@repo/ui/button'
-import type { BusinessHours, Service, StaffSchedule, User } from '@repo/salon-core/types'
+import type {
+  BusinessHours,
+  Service,
+  StaffSchedule,
+  User,
+} from '@repo/salon-core/types'
 
 import {
   StaffActionsProvider,

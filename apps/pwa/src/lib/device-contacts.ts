@@ -4,8 +4,7 @@ import type { DeviceContactPickerRow } from '@repo/salon-core/device-contacts'
 
 export function isDeviceContactPickerSupported(): boolean {
   return (
-    'contacts' in navigator &&
-    typeof navigator.contacts?.select === 'function'
+    'contacts' in navigator && typeof navigator.contacts?.select === 'function'
   )
 }
 

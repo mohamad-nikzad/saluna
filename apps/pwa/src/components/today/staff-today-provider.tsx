@@ -4,9 +4,7 @@ import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 import { todayQueryOptions } from '#/lib/today-queries'
 import { firstNameOf } from '#/lib/today-view-model'
-import {
-  StaffTodayContext,
-} from '#/components/today/staff-today-context'
+import { StaffTodayContext } from '#/components/today/staff-today-context'
 import type { StaffTodayContextValue } from '#/components/today/staff-today-context'
 
 export function StaffTodayProvider({
