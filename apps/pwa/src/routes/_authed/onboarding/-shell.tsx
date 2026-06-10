@@ -4,6 +4,7 @@ import { SakuraMark } from '@repo/ui/sakura-mark'
 import { Spinner } from '@repo/ui/spinner'
 import { cn } from '@repo/ui/utils'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 
 import { ONBOARDING_STEP_COUNT, stepIndex } from './-steps'
 import type { OnboardingStepId } from './-steps'
@@ -193,7 +194,10 @@ export function StepBody({
 }) {
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="flex flex-1 flex-col gap-4 overflow-auto px-5 pb-6 pt-4">
+      <div
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-5 pb-6 pt-4"
+        onFocus={handleFormFocusScroll}
+      >
         <Eyebrow>{eyebrow}</Eyebrow>
         <Question>{question}</Question>
         {children}

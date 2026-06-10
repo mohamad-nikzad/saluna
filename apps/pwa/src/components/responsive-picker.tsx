@@ -44,7 +44,7 @@ export function ResponsivePicker({
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent
           showClose={false}
-          className="max-h-[88lvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
+          className="max-h-[88dvh] pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150"
         >
           <DrawerHeader className="pe-5">
             <DrawerTitle>{title}</DrawerTitle>
@@ -71,7 +71,10 @@ export function ResponsivePicker({
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
         align="start"
-        className={cn('p-0', popoverContentClassName)}
+        className={cn(
+          'max-h-[min(70dvh,24rem)] overflow-hidden p-0',
+          popoverContentClassName,
+        )}
         onWheel={(event) => event.stopPropagation()}
         onTouchMove={(event) => event.stopPropagation()}
       >

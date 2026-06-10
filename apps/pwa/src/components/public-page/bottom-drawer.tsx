@@ -26,10 +26,12 @@ export function BottomDrawer({
         side="bottom"
         className="flex max-h-[88dvh] flex-col gap-0 p-0"
       >
-        <SheetHeader className="border-b py-4 pr-12 pl-5">
+        <SheetHeader className="shrink-0 border-b py-4 pe-12 ps-5">
           <SheetTitle className="text-right">{title}</SheetTitle>
         </SheetHeader>
-        <div className={cn('flex-1 overflow-auto', padded && 'px-5 py-5')}>
+        <div
+          className={cn('min-h-0 flex-1 overflow-auto', padded && 'px-5 py-5')}
+        >
           {children}
         </div>
       </SheetContent>

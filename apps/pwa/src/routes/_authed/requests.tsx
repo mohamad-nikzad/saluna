@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from '@repo/ui/dialog'
 import { Textarea } from '@repo/ui/textarea'
+import { scrollFocusedInputIntoView } from '#/lib/scroll-focused-input-into-view'
 import {
   toPersianDigits,
   formatPersianTime,
@@ -131,7 +132,9 @@ export const Route = createFileRoute('/_authed/requests')({
     }
   },
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(pendingAppointmentRequestsQueryOptions()),
+    context.queryClient.ensureQueryData(
+      pendingAppointmentRequestsQueryOptions(),
+    ),
   component: RequestsPage,
   pendingComponent: RequestsPending,
   errorComponent: RequestsError,
@@ -316,9 +319,7 @@ function RequestsList({
   )
 
   // Focus only applies to the pending tab (enforced in RequestsPage).
-  const focused = focus
-    ? requests?.find((req) => req.id === focus)
-    : undefined
+  const focused = focus ? requests?.find((req) => req.id === focus) : undefined
 
   if (isLoading) {
     return (
@@ -485,9 +486,7 @@ function PendingCard({
           onChanged()
         },
         onError: (e: unknown) => {
-          setErrMsg(
-            e instanceof Error ? e.message : 'تأیید درخواست انجام نشد',
-          )
+          setErrMsg(e instanceof Error ? e.message : 'تأیید درخواست انجام نشد')
         },
       },
     )
@@ -627,6 +626,7 @@ function PendingCard({
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="دلیل (اختیاری)"
             rows={3}
+            onFocus={(e) => scrollFocusedInputIntoView(e.target)}
           />
           {errMsg && <p className="text-xs text-destructive">{errMsg}</p>}
           <DialogFooter>

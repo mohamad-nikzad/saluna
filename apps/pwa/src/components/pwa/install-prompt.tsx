@@ -198,7 +198,7 @@ export function InstallPrompt() {
       onOpenChange={handleOpenChange}
       dismissible={!isPending}
     >
-      <DrawerContent className="max-h-[88lvh] rounded-t-[28px] border-border/70 bg-background/98 backdrop-blur">
+      <DrawerContent className="max-h-[88dvh] rounded-t-[28px] border-border/70 bg-background/98 backdrop-blur">
         <DrawerHeader className="text-start">
           <div className="mb-3 flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
@@ -230,7 +230,8 @@ export function InstallPrompt() {
                 <li>در Safari پايين صفحه روي دکمه اشتراک گذاري بزنيد.</li>
                 <li>گزينه Add to Home Screen را انتخاب کنيد.</li>
                 <li>
-                  در مرحله آخر روي Add بزنيد تا {brand.name.fa} مثل يک اپ باز شود.
+                  در مرحله آخر روي Add بزنيد تا {brand.name.fa} مثل يک اپ باز
+                  شود.
                 </li>
               </ol>
             ) : (
