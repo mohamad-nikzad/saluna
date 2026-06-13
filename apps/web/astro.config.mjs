@@ -106,5 +106,10 @@ export default defineConfig({
       }),
     },
   },
-  vite: { ssr: { noExternal: ['@repo/api-client', '@repo/salon-core'] } },
+  vite: {
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
+    ssr: { noExternal: ['@repo/api-client', '@repo/salon-core'] },
+  },
 })
