@@ -294,6 +294,62 @@ describe('auth /me shim', () => {
   })
 })
 
+describe('Better Auth passthrough routes', () => {
+  it('passes phone-number password sign-in through to Better Auth', async () => {
+    vi.mocked(authServer.handler).mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, endpoint: 'phone' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }) as never,
+    )
+
+    const res = await app.request('/api/v1/auth/sign-in/phone-number', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        phoneNumber: '09121234567',
+        password: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true, endpoint: 'phone' })
+    expect(authServer.handler).toHaveBeenCalledOnce()
+    const forwardedRequest = vi.mocked(authServer.handler).mock.calls[0]?.[0]
+    expect(forwardedRequest).toBeInstanceOf(Request)
+    expect((forwardedRequest as Request).url).toContain(
+      '/api/v1/auth/sign-in/phone-number',
+    )
+  })
+
+  it('keeps legacy username/password sign-in available for rollback', async () => {
+    vi.mocked(authServer.handler).mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, endpoint: 'username' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }) as never,
+    )
+
+    const res = await app.request('/api/v1/auth/sign-in/username', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        username: '09121234567',
+        password: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true, endpoint: 'username' })
+    expect(authServer.handler).toHaveBeenCalledOnce()
+    const forwardedRequest = vi.mocked(authServer.handler).mock.calls[0]?.[0]
+    expect(forwardedRequest).toBeInstanceOf(Request)
+    expect((forwardedRequest as Request).url).toContain(
+      '/api/v1/auth/sign-in/username',
+    )
+  })
+})
+
 describe('OTP signup continuation routes', () => {
   it('sets the password and real manager name for an OTP-created account', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({

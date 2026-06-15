@@ -159,13 +159,13 @@ References:
    - [x] Route `needs_workspace` users through the pre-workspace signup flow.
 
 6. **Compatibility Pass**
-   - Update e2e helpers to prefer phone-number password login.
-   - Confirm rollback path: existing username/password login still works.
+   - [x] Update e2e/helper coverage to prefer phone-number password login.
+   - [x] Confirm rollback path: existing username/password login still works.
 
 7. **Production Enablement**
-   - Create/approve sms.ir OTP template.
-   - Set production `SMS_IR_OTP_TEMPLATE_ID`.
-   - Smoke test existing prod/test salons before enabling OTP UI broadly.
+   - [ ] Create/approve sms.ir OTP template.
+   - [ ] Set production `SMS_IR_OTP_TEMPLATE_ID`.
+   - [ ] Smoke test existing prod/test salons before enabling OTP UI broadly.
 
 ## Progress Log
 
@@ -451,6 +451,32 @@ Completed:
 Verified locally:
 
 - `pnpm --filter @repo/pwa typecheck`
+
+### 2026-06-15 compatibility helper and rollback coverage slice
+
+Completed:
+
+- Added focused coverage for the legacy PWA API auth wrapper to prove password
+  login now uses Better Auth's `/sign-in/phone-number` endpoint and resolves the
+  legacy `User` through `/api/v1/auth/me`.
+- Kept the old rollback endpoint constant
+  `/api/v1/auth/sign-in/username` explicitly covered for callers that still need
+  the rollout compatibility path.
+- Added app-level API route tests proving both
+  `/api/v1/auth/sign-in/phone-number` and `/api/v1/auth/sign-in/username`
+  pass through to the Better Auth handler.
+
+Verified locally:
+
+- `pnpm --filter @repo/api-client test -- src/legacy/auth.test.ts`
+- `pnpm --filter @repo/api test -- auth.test.ts`
+
+Remaining notes for the next agent:
+
+- There is no existing Playwright e2e suite in this repo, so this slice used
+  focused helper/API route coverage rather than introducing a new e2e harness.
+- Production enablement remains open: sms.ir template approval/env setup and
+  smoke testing existing prod/test salons before broad OTP UI enablement.
 
 ## Test Plan
 
