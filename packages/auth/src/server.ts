@@ -18,6 +18,8 @@ import {
   AUTH_OTP_ALLOWED_ATTEMPTS,
   AUTH_OTP_EXPIRES_IN_SECONDS,
   AUTH_OTP_LENGTH,
+  AUTH_OTP_SEND_MAX_PER_WINDOW,
+  AUTH_OTP_SEND_WINDOW_SECONDS,
   getTempEmailForPhoneNumber,
   getTempNameForPhoneNumber,
   isValidAuthPhoneNumber,
@@ -50,6 +52,16 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7d
     updateAge: 60 * 60 * 24, // roll daily
     cookieCache: { enabled: true, maxAge: 60 },
+  },
+  rateLimit: {
+    enabled: true,
+    storage: 'memory',
+    customRules: {
+      '/phone-number/send-otp': {
+        window: AUTH_OTP_SEND_WINDOW_SECONDS,
+        max: AUTH_OTP_SEND_MAX_PER_WINDOW,
+      },
+    },
   },
   // UUID ids keep Better Auth's PKs compatible with the existing uuid salon_id
   // FK columns across the domain schema.

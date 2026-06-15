@@ -7,6 +7,8 @@ import {
 export const AUTH_OTP_LENGTH = 6
 export const AUTH_OTP_EXPIRES_IN_SECONDS = 300
 export const AUTH_OTP_ALLOWED_ATTEMPTS = 3
+export const AUTH_OTP_SEND_WINDOW_SECONDS = 60
+export const AUTH_OTP_SEND_MAX_PER_WINDOW = 1
 export const DEFAULT_AUTH_OTP_BYPASS_CODE = '123456'
 const TEMP_EMAIL_DOMAIN = 'saluna.local'
 

@@ -132,7 +132,7 @@ References:
 2. **Auth Foundation**
    - [x] Add phone plugin, `signUpOnVerification`, bypass envs, sms.ir send hook,
          phone validation, OTP expiry, and allowed-attempt limits.
-   - [ ] Add/verify server rate limits for OTP send requests before broad UI
+   - [x] Add/verify server rate limits for OTP send requests before broad UI
          rollout.
    - [x] Keep old username/password endpoint operational during transition.
    - [ ] Add a single credential password-writing strategy; remove or replace local
@@ -295,13 +295,41 @@ Remaining notes for the next agent:
 
 Additional remaining notes from the OTP foundation slice:
 
-- OTP send endpoint throttling still needs a deliberate pass before exposing the
-  OTP UI broadly. The plugin now enforces verification attempt limits, but send
-  cooldown/rate-limiting policy should still be verified at the server edge.
 - Real OTP mode depends on the existing SMS delivery bootstrap and a configured
   sms.ir template. Bypass mode is the path for local/dev tests.
 - The PWA login/signup screens still call the old flows; no UI work was done in
   this slice.
+
+### 2026-06-15 OTP send rate-limit slice
+
+Completed:
+
+- Added explicit OTP send rate-limit constants in `@repo/auth/phone-otp`:
+  - `AUTH_OTP_SEND_WINDOW_SECONDS = 60`
+  - `AUTH_OTP_SEND_MAX_PER_WINDOW = 1`
+- Enabled Better Auth rate limiting explicitly instead of relying on the
+  production-only default.
+- Added a Better Auth `customRules` entry for `/phone-number/send-otp` so OTP
+  sends are limited to one request per 60 seconds per client/path, matching the
+  PWA resend cooldown policy.
+- Kept the phone-number plugin's broader `/phone-number/*` fallback rule in
+  place for other phone-number endpoints.
+- Added `packages/auth/src/server.test.ts` to verify the configured OTP send
+  rate-limit rule.
+
+Verified locally:
+
+- `pnpm --filter @repo/auth test -- phone-otp.test.ts server.test.ts`
+- `pnpm --filter @repo/auth typecheck`
+
+Remaining notes for the next agent:
+
+- Better Auth's memory rate limiter keys by client IP and path, not by phone
+  number. This is acceptable as a server-edge cooldown for the PWA rollout, but
+  a future abuse-hardening pass may want persistent or phone-keyed throttles if
+  traffic patterns require it.
+- The test emits Better Auth's expected warning about missing
+  `BETTER_AUTH_URL` in the mocked unit-test environment.
 
 ## Test Plan
 
