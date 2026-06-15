@@ -7,7 +7,7 @@
   },
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "turbo run dev --filter=@repo/pwa --filter=@repo/web --filter=@repo/api",
+    "dev": "turbo run dev:local --filter=@repo/pwa --filter=@repo/web --filter=@repo/api",
     "dev:web-stack": "turbo run dev:local --filter=@repo/web --filter=@repo/api",
     "dev:web": "pnpm --filter @repo/web dev",
     "smoke:web": "node scripts/smoke-web.mjs",
