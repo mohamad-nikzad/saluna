@@ -6,6 +6,7 @@ vi.mock('@repo/auth/server', () => ({
       getSession: vi.fn(),
       signUpEmail: vi.fn(),
       createOrganization: vi.fn(),
+      setPassword: vi.fn(),
     },
     handler: vi.fn(),
   },
@@ -24,20 +25,28 @@ vi.mock('@repo/database/staff', () => ({
 }))
 
 vi.mock('@repo/database/client', () => {
+  let selectRows: unknown[] = []
   const stub: {
+    __setSelectRows: (rows: unknown[]) => void
     transaction: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>
     insert: () => { values: () => Promise<void> }
     update: () => { set: () => { where: () => Promise<void> } }
     select: () => {
-      from: () => { leftJoin?: unknown; where: () => { limit: () => Promise<unknown[]> } }
+      from: () => {
+        leftJoin?: unknown
+        where: () => { limit: () => Promise<unknown[]> }
+      }
     }
   } = {
+    __setSelectRows: (rows) => {
+      selectRows = rows
+    },
     transaction: async (fn) => fn(stub),
     insert: () => ({ values: async () => undefined }),
     update: () => ({ set: () => ({ where: async () => undefined }) }),
     select: () => ({
       from: () => ({
-        where: () => ({ limit: async () => [] as unknown[] }),
+        where: () => ({ limit: async () => selectRows }),
       }),
     }),
   }
@@ -45,6 +54,7 @@ vi.mock('@repo/database/client', () => {
 })
 
 import { auth as authServer } from '@repo/auth/server'
+import { getDb } from '@repo/database/client'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import { getMemberForUser } from '@repo/database/members'
 import { getUserWithServiceIds } from '@repo/database/staff'
@@ -67,18 +77,33 @@ function jsonHeaders() {
   return { 'Content-Type': 'application/json' }
 }
 
-function mockSignUpResponse(opts: { ok: boolean; userId?: string; status?: number; setCookie?: string | string[] }) {
+function mockSignUpResponse(opts: {
+  ok: boolean
+  userId?: string
+  status?: number
+  setCookie?: string | string[]
+}) {
   const headers = new Headers()
   if (opts.setCookie) {
-    const cookies = Array.isArray(opts.setCookie) ? opts.setCookie : [opts.setCookie]
+    const cookies = Array.isArray(opts.setCookie)
+      ? opts.setCookie
+      : [opts.setCookie]
     for (const cookie of cookies) headers.append('set-cookie', cookie)
   }
-  const body = opts.ok ? { user: { id: opts.userId ?? 'u1' } } : { error: 'fail' }
-  return new Response(JSON.stringify(body), { status: opts.status ?? (opts.ok ? 200 : 400), headers })
+  const body = opts.ok
+    ? { user: { id: opts.userId ?? 'u1' } }
+    : { error: 'fail' }
+  return new Response(JSON.stringify(body), {
+    status: opts.status ?? (opts.ok ? 200 : 400),
+    headers,
+  })
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  ;(
+    getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+  ).__setSelectRows([])
 })
 
 describe('auth signup route', () => {
@@ -93,7 +118,7 @@ describe('auth signup route', () => {
 
   it('returns 409 when signUpEmail rejects as duplicate', async () => {
     vi.mocked(authServer.api.signUpEmail).mockRejectedValue(
-      new Error('user already exists')
+      new Error('user already exists'),
     )
     const res = await app.request('/api/v1/auth/signup', {
       method: 'POST',
@@ -108,10 +133,10 @@ describe('auth signup route', () => {
 
   it('returns 409 when createOrganization rejects as duplicate slug', async () => {
     vi.mocked(authServer.api.signUpEmail).mockResolvedValue(
-      mockSignUpResponse({ ok: true, userId: 'u1' }) as never
+      mockSignUpResponse({ ok: true, userId: 'u1' }) as never,
     )
     vi.mocked(authServer.api.createOrganization).mockRejectedValue(
-      new Error('slug already exists')
+      new Error('slug already exists'),
     )
     const res = await app.request('/api/v1/auth/signup', {
       method: 'POST',
@@ -130,7 +155,7 @@ describe('auth signup route', () => {
         ok: true,
         userId: 'u1',
         setCookie: 'better-auth.session_token=tok; HttpOnly; Path=/',
-      }) as never
+      }) as never,
     )
     vi.mocked(authServer.api.createOrganization).mockResolvedValue({
       id: 's1',
@@ -151,7 +176,9 @@ describe('auth signup route', () => {
     expect(body.salon.id).toBe('s1')
     expect(body.user.id).toBe('u1')
     expect(body.redirectTo).toBe('/onboarding')
-    expect(res.headers.get('set-cookie') ?? '').toContain('better-auth.session_token=tok')
+    expect(res.headers.get('set-cookie') ?? '').toContain(
+      'better-auth.session_token=tok',
+    )
   })
 
   it('forwards every Set-Cookie header (session token + cache cookie) separately', async () => {
@@ -163,7 +190,7 @@ describe('auth signup route', () => {
           'better-auth.session_token=tok; HttpOnly; Path=/',
           'better-auth.session_data=cache; Max-Age=60; HttpOnly; Path=/',
         ],
-      }) as never
+      }) as never,
     )
     vi.mocked(authServer.api.createOrganization).mockResolvedValue({
       id: 's1',
@@ -264,5 +291,125 @@ describe('auth /me shim', () => {
     expect(body.user.onboardingCompleted).toBe(true)
     expect(getUserWithServiceIds).toHaveBeenCalledWith('u1', 's1')
     expect(getManagerOnboardingFlags).toHaveBeenCalledWith('s1')
+  })
+})
+
+describe('OTP signup continuation routes', () => {
+  it('sets the password and real manager name for an OTP-created account', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Temporary',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(authServer.api.setPassword).mockResolvedValue({
+      status: true,
+    } as never)
+
+    const res = await app.request('/api/v1/auth/signup/account', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        managerName: 'Ali',
+        password: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(authServer.api.setPassword).toHaveBeenCalledWith({
+      body: { newPassword: 'secret123' },
+      headers: expect.any(Headers),
+    })
+    expect(await res.json()).toEqual({
+      user: { id: 'u1', name: 'Ali', phone: '09121234567' },
+    })
+  })
+
+  it('requires a session before setting account details', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue(null as never)
+
+    const res = await app.request('/api/v1/auth/signup/account', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        managerName: 'Ali',
+        password: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(401)
+    expect(authServer.api.setPassword).not.toHaveBeenCalled()
+  })
+
+  it('creates a workspace for an authenticated user without membership', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Ali',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(authServer.api.createOrganization).mockResolvedValue({
+      id: 's1',
+      name: 'My Salon',
+      slug: 'my-salon',
+    } as never)
+
+    const res = await app.request('/api/v1/auth/signup/workspace', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonName: 'My Salon', slug: 'my-salon' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(authServer.api.createOrganization).toHaveBeenCalledWith({
+      body: { name: 'My Salon', slug: 'my-salon', userId: 'u1' },
+    })
+    expect(await res.json()).toEqual({
+      salon: { id: 's1', name: 'My Salon', slug: 'my-salon' },
+      user: { id: 'u1', name: 'Ali', phone: '09121234567' },
+      redirectTo: '/onboarding',
+    })
+  })
+
+  it('returns existing workspace state instead of creating another workspace', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Ali',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u1',
+      organizationId: 's1',
+      role: 'owner',
+      name: 'Ali',
+      username: '09121234567',
+    })
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([
+      { id: 's1', name: 'Existing Salon', slug: 'existing-salon' },
+    ])
+
+    const res = await app.request('/api/v1/auth/signup/workspace', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonName: 'Ignored Salon' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(authServer.api.createOrganization).not.toHaveBeenCalled()
+    expect(await res.json()).toEqual({
+      salon: { id: 's1', name: 'Existing Salon', slug: 'existing-salon' },
+      user: { id: 'u1', name: 'Ali', phone: '09121234567' },
+      redirectTo: '/onboarding',
+    })
   })
 })

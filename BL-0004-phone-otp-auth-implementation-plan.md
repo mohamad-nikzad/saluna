@@ -141,7 +141,7 @@ References:
 3. **API State + Workspace**
    - [x] Rework `/me` to resolve Better Auth session first, then optional
          membership, so `needs_workspace` can be returned.
-   - [ ] Add session-only account/password and workspace creation endpoints.
+   - [x] Add session-only account/password and workspace creation endpoints.
 
 4. **Staff + Legacy Compatibility**
    - [ ] Update staff create/update/password flows to sync phone fields and keep
@@ -200,11 +200,10 @@ Remaining notes for the next agent:
   use the existing local scrypt writer in `packages/database/src/internal/staff-queries.ts`.
   Replace it with a Better Auth-compatible credential password strategy before
   relying on phone-number/password sign-in for staff.
-- The Better Auth `phoneNumber` plugin is not configured yet. Add it in the
-  Auth Foundation phase with OTP bypass, sms.ir delivery, phone validation, and
-  rate limits.
-- `/api/v1/auth/me` still uses tenant middleware directly and does not yet
-  return `needs_workspace`.
+- Superseded by later slices: the Better Auth `phoneNumber` plugin is now
+  configured, but OTP send rate limiting still remains.
+- Superseded by later slices: `/api/v1/auth/me` now returns `needs_workspace`
+  for authenticated users without a salon membership.
 - OpenAPI/generated API contracts were not regenerated because this slice did
   not change external API response shapes.
 
@@ -258,19 +257,41 @@ Completed:
 Verified locally:
 
 - `pnpm --filter @repo/api test -- auth.test.ts`
+
+### 2026-06-15 pre-workspace account/workspace API slice
+
+Completed:
+
+- Added shared `preWorkspaceAccountSchema` and `preWorkspaceSchema` validation
+  in `@repo/salon-core/forms/auth`.
+- Added `POST /api/v1/auth/signup/account` for OTP-created authenticated users:
+  - Requires an active Better Auth session.
+  - Sets the credential password through `auth.api.setPassword`.
+  - Updates the temporary Better Auth user name to the real manager name.
+  - Maps Better Auth password errors to localized API errors.
+- Added `POST /api/v1/auth/signup/workspace` for authenticated users without a
+  salon membership:
+  - Creates the Better Auth organization with the chosen or generated slug.
+  - Creates the salon sidecars: `salon_profile`, owner `salon_member`,
+    `business_settings`, and `salon_onboarding`.
+  - Is idempotent once the session already has a salon membership: returns the
+    existing workspace state instead of creating a second organization.
+- Added route tests for account setup, auth guarding, workspace creation, and
+  existing-workspace idempotency.
+
+Verified locally:
+
+- `pnpm --filter @repo/api test -- auth.test.ts`
 - `pnpm --filter @repo/api typecheck`
-- `pnpm --filter @repo/api-client typecheck`
-- `pnpm --filter @repo/pwa typecheck`
+- `pnpm --filter @repo/salon-core typecheck`
 
 Remaining notes for the next agent:
 
-- The session-only account/password endpoint and idempotent workspace creation
-  endpoint are still open.
-- PWA route guards do not yet send `needs_workspace` users through the
-  pre-workspace onboarding flow; they are temporarily treated as having no
-  tenant user to avoid rendering tenant screens with an incomplete user shape.
-- Generated OpenAPI/API contracts were not regenerated in this slice; do that
-  when the new pre-workspace endpoints and PWA flow settle.
+- PWA routes still need to call the OTP signup continuation endpoints and route
+  `needs_workspace` users through pre-workspace onboarding.
+- OpenAPI/generated API contracts were not regenerated in this slice because the
+  current auth wrapper endpoints are not represented in the existing OpenAPI
+  route set.
 
 Additional remaining notes from the OTP foundation slice:
 
