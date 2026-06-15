@@ -6,7 +6,9 @@
       "@repo/salon-core": ["../salon-core/src/index.ts"],
       "@repo/salon-core/*": ["../salon-core/src/*"],
       "@repo/database": ["../database/src/index.ts"],
-      "@repo/database/*": ["../database/src/*"]
+      "@repo/database/*": ["../database/src/*"],
+      "@repo/notifications": ["../notifications/src/index.ts"],
+      "@repo/notifications/*": ["../notifications/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

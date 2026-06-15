@@ -126,28 +126,30 @@ References:
 1. **Database First**
    - [x] Deploy additive phone columns and backfill existing users.
    - [x] Add temporary read fallbacks so `phoneNumber ?? username` is the displayed
-     and tenant phone everywhere.
+         and tenant phone everywhere.
    - [ ] Verify prod/test salon users still log in with current password flow.
 
 2. **Auth Foundation**
-   - [ ] Add phone plugin, `signUpOnVerification`, bypass envs, sms.ir send hook,
-     phone validation, and rate limits.
+   - [x] Add phone plugin, `signUpOnVerification`, bypass envs, sms.ir send hook,
+         phone validation, OTP expiry, and allowed-attempt limits.
+   - [ ] Add/verify server rate limits for OTP send requests before broad UI
+         rollout.
    - [x] Keep old username/password endpoint operational during transition.
    - [ ] Add a single credential password-writing strategy; remove or replace local
-     ad-hoc password hashing for staff password updates.
+         ad-hoc password hashing for staff password updates.
 
 3. **API State + Workspace**
    - [ ] Rework `/me` to resolve Better Auth session first, then optional
-     membership, so `needs_workspace` can be returned.
+         membership, so `needs_workspace` can be returned.
    - [ ] Add session-only account/password and workspace creation endpoints.
 
 4. **Staff + Legacy Compatibility**
    - [ ] Update staff create/update/password flows to sync phone fields and keep
-     staff loginable.
+         staff loginable.
    - [x] Update legacy signup, seed scripts, tests, row mappers, tenant context, and
-     generated API/OpenAPI contracts as needed.
+         generated API/OpenAPI contracts as needed.
    - [x] Do not update native callers; native is deprecated and excluded from this
-     rollout.
+         rollout.
 
 5. **PWA UI**
    - Add phone/password default login, OTP secondary login, and phone-first
@@ -205,6 +207,46 @@ Remaining notes for the next agent:
   return `needs_workspace`.
 - OpenAPI/generated API contracts were not regenerated because this slice did
   not change external API response shapes.
+
+### 2026-06-15 Better Auth phone OTP foundation slice
+
+Completed:
+
+- Added the Better Auth `phoneNumber` plugin to `packages/auth/src/server.ts`
+  while keeping the existing `username` plugin and username/password paths.
+- Configured OTP settings from the plan:
+  - `otpLength: 6`
+  - `expiresIn: 300`
+  - `allowedAttempts: 3`
+- Added `packages/auth/src/phone-otp.ts` for:
+  - Iranian mobile normalization/validation.
+  - temporary OTP-created user email/name generation.
+  - `AUTH_OTP_BYPASS_ENABLED` and `AUTH_OTP_BYPASS_CODE` parsing, defaulting to
+    `123456`.
+  - bypass mode that skips SMS and accepts only the configured bypass code.
+  - real mode that sends through the existing `sendSmsOtp` sms.ir delivery
+    path with purpose `signup`.
+- Added API env parsing for `AUTH_OTP_BYPASS_ENABLED` and
+  `AUTH_OTP_BYPASS_CODE`.
+- Added workspace/package TypeScript resolution and lockfile metadata for
+  `@repo/auth` -> `@repo/notifications`.
+
+Verified locally:
+
+- `pnpm --filter @repo/auth test -- phone-otp.test.ts`
+- `pnpm --filter @repo/auth typecheck`
+- `pnpm --filter @repo/api test -- env.test.ts src/cli/messaging-set-webhook.test.ts`
+- `pnpm --filter @repo/api typecheck`
+
+Remaining notes for the next agent:
+
+- OTP send endpoint throttling still needs a deliberate pass before exposing the
+  OTP UI broadly. The plugin now enforces verification attempt limits, but send
+  cooldown/rate-limiting policy should still be verified at the server edge.
+- Real OTP mode depends on the existing SMS delivery bootstrap and a configured
+  sms.ir template. Bypass mode is the path for local/dev tests.
+- The PWA login/signup screens still call the old flows; no UI work was done in
+  this slice.
 
 ## Test Plan
 

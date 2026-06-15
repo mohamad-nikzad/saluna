@@ -30,6 +30,8 @@ function env(overrides: Partial<Env> = {}): Env {
     BALE_WEBHOOK_URL: `https://api.example.com/api/v1/messaging/bale/webhook/${baleConfig.webhookSecret}`,
     BALE_SAFIR_ENABLED: false,
     SMS_ENABLED: false,
+    AUTH_OTP_BYPASS_ENABLED: false,
+    AUTH_OTP_BYPASS_CODE: '123456',
     ...overrides,
   }
 }
@@ -41,7 +43,9 @@ describe('messaging set-webhook CLI', () => {
     expect(parseProviderArg(['--provider', 'bale'])).toBe('bale')
     expect(() => parseProviderArg(['--provider='])).toThrow(/Missing provider/)
     expect(() => parseProviderArg(['--provider'])).toThrow(/Missing provider/)
-    expect(() => parseProviderArg(['--provider=rubika'])).toThrow(/Unsupported provider/)
+    expect(() => parseProviderArg(['--provider=rubika'])).toThrow(
+      /Unsupported provider/,
+    )
   })
 
   it('resolves complete Bale config and refuses incomplete config', () => {
@@ -51,7 +55,9 @@ describe('messaging set-webhook CLI', () => {
     })
 
     expect(resolveBaleWebhookInput(env({ BALE_ENABLED: false }))).toBeNull()
-    expect(resolveBaleWebhookInput(env({ BALE_WEBHOOK_URL: undefined }))).toBeNull()
+    expect(
+      resolveBaleWebhookInput(env({ BALE_WEBHOOK_URL: undefined })),
+    ).toBeNull()
   })
 
   it('requires Bale webhook URL to be HTTPS on a supported port with the secret path segment', () => {
@@ -113,13 +119,16 @@ describe('messaging set-webhook CLI', () => {
       fetchFn,
     )
 
-    expect(fetchFn).toHaveBeenCalledWith('https://tapi.bale.ai/botbale-token/setWebhook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: 'https://api.example.com/api/v1/messaging/bale/webhook/secret-123',
-      }),
-    })
+    expect(fetchFn).toHaveBeenCalledWith(
+      'https://tapi.bale.ai/botbale-token/setWebhook',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'https://api.example.com/api/v1/messaging/bale/webhook/secret-123',
+        }),
+      },
+    )
   })
 
   it('surfaces Bale setWebhook API errors', async () => {

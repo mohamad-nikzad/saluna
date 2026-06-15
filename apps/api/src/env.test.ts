@@ -14,6 +14,8 @@ function env(overrides: Partial<Env> = {}): Env {
     BALE_ENABLED: false,
     BALE_SAFIR_ENABLED: false,
     SMS_ENABLED: false,
+    AUTH_OTP_BYPASS_ENABLED: false,
+    AUTH_OTP_BYPASS_CODE: '123456',
     ...overrides,
   }
 }
@@ -64,6 +66,22 @@ describe('env SMS delivery config', () => {
       SMS_ENABLED: true,
       SMS_PROVIDER: 'sms_ir',
       SMS_IR_API_KEY: 'secret-api-key',
+      AUTH_OTP_BYPASS_ENABLED: false,
+      AUTH_OTP_BYPASS_CODE: '123456',
+    })
+  })
+
+  it('parses OTP bypass envs for dev and test flows', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('DATABASE_URL', 'postgres://stub')
+    vi.stubEnv('AUTH_OTP_BYPASS_ENABLED', 'true')
+    vi.stubEnv('AUTH_OTP_BYPASS_CODE', '654321')
+
+    const { getEnv } = await import('./env')
+
+    expect(getEnv()).toMatchObject({
+      AUTH_OTP_BYPASS_ENABLED: true,
+      AUTH_OTP_BYPASS_CODE: '654321',
     })
   })
 })

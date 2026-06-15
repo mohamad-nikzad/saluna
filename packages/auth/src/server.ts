@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { username } from 'better-auth/plugins/username'
+import { phoneNumber } from 'better-auth/plugins/phone-number'
 import { organization } from 'better-auth/plugins/organization'
 import { bearer } from 'better-auth/plugins/bearer'
 import { getDb } from '@repo/database/client'
@@ -13,10 +14,22 @@ import {
   member,
   invitation,
 } from '@repo/database/schema'
+import {
+  AUTH_OTP_ALLOWED_ATTEMPTS,
+  AUTH_OTP_EXPIRES_IN_SECONDS,
+  AUTH_OTP_LENGTH,
+  getTempEmailForPhoneNumber,
+  getTempNameForPhoneNumber,
+  isValidAuthPhoneNumber,
+  readAuthOtpConfig,
+  sendAuthPhoneOtp,
+  verifyBypassAuthPhoneOtp,
+} from './phone-otp'
 
 const trustedOrigins = [process.env.PWA_ORIGIN].filter(
-  (origin): origin is string => Boolean(origin)
+  (origin): origin is string => Boolean(origin),
 )
+const otpConfig = readAuthOtpConfig()
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), {
@@ -43,6 +56,20 @@ export const auth = betterAuth({
   advanced: { database: { generateId: 'uuid' } },
   plugins: [
     username({ minUsernameLength: 10, maxUsernameLength: 15 }), // 11-digit 09xxxxxxxxx fits
+    phoneNumber({
+      otpLength: AUTH_OTP_LENGTH,
+      expiresIn: AUTH_OTP_EXPIRES_IN_SECONDS,
+      allowedAttempts: AUTH_OTP_ALLOWED_ATTEMPTS,
+      phoneNumberValidator: isValidAuthPhoneNumber,
+      sendOTP: sendAuthPhoneOtp,
+      ...(otpConfig.bypassEnabled
+        ? { verifyOTP: verifyBypassAuthPhoneOtp }
+        : {}),
+      signUpOnVerification: {
+        getTempEmail: getTempEmailForPhoneNumber,
+        getTempName: getTempNameForPhoneNumber,
+      },
+    }),
     organization({ allowUserToCreateOrganization: false }), // only the signup wrapper creates orgs
     bearer(), // native bearer-token transport (future)
   ],

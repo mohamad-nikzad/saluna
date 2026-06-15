@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@repo/database": "workspace:*",
+    "@repo/notifications": "workspace:*",
     "@repo/salon-core": "workspace:*",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.11",

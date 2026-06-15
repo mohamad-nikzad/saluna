@@ -74,6 +74,11 @@ const envSchema = z
     SMS_IR_FORGOT_PASSWORD_TEMPLATE_ID: z.string().optional(),
     SMS_IR_APPOINTMENT_REQUEST_TEMPLATE_ID: z.string().optional(),
     MESSAGING_PWA_BASE_URL: z.string().url().optional(),
+    AUTH_OTP_BYPASS_ENABLED: z
+      .string()
+      .default('false')
+      .transform((v) => v === 'true' || v === '1'),
+    AUTH_OTP_BYPASS_CODE: z.string().default('123456'),
   })
   .superRefine((env, ctx) => {
     if (env.TELEGRAM_ENABLED) {
