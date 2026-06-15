@@ -26,6 +26,7 @@ export async function getMemberForUser(
       organizationId: member.organizationId,
       role: member.role,
       name: user.name,
+      phoneNumber: user.phoneNumber,
       username: user.username,
     })
     .from(member)
@@ -46,7 +47,7 @@ export async function getMemberForUser(
     .limit(1)
   const row = rows[0]
   if (!row) return undefined
-  return { ...row, username: row.username ?? '' }
+  return { ...row, username: row.phoneNumber ?? row.username ?? '' }
 }
 
 const MANAGER_ROLES = ['owner', 'admin']

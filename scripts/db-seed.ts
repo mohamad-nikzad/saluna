@@ -3,7 +3,7 @@
  *   pnpm db:push
  *   pnpm db:seed  (scripts/db-seed.ts)
  */
-import { and, count, eq, inArray, like } from 'drizzle-orm'
+import { and, count, eq, inArray, like, or } from 'drizzle-orm'
 import {
   addDaysYmd,
   salonCurrentHm,
@@ -67,9 +67,21 @@ async function ensureUser({
   const [existing] = await db
     .select({ id: user.id })
     .from(user)
-    .where(eq(user.username, phone))
+    .where(or(eq(user.phoneNumber, phone), eq(user.username, phone)))
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    await db
+      .update(user)
+      .set({
+        username: phone,
+        displayUsername: phone,
+        phoneNumber: phone,
+        phoneNumberVerified: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, existing.id))
+    return existing.id
+  }
 
   const res = await auth.api.signUpEmail({
     body: {
@@ -79,6 +91,15 @@ async function ensureUser({
       username: phone,
     },
   })
+  await db
+    .update(user)
+    .set({
+      phoneNumber: phone,
+      phoneNumberVerified: true,
+      displayUsername: phone,
+      updatedAt: new Date(),
+    })
+    .where(eq(user.id, res.user.id))
   return res.user.id
 }
 
@@ -184,7 +205,8 @@ async function getSalonStaff(organizationId: string): Promise<SeedStaff[]> {
   const rows = await db
     .select({
       id: user.id,
-      phone: user.username,
+      phoneNumber: user.phoneNumber,
+      username: user.username,
       name: user.name,
       role: member.role,
       color: salonMember.color,
@@ -203,7 +225,7 @@ async function getSalonStaff(organizationId: string): Promise<SeedStaff[]> {
 
   return rows.map((row) => ({
     id: row.id,
-    phone: row.phone ?? '',
+    phone: row.phoneNumber ?? row.username ?? '',
     name: row.name,
     role: mapRole(row.role),
     color: row.color,

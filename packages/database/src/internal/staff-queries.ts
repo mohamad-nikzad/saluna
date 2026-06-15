@@ -161,6 +161,8 @@ export async function updateStaffMember(
         name: input.name,
         username: input.phone,
         displayUsername: input.phone,
+        phoneNumber: input.phone,
+        phoneNumberVerified: true,
         email: emailForUpdatedPhone(existing.email, input.phone),
         updatedAt: new Date(),
       })

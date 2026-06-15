@@ -23,18 +23,25 @@ import type { MessagingProviderId } from './messaging-provider-id'
 // PKs are uuid so the existing uuid salon_id FKs repoint to organization.id.
 // ─────────────────────────────────────────────────────────────────────────
 
-export const user = pgTable('user', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  image: text('image'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  // username plugin
-  username: text('username').unique(),
-  displayUsername: text('display_username'),
-})
+export const user = pgTable(
+  'user',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    email: text('email').notNull().unique(),
+    emailVerified: boolean('email_verified').notNull().default(false),
+    image: text('image'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    // username plugin
+    username: text('username').unique(),
+    displayUsername: text('display_username'),
+    // phone-number plugin. Kept in sync with username during rollout.
+    phoneNumber: text('phone_number'),
+    phoneNumberVerified: boolean('phone_number_verified').notNull().default(false),
+  },
+  (t) => [uniqueIndex('user_phone_number_unique').on(t.phoneNumber)]
+)
 
 export const session = pgTable(
   'session',
