@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import {
+  buildSmsDeliveryConfigFromEnv,
+  type SmsDeliveryConfig,
+} from '@repo/notifications'
 
 /** Telegram `secret_token` allowed charset (Bot API). */
 export const TELEGRAM_WEBHOOK_SECRET_PATTERN = /^[A-Za-z0-9_-]{1,256}$/
@@ -56,6 +60,19 @@ const envSchema = z
       .transform((v) => v === 'true' || v === '1'),
     BALE_SAFIR_API_ACCESS_KEY: z.string().optional(),
     BALE_SAFIR_BOT_ID: z.string().optional(),
+    SMS_ENABLED: z
+      .string()
+      .default('false')
+      .transform((v) => v === 'true' || v === '1'),
+    SMS_PROVIDER: z.string().optional(),
+    SMS_IR_API_KEY: z.string().optional(),
+    SMS_IR_LINE_NUMBER: z.string().optional(),
+    SMS_IR_OTP_TEMPLATE_ID: z.string().optional(),
+    SMS_IR_API_BASE_URL: z.string().url().optional(),
+    SMS_IR_LOGIN_TEMPLATE_ID: z.string().optional(),
+    SMS_IR_SIGNUP_TEMPLATE_ID: z.string().optional(),
+    SMS_IR_FORGOT_PASSWORD_TEMPLATE_ID: z.string().optional(),
+    SMS_IR_APPOINTMENT_REQUEST_TEMPLATE_ID: z.string().optional(),
     MESSAGING_PWA_BASE_URL: z.string().url().optional(),
   })
   .superRefine((env, ctx) => {
@@ -123,6 +140,24 @@ const envSchema = z
         }
       }
     }
+
+    if (env.SMS_ENABLED) {
+      if (env.SMS_PROVIDER?.trim() !== 'sms_ir') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMS_PROVIDER'],
+          message: 'SMS_PROVIDER must be sms_ir when SMS_ENABLED=true',
+        })
+      }
+
+      if (!env.SMS_IR_API_KEY || env.SMS_IR_API_KEY.trim() === '') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMS_IR_API_KEY'],
+          message: 'SMS_IR_API_KEY is required when SMS_ENABLED=true',
+        })
+      }
+    }
   })
 
 export type Env = z.infer<typeof envSchema>
@@ -179,6 +214,12 @@ export function readBaleSafirConfigFromEnv(
   const botId = env.BALE_SAFIR_BOT_ID?.trim()
   if (!apiAccessKey || !botId) return null
   return { apiAccessKey, botId }
+}
+
+export function readSmsDeliveryConfigFromEnv(
+  env: Env = getEnv(),
+): SmsDeliveryConfig | null {
+  return buildSmsDeliveryConfigFromEnv(env)
 }
 
 let cached: Env | undefined

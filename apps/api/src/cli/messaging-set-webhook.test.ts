@@ -29,6 +29,7 @@ function env(overrides: Partial<Env> = {}): Env {
     BALE_WEBHOOK_SECRET: baleConfig.webhookSecret,
     BALE_WEBHOOK_URL: `https://api.example.com/api/v1/messaging/bale/webhook/${baleConfig.webhookSecret}`,
     BALE_SAFIR_ENABLED: false,
+    SMS_ENABLED: false,
     ...overrides,
   }
 }

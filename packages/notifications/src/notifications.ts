@@ -214,7 +214,25 @@ export async function createNotificationForUser(input: CreateNotificationForUser
 }
 
 export const dispatchNotification = recordNotificationDelivery
-export { sendSmsNotification }
+export {
+  buildSmsDeliveryConfigFromEnv,
+  initSmsDelivery,
+  sendSmsBulk,
+  sendSmsNotification,
+  sendSmsOtp,
+  sendSmsText,
+  setSmsFetchForTests,
+  type SmsBulkInput,
+  type SmsDeliveryConfig,
+  type SmsDeliveryResult,
+  type SmsEnvVars,
+  type SmsIrConfig,
+  type SmsOtpInput,
+  type SmsProvider,
+  type SmsProviderId,
+  type SmsPurpose,
+  type SmsTextInput,
+} from './sms'
 export {
   type AppNotification,
   type CreateNotificationInput,
