@@ -1,4 +1,3 @@
-import { randomBytes, scrypt } from 'node:crypto'
 import { and, asc, count, eq, inArray, isNull, ne, or } from 'drizzle-orm'
 import type {
   BusinessHours,
@@ -24,6 +23,7 @@ import {
 import { rowToStaffSchedule, rowToUser, staffUserSelect } from './row-mappers'
 import { getUserById } from './user-queries'
 import { getBusinessSettings } from './settings-queries'
+import { hashCredentialPassword } from '../auth-password'
 
 export type UpdateStaffInput = {
   name: string
@@ -31,37 +31,6 @@ export type UpdateStaffInput = {
   phone: string
   role: UserRole
   color: string
-}
-
-const PASSWORD_HASH_CONFIG = {
-  N: 16384,
-  r: 16,
-  p: 1,
-  dkLen: 64,
-}
-
-function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString('hex')
-  return new Promise((resolve, reject) => {
-    scrypt(
-      password.normalize('NFKC'),
-      salt,
-      PASSWORD_HASH_CONFIG.dkLen,
-      {
-        N: PASSWORD_HASH_CONFIG.N,
-        r: PASSWORD_HASH_CONFIG.r,
-        p: PASSWORD_HASH_CONFIG.p,
-        maxmem: 128 * PASSWORD_HASH_CONFIG.N * PASSWORD_HASH_CONFIG.r * 2,
-      },
-      (err, key) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(`${salt}:${key.toString('hex')}`)
-      },
-    )
-  })
 }
 
 export async function getAllStaff(salonId: string): Promise<User[]> {
@@ -250,7 +219,7 @@ export async function updateStaffPassword(
 
   if (!rows[0]) return false
 
-  const passwordHash = await hashPassword(password)
+  const passwordHash = await hashCredentialPassword(password)
   const updated = await db
     .update(account)
     .set({ password: passwordHash, updatedAt: new Date() })

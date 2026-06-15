@@ -6,6 +6,10 @@ import { organization } from 'better-auth/plugins/organization'
 import { bearer } from 'better-auth/plugins/bearer'
 import { getDb } from '@repo/database/client'
 import {
+  hashCredentialPassword,
+  verifyCredentialPassword,
+} from '@repo/database/auth-password'
+import {
   user,
   session,
   account,
@@ -47,7 +51,13 @@ export const auth = betterAuth({
     },
   }),
   basePath: '/api/v1/auth',
-  emailAndPassword: { enabled: true },
+  emailAndPassword: {
+    enabled: true,
+    password: {
+      hash: hashCredentialPassword,
+      verify: ({ hash, password }) => verifyCredentialPassword(hash, password),
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7d
     updateAge: 60 * 60 * 24, // roll daily

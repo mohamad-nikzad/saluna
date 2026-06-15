@@ -135,7 +135,7 @@ References:
    - [x] Add/verify server rate limits for OTP send requests before broad UI
          rollout.
    - [x] Keep old username/password endpoint operational during transition.
-   - [ ] Add a single credential password-writing strategy; remove or replace local
+   - [x] Add a single credential password-writing strategy; remove or replace local
          ad-hoc password hashing for staff password updates.
 
 3. **API State + Workspace**
@@ -144,7 +144,7 @@ References:
    - [x] Add session-only account/password and workspace creation endpoints.
 
 4. **Staff + Legacy Compatibility**
-   - [ ] Update staff create/update/password flows to sync phone fields and keep
+   - [x] Update staff create/update/password flows to sync phone fields and keep
          staff loginable.
    - [x] Update legacy signup, seed scripts, tests, row mappers, tenant context, and
          generated API/OpenAPI contracts as needed.
@@ -196,12 +196,8 @@ Verified locally:
 
 Remaining notes for the next agent:
 
-- Staff create/update now sync phone fields, but staff password updates still
-  use the existing local scrypt writer in `packages/database/src/internal/staff-queries.ts`.
-  Replace it with a Better Auth-compatible credential password strategy before
-  relying on phone-number/password sign-in for staff.
 - Superseded by later slices: the Better Auth `phoneNumber` plugin is now
-  configured, but OTP send rate limiting still remains.
+  configured, and OTP send rate limiting has been added.
 - Superseded by later slices: `/api/v1/auth/me` now returns `needs_workspace`
   for authenticated users without a salon membership.
 - OpenAPI/generated API contracts were not regenerated because this slice did
@@ -257,6 +253,29 @@ Completed:
 Verified locally:
 
 - `pnpm --filter @repo/api test -- auth.test.ts`
+
+### 2026-06-15 staff credential password strategy slice
+
+Completed:
+
+- Added `packages/database/src/auth-password.ts` as the single Better
+  Auth-compatible credential password helper for this codebase.
+- Configured Better Auth `emailAndPassword.password.hash/verify` to use that
+  helper explicitly, so credential account writes and Better Auth sign-in verify
+  share the same strategy.
+- Updated `updateStaffPassword` to use the shared helper instead of its private
+  local scrypt implementation.
+- Exported the helper as `@repo/database/auth-password`.
+- Added a focused unit test for hash format, successful verification, and failed
+  verification.
+
+Verified locally:
+
+- `pnpm --filter @repo/database test -- auth-password.test.ts`
+- `pnpm --filter @repo/database typecheck`
+- `pnpm --filter @repo/auth typecheck`
+- `pnpm --filter @repo/api test -- staff.test.ts`
+- `pnpm --filter @repo/api typecheck`
 
 ### 2026-06-15 pre-workspace account/workspace API slice
 
