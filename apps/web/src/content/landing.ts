@@ -151,5 +151,5 @@ export const faqItems = [
   },
 ]
 
-export const loginHref = new URL('/login', PUBLIC_MANAGER_APP_URL).toString()
+export const loginHref = new URL('/auth', PUBLIC_MANAGER_APP_URL).toString()
 export const signupHref = new URL('/signup', PUBLIC_MANAGER_APP_URL).toString()

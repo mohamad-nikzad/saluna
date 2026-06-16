@@ -73,6 +73,9 @@ export const Route = createFileRoute('/signup')({
     const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
+    if (!session) {
+      throw redirect({ to: '/auth' })
+    }
     if (session && session.status !== 'needs_workspace') {
       throw redirect({ to: homePathForRole(session.user.role) })
     }
@@ -210,8 +213,9 @@ function SignupPage() {
     })
   })
 
-  const submitOtp = () => {
-    const code = normalizeOtpCode(otp)
+  const submitOtp = (value?: string) => {
+    if (verifyOtp.isPending) return
+    const code = normalizeOtpCode(value ?? otp)
     if (code.length !== AUTH_OTP_CODE_LENGTH) {
       setOtpError(`کد ${AUTH_OTP_CODE_LENGTH} رقمی را کامل وارد کنید`)
       return
@@ -338,9 +342,10 @@ function SignupPage() {
                     setOtp(value)
                     setOtpError(null)
                   }}
+                  onComplete={submitOtp}
                   disabled={verifyOtp.isPending}
                   invalid={Boolean(otpError)}
-                  slotClassName="h-12 w-11 bg-card"
+                  slotClassName="bg-card"
                 />
                 {otpError && <FieldError>{otpError}</FieldError>}
               </Field>
@@ -349,7 +354,7 @@ function SignupPage() {
                 type="button"
                 className="h-12 rounded-xl text-base font-semibold"
                 disabled={verifyOtp.isPending}
-                onClick={submitOtp}
+                onClick={() => submitOtp()}
               >
                 {verifyOtp.isPending ? <Spinner className="ml-2" /> : null}
                 تایید کد
@@ -482,7 +487,7 @@ function SignupPage() {
         <p className="mt-6 px-1 text-center text-sm text-sage-deep">
           حساب دارید؟{' '}
           <Link
-            to="/login"
+            to="/auth"
             className="font-semibold text-primary underline-offset-4 hover:underline"
           >
             ورود

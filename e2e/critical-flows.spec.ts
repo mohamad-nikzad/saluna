@@ -22,7 +22,7 @@ test.describe('Critical salon journeys', () => {
   }) => {
     await test.step('Root redirects to login', async () => {
       await page.goto('/')
-      await expect(page).toHaveURL(/\/login/)
+      await expect(page).toHaveURL(/\/auth/)
     })
     await test.step('Login form and signup CTA', async () => {
       await expect(page.getByRole('button', { name: 'ورود' })).toBeVisible()

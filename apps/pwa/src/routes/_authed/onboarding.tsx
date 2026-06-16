@@ -62,7 +62,7 @@ export async function loadOnboardingStatus(
   } catch (err) {
     if (isRedirect(err)) throw err
     if (err instanceof ApiError && err.status === 401) {
-      throw redirect({ to: '/login', search: { redirect: '/onboarding' } })
+      throw redirect({ to: '/auth', search: { redirect: '/onboarding' } })
     }
     return null
   }

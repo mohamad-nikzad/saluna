@@ -5,7 +5,7 @@ export class LoginPage {
   constructor(readonly page: Page) {}
 
   async goto() {
-    await this.page.goto('/login')
+    await this.page.goto('/auth')
   }
 
   async submit(phone: string, password: string) {

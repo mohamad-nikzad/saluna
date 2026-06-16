@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_authed')({
     })
     if (!session) {
       throw redirect({
-        to: '/login',
+        to: '/auth',
         search: { redirect: location.href },
       })
     }

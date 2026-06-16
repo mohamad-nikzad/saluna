@@ -1,5 +1,11 @@
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@repo/ui/input-otp'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  REGEXP_ONLY_DIGITS,
+} from '@repo/ui/input-otp'
 import { cn } from '@repo/ui/utils'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
 import { AUTH_OTP_CODE_LENGTH, normalizeOtpCode } from '#/lib/auth-otp'
 
@@ -7,6 +13,7 @@ type OtpCodeInputProps = {
   id?: string
   value: string
   onValueChange: (value: string) => void
+  onComplete?: (value: string) => void
   disabled?: boolean
   invalid?: boolean
   slotClassName?: string
@@ -16,6 +23,7 @@ export function OtpCodeInput({
   id = 'otp',
   value,
   onValueChange,
+  onComplete,
   disabled,
   invalid,
   slotClassName,
@@ -27,6 +35,12 @@ export function OtpCodeInput({
         maxLength={AUTH_OTP_CODE_LENGTH}
         value={value}
         onChange={(nextValue) => onValueChange(normalizeOtpCode(nextValue))}
+        onComplete={(nextValue) => {
+          const code = normalizeOtpCode(String(nextValue))
+          if (code.length === AUTH_OTP_CODE_LENGTH) onComplete?.(code)
+        }}
+        pasteTransformer={normalizeOtpCode}
+        pattern={REGEXP_ONLY_DIGITS}
         inputMode="numeric"
         autoComplete="one-time-code"
         disabled={disabled}
@@ -37,9 +51,10 @@ export function OtpCodeInput({
             <InputOTPSlot
               key={index}
               index={index}
+              formatChar={toPersianDigits}
               aria-invalid={invalid}
               className={cn(
-                'rounded-xl border text-lg font-bold',
+                'h-[52px] w-12 rounded-lg border text-xl font-bold',
                 slotClassName,
               )}
             />

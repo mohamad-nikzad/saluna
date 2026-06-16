@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { OTPInput, OTPInputContext } from 'input-otp'
+import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from 'input-otp'
 import { MinusIcon } from 'lucide-react'
 
 import { cn } from './utils'
@@ -39,9 +39,11 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<'div'>) {
 function InputOTPSlot({
   index,
   className,
+  formatChar,
   ...props
 }: React.ComponentProps<'div'> & {
   index: number
+  formatChar?: (char: string) => React.ReactNode
 }) {
   const inputOTPContext = React.useContext(OTPInputContext)
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
@@ -56,7 +58,7 @@ function InputOTPSlot({
       )}
       {...props}
     >
-      {char}
+      {char && formatChar ? formatChar(char) : char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="animate-caret-blink bg-foreground h-4 w-px duration-1000" />
@@ -74,4 +76,10 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
   )
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+export {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+  REGEXP_ONLY_DIGITS,
+}

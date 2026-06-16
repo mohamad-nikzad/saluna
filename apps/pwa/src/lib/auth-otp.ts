@@ -5,7 +5,7 @@ import { toLatinDigits } from '@repo/salon-core/persian-digits'
 import { getMutationErrorMessage } from '#/lib/query-client'
 
 export const AUTH_OTP_CODE_LENGTH = 6
-export const AUTH_OTP_RESEND_SECONDS = 60
+export const AUTH_OTP_RESEND_SECONDS = 180
 
 export function normalizeOtpCode(value: string): string {
   return toLatinDigits(value).replace(/\D/g, '')

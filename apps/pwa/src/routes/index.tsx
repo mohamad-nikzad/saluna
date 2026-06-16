@@ -10,7 +10,7 @@ export const Route = createFileRoute('/')({
       queryKey: authQueryKey,
     })
     if (!session) {
-      throw redirect({ to: '/login' })
+      throw redirect({ to: '/auth' })
     }
     if (session.status === 'needs_workspace') {
       throw redirect({ to: '/signup' })

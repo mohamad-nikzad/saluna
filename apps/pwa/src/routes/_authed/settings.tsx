@@ -212,7 +212,7 @@ function SettingsPage() {
   const handleLogout = async () => {
     setLoggingOut(true)
     await logout()
-    await navigate({ to: '/login', replace: true })
+    await navigate({ to: '/auth', replace: true })
   }
 
   const toggleDarkMode = (enabled: boolean) => {

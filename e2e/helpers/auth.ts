@@ -5,7 +5,7 @@ export const SEEDED_MANAGER = { phone: '09120000000', password: 'admin123' }
 export const SEEDED_STAFF = { phone: '09120000001', password: 'admin123' }
 
 export async function login(page: Page, phone: string, password: string) {
-  await page.goto('/login')
+  await page.goto('/auth')
   await expect(page.getByRole('heading', { name: /سالونا|آراویرا/ })).toBeVisible()
   const phoneBox = page.getByRole('textbox', { name: 'شماره موبایل' })
   const passBox = page.getByRole('textbox', { name: 'رمز عبور' })
@@ -49,5 +49,5 @@ export async function loginStaffExpectsToday(page: Page) {
 export async function logoutFromSettings(page: Page) {
   await page.goto('/settings')
   await page.getByRole('button', { name: /خروج از حساب/ }).click()
-  await expect(page).toHaveURL(/\/login/)
+  await expect(page).toHaveURL(/\/auth/)
 }
