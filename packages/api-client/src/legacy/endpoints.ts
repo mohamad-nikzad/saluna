@@ -7,6 +7,7 @@ export const endpoints = {
     signInPhoneNumber: '/api/v1/auth/sign-in/phone-number',
     sendPhoneOtp: '/api/v1/auth/phone-number/send-otp',
     verifyPhoneOtp: '/api/v1/auth/phone-number/verify',
+    phoneStatus: '/api/v1/auth/phone-status',
     signup: '/api/v1/auth/signup',
     signupAccount: '/api/v1/auth/signup/account',
     signupWorkspace: '/api/v1/auth/signup/workspace',

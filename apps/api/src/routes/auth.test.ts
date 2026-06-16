@@ -294,6 +294,34 @@ describe('auth /me shim', () => {
   })
 })
 
+describe('auth phone status route', () => {
+  it('returns registered true when the phone belongs to a user', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'u1' }])
+
+    const res = await app.request('/api/v1/auth/phone-status', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ phone: '09121234567' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ registered: true })
+  })
+
+  it('returns registered false for a new phone number', async () => {
+    const res = await app.request('/api/v1/auth/phone-status', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ phone: '09121234567' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ registered: false })
+  })
+})
+
 describe('Better Auth passthrough routes', () => {
   it('passes phone-number password sign-in through to Better Auth', async () => {
     vi.mocked(authServer.handler).mockResolvedValue(

@@ -45,6 +45,8 @@ export type VerifyPhoneOtpResponse = {
 
 export type PreWorkspaceAccountResponse = { user: PreWorkspaceUser }
 
+export type PhoneStatusResponse = { registered: boolean }
+
 export type PreWorkspaceResponse = {
   user: PreWorkspaceUser
   salon: { id: string; name: string; slug: string }
@@ -77,6 +79,12 @@ export function createAuthApi(client: ApiClient) {
       return client.request<{ message: string }>(endpoints.auth.sendPhoneOtp, {
         method: 'POST',
         body: { phoneNumber: input.phone },
+      })
+    },
+    getPhoneStatus(input: { phone: string }) {
+      return client.request<PhoneStatusResponse>(endpoints.auth.phoneStatus, {
+        method: 'POST',
+        body: { phone: input.phone },
       })
     },
     verifyPhoneOtp(input: { phone: string; code: string }) {

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
-import { eq } from 'drizzle-orm'
+import { eq, or } from 'drizzle-orm'
+import { z } from 'zod'
 import { auth } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import {
@@ -17,6 +18,7 @@ import {
   preWorkspaceSchema,
   signupSchema,
 } from '@repo/salon-core/forms/auth'
+import { phoneSchema } from '@repo/salon-core/forms/primitives'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import { getUserWithServiceIds } from '@repo/database/staff'
 import { getMemberForUser } from '@repo/database/members'
@@ -27,6 +29,7 @@ import { brand } from '@repo/brand'
 import { error, ok } from '../lib/responses'
 
 const OWNER_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
+const phoneStatusSchema = z.object({ phone: phoneSchema })
 
 function phoneToEmail(phone: string): string {
   return `${phone}@${brand.emailLocalDomain}`
@@ -171,6 +174,16 @@ export const authRoute = new Hono<AppEnv>()
     }
 
     return ok(c, { status: 'ready', user: { ...user, role } })
+  })
+  .post('/phone-status', zValidator('json', phoneStatusSchema), async (c) => {
+    const { phone } = c.req.valid('json')
+    const rows = await getDb()
+      .select({ id: user.id })
+      .from(user)
+      .where(or(eq(user.phoneNumber, phone), eq(user.username, phone)))
+      .limit(1)
+
+    return ok(c, { registered: Boolean(rows[0]) })
   })
   .post(
     '/signup/account',

@@ -139,6 +139,35 @@ describe('legacy auth API wrapper', () => {
     )
   })
 
+  it('maps phone status to the app-owned auth helper endpoint', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response(JSON.stringify({ registered: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const auth = createAuthApi(
+      createApiClient({
+        baseUrl: 'https://api.example.test',
+        credentials: 'include',
+        fetchImpl: fetchMock,
+      }),
+    )
+
+    const response = await auth.getPhoneStatus({ phone: '09121234567' })
+
+    expect(response.registered).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.test/api/v1/auth/phone-status',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ phone: '09121234567' }),
+      }),
+    )
+  })
+
   it('maps pre-workspace account and workspace calls to the signup continuation endpoints', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
