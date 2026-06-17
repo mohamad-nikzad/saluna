@@ -34,6 +34,7 @@ describe('env SMS delivery config', () => {
           SMS_PROVIDER: 'sms_ir',
           SMS_IR_API_KEY: ' secret-api-key ',
           SMS_IR_OTP_TEMPLATE_ID: '123456',
+          SMS_IR_OTP_PARAMETER_NAME: 'CODE',
         }),
       ),
     ).toEqual({
@@ -42,6 +43,7 @@ describe('env SMS delivery config', () => {
         apiKey: 'secret-api-key',
         lineNumber: null,
         otpTemplateId: '123456',
+        otpParameterName: 'CODE',
         apiBaseUrl: null,
         templates: {
           login: undefined,

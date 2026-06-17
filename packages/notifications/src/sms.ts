@@ -59,6 +59,7 @@ export type SmsIrConfig = {
   apiKey: string
   lineNumber?: string | null
   otpTemplateId?: string | null
+  otpParameterName?: string | null
   apiBaseUrl?: string | null
   templates?: Partial<Record<SmsPurpose, string>>
 }
@@ -74,6 +75,7 @@ export type SmsEnvVars = {
   SMS_IR_API_KEY?: string | null
   SMS_IR_LINE_NUMBER?: string | null
   SMS_IR_OTP_TEMPLATE_ID?: string | null
+  SMS_IR_OTP_PARAMETER_NAME?: string | null
   SMS_IR_API_BASE_URL?: string | null
   SMS_IR_LOGIN_TEMPLATE_ID?: string | null
   SMS_IR_SIGNUP_TEMPLATE_ID?: string | null
@@ -144,6 +146,7 @@ export function buildSmsDeliveryConfigFromEnv(
       apiKey,
       lineNumber: clean(env.SMS_IR_LINE_NUMBER),
       otpTemplateId: clean(env.SMS_IR_OTP_TEMPLATE_ID),
+      otpParameterName: clean(env.SMS_IR_OTP_PARAMETER_NAME),
       apiBaseUrl: clean(env.SMS_IR_API_BASE_URL),
       templates: {
         login: clean(env.SMS_IR_LOGIN_TEMPLATE_ID) ?? undefined,
@@ -182,6 +185,8 @@ function logSmsFailure(input: {
   requestId?: string
   notificationId?: string
   error: string
+  providerStatus?: number
+  providerMessage?: string
 }): void {
   console.error('[sms.send.failed]', {
     provider: input.provider,
@@ -189,6 +194,8 @@ function logSmsFailure(input: {
     requestId: input.requestId,
     notificationId: input.notificationId,
     error: input.error,
+    providerStatus: input.providerStatus,
+    providerMessage: input.providerMessage,
   })
 }
 
@@ -231,6 +238,10 @@ function parseSmsIrTemplateId(value: string): number | null {
   if (!/^\d+$/.test(value)) return null
   const id = Number(value)
   return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
+function smsIrOtpParameterName(config: SmsIrConfig): string {
+  return config.otpParameterName?.trim() || SMS_IR_CODE_PARAMETER
 }
 
 function isSmsIrConfigured(config: SmsIrConfig | null): config is SmsIrConfig {
@@ -285,10 +296,11 @@ export function buildSmsIrVerifyRequest(input: {
   const numericTemplateId = parseSmsIrTemplateId(templateId)
   if (!numericTemplateId) return { error: 'invalid_template' }
 
+  const codeParameterName = smsIrOtpParameterName(input.config)
   const parameters = [
-    { name: SMS_IR_CODE_PARAMETER, value: input.code },
+    { name: codeParameterName, value: input.code },
     ...Object.entries(input.templateParams ?? {})
-      .filter(([name]) => name !== SMS_IR_CODE_PARAMETER)
+      .filter(([name]) => name !== codeParameterName)
       .map(([name, value]) => ({
         name,
         value,
@@ -361,6 +373,8 @@ function createSmsIrProvider(
           purpose: input.purpose,
           requestId: input.requestId,
           error,
+          providerStatus: body?.status,
+          providerMessage: sanitizeProviderMessage(body?.message),
         })
         return { status: 'failed', provider: 'sms_ir', error }
       }
@@ -372,6 +386,8 @@ function createSmsIrProvider(
           purpose: input.purpose,
           requestId: input.requestId,
           error,
+          providerStatus: body?.status,
+          providerMessage: error,
         })
         return { status: 'failed', provider: 'sms_ir', error }
       }

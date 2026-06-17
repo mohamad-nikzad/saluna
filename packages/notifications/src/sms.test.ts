@@ -95,6 +95,7 @@ describe('SMS delivery foundation', () => {
         SMS_IR_API_KEY: ' secret-api-key ',
         SMS_IR_LINE_NUMBER: ' ',
         SMS_IR_OTP_TEMPLATE_ID: '123456',
+        SMS_IR_OTP_PARAMETER_NAME: 'CODE',
         SMS_IR_LOGIN_TEMPLATE_ID: '654321',
       }),
     ).toEqual({
@@ -103,6 +104,7 @@ describe('SMS delivery foundation', () => {
         apiKey: 'secret-api-key',
         lineNumber: null,
         otpTemplateId: '123456',
+        otpParameterName: 'CODE',
         apiBaseUrl: null,
         templates: {
           login: '654321',
@@ -175,6 +177,25 @@ describe('SMS delivery foundation', () => {
 
     expect(JSON.parse(String(request.init.body)).parameters).toEqual([
       { name: 'Code', value: '246810' },
+      { name: 'Salon', value: 'Saluna' },
+    ])
+  })
+
+  it('uses the configured sms.ir OTP parameter name when templates differ', () => {
+    const request = buildSmsIrVerifyRequest({
+      config: { ...smsIrConfig, otpParameterName: 'CODE' },
+      mobile: '09123456789',
+      code: '246810',
+      purpose: 'login',
+      templateParams: { Code: '000000', Salon: 'Saluna' },
+    })
+
+    expect('error' in request).toBe(false)
+    if ('error' in request) throw new Error(request.error)
+
+    expect(JSON.parse(String(request.init.body)).parameters).toEqual([
+      { name: 'CODE', value: '246810' },
+      { name: 'Code', value: '000000' },
       { name: 'Salon', value: 'Saluna' },
     ])
   })

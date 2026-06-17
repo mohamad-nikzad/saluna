@@ -68,6 +68,7 @@ const envSchema = z
     SMS_IR_API_KEY: z.string().optional(),
     SMS_IR_LINE_NUMBER: z.string().optional(),
     SMS_IR_OTP_TEMPLATE_ID: z.string().optional(),
+    SMS_IR_OTP_PARAMETER_NAME: z.string().optional(),
     SMS_IR_API_BASE_URL: z.string().url().optional(),
     SMS_IR_LOGIN_TEMPLATE_ID: z.string().optional(),
     SMS_IR_SIGNUP_TEMPLATE_ID: z.string().optional(),
