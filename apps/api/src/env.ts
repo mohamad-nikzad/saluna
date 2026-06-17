@@ -80,6 +80,15 @@ const envSchema = z
       .default('false')
       .transform((v) => v === 'true' || v === '1'),
     AUTH_OTP_BYPASS_CODE: z.string().default('123456'),
+    PLATFORM_ADMIN_BOOTSTRAP_PHONES: z
+      .string()
+      .default('')
+      .transform((v) =>
+        v
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
   })
   .superRefine((env, ctx) => {
     if (env.TELEGRAM_ENABLED) {

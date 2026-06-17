@@ -16,6 +16,7 @@ function env(overrides: Partial<Env> = {}): Env {
     SMS_ENABLED: false,
     AUTH_OTP_BYPASS_ENABLED: false,
     AUTH_OTP_BYPASS_CODE: '123456',
+    PLATFORM_ADMIN_BOOTSTRAP_PHONES: [],
     ...overrides,
   }
 }
@@ -84,6 +85,20 @@ describe('env SMS delivery config', () => {
     expect(getEnv()).toMatchObject({
       AUTH_OTP_BYPASS_ENABLED: true,
       AUTH_OTP_BYPASS_CODE: '654321',
+      PLATFORM_ADMIN_BOOTSTRAP_PHONES: [],
     })
+  })
+
+  it('parses platform admin bootstrap phones as a comma-separated allowlist', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('DATABASE_URL', 'postgres://stub')
+    vi.stubEnv('PLATFORM_ADMIN_BOOTSTRAP_PHONES', '09121111111, 09122222222,')
+
+    const { getEnv } = await import('./env')
+
+    expect(getEnv().PLATFORM_ADMIN_BOOTSTRAP_PHONES).toEqual([
+      '09121111111',
+      '09122222222',
+    ])
   })
 })

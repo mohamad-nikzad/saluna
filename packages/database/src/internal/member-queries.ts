@@ -1,11 +1,12 @@
 import { and, eq, inArray, isNull, or } from 'drizzle-orm'
 import { getDb } from '../client'
-import { member, salonMember, user } from '../schema'
+import { member, salonMember, salonProfile, user } from '../schema'
 
 export type MemberContext = {
   userId: string
   organizationId: string
   role: string
+  salonStatus?: 'active' | 'suspended' | 'archived'
   name: string
   username: string
 }
@@ -25,12 +26,17 @@ export async function getMemberForUser(
       userId: member.userId,
       organizationId: member.organizationId,
       role: member.role,
+      salonStatus: salonProfile.status,
       name: user.name,
       phoneNumber: user.phoneNumber,
       username: user.username,
     })
     .from(member)
     .innerJoin(user, eq(member.userId, user.id))
+    .leftJoin(
+      salonProfile,
+      eq(salonProfile.organizationId, member.organizationId),
+    )
     .leftJoin(
       salonMember,
       and(
@@ -47,7 +53,11 @@ export async function getMemberForUser(
     .limit(1)
   const row = rows[0]
   if (!row) return undefined
-  return { ...row, username: row.phoneNumber ?? row.username ?? '' }
+  return {
+    ...row,
+    salonStatus: row.salonStatus ?? undefined,
+    username: row.phoneNumber ?? row.username ?? '',
+  }
 }
 
 const MANAGER_ROLES = ['owner', 'admin']
