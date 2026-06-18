@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { AdminPage } from '#/features/admin-page'
+import { AuditLogPage } from '#/features/audit-log'
 
 export const Route = createFileRoute('/_admin/audit-log')({
   component: AuditLogRoute,
 })
 
 function AuditLogRoute() {
-  return <AdminPage pageId="audit-log" />
+  return <AuditLogPage />
 }

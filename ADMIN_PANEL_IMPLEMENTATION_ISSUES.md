@@ -41,7 +41,7 @@ Triage label for all issues: `needs-triage`
    - **Blocked by**: ADMIN-001, ADMIN-002, ADMIN-003
    - **User stories covered**: Platform admin can manage CatalogPreset records using category, family, and service variant language.
 
-8. **ADMIN-008: Rebuild Audit Log as a filterable feature slice**
+8. **ADMIN-008: Rebuild Audit Log as a filterable feature slice** ✅
    - **Type**: AFK
    - **Blocked by**: ADMIN-001, ADMIN-003
    - **User stories covered**: Platform admin can review audited admin actions with filters.
@@ -232,12 +232,12 @@ Move Audit Log into `features/audit-log`, backed by the generated admin audit-lo
 
 ## Acceptance criteria
 
-- [ ] `/audit-log` renders from `features/audit-log`.
-- [ ] Audit events are fetched through generated admin audit-log query options.
-- [ ] Filters support action, target type, target id, salon id, search, page, and page size where supported by the API.
-- [ ] Table rows show actor, role, action, target, reason, salon id, and created time when available.
-- [ ] Loading, empty, and error states are handled.
-- [ ] UI tests cover filtering and pagination state.
+- [x] `/audit-log` renders from `features/audit-log`.
+- [x] Audit events are fetched through generated admin audit-log query options.
+- [x] Filters support action, target type, target id, salon id, search, page, and page size where supported by the API.
+- [x] Table rows show actor, role, action, target, reason, salon id, and created time when available.
+- [x] Loading, empty, and error states are handled.
+- [x] UI tests cover filtering and pagination state.
 
 ## Blocked by
 
