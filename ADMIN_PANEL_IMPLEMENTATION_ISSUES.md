@@ -36,7 +36,7 @@ Triage label for all issues: `needs-triage`
    - **Blocked by**: ADMIN-005
    - **User stories covered**: Platform admin can inspect a salon's Clients, Appointments, Appointment Requests, Staff, and Services without tenant mutations.
 
-7. **ADMIN-007: Rebuild Catalog Presets CRUD with canonical catalog language**
+7. **ADMIN-007: Rebuild Catalog Presets CRUD with canonical catalog language** ✅
    - **Type**: AFK
    - **Blocked by**: ADMIN-001, ADMIN-002, ADMIN-003
    - **User stories covered**: Platform admin can manage CatalogPreset records using category, family, and service variant language.
@@ -207,14 +207,14 @@ Move Catalog Presets into `features/catalog-presets`, backed by generated admin 
 
 ## Acceptance criteria
 
-- [ ] `/catalog-presets` renders a searchable, paginated Catalog Presets table.
-- [ ] Create and update dialogs use generated admin CatalogPreset mutations.
-- [ ] The tree editor supports `PresetCategory -> PresetFamily -> PresetVariant` editing.
-- [ ] UI copy uses `Catalog Presets`, `قالب خدمات`, category, family, and service variant.
-- [ ] Mutation dialogs require a reason.
-- [ ] Live-data mode shows production-data warning copy before CatalogPreset mutations.
-- [ ] Successful mutations invalidate generated CatalogPreset query keys.
-- [ ] API, generated client, and UI tests cover create/update/list behavior.
+- [x] `/catalog-presets` renders a searchable, paginated Catalog Presets table.
+- [x] Create and update dialogs use generated admin CatalogPreset mutations.
+- [x] The tree editor supports `PresetCategory -> PresetFamily -> PresetVariant` editing.
+- [x] UI copy uses `Catalog Presets`, `قالب خدمات`, category, family, and service variant.
+- [x] Mutation dialogs require a reason.
+- [x] Live-data mode shows production-data warning copy before CatalogPreset mutations.
+- [x] Successful mutations invalidate generated CatalogPreset query keys.
+- [x] API, generated client, and UI tests cover create/update/list behavior.
 
 ## Blocked by
 

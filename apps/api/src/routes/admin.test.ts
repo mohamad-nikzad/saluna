@@ -45,12 +45,15 @@ vi.mock('@repo/database/members', () => ({
 import { auth as authServer } from '@repo/auth/server'
 import {
   createAdminAuditEvent,
+  createAdminCatalogPreset,
   createAdminInternalNote,
   getAdminSalon,
   getPlatformAdminForUser,
   getPlatformAdminMe,
+  listAdminCatalogPresets,
   listAdminInternalNotes,
   listAdminSalons,
+  updateAdminCatalogPreset,
   updateAdminSalonStatus,
 } from '@repo/database/admin'
 
@@ -62,6 +65,45 @@ const { app } = await import('../app')
 
 const authHeaders = { Authorization: 'Bearer testtoken' }
 const salonId = '11111111-1111-4111-8111-111111111111'
+const presetId = '22222222-2222-4222-8222-222222222222'
+const presetTree = [
+  {
+    name: 'مو',
+    families: [
+      {
+        name: 'رنگ',
+        variants: [
+          {
+            name: 'رنگ ریشه',
+            duration: 30,
+            price: 500000,
+            color: 'teal',
+            description: null,
+          },
+        ],
+      },
+    ],
+  },
+]
+const parsedPresetTree = [
+  {
+    name: 'مو',
+    families: [
+      {
+        name: 'رنگ',
+        variants: [
+          {
+            name: 'رنگ ریشه',
+            duration: 30,
+            price: 500000,
+            color: 'rose',
+            description: undefined,
+          },
+        ],
+      },
+    ],
+  },
+]
 
 beforeEach(() => {
   vi.resetAllMocks()
@@ -270,5 +312,128 @@ describe('admin runtime data source', () => {
     expect(await res.json()).toEqual({ error: 'سالن یافت نشد' })
     expect(createAdminInternalNote).not.toHaveBeenCalled()
     expect(createAdminAuditEvent).not.toHaveBeenCalled()
+  })
+
+  it('lists admin CatalogPreset records', async () => {
+    vi.mocked(listAdminCatalogPresets).mockResolvedValue({
+      items: [
+        {
+          id: presetId,
+          slug: 'hair-services',
+          name: 'قالب خدمات مو',
+          tree: presetTree,
+        },
+      ],
+      pagination: { page: 1, pageSize: 20, total: 1 },
+    } as never)
+
+    const res = await app.request(
+      '/api/v1/admin/catalog-presets?page=1&pageSize=20&search=hair',
+      { headers: authHeaders },
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      items: [{ id: presetId, slug: 'hair-services' }],
+      pagination: { total: 1 },
+    })
+    expect(listAdminCatalogPresets).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      search: 'hair',
+    })
+  })
+
+  it('creates a CatalogPreset with a reason and writes audit event', async () => {
+    vi.mocked(createAdminCatalogPreset).mockResolvedValue({
+      id: presetId,
+      slug: 'hair-services',
+      name: 'قالب خدمات مو',
+      tree: presetTree,
+    } as never)
+    vi.mocked(createAdminAuditEvent).mockResolvedValue({
+      id: 'audit-catalog-create',
+    } as never)
+
+    const res = await app.request('/api/v1/admin/catalog-presets', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slug: 'hair-services',
+        name: 'قالب خدمات مو',
+        description: null,
+        tree: presetTree,
+        sortOrder: 1,
+        isActive: true,
+        reason: 'Add canonical hair service variants',
+      }),
+    })
+
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({
+      preset: { id: presetId, slug: 'hair-services' },
+    })
+    expect(createAdminCatalogPreset).toHaveBeenCalledWith({
+      slug: 'hair-services',
+      name: 'قالب خدمات مو',
+      description: null,
+      tree: parsedPresetTree,
+      sortOrder: 1,
+      isActive: true,
+      reason: 'Add canonical hair service variants',
+    })
+    expect(createAdminAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'catalog_preset.create',
+        targetType: 'catalog_preset',
+        targetId: presetId,
+        reason: 'Add canonical hair service variants',
+      }),
+    )
+  })
+
+  it('updates a CatalogPreset with a reason and writes audit event', async () => {
+    vi.mocked(updateAdminCatalogPreset).mockResolvedValue({
+      id: presetId,
+      slug: 'hair-services',
+      name: 'قالب خدمات مو و ابرو',
+      tree: presetTree,
+      isActive: false,
+    } as never)
+    vi.mocked(createAdminAuditEvent).mockResolvedValue({
+      id: 'audit-catalog-update',
+    } as never)
+
+    const res = await app.request(
+      `/api/v1/admin/catalog-presets/${presetId}`,
+      {
+        method: 'PATCH',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'قالب خدمات مو و ابرو',
+          isActive: false,
+          reason: 'Archive old service variant language',
+        }),
+      },
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      preset: { id: presetId, name: 'قالب خدمات مو و ابرو' },
+    })
+    expect(updateAdminCatalogPreset).toHaveBeenCalledWith({
+      id: presetId,
+      name: 'قالب خدمات مو و ابرو',
+      isActive: false,
+      reason: 'Archive old service variant language',
+    })
+    expect(createAdminAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'catalog_preset.update',
+        targetType: 'catalog_preset',
+        targetId: presetId,
+        reason: 'Archive old service variant language',
+      }),
+    )
   })
 })
