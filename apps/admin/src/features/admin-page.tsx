@@ -4,7 +4,6 @@ import {
   getApiV1AdminCatalogPresetsQueryKey,
   getApiV1AdminMessagingHealthOptions,
   getApiV1AdminNotificationsDeliveriesOptions,
-  getApiV1AdminOverviewOptions,
   getApiV1AdminOverviewQueryKey,
   getApiV1AdminPlatformAdminsOptions,
   getApiV1AdminPlatformAdminsQueryKey,
@@ -36,12 +35,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { UseQueryOptions } from '@tanstack/react-query'
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  Activity,
-  Archive,
   BellRing,
   CircleAlert,
   Eye,
-  FileClock,
   LockKeyhole,
   MessageSquareWarning,
   Plus,
@@ -57,7 +53,6 @@ import { DataTableToolbar } from '#/components/data-table/data-table-toolbar'
 import { AdminPageHeader } from '#/components/layout/admin-page-header'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import {
   Sheet,
@@ -72,7 +67,6 @@ import { useTableUrlState } from '#/hooks/use-table-url-state'
 import { cn } from '#/lib/utils'
 
 type AdminPageId =
-  | 'overview'
   | 'salons'
   | 'users'
   | 'catalog-presets'
@@ -112,11 +106,6 @@ type PageConfig = {
 }
 
 const pageConfig: Record<AdminPageId, PageConfig> = {
-  overview: {
-    title: 'نمای کلی',
-    description:
-      'وضعیت پلتفرم، سلامت سالن‌ها، ارسال‌های ناموفق و آخرین رویدادهای حاکمیتی.',
-  },
   salons: {
     title: 'سالن‌ها',
     description: 'بررسی سالن‌ها، یادداشت‌های داخلی و کنترل وضعیت پلتفرمی.',
@@ -165,7 +154,6 @@ export function AdminPage({ pageId }: { pageId: AdminPageId }) {
         description={config.description}
         actions={<HeaderAction pageId={pageId} />}
       />
-      {pageId === 'overview' ? <OverviewScreen /> : null}
       {pageId === 'salons' ? <SalonsScreen /> : null}
       {pageId === 'users' ? <UsersScreen /> : null}
       {pageId === 'catalog-presets' ? <CatalogPresetsScreen /> : null}
@@ -182,98 +170,6 @@ function HeaderAction({ pageId }: { pageId: AdminPageId }) {
   if (pageId === 'catalog-presets') return null
   if (pageId === 'platform-admins') return null
   return null
-}
-
-function OverviewScreen() {
-  const overviewQuery = useQuery(getApiV1AdminOverviewOptions())
-  const data = overviewQuery.data
-  const cards = [
-    {
-      label: 'سالن‌های فعال',
-      value: data?.salonsByStatus.active ?? 0,
-      icon: Activity,
-      tone: 'success',
-      hint: `${data?.salonsByStatus.suspended ?? 0} تعلیق‌شده`,
-    },
-    {
-      label: 'سالن‌های آرشیوشده',
-      value: data?.salonsByStatus.archived ?? 0,
-      icon: Archive,
-      tone: 'default',
-      hint: 'خارج از جریان کاری سالن‌ها',
-    },
-    {
-      label: 'ارسال‌های ناموفق',
-      value: data?.failedDeliveries ?? 0,
-      icon: CircleAlert,
-      tone: 'warning',
-      hint: 'خطاهای ارسال اعلان',
-    },
-    {
-      label: 'رویدادهای ممیزی اخیر',
-      value: data?.recentAuditEvents.length ?? 0,
-      icon: ShieldCheck,
-      tone: 'default',
-      hint: 'آخرین فعالیت‌های حاکمیتی',
-    },
-  ] as const
-
-  if (overviewQuery.isLoading) return <ScreenSkeleton />
-
-  return (
-    <div className="space-y-5">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => {
-          const Icon = card.icon
-          return (
-            <Card key={card.label} className="min-h-36">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle>{card.label}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground/85" />
-              </CardHeader>
-              <CardContent className="flex min-h-20 flex-col items-end justify-end">
-                <div className="text-4xl font-semibold leading-none tracking-normal">
-                  {card.value}
-                </div>
-                <Badge className="mt-3" variant={card.tone}>
-                  {card.hint}
-                </Badge>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </section>
-
-      <section className="grid min-h-32 gap-4 lg:grid-cols-2">
-        <Panel
-          title="ارائه‌دهنده‌های پیام‌رسانی"
-          icon={<MessageSquareWarning className="h-4 w-4" />}
-        >
-          <CompactRows
-            rows={(data?.messagingAccounts ?? []).map((row) => ({
-              label: `${text(row.provider)} ${truthy(row.enabled) ? 'فعال' : 'غیرفعال'}`,
-              value: String(number(row.value)),
-              badge: truthy(row.enabled) ? 'فعال' : 'غیرفعال',
-            }))}
-            empty="هنوز حساب پیام‌رسانی متصل نشده است."
-          />
-        </Panel>
-        <Panel
-          title="رویدادهای ممیزی اخیر"
-          icon={<FileClock className="h-4 w-4" />}
-        >
-          <CompactRows
-            rows={(data?.recentAuditEvents ?? []).map((row) => ({
-              label: text(row.action),
-              value: text(row.targetType),
-              badge: formatDate(row.createdAt),
-            }))}
-            empty="هنوز تغییری توسط ادمین ثبت نشده است."
-          />
-        </Panel>
-      </section>
-    </div>
-  )
 }
 
 function SalonsScreen() {

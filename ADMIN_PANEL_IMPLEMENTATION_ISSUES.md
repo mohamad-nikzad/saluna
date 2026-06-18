@@ -21,7 +21,7 @@ Triage label for all issues: `needs-triage`
    - **Blocked by**: ADMIN-001
    - **User stories covered**: Admin pages use generated contract-backed data access instead of handwritten fetch wrappers.
 
-4. **ADMIN-004: Rebuild Overview as a feature slice**
+4. **ADMIN-004: Rebuild Overview as a feature slice** ✅
    - **Type**: AFK
    - **Blocked by**: ADMIN-001, ADMIN-003
    - **User stories covered**: Platform admin can land on `/overview` and see real platform metrics plus recent audit activity.
@@ -136,12 +136,12 @@ Move the Overview screen out of the monolithic admin page into `features/overvie
 
 ## Acceptance criteria
 
-- [ ] `/overview` renders from `features/overview`.
-- [ ] Overview data comes from the generated admin overview query.
-- [ ] Metrics use real Saluna admin API data only.
-- [ ] Recent audit activity is visible and links or references target data where available.
-- [ ] Loading, empty, and error states are handled.
-- [ ] Admin typecheck, lint, and tests cover the overview feature.
+- [x] `/overview` renders from `features/overview`.
+- [x] Overview data comes from the generated admin overview query.
+- [x] Metrics use real Saluna admin API data only.
+- [x] Recent audit activity is visible and links or references target data where available.
+- [x] Loading, empty, and error states are handled.
+- [x] Admin typecheck, lint, and tests cover the overview feature.
 
 ## Blocked by
 
