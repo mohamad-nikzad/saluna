@@ -33,6 +33,7 @@ function env(overrides: Partial<Env> = {}): Env {
     AUTH_OTP_BYPASS_ENABLED: false,
     AUTH_OTP_BYPASS_CODE: '123456',
     PLATFORM_ADMIN_BOOTSTRAP_PHONES: [],
+    ADMIN_DATA_SOURCE: 'local',
     ...overrides,
   }
 }

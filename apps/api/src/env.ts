@@ -89,6 +89,7 @@ const envSchema = z
           .map((s) => s.trim())
           .filter(Boolean),
       ),
+    ADMIN_DATA_SOURCE: z.enum(['local', 'live']).default('local'),
   })
   .superRefine((env, ctx) => {
     if (env.TELEGRAM_ENABLED) {

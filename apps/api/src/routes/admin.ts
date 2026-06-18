@@ -28,6 +28,7 @@ import {
 } from '@repo/database/admin'
 import { presetTreeSchema } from '@repo/salon-core/forms/catalog-preset'
 import type { AppEnv } from '../factory'
+import { getEnv } from '../env'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { error, ok, created } from '../lib/responses'
 import { zValidator } from '../lib/validate'
@@ -52,6 +53,7 @@ const reasonSchema = z.string().trim().min(3).max(500)
 const statusBodySchema = z.object({
   status: z.enum(['active', 'suspended', 'archived']),
   reason: reasonSchema,
+  liveConfirmation: z.string().trim().optional(),
 })
 
 const noteBodySchema = z.object({
@@ -85,15 +87,32 @@ const platformAdminCreateSchema = z.object({
   role: platformRoleSchema,
   active: z.boolean().optional(),
   reason: reasonSchema,
+  liveConfirmation: z.string().trim().optional(),
 })
 
 const platformAdminUpdateSchema = z.object({
   role: platformRoleSchema.optional(),
   active: z.boolean().optional(),
   reason: reasonSchema,
+  liveConfirmation: z.string().trim().optional(),
 })
 
-function auditMeta(c: { req: { header: (name: string) => string | undefined } }) {
+function runtime() {
+  return { dataSource: getEnv().ADMIN_DATA_SOURCE }
+}
+
+function requireLiveConfirmation(
+  c: Parameters<typeof error>[0],
+  confirmation: string | undefined,
+) {
+  if (getEnv().ADMIN_DATA_SOURCE !== 'live') return null
+  if (confirmation === 'LIVE') return null
+  return error(c, 'برای تغییر داده زنده عبارت LIVE را وارد کنید', 400)
+}
+
+function auditMeta(c: {
+  req: { header: (name: string) => string | undefined }
+}) {
   return {
     ip:
       c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -135,7 +154,10 @@ export const adminRoute = new Hono<AppEnv>()
   .get('/auth/me', async (c) => {
     const me = await getPlatformAdminMe(c.var.platformAdmin.userId)
     if (!me) return error(c, 'دسترسی غیرمجاز', 403)
-    return ok(c, { user: me })
+    return ok(c, { user: me, runtime: runtime() })
+  })
+  .get('/runtime', async (c) => {
+    return ok(c, runtime())
   })
   .get('/overview', async (c) => ok(c, await getAdminOverview()))
   .get(
@@ -162,7 +184,15 @@ export const adminRoute = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param')
       const body = c.req.valid('json')
-      const updated = await updateAdminSalonStatus({ salonId: id, status: body.status })
+      const liveConfirmationError = requireLiveConfirmation(
+        c,
+        body.liveConfirmation,
+      )
+      if (liveConfirmationError) return liveConfirmationError
+      const updated = await updateAdminSalonStatus({
+        salonId: id,
+        status: body.status,
+      })
       if (!updated) return error(c, 'سالن یافت نشد', 404)
       await writeAudit({
         actorUserId: c.var.platformAdmin.userId,
@@ -184,7 +214,12 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      return ok(c, { notes: await listAdminInternalNotes({ subjectType: 'salon', subjectId: id }) })
+      return ok(c, {
+        notes: await listAdminInternalNotes({
+          subjectType: 'salon',
+          subjectId: id,
+        }),
+      })
     },
   )
   .post(
@@ -237,7 +272,12 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      return ok(c, { notes: await listAdminInternalNotes({ subjectType: 'user', subjectId: id }) })
+      return ok(c, {
+        notes: await listAdminInternalNotes({
+          subjectType: 'user',
+          subjectId: id,
+        }),
+      })
     },
   )
   .post(
@@ -325,19 +365,22 @@ export const adminRoute = new Hono<AppEnv>()
     '/notifications/deliveries',
     requirePlatformAdmin('view_messaging_health'),
     zValidator('query', listQuerySchema),
-    async (c) => ok(c, await listAdminNotificationDeliveries(c.req.valid('query'))),
+    async (c) =>
+      ok(c, await listAdminNotificationDeliveries(c.req.valid('query'))),
   )
   .get(
     '/support/appointments',
     requirePlatformAdmin('view_support_lookup'),
     zValidator('query', listQuerySchema),
-    async (c) => ok(c, await listAdminSupportAppointments(c.req.valid('query'))),
+    async (c) =>
+      ok(c, await listAdminSupportAppointments(c.req.valid('query'))),
   )
   .get(
     '/support/appointment-requests',
     requirePlatformAdmin('view_support_lookup'),
     zValidator('query', listQuerySchema),
-    async (c) => ok(c, await listAdminSupportAppointmentRequests(c.req.valid('query'))),
+    async (c) =>
+      ok(c, await listAdminSupportAppointmentRequests(c.req.valid('query'))),
   )
   .get(
     '/audit-log',
@@ -357,6 +400,11 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('json', platformAdminCreateSchema),
     async (c) => {
       const body = c.req.valid('json')
+      const liveConfirmationError = requireLiveConfirmation(
+        c,
+        body.liveConfirmation,
+      )
+      if (liveConfirmationError) return liveConfirmationError
       const admin = await upsertPlatformAdmin({
         userId: body.userId,
         role: body.role,
@@ -370,7 +418,11 @@ export const adminRoute = new Hono<AppEnv>()
         targetType: 'platform_admin',
         targetId: admin.id,
         reason: body.reason,
-        metadata: { userId: admin.userId, role: admin.role, active: admin.active },
+        metadata: {
+          userId: admin.userId,
+          role: admin.role,
+          active: admin.active,
+        },
         request: auditMeta(c),
       })
       return created(c, { admin })
@@ -384,6 +436,11 @@ export const adminRoute = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param')
       const body = c.req.valid('json')
+      const liveConfirmationError = requireLiveConfirmation(
+        c,
+        body.liveConfirmation,
+      )
+      if (liveConfirmationError) return liveConfirmationError
       const target = await getPlatformAdminById(id)
       if (!target) return error(c, 'ادمین پلتفرم یافت نشد', 404)
       const ownerCount = await countActivePlatformOwners()
@@ -409,7 +466,11 @@ export const adminRoute = new Hono<AppEnv>()
         targetType: 'platform_admin',
         targetId: admin.id,
         reason: body.reason,
-        metadata: { userId: admin.userId, role: admin.role, active: admin.active },
+        metadata: {
+          userId: admin.userId,
+          role: admin.role,
+          active: admin.active,
+        },
         request: auditMeta(c),
       })
       return ok(c, { admin })

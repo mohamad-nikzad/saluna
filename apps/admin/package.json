@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite dev --port 3003",
     "dev:local": "vite dev --port 3003",
+    "dev:local-data": "vite dev --port 3003",
+    "dev:live-data": "vite dev --port 3003",
     "build": "vite build",
     "preview": "vite preview --port 3003",
     "lint": "eslint .",

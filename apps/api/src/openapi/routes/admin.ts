@@ -1,5 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
+import {
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
 import {
   adminAuditLogResponseSchema,
   adminAuditQuerySchema,
@@ -18,6 +22,7 @@ import {
   adminPlatformAdminPatchBodySchema,
   adminPlatformAdminResponseSchema,
   adminPlatformAdminsResponseSchema,
+  adminRuntimeResponseSchema,
   adminSalonDetailResponseSchema,
   adminSalonsResponseSchema,
   adminStatusUpdateBodySchema,
@@ -36,7 +41,8 @@ const unauthorizedResponse = {
 } as const
 
 const forbiddenResponse = {
-  description: 'Authenticated user is not an active platform admin or lacks permission',
+  description:
+    'Authenticated user is not an active platform admin or lacks permission',
   content: { 'application/json': { schema: apiErrorSchema } },
 } as const
 
@@ -81,17 +87,74 @@ function getRoute(
   })
 }
 
-export const getAdminMeRoute = getRoute('/auth/me', 'Get current platform admin', adminUserMeResponseSchema)
-export const getAdminOverviewRoute = getRoute('/overview', 'Get admin overview metrics', adminOverviewResponseSchema)
-export const listAdminSalonsRoute = getRoute('/salons', 'List salons for platform admin', adminSalonsResponseSchema, adminListQuerySchema)
-export const listAdminUsersRoute = getRoute('/users', 'List users for platform admin', adminUsersResponseSchema, adminListQuerySchema)
-export const listAdminCatalogPresetsRoute = getRoute('/catalog-presets', 'List catalog presets for platform admin', adminCatalogPresetsResponseSchema, adminListQuerySchema)
-export const getAdminMessagingHealthRoute = getRoute('/messaging/health', 'Get messaging health', adminMessagingHealthResponseSchema)
-export const listAdminNotificationDeliveriesRoute = getRoute('/notifications/deliveries', 'List notification deliveries', adminNotificationDeliveriesResponseSchema, adminListQuerySchema)
-export const listAdminSupportAppointmentsRoute = getRoute('/support/appointments', 'Search support appointments', adminSupportAppointmentsResponseSchema, adminListQuerySchema)
-export const listAdminSupportAppointmentRequestsRoute = getRoute('/support/appointment-requests', 'Search support appointment requests', adminSupportAppointmentRequestsResponseSchema, adminListQuerySchema)
-export const listAdminAuditLogRoute = getRoute('/audit-log', 'List admin audit events', adminAuditLogResponseSchema, adminAuditQuerySchema)
-export const listPlatformAdminsRoute = getRoute('/platform-admins', 'List platform admins', adminPlatformAdminsResponseSchema, adminListQuerySchema)
+export const getAdminMeRoute = getRoute(
+  '/auth/me',
+  'Get current platform admin',
+  adminUserMeResponseSchema,
+)
+export const getAdminRuntimeRoute = getRoute(
+  '/runtime',
+  'Get admin runtime metadata',
+  adminRuntimeResponseSchema,
+)
+export const getAdminOverviewRoute = getRoute(
+  '/overview',
+  'Get admin overview metrics',
+  adminOverviewResponseSchema,
+)
+export const listAdminSalonsRoute = getRoute(
+  '/salons',
+  'List salons for platform admin',
+  adminSalonsResponseSchema,
+  adminListQuerySchema,
+)
+export const listAdminUsersRoute = getRoute(
+  '/users',
+  'List users for platform admin',
+  adminUsersResponseSchema,
+  adminListQuerySchema,
+)
+export const listAdminCatalogPresetsRoute = getRoute(
+  '/catalog-presets',
+  'List catalog presets for platform admin',
+  adminCatalogPresetsResponseSchema,
+  adminListQuerySchema,
+)
+export const getAdminMessagingHealthRoute = getRoute(
+  '/messaging/health',
+  'Get messaging health',
+  adminMessagingHealthResponseSchema,
+)
+export const listAdminNotificationDeliveriesRoute = getRoute(
+  '/notifications/deliveries',
+  'List notification deliveries',
+  adminNotificationDeliveriesResponseSchema,
+  adminListQuerySchema,
+)
+export const listAdminSupportAppointmentsRoute = getRoute(
+  '/support/appointments',
+  'Search support appointments',
+  adminSupportAppointmentsResponseSchema,
+  adminListQuerySchema,
+)
+export const listAdminSupportAppointmentRequestsRoute = getRoute(
+  '/support/appointment-requests',
+  'Search support appointment requests',
+  adminSupportAppointmentRequestsResponseSchema,
+  adminListQuerySchema,
+)
+export const listAdminAuditLogRoute = getRoute(
+  '/audit-log',
+  'List admin audit events',
+  adminAuditLogResponseSchema,
+  adminAuditQuerySchema,
+)
+export const listPlatformAdminsRoute = getRoute(
+  '/platform-admins',
+  'List platform admins',
+  adminPlatformAdminsResponseSchema,
+  adminListQuerySchema,
+)
 
 export const getAdminSalonRoute = createRoute({
   method: 'get',
@@ -103,7 +166,9 @@ export const getAdminSalonRoute = createRoute({
   responses: {
     200: {
       description: 'Salon detail',
-      content: { 'application/json': { schema: adminSalonDetailResponseSchema } },
+      content: {
+        'application/json': { schema: adminSalonDetailResponseSchema },
+      },
     },
     401: unauthorizedResponse,
     403: forbiddenResponse,
@@ -127,7 +192,11 @@ export const updateAdminSalonStatusRoute = createRoute({
   responses: {
     200: {
       description: 'Updated salon status',
-      content: { 'application/json': { schema: adminSalonDetailResponseSchema.partial() } },
+      content: {
+        'application/json': {
+          schema: adminSalonDetailResponseSchema.partial(),
+        },
+      },
     },
     400: validationResponse,
     401: unauthorizedResponse,
@@ -187,7 +256,9 @@ export const getAdminUserRoute = createRoute({
   responses: {
     200: {
       description: 'User detail',
-      content: { 'application/json': { schema: adminUserDetailResponseSchema } },
+      content: {
+        'application/json': { schema: adminUserDetailResponseSchema },
+      },
     },
     401: unauthorizedResponse,
     403: forbiddenResponse,
@@ -251,7 +322,9 @@ export const createAdminCatalogPresetRoute = createRoute({
   responses: {
     201: {
       description: 'Created catalog preset',
-      content: { 'application/json': { schema: adminCatalogPresetResponseSchema } },
+      content: {
+        'application/json': { schema: adminCatalogPresetResponseSchema },
+      },
     },
     400: validationResponse,
     401: unauthorizedResponse,
@@ -269,13 +342,17 @@ export const updateAdminCatalogPresetRoute = createRoute({
     params: idParamSchema,
     body: {
       required: true,
-      content: { 'application/json': { schema: adminCatalogPresetPatchBodySchema } },
+      content: {
+        'application/json': { schema: adminCatalogPresetPatchBodySchema },
+      },
     },
   },
   responses: {
     200: {
       description: 'Updated catalog preset',
-      content: { 'application/json': { schema: adminCatalogPresetResponseSchema } },
+      content: {
+        'application/json': { schema: adminCatalogPresetResponseSchema },
+      },
     },
     400: validationResponse,
     401: unauthorizedResponse,
@@ -293,13 +370,17 @@ export const createPlatformAdminRoute = createRoute({
   request: {
     body: {
       required: true,
-      content: { 'application/json': { schema: adminPlatformAdminCreateBodySchema } },
+      content: {
+        'application/json': { schema: adminPlatformAdminCreateBodySchema },
+      },
     },
   },
   responses: {
     201: {
       description: 'Created or updated platform admin',
-      content: { 'application/json': { schema: adminPlatformAdminResponseSchema } },
+      content: {
+        'application/json': { schema: adminPlatformAdminResponseSchema },
+      },
     },
     400: validationResponse,
     401: unauthorizedResponse,
@@ -317,13 +398,17 @@ export const updatePlatformAdminRoute = createRoute({
     params: idParamSchema,
     body: {
       required: true,
-      content: { 'application/json': { schema: adminPlatformAdminPatchBodySchema } },
+      content: {
+        'application/json': { schema: adminPlatformAdminPatchBodySchema },
+      },
     },
   },
   responses: {
     200: {
       description: 'Updated platform admin',
-      content: { 'application/json': { schema: adminPlatformAdminResponseSchema } },
+      content: {
+        'application/json': { schema: adminPlatformAdminResponseSchema },
+      },
     },
     400: validationResponse,
     401: unauthorizedResponse,

@@ -64,10 +64,7 @@ import {
   updateSalonPublicSettingsRoute,
   updateSalonSlugRoute,
 } from './routes/salon-public-settings'
-import {
-  getOnboardingRoute,
-  updateOnboardingRoute,
-} from './routes/onboarding'
+import { getOnboardingRoute, updateOnboardingRoute } from './routes/onboarding'
 import { getDashboardRoute } from './routes/dashboard'
 import { getTodayRoute } from './routes/today'
 import {
@@ -117,6 +114,7 @@ import {
   getAdminMeRoute,
   getAdminMessagingHealthRoute,
   getAdminOverviewRoute,
+  getAdminRuntimeRoute,
   getAdminSalonRoute,
   getAdminUserRoute,
   listAdminAuditLogRoute,
@@ -172,15 +170,18 @@ const stubSummary = {
   openFollowUps: [],
 }
 
-const listClientsStub: RouteHandler<typeof listClientsRoute> = (c) => c.json({ clients: [] }, 200)
+const listClientsStub: RouteHandler<typeof listClientsRoute> = (c) =>
+  c.json({ clients: [] }, 200)
 
 const createClientStub: RouteHandler<typeof createClientRoute> = (c) =>
   c.json({ client: stubClient }, 200)
 
-const bulkCreateClientsStub: RouteHandler<typeof bulkCreateClientsRoute> = (c) =>
-  c.json({ created: [stubClient], skipped: [] }, 200)
+const bulkCreateClientsStub: RouteHandler<typeof bulkCreateClientsRoute> = (
+  c,
+) => c.json({ created: [stubClient], skipped: [] }, 200)
 
-const getClientStub: RouteHandler<typeof getClientRoute> = (c) => c.json({ client: stubClient }, 200)
+const getClientStub: RouteHandler<typeof getClientRoute> = (c) =>
+  c.json({ client: stubClient }, 200)
 
 const updateClientStub: RouteHandler<typeof updateClientRoute> = (c) =>
   c.json({ client: stubClient }, 200)
@@ -188,8 +189,9 @@ const updateClientStub: RouteHandler<typeof updateClientRoute> = (c) =>
 const getClientSummaryStub: RouteHandler<typeof getClientSummaryRoute> = (c) =>
   c.json(stubSummary, 200)
 
-const createClientFollowUpStub: RouteHandler<typeof createClientFollowUpRoute> = (c) =>
-  c.json({ followUp: stubFollowUp }, 200)
+const createClientFollowUpStub: RouteHandler<
+  typeof createClientFollowUpRoute
+> = (c) => c.json({ followUp: stubFollowUp }, 200)
 
 const stubStaffUser = {
   id: 'stub',
@@ -220,8 +222,9 @@ const createStaffStub: RouteHandler<typeof createStaffRoute> = (c) =>
 const updateStaffStub: RouteHandler<typeof updateStaffRoute> = (c) =>
   c.json({ staff: stubStaffUser }, 200)
 
-const updateStaffPasswordStub: RouteHandler<typeof updateStaffPasswordRoute> = (c) =>
-  c.json({ success: true as const }, 200)
+const updateStaffPasswordStub: RouteHandler<typeof updateStaffPasswordRoute> = (
+  c,
+) => c.json({ success: true as const }, 200)
 
 const deleteStaffStub: RouteHandler<typeof deleteStaffRoute> = (c) =>
   c.json({ success: true as const }, 200)
@@ -233,11 +236,13 @@ const getStaffBookingAvailabilityStub: RouteHandler<
 const getStaffScheduleStub: RouteHandler<typeof getStaffScheduleRoute> = (c) =>
   c.json({ schedule: [], businessHours: stubBusinessHours }, 200)
 
-const updateStaffScheduleStub: RouteHandler<typeof updateStaffScheduleRoute> = (c) =>
-  c.json({ schedule: [] }, 200)
+const updateStaffScheduleStub: RouteHandler<typeof updateStaffScheduleRoute> = (
+  c,
+) => c.json({ schedule: [] }, 200)
 
-const updateStaffServicesStub: RouteHandler<typeof updateStaffServicesRoute> = (c) =>
-  c.json({ staff: stubStaffUser }, 200)
+const updateStaffServicesStub: RouteHandler<typeof updateStaffServicesRoute> = (
+  c,
+) => c.json({ staff: stubStaffUser }, 200)
 
 const stubService = {
   id: 'stub',
@@ -324,8 +329,7 @@ const createServiceStub: RouteHandler<typeof createServiceRoute> = (c) =>
 
 const importStarterTemplatesStub: RouteHandler<
   typeof importStarterTemplatesRoute
-> = (c) =>
-  c.json({ categories: [], families: [], services: [] }, 200)
+> = (c) => c.json({ categories: [], families: [], services: [] }, 200)
 
 const getServiceStub: RouteHandler<typeof getServiceRoute> = (c) =>
   c.json({ service: stubService }, 200)
@@ -336,8 +340,9 @@ const updateServiceStub: RouteHandler<typeof updateServiceRoute> = (c) =>
 const getServiceAddonsStub: RouteHandler<typeof getServiceAddonsRoute> = (c) =>
   c.json({ addons: [] }, 200)
 
-const getComboComponentsStub: RouteHandler<typeof getComboComponentsRoute> = (c) =>
-  c.json({ combo: stubComboComponents }, 200)
+const getComboComponentsStub: RouteHandler<typeof getComboComponentsRoute> = (
+  c,
+) => c.json({ combo: stubComboComponents }, 200)
 
 const updateComboComponentsStub: RouteHandler<
   typeof updateComboComponentsRoute
@@ -355,29 +360,37 @@ const updateServiceCategoryStub: RouteHandler<
   typeof updateServiceCategoryRoute
 > = (c) => c.json({ category: stubServiceCategory }, 200)
 
-const listServiceFamiliesStub: RouteHandler<typeof listServiceFamiliesRoute> = (c) =>
-  c.json({ families: [] }, 200)
+const listServiceFamiliesStub: RouteHandler<typeof listServiceFamiliesRoute> = (
+  c,
+) => c.json({ families: [] }, 200)
 
-const createServiceFamilyStub: RouteHandler<typeof createServiceFamilyRoute> = (c) =>
-  c.json({ family: stubServiceFamily }, 200)
+const createServiceFamilyStub: RouteHandler<typeof createServiceFamilyRoute> = (
+  c,
+) => c.json({ family: stubServiceFamily }, 200)
 
-const updateServiceFamilyStub: RouteHandler<typeof updateServiceFamilyRoute> = (c) =>
-  c.json({ family: stubServiceFamily }, 200)
+const updateServiceFamilyStub: RouteHandler<typeof updateServiceFamilyRoute> = (
+  c,
+) => c.json({ family: stubServiceFamily }, 200)
 
-const listServiceAddonsStub: RouteHandler<typeof listServiceAddonsRoute> = (c) =>
-  c.json({ addons: [] }, 200)
+const listServiceAddonsStub: RouteHandler<typeof listServiceAddonsRoute> = (
+  c,
+) => c.json({ addons: [] }, 200)
 
-const createServiceAddonStub: RouteHandler<typeof createServiceAddonRoute> = (c) =>
-  c.json({ addon: stubServiceAddon }, 200)
+const createServiceAddonStub: RouteHandler<typeof createServiceAddonRoute> = (
+  c,
+) => c.json({ addon: stubServiceAddon }, 200)
 
-const updateServiceAddonStub: RouteHandler<typeof updateServiceAddonRoute> = (c) =>
-  c.json({ addon: stubServiceAddon }, 200)
+const updateServiceAddonStub: RouteHandler<typeof updateServiceAddonRoute> = (
+  c,
+) => c.json({ addon: stubServiceAddon }, 200)
 
-const listCatalogPresetsStub: RouteHandler<typeof listCatalogPresetsRoute> = (c) =>
-  c.json({ presets: [stubCatalogPreset] }, 200)
+const listCatalogPresetsStub: RouteHandler<typeof listCatalogPresetsRoute> = (
+  c,
+) => c.json({ presets: [stubCatalogPreset] }, 200)
 
-const applyCatalogPresetStub: RouteHandler<typeof applyCatalogPresetRoute> = (c) =>
-  c.json({ importedCategoryIds: [], importedVariantIds: [] }, 200)
+const applyCatalogPresetStub: RouteHandler<typeof applyCatalogPresetRoute> = (
+  c,
+) => c.json({ importedCategoryIds: [], importedVariantIds: [] }, 200)
 
 const adminListStub = {
   items: [],
@@ -394,25 +407,35 @@ const stubPlatformAdmin = {
 }
 
 const getAdminMeStub: RouteHandler<typeof getAdminMeRoute> = (c) =>
-  c.json({
-    user: {
-      userId: '00000000-0000-0000-0000-000000000000',
-      name: 'stub',
-      email: 'stub@example.com',
-      phoneNumber: null,
-      username: null,
-      role: 'platform_owner',
-      active: true,
+  c.json(
+    {
+      user: {
+        userId: '00000000-0000-0000-0000-000000000000',
+        name: 'stub',
+        email: 'stub@example.com',
+        phoneNumber: null,
+        username: null,
+        role: 'platform_owner',
+        active: true,
+      },
+      runtime: { dataSource: 'local' },
     },
-  }, 200)
+    200,
+  )
+
+const getAdminRuntimeStub: RouteHandler<typeof getAdminRuntimeRoute> = (c) =>
+  c.json({ dataSource: 'local' }, 200)
 
 const getAdminOverviewStub: RouteHandler<typeof getAdminOverviewRoute> = (c) =>
-  c.json({
-    salonsByStatus: { active: 0, suspended: 0, archived: 0 },
-    failedDeliveries: 0,
-    messagingAccounts: [],
-    recentAuditEvents: [],
-  }, 200)
+  c.json(
+    {
+      salonsByStatus: { active: 0, suspended: 0, archived: 0 },
+      failedDeliveries: 0,
+      messagingAccounts: [],
+      recentAuditEvents: [],
+    },
+    200,
+  )
 
 const listAdminSalonsStub: RouteHandler<typeof listAdminSalonsRoute> = (c) =>
   c.json(adminListStub, 200)
@@ -420,14 +443,17 @@ const listAdminSalonsStub: RouteHandler<typeof listAdminSalonsRoute> = (c) =>
 const getAdminSalonStub: RouteHandler<typeof getAdminSalonRoute> = (c) =>
   c.json({ salon: {}, members: [], stats: {} }, 200)
 
-const updateAdminSalonStatusStub: RouteHandler<typeof updateAdminSalonStatusRoute> = (c) =>
-  c.json({ salon: { salonId: 'stub', status: 'active' } }, 200)
+const updateAdminSalonStatusStub: RouteHandler<
+  typeof updateAdminSalonStatusRoute
+> = (c) => c.json({ salon: { salonId: 'stub', status: 'active' } }, 200)
 
-const listAdminSalonNotesStub: RouteHandler<typeof listAdminSalonNotesRoute> = (c) =>
-  c.json({ notes: [] }, 200)
+const listAdminSalonNotesStub: RouteHandler<typeof listAdminSalonNotesRoute> = (
+  c,
+) => c.json({ notes: [] }, 200)
 
-const createAdminSalonNoteStub: RouteHandler<typeof createAdminSalonNoteRoute> = (c) =>
-  c.json({ note: {} }, 201)
+const createAdminSalonNoteStub: RouteHandler<
+  typeof createAdminSalonNoteRoute
+> = (c) => c.json({ note: {} }, 201)
 
 const listAdminUsersStub: RouteHandler<typeof listAdminUsersRoute> = (c) =>
   c.json(adminListStub, 200)
@@ -435,22 +461,29 @@ const listAdminUsersStub: RouteHandler<typeof listAdminUsersRoute> = (c) =>
 const getAdminUserStub: RouteHandler<typeof getAdminUserRoute> = (c) =>
   c.json({ user: {}, memberships: [], messagingAccounts: [] }, 200)
 
-const listAdminUserNotesStub: RouteHandler<typeof listAdminUserNotesRoute> = (c) =>
-  c.json({ notes: [] }, 200)
+const listAdminUserNotesStub: RouteHandler<typeof listAdminUserNotesRoute> = (
+  c,
+) => c.json({ notes: [] }, 200)
 
-const createAdminUserNoteStub: RouteHandler<typeof createAdminUserNoteRoute> = (c) =>
-  c.json({ note: {} }, 201)
+const createAdminUserNoteStub: RouteHandler<typeof createAdminUserNoteRoute> = (
+  c,
+) => c.json({ note: {} }, 201)
 
-const listAdminCatalogPresetsStub: RouteHandler<typeof listAdminCatalogPresetsRoute> = (c) =>
-  c.json(adminListStub, 200)
+const listAdminCatalogPresetsStub: RouteHandler<
+  typeof listAdminCatalogPresetsRoute
+> = (c) => c.json(adminListStub, 200)
 
-const createAdminCatalogPresetStub: RouteHandler<typeof createAdminCatalogPresetRoute> = (c) =>
-  c.json({ preset: stubCatalogPreset }, 201)
+const createAdminCatalogPresetStub: RouteHandler<
+  typeof createAdminCatalogPresetRoute
+> = (c) => c.json({ preset: stubCatalogPreset }, 201)
 
-const updateAdminCatalogPresetStub: RouteHandler<typeof updateAdminCatalogPresetRoute> = (c) =>
-  c.json({ preset: stubCatalogPreset }, 200)
+const updateAdminCatalogPresetStub: RouteHandler<
+  typeof updateAdminCatalogPresetRoute
+> = (c) => c.json({ preset: stubCatalogPreset }, 200)
 
-const getAdminMessagingHealthStub: RouteHandler<typeof getAdminMessagingHealthRoute> = (c) =>
+const getAdminMessagingHealthStub: RouteHandler<
+  typeof getAdminMessagingHealthRoute
+> = (c) =>
   c.json({ accounts: [], failedNotifications: [], failedFollowUps: [] }, 200)
 
 const listAdminNotificationDeliveriesStub: RouteHandler<
@@ -465,17 +498,21 @@ const listAdminSupportAppointmentRequestsStub: RouteHandler<
   typeof listAdminSupportAppointmentRequestsRoute
 > = (c) => c.json(adminListStub, 200)
 
-const listAdminAuditLogStub: RouteHandler<typeof listAdminAuditLogRoute> = (c) =>
-  c.json(adminListStub, 200)
+const listAdminAuditLogStub: RouteHandler<typeof listAdminAuditLogRoute> = (
+  c,
+) => c.json(adminListStub, 200)
 
-const listPlatformAdminsStub: RouteHandler<typeof listPlatformAdminsRoute> = (c) =>
-  c.json(adminListStub, 200)
+const listPlatformAdminsStub: RouteHandler<typeof listPlatformAdminsRoute> = (
+  c,
+) => c.json(adminListStub, 200)
 
-const createPlatformAdminStub: RouteHandler<typeof createPlatformAdminRoute> = (c) =>
-  c.json({ admin: stubPlatformAdmin }, 201)
+const createPlatformAdminStub: RouteHandler<typeof createPlatformAdminRoute> = (
+  c,
+) => c.json({ admin: stubPlatformAdmin }, 201)
 
-const updatePlatformAdminStub: RouteHandler<typeof updatePlatformAdminRoute> = (c) =>
-  c.json({ admin: stubPlatformAdmin }, 200)
+const updatePlatformAdminStub: RouteHandler<typeof updatePlatformAdminRoute> = (
+  c,
+) => c.json({ admin: stubPlatformAdmin }, 200)
 
 const stubAppointment = {
   id: 'stub',
@@ -502,8 +539,9 @@ const stubAppointment = {
 const listAppointmentsStub: RouteHandler<typeof listAppointmentsRoute> = (c) =>
   c.json({ appointments: [] }, 200)
 
-const createAppointmentStub: RouteHandler<typeof createAppointmentRoute> = (c) =>
-  c.json({ appointment: stubAppointment }, 200)
+const createAppointmentStub: RouteHandler<typeof createAppointmentRoute> = (
+  c,
+) => c.json({ appointment: stubAppointment }, 200)
 
 const getAppointmentAvailabilityStub: RouteHandler<
   typeof getAppointmentAvailabilityRoute
@@ -512,11 +550,13 @@ const getAppointmentAvailabilityStub: RouteHandler<
 const getAppointmentStub: RouteHandler<typeof getAppointmentRoute> = (c) =>
   c.json({ appointment: stubAppointment }, 200)
 
-const updateAppointmentStub: RouteHandler<typeof updateAppointmentRoute> = (c) =>
-  c.json({ appointment: stubAppointment }, 200)
+const updateAppointmentStub: RouteHandler<typeof updateAppointmentRoute> = (
+  c,
+) => c.json({ appointment: stubAppointment }, 200)
 
-const deleteAppointmentStub: RouteHandler<typeof deleteAppointmentRoute> = (c) =>
-  c.json({ success: true as const }, 200)
+const deleteAppointmentStub: RouteHandler<typeof deleteAppointmentRoute> = (
+  c,
+) => c.json({ success: true as const }, 200)
 
 const completePlaceholderClientStub: RouteHandler<
   typeof completePlaceholderClientRoute
@@ -593,8 +633,9 @@ const stubManagerPublicSettings = {
   services: [] as Array<{ service: typeof stubService; visible: boolean }>,
 }
 
-const getBusinessSettingsStub: RouteHandler<typeof getBusinessSettingsRoute> = (c) =>
-  c.json({ settings: stubBusinessHours }, 200)
+const getBusinessSettingsStub: RouteHandler<typeof getBusinessSettingsRoute> = (
+  c,
+) => c.json({ settings: stubBusinessHours }, 200)
 
 const updateBusinessSettingsStub: RouteHandler<
   typeof updateBusinessSettingsRoute
@@ -603,8 +644,9 @@ const updateBusinessSettingsStub: RouteHandler<
 const getSalonPresenceStub: RouteHandler<typeof getSalonPresenceRoute> = (c) =>
   c.json({ presence: stubSalonPresence }, 200)
 
-const updateSalonPresenceStub: RouteHandler<typeof updateSalonPresenceRoute> = (c) =>
-  c.json({ presence: stubSalonPresence }, 200)
+const updateSalonPresenceStub: RouteHandler<typeof updateSalonPresenceRoute> = (
+  c,
+) => c.json({ presence: stubSalonPresence }, 200)
 
 const getSalonPublicSettingsStub: RouteHandler<
   typeof getSalonPublicSettingsRoute
@@ -731,7 +773,9 @@ const listMessagingAccountsStub: RouteHandler<
     200,
   )
 
-const createMessagingLinkStub: RouteHandler<typeof createMessagingLinkRoute> = (c) =>
+const createMessagingLinkStub: RouteHandler<typeof createMessagingLinkRoute> = (
+  c,
+) =>
   c.json(
     {
       deepLink: 'https://t.me/saluna_bot?start=stub',
@@ -761,8 +805,9 @@ const stubAppNotification = {
   createdAt: new Date().toISOString(),
 }
 
-const listNotificationsStub: RouteHandler<typeof listNotificationsRoute> = (c) =>
-  c.json({ notifications: [] }, 200)
+const listNotificationsStub: RouteHandler<typeof listNotificationsRoute> = (
+  c,
+) => c.json({ notifications: [] }, 200)
 
 const markAllNotificationsReadStub: RouteHandler<
   typeof markAllNotificationsReadRoute
@@ -772,8 +817,9 @@ const createNotificationTestStub: RouteHandler<
   typeof createNotificationTestRoute
 > = (c) => c.json({ notification: stubAppNotification }, 200)
 
-const markNotificationReadStub: RouteHandler<typeof markNotificationReadRoute> = (c) =>
-  c.json({ notification: stubAppNotification }, 200)
+const markNotificationReadStub: RouteHandler<
+  typeof markNotificationReadRoute
+> = (c) => c.json({ notification: stubAppNotification }, 200)
 
 const stubNotificationPreferences = {
   salonId: 'stub',
@@ -831,8 +877,9 @@ const stubPublicAppointmentRequestStatus = {
 const getPublicSalonStub: RouteHandler<typeof getPublicSalonRoute> = (c) =>
   c.json(stubPublicSalonView, 200)
 
-const getPublicAvailabilityStub: RouteHandler<typeof getPublicAvailabilityRoute> = (c) =>
-  c.json({ mode: 'day' as const, slots: [] }, 200)
+const getPublicAvailabilityStub: RouteHandler<
+  typeof getPublicAvailabilityRoute
+> = (c) => c.json({ mode: 'day' as const, slots: [] }, 200)
 
 const createPublicAppointmentRequestStub: RouteHandler<
   typeof createPublicAppointmentRequestRoute
@@ -855,6 +902,7 @@ export const contractApp = new OpenAPIHono()
     '/api/v1/admin',
     new OpenAPIHono()
       .openapi(getAdminMeRoute, getAdminMeStub)
+      .openapi(getAdminRuntimeRoute, getAdminRuntimeStub)
       .openapi(getAdminOverviewRoute, getAdminOverviewStub)
       .openapi(listAdminSalonsRoute, listAdminSalonsStub)
       .openapi(getAdminSalonRoute, getAdminSalonStub)
@@ -869,8 +917,14 @@ export const contractApp = new OpenAPIHono()
       .openapi(createAdminCatalogPresetRoute, createAdminCatalogPresetStub)
       .openapi(updateAdminCatalogPresetRoute, updateAdminCatalogPresetStub)
       .openapi(getAdminMessagingHealthRoute, getAdminMessagingHealthStub)
-      .openapi(listAdminNotificationDeliveriesRoute, listAdminNotificationDeliveriesStub)
-      .openapi(listAdminSupportAppointmentsRoute, listAdminSupportAppointmentsStub)
+      .openapi(
+        listAdminNotificationDeliveriesRoute,
+        listAdminNotificationDeliveriesStub,
+      )
+      .openapi(
+        listAdminSupportAppointmentsRoute,
+        listAdminSupportAppointmentsStub,
+      )
       .openapi(
         listAdminSupportAppointmentRequestsRoute,
         listAdminSupportAppointmentRequestsStub,
@@ -896,7 +950,10 @@ export const contractApp = new OpenAPIHono()
     new OpenAPIHono()
       .openapi(listStaffRoute, listStaffStub)
       .openapi(createStaffRoute, createStaffStub)
-      .openapi(getStaffBookingAvailabilityRoute, getStaffBookingAvailabilityStub)
+      .openapi(
+        getStaffBookingAvailabilityRoute,
+        getStaffBookingAvailabilityStub,
+      )
       .openapi(updateStaffRoute, updateStaffStub)
       .openapi(updateStaffPasswordRoute, updateStaffPasswordStub)
       .openapi(deleteStaffRoute, deleteStaffStub)
@@ -990,7 +1047,10 @@ export const contractApp = new OpenAPIHono()
     '/api/v1/dashboard',
     new OpenAPIHono().openapi(getDashboardRoute, getDashboardStub),
   )
-  .route('/api/v1/today', new OpenAPIHono().openapi(getTodayRoute, getTodayStub))
+  .route(
+    '/api/v1/today',
+    new OpenAPIHono().openapi(getTodayRoute, getTodayStub),
+  )
   .route(
     '/api/v1/retention',
     new OpenAPIHono()
@@ -1018,16 +1078,28 @@ export const contractApp = new OpenAPIHono()
     '/api/v1/notification-preferences',
     new OpenAPIHono()
       .openapi(getNotificationPreferencesRoute, getNotificationPreferencesStub)
-      .openapi(updateNotificationPreferencesRoute, updateNotificationPreferencesStub),
+      .openapi(
+        updateNotificationPreferencesRoute,
+        updateNotificationPreferencesStub,
+      ),
   )
   .route(
     '/api/v1/public',
     new OpenAPIHono()
       .openapi(getPublicSalonRoute, getPublicSalonStub)
       .openapi(getPublicAvailabilityRoute, getPublicAvailabilityStub)
-      .openapi(createPublicAppointmentRequestRoute, createPublicAppointmentRequestStub)
-      .openapi(getPublicAppointmentRequestRoute, getPublicAppointmentRequestStub)
-      .openapi(cancelPublicAppointmentRequestRoute, cancelPublicAppointmentRequestStub),
+      .openapi(
+        createPublicAppointmentRequestRoute,
+        createPublicAppointmentRequestStub,
+      )
+      .openapi(
+        getPublicAppointmentRequestRoute,
+        getPublicAppointmentRequestStub,
+      )
+      .openapi(
+        cancelPublicAppointmentRequestRoute,
+        cancelPublicAppointmentRequestStub,
+      ),
   )
 
 export const openApiDocumentConfig = {
@@ -1039,19 +1111,33 @@ export const openApiDocumentConfig = {
       'Tenant-facing Saluna API. Generated from Hono OpenAPI route definitions. ' +
       'This contract is expanded incrementally; admin, clients, staff, services catalog, appointments, appointment-requests, settings, salon-profile, salon-public-settings, onboarding, dashboard, today, retention, messaging, notifications, notification-preferences, and public booking route groups are documented.',
   },
-  servers: [{ url: '', description: 'Saluna API (paths include /api/v1 prefix)' }],
+  servers: [
+    { url: '', description: 'Saluna API (paths include /api/v1 prefix)' },
+  ],
   tags: [
     { name: 'Clients', description: 'Salon client CRUD and follow-ups' },
-    { name: 'Staff', description: 'Staff roster, schedules, and service assignments' },
-    { name: 'Services', description: 'Salon services, combo packages, and starter imports' },
+    {
+      name: 'Staff',
+      description: 'Staff roster, schedules, and service assignments',
+    },
+    {
+      name: 'Services',
+      description: 'Salon services, combo packages, and starter imports',
+    },
     {
       name: 'Service categories',
       description: 'Top-level service catalog sections',
     },
-    { name: 'Service families', description: 'Grouped services within a category' },
+    {
+      name: 'Service families',
+      description: 'Grouped services within a category',
+    },
     { name: 'Service addons', description: 'Optional booking add-ons' },
     { name: 'Catalog presets', description: 'Starter catalog templates' },
-    { name: 'Appointments', description: 'Calendar appointments and availability' },
+    {
+      name: 'Appointments',
+      description: 'Calendar appointments and availability',
+    },
     {
       name: 'Appointment requests',
       description: 'Public booking request inbox (approve / reject)',
@@ -1095,7 +1181,8 @@ export const openApiDocumentConfig = {
     },
     {
       name: 'Public booking',
-      description: 'Unauthenticated public salon page and appointment request flows',
+      description:
+        'Unauthenticated public salon page and appointment request flows',
     },
     {
       name: 'Admin',
@@ -1113,7 +1200,8 @@ export const openApiDocumentConfig = {
         type: 'apiKey' as const,
         in: 'cookie' as const,
         name: 'better-auth.session_token',
-        description: 'Better Auth session cookie (PWA uses credentials: include)',
+        description:
+          'Better Auth session cookie (PWA uses credentials: include)',
       },
     },
   },

@@ -17,6 +17,7 @@ function env(overrides: Partial<Env> = {}): Env {
     AUTH_OTP_BYPASS_ENABLED: false,
     AUTH_OTP_BYPASS_CODE: '123456',
     PLATFORM_ADMIN_BOOTSTRAP_PHONES: [],
+    ADMIN_DATA_SOURCE: 'local',
     ...overrides,
   }
 }
@@ -100,5 +101,34 @@ describe('env SMS delivery config', () => {
       '09121111111',
       '09122222222',
     ])
+  })
+
+  it('defaults admin data source to local', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('DATABASE_URL', 'postgres://stub')
+
+    const { getEnv } = await import('./env')
+
+    expect(getEnv().ADMIN_DATA_SOURCE).toBe('local')
+  })
+
+  it('parses live admin data source explicitly', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('DATABASE_URL', 'postgres://stub')
+    vi.stubEnv('ADMIN_DATA_SOURCE', 'live')
+
+    const { getEnv } = await import('./env')
+
+    expect(getEnv().ADMIN_DATA_SOURCE).toBe('live')
+  })
+
+  it('rejects unknown admin data source values', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('DATABASE_URL', 'postgres://stub')
+    vi.stubEnv('ADMIN_DATA_SOURCE', 'production')
+
+    const { getEnv } = await import('./env')
+
+    expect(() => getEnv()).toThrow(/ADMIN_DATA_SOURCE/)
   })
 })

@@ -141,11 +141,19 @@
             "additionalProperties": {
               "nullable": true
             }
+          },
+          "runtime": {
+            "type": "object",
+            "properties": {
+              "dataSource": {
+                "type": "string",
+                "enum": ["local", "live"]
+              }
+            },
+            "required": ["dataSource"]
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user", "runtime"]
       },
       "PlatformRole": {
         "type": "string",
@@ -168,9 +176,17 @@
             "example": "duplicate-phone"
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
+      },
+      "AdminRuntimeResponse": {
+        "type": "object",
+        "properties": {
+          "dataSource": {
+            "type": "string",
+            "enum": ["local", "live"]
+          }
+        },
+        "required": ["dataSource"]
       },
       "AdminOverviewResponse": {
         "type": "object",
@@ -188,11 +204,7 @@
                 "type": "integer"
               }
             },
-            "required": [
-              "active",
-              "suspended",
-              "archived"
-            ]
+            "required": ["active", "suspended", "archived"]
           },
           "failedDeliveries": {
             "type": "integer"
@@ -239,10 +251,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminPagination": {
         "type": "object",
@@ -257,11 +266,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "page",
-          "pageSize",
-          "total"
-        ]
+        "required": ["page", "pageSize", "total"]
       },
       "AdminSalonDetailResponse": {
         "type": "object",
@@ -288,11 +293,7 @@
             }
           }
         },
-        "required": [
-          "salon",
-          "members",
-          "stats"
-        ]
+        "required": ["salon", "members", "stats"]
       },
       "AdminSalonStatusUpdateRequest": {
         "type": "object",
@@ -305,20 +306,16 @@
             "minLength": 3,
             "maxLength": 500,
             "example": "درخواست پشتیبانی داخلی"
+          },
+          "liveConfirmation": {
+            "type": "string"
           }
         },
-        "required": [
-          "status",
-          "reason"
-        ]
+        "required": ["status", "reason"]
       },
       "AdminSalonStatus": {
         "type": "string",
-        "enum": [
-          "active",
-          "suspended",
-          "archived"
-        ]
+        "enum": ["active", "suspended", "archived"]
       },
       "AdminNotesResponse": {
         "type": "object",
@@ -333,10 +330,7 @@
                 },
                 "subjectType": {
                   "type": "string",
-                  "enum": [
-                    "salon",
-                    "user"
-                  ]
+                  "enum": ["salon", "user"]
                 },
                 "subjectId": {
                   "type": "string"
@@ -377,9 +371,7 @@
             }
           }
         },
-        "required": [
-          "notes"
-        ]
+        "required": ["notes"]
       },
       "AdminNoteResponse": {
         "type": "object",
@@ -391,9 +383,7 @@
             }
           }
         },
-        "required": [
-          "note"
-        ]
+        "required": ["note"]
       },
       "AdminNoteCreateRequest": {
         "type": "object",
@@ -410,10 +400,7 @@
             "example": "درخواست پشتیبانی داخلی"
           }
         },
-        "required": [
-          "body",
-          "reason"
-        ]
+        "required": ["body", "reason"]
       },
       "AdminUsersResponse": {
         "type": "object",
@@ -431,10 +418,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminUserDetailResponse": {
         "type": "object",
@@ -464,11 +448,7 @@
             }
           }
         },
-        "required": [
-          "user",
-          "memberships",
-          "messagingAccounts"
-        ]
+        "required": ["user", "memberships", "messagingAccounts"]
       },
       "AdminCatalogPresetsResponse": {
         "type": "object",
@@ -486,10 +466,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminCatalogPresetResponse": {
         "type": "object",
@@ -501,9 +478,7 @@
             }
           }
         },
-        "required": [
-          "preset"
-        ]
+        "required": ["preset"]
       },
       "AdminCatalogPresetCreateRequest": {
         "type": "object",
@@ -545,12 +520,7 @@
             "example": "درخواست پشتیبانی داخلی"
           }
         },
-        "required": [
-          "slug",
-          "name",
-          "tree",
-          "reason"
-        ]
+        "required": ["slug", "name", "tree", "reason"]
       },
       "AdminCatalogPresetUpdateRequest": {
         "type": "object",
@@ -592,9 +562,7 @@
             "example": "درخواست پشتیبانی داخلی"
           }
         },
-        "required": [
-          "reason"
-        ]
+        "required": ["reason"]
       },
       "AdminMessagingHealthResponse": {
         "type": "object",
@@ -627,11 +595,7 @@
             }
           }
         },
-        "required": [
-          "accounts",
-          "failedNotifications",
-          "failedFollowUps"
-        ]
+        "required": ["accounts", "failedNotifications", "failedFollowUps"]
       },
       "AdminNotificationDeliveriesResponse": {
         "type": "object",
@@ -649,10 +613,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminSupportAppointmentsResponse": {
         "type": "object",
@@ -670,10 +631,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminSupportAppointmentRequestsResponse": {
         "type": "object",
@@ -691,10 +649,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminAuditLogResponse": {
         "type": "object",
@@ -712,10 +667,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminPlatformAdminsResponse": {
         "type": "object",
@@ -733,10 +685,7 @@
             "$ref": "#/components/schemas/AdminPagination"
           }
         },
-        "required": [
-          "items",
-          "pagination"
-        ]
+        "required": ["items", "pagination"]
       },
       "AdminPlatformAdminResponse": {
         "type": "object",
@@ -748,9 +697,7 @@
             }
           }
         },
-        "required": [
-          "admin"
-        ]
+        "required": ["admin"]
       },
       "AdminPlatformAdminCreateRequest": {
         "type": "object",
@@ -769,13 +716,12 @@
             "minLength": 3,
             "maxLength": 500,
             "example": "درخواست پشتیبانی داخلی"
+          },
+          "liveConfirmation": {
+            "type": "string"
           }
         },
-        "required": [
-          "userId",
-          "role",
-          "reason"
-        ]
+        "required": ["userId", "role", "reason"]
       },
       "AdminPlatformAdminUpdateRequest": {
         "type": "object",
@@ -791,11 +737,12 @@
             "minLength": 3,
             "maxLength": 500,
             "example": "درخواست پشتیبانی داخلی"
+          },
+          "liveConfirmation": {
+            "type": "string"
           }
         },
-        "required": [
-          "reason"
-        ]
+        "required": ["reason"]
       },
       "ClientsListResponse": {
         "type": "object",
@@ -807,9 +754,7 @@
             }
           }
         },
-        "required": [
-          "clients"
-        ]
+        "required": ["clients"]
       },
       "Client": {
         "type": "object",
@@ -848,13 +793,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "name",
-          "phone",
-          "isPlaceholder",
-          "createdAt"
-        ]
+        "required": ["id", "name", "phone", "isPlaceholder", "createdAt"]
       },
       "ClientTag": {
         "type": "object",
@@ -886,14 +825,7 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "salonId",
-          "clientId",
-          "label",
-          "color",
-          "createdAt"
-        ]
+        "required": ["id", "salonId", "clientId", "label", "color", "createdAt"]
       },
       "ClientResponse": {
         "type": "object",
@@ -902,9 +834,7 @@
             "$ref": "#/components/schemas/Client"
           }
         },
-        "required": [
-          "client"
-        ]
+        "required": ["client"]
       },
       "ClientCreateRequest": {
         "type": "object",
@@ -926,9 +856,7 @@
             "items": {
               "type": "string"
             },
-            "example": [
-              "VIP"
-            ]
+            "example": ["VIP"]
           },
           "id": {
             "type": "string",
@@ -936,10 +864,7 @@
             "description": "Optional client-provided UUID for offline-first sync"
           }
         },
-        "required": [
-          "name",
-          "phone"
-        ]
+        "required": ["name", "phone"]
       },
       "ClientBulkCreateResponse": {
         "type": "object",
@@ -957,10 +882,7 @@
             }
           }
         },
-        "required": [
-          "created",
-          "skipped"
-        ]
+        "required": ["created", "skipped"]
       },
       "ClientBulkCreateSkipped": {
         "type": "object",
@@ -971,17 +893,11 @@
           },
           "reason": {
             "type": "string",
-            "enum": [
-              "duplicate-phone",
-              "invalid"
-            ],
+            "enum": ["duplicate-phone", "invalid"],
             "example": "duplicate-phone"
           }
         },
-        "required": [
-          "phone",
-          "reason"
-        ]
+        "required": ["phone", "reason"]
       },
       "ClientBulkCreateRequest": {
         "type": "object",
@@ -1000,10 +916,7 @@
                   "example": "09121234567"
                 }
               },
-              "required": [
-                "name",
-                "phone"
-              ]
+              "required": ["name", "phone"]
             },
             "minItems": 1,
             "example": [
@@ -1014,9 +927,7 @@
             ]
           }
         },
-        "required": [
-          "clients"
-        ]
+        "required": ["clients"]
       },
       "ClientUpdateRequest": {
         "type": "object",
@@ -1037,9 +948,7 @@
             "items": {
               "type": "string"
             },
-            "example": [
-              "VIP"
-            ]
+            "example": ["VIP"]
           }
         }
       },
@@ -1319,10 +1228,7 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "name"
-        ],
+        "required": ["id", "name"],
         "additionalProperties": {
           "nullable": true
         }
@@ -1343,10 +1249,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "id",
-          "name"
-        ],
+        "required": ["id", "name"],
         "additionalProperties": {
           "nullable": true
         }
@@ -1423,21 +1326,11 @@
       },
       "FollowUpReason": {
         "type": "string",
-        "enum": [
-          "inactive",
-          "no-show",
-          "new-client",
-          "vip",
-          "manual"
-        ]
+        "enum": ["inactive", "no-show", "new-client", "vip", "manual"]
       },
       "FollowUpStatus": {
         "type": "string",
-        "enum": [
-          "open",
-          "reviewed",
-          "dismissed"
-        ]
+        "enum": ["open", "reviewed", "dismissed"]
       },
       "ClientFollowUpResponse": {
         "type": "object",
@@ -1446,9 +1339,7 @@
             "$ref": "#/components/schemas/ClientFollowUp"
           }
         },
-        "required": [
-          "followUp"
-        ]
+        "required": ["followUp"]
       },
       "ClientFollowUpCreateRequest": {
         "type": "object",
@@ -1474,9 +1365,7 @@
             }
           }
         },
-        "required": [
-          "staff"
-        ]
+        "required": ["staff"]
       },
       "StaffUser": {
         "type": "object",
@@ -1540,10 +1429,7 @@
       },
       "StaffRole": {
         "type": "string",
-        "enum": [
-          "staff",
-          "manager"
-        ]
+        "enum": ["staff", "manager"]
       },
       "StaffCreateResponse": {
         "type": "object",
@@ -1552,9 +1438,7 @@
             "$ref": "#/components/schemas/StaffUser"
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user"]
       },
       "StaffCreateRequest": {
         "type": "object",
@@ -1582,11 +1466,7 @@
             ]
           }
         },
-        "required": [
-          "name",
-          "phone",
-          "password"
-        ]
+        "required": ["name", "phone", "password"]
       },
       "StaffBookingAvailabilityResponse": {
         "type": "object",
@@ -1598,9 +1478,7 @@
             }
           }
         },
-        "required": [
-          "staff"
-        ]
+        "required": ["staff"]
       },
       "StaffBookingAvailabilityRow": {
         "type": "object",
@@ -1615,10 +1493,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "staffId",
-          "available"
-        ]
+        "required": ["staffId", "available"]
       },
       "StaffMemberResponse": {
         "type": "object",
@@ -1627,9 +1502,7 @@
             "$ref": "#/components/schemas/StaffUser"
           }
         },
-        "required": [
-          "staff"
-        ]
+        "required": ["staff"]
       },
       "StaffUpdateRequest": {
         "type": "object",
@@ -1662,25 +1535,17 @@
             "example": "plum"
           }
         },
-        "required": [
-          "name",
-          "phone",
-          "role"
-        ]
+        "required": ["name", "phone", "role"]
       },
       "SuccessResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "StaffPasswordUpdateRequest": {
         "type": "object",
@@ -1690,9 +1555,7 @@
             "example": "newsecure1"
           }
         },
-        "required": [
-          "password"
-        ]
+        "required": ["password"]
       },
       "StaffScheduleBundleResponse": {
         "type": "object",
@@ -1707,10 +1570,7 @@
             "$ref": "#/components/schemas/BusinessHours"
           }
         },
-        "required": [
-          "schedule",
-          "businessHours"
-        ]
+        "required": ["schedule", "businessHours"]
       },
       "StaffSchedule": {
         "type": "object",
@@ -1810,9 +1670,7 @@
             }
           }
         },
-        "required": [
-          "schedule"
-        ]
+        "required": ["schedule"]
       },
       "StaffScheduleUpdateRequest": {
         "type": "object",
@@ -1825,9 +1683,7 @@
             "description": "Weekly schedule rows (one per day of week)"
           }
         },
-        "required": [
-          "schedule"
-        ]
+        "required": ["schedule"]
       },
       "StaffScheduleDay": {
         "type": "object",
@@ -1849,12 +1705,7 @@
             "example": "19:00"
           }
         },
-        "required": [
-          "dayOfWeek",
-          "active",
-          "workingStart",
-          "workingEnd"
-        ]
+        "required": ["dayOfWeek", "active", "workingStart", "workingEnd"]
       },
       "StaffServiceIdsRequest": {
         "type": "object",
@@ -1865,10 +1716,7 @@
             "items": {
               "type": "string"
             },
-            "example": [
-              "svc-1",
-              "svc-2"
-            ]
+            "example": ["svc-1", "svc-2"]
           }
         }
       },
@@ -1882,9 +1730,7 @@
             }
           }
         },
-        "required": [
-          "services"
-        ]
+        "required": ["services"]
       },
       "ServiceResponse": {
         "type": "object",
@@ -1893,9 +1739,7 @@
             "$ref": "#/components/schemas/Service"
           }
         },
-        "required": [
-          "service"
-        ]
+        "required": ["service"]
       },
       "ServiceCreateRequest": {
         "type": "object",
@@ -1939,28 +1783,15 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "categoryId",
-          "duration",
-          "price"
-        ]
+        "required": ["name", "categoryId", "duration", "price"]
       },
       "LegacyServiceCategoryKey": {
         "type": "string",
-        "enum": [
-          "hair",
-          "nails",
-          "skincare",
-          "spa"
-        ]
+        "enum": ["hair", "nails", "skincare", "spa"]
       },
       "ServiceKind": {
         "type": "string",
-        "enum": [
-          "standard",
-          "combo"
-        ]
+        "enum": ["standard", "combo"]
       },
       "ImportStarterTemplatesResponse": {
         "type": "object",
@@ -1984,11 +1815,7 @@
             }
           }
         },
-        "required": [
-          "categories",
-          "families",
-          "services"
-        ]
+        "required": ["categories", "families", "services"]
       },
       "ServiceCategory": {
         "type": "object",
@@ -2025,13 +1852,7 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "name",
-          "active",
-          "createdAt",
-          "updatedAt"
-        ],
+        "required": ["id", "name", "active", "createdAt", "updatedAt"],
         "additionalProperties": {
           "nullable": true
         }
@@ -2133,9 +1954,7 @@
             }
           }
         },
-        "required": [
-          "addons"
-        ]
+        "required": ["addons"]
       },
       "ServiceAddon": {
         "type": "object",
@@ -2221,9 +2040,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "category"
-                ]
+                "enum": ["category"]
               },
               "categoryId": {
                 "type": "string"
@@ -2235,21 +2052,14 @@
                 "type": "boolean"
               }
             },
-            "required": [
-              "type",
-              "categoryId",
-              "categoryName",
-              "active"
-            ]
+            "required": ["type", "categoryId", "categoryName", "active"]
           },
           {
             "type": "object",
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "family"
-                ]
+                "enum": ["family"]
               },
               "familyId": {
                 "type": "string"
@@ -2277,9 +2087,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "service"
-                ]
+                "enum": ["service"]
               },
               "serviceId": {
                 "type": "string"
@@ -2312,9 +2120,7 @@
             "$ref": "#/components/schemas/ComboComponentsSummary"
           }
         },
-        "required": [
-          "combo"
-        ]
+        "required": ["combo"]
       },
       "ComboComponentsSummary": {
         "type": "object",
@@ -2408,15 +2214,10 @@
             "items": {
               "type": "string"
             },
-            "example": [
-              "svc-1",
-              "svc-2"
-            ]
+            "example": ["svc-1", "svc-2"]
           }
         },
-        "required": [
-          "componentServiceIds"
-        ]
+        "required": ["componentServiceIds"]
       },
       "ServiceCategoriesListResponse": {
         "type": "object",
@@ -2428,9 +2229,7 @@
             }
           }
         },
-        "required": [
-          "categories"
-        ]
+        "required": ["categories"]
       },
       "ServiceCategoryResponse": {
         "type": "object",
@@ -2439,9 +2238,7 @@
             "$ref": "#/components/schemas/ServiceCategory"
           }
         },
-        "required": [
-          "category"
-        ]
+        "required": ["category"]
       },
       "ServiceCategoryCreateRequest": {
         "type": "object",
@@ -2457,9 +2254,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "ServiceCategoryUpdateRequest": {
         "type": "object",
@@ -2482,9 +2277,7 @@
             }
           }
         },
-        "required": [
-          "families"
-        ]
+        "required": ["families"]
       },
       "ServiceFamilyResponse": {
         "type": "object",
@@ -2493,9 +2286,7 @@
             "$ref": "#/components/schemas/ServiceFamily"
           }
         },
-        "required": [
-          "family"
-        ]
+        "required": ["family"]
       },
       "ServiceFamilyCreateRequest": {
         "type": "object",
@@ -2515,10 +2306,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "categoryId",
-          "name"
-        ]
+        "required": ["categoryId", "name"]
       },
       "ServiceFamilyUpdateRequest": {
         "type": "object",
@@ -2541,9 +2329,7 @@
             "$ref": "#/components/schemas/ServiceAddon"
           }
         },
-        "required": [
-          "addon"
-        ]
+        "required": ["addon"]
       },
       "ServiceAddonCreateRequest": {
         "type": "object",
@@ -2581,9 +2367,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "ServiceAddonScopeInput": {
         "oneOf": [
@@ -2592,54 +2376,39 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "category"
-                ]
+                "enum": ["category"]
               },
               "categoryId": {
                 "type": "string"
               }
             },
-            "required": [
-              "type",
-              "categoryId"
-            ]
+            "required": ["type", "categoryId"]
           },
           {
             "type": "object",
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "family"
-                ]
+                "enum": ["family"]
               },
               "familyId": {
                 "type": "string"
               }
             },
-            "required": [
-              "type",
-              "familyId"
-            ]
+            "required": ["type", "familyId"]
           },
           {
             "type": "object",
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "service"
-                ]
+                "enum": ["service"]
               },
               "serviceId": {
                 "type": "string"
               }
             },
-            "required": [
-              "type",
-              "serviceId"
-            ]
+            "required": ["type", "serviceId"]
           }
         ]
       },
@@ -2686,9 +2455,7 @@
             }
           }
         },
-        "required": [
-          "presets"
-        ]
+        "required": ["presets"]
       },
       "CatalogPresetListItem": {
         "type": "object",
@@ -2718,10 +2485,7 @@
           "disabledReason": {
             "type": "string",
             "nullable": true,
-            "enum": [
-              "collision",
-              null
-            ]
+            "enum": ["collision", null]
           }
         },
         "required": [
@@ -2772,26 +2536,15 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "name",
-                        "duration",
-                        "price",
-                        "color"
-                      ]
+                      "required": ["name", "duration", "price", "color"]
                     }
                   }
                 },
-                "required": [
-                  "name",
-                  "variants"
-                ]
+                "required": ["name", "variants"]
               }
             }
           },
-          "required": [
-            "name",
-            "families"
-          ]
+          "required": ["name", "families"]
         }
       },
       "ApplyCatalogPresetResponse": {
@@ -2810,10 +2563,7 @@
             }
           }
         },
-        "required": [
-          "importedCategoryIds",
-          "importedVariantIds"
-        ]
+        "required": ["importedCategoryIds", "importedVariantIds"]
       },
       "ApplyCatalogPresetRequest": {
         "type": "object",
@@ -2845,25 +2595,17 @@
                         "minItems": 1
                       }
                     },
-                    "required": [
-                      "familyIndex",
-                      "variantIndices"
-                    ]
+                    "required": ["familyIndex", "variantIndices"]
                   },
                   "minItems": 1
                 }
               },
-              "required": [
-                "categoryIndex",
-                "families"
-              ]
+              "required": ["categoryIndex", "families"]
             },
             "minItems": 1
           }
         },
-        "required": [
-          "selection"
-        ]
+        "required": ["selection"]
       },
       "AppointmentsListResponse": {
         "type": "object",
@@ -2875,9 +2617,7 @@
             }
           }
         },
-        "required": [
-          "appointments"
-        ]
+        "required": ["appointments"]
       },
       "AppointmentResponse": {
         "type": "object",
@@ -2886,9 +2626,7 @@
             "$ref": "#/components/schemas/AppointmentWithDetails"
           }
         },
-        "required": [
-          "appointment"
-        ]
+        "required": ["appointment"]
       },
       "AppointmentCreateRequest": {
         "type": "object",
@@ -2910,9 +2648,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name"
-            ]
+            "required": ["name"]
           },
           "staffId": {
             "type": "string"
@@ -2945,12 +2681,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "staffId",
-          "serviceId",
-          "date",
-          "startTime"
-        ]
+        "required": ["staffId", "serviceId", "date", "startTime"]
       },
       "AvailabilityResponse": {
         "anyOf": [
@@ -2967,9 +2698,7 @@
         "properties": {
           "mode": {
             "type": "string",
-            "enum": [
-              "day"
-            ]
+            "enum": ["day"]
           },
           "slots": {
             "type": "array",
@@ -2981,10 +2710,7 @@
             "$ref": "#/components/schemas/AvailabilityEmptyReason"
           }
         },
-        "required": [
-          "mode",
-          "slots"
-        ]
+        "required": ["mode", "slots"]
       },
       "AvailabilitySlot": {
         "type": "object",
@@ -3005,13 +2731,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "date",
-          "startTime",
-          "endTime",
-          "staffId",
-          "staffName"
-        ]
+        "required": ["date", "startTime", "endTime", "staffId", "staffName"]
       },
       "AvailabilityEmptyReason": {
         "type": "string",
@@ -3029,9 +2749,7 @@
         "properties": {
           "mode": {
             "type": "string",
-            "enum": [
-              "nearest"
-            ]
+            "enum": ["nearest"]
           },
           "slot": {
             "allOf": [
@@ -3047,10 +2765,7 @@
             "$ref": "#/components/schemas/AvailabilityEmptyReason"
           }
         },
-        "required": [
-          "mode",
-          "slot"
-        ]
+        "required": ["mode", "slot"]
       },
       "AppointmentUpdateResponse": {
         "anyOf": [
@@ -3067,25 +2782,17 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "removedAppointmentId": {
             "type": "string"
           },
           "cleanup": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           }
         },
-        "required": [
-          "success",
-          "removedAppointmentId",
-          "cleanup"
-        ]
+        "required": ["success", "removedAppointmentId", "cleanup"]
       },
       "AppointmentUpdateRequest": {
         "type": "object",
@@ -3103,9 +2810,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name"
-            ]
+            "required": ["name"]
           },
           "staffId": {
             "type": "string"
@@ -3153,9 +2858,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "CompletePlaceholderClientResponse": {
         "type": "object",
@@ -3165,16 +2868,10 @@
           },
           "outcome": {
             "type": "string",
-            "enum": [
-              "created-client",
-              "reassigned-client"
-            ]
+            "enum": ["created-client", "reassigned-client"]
           }
         },
-        "required": [
-          "appointment",
-          "outcome"
-        ]
+        "required": ["appointment", "outcome"]
       },
       "DuplicateClientError": {
         "type": "object",
@@ -3184,18 +2881,13 @@
           },
           "code": {
             "type": "string",
-            "enum": [
-              "duplicate-phone"
-            ]
+            "enum": ["duplicate-phone"]
           },
           "existingClient": {
             "$ref": "#/components/schemas/Client"
           }
         },
-        "required": [
-          "error",
-          "code"
-        ]
+        "required": ["error", "code"]
       },
       "CompletePlaceholderClientRequest": {
         "type": "object",
@@ -3213,10 +2905,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "phone"
-        ]
+        "required": ["name", "phone"]
       },
       "AppointmentRequestsListResponse": {
         "type": "object",
@@ -3228,9 +2917,7 @@
             }
           }
         },
-        "required": [
-          "requests"
-        ]
+        "required": ["requests"]
       },
       "AppointmentRequestListItem": {
         "type": "object",
@@ -3376,21 +3063,11 @@
       },
       "AppointmentRequestStatus": {
         "type": "string",
-        "enum": [
-          "pending",
-          "approved",
-          "rejected",
-          "cancelled",
-          "expired"
-        ]
+        "enum": ["pending", "approved", "rejected", "cancelled", "expired"]
       },
       "AppointmentRequestPaymentStatus": {
         "type": "string",
-        "enum": [
-          "none",
-          "pending",
-          "paid"
-        ]
+        "enum": ["none", "pending", "paid"]
       },
       "AppointmentRequestExistingClient": {
         "type": "object",
@@ -3403,10 +3080,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name"
-        ]
+        "required": ["id", "name"]
       },
       "ApproveAppointmentRequestResponse": {
         "type": "object",
@@ -3418,10 +3092,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "appointmentId",
-          "clientId"
-        ]
+        "required": ["appointmentId", "clientId"]
       },
       "ApproveAppointmentRequestRequest": {
         "type": "object",
@@ -3432,23 +3103,17 @@
             "description": "Staff member assigned when converting the request to an appointment"
           }
         },
-        "required": [
-          "staffId"
-        ]
+        "required": ["staffId"]
       },
       "RejectAppointmentRequestResponse": {
         "type": "object",
         "properties": {
           "ok": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           }
         },
-        "required": [
-          "ok"
-        ]
+        "required": ["ok"]
       },
       "RejectAppointmentRequestRequest": {
         "type": "object",
@@ -3467,9 +3132,7 @@
             "$ref": "#/components/schemas/BusinessHours"
           }
         },
-        "required": [
-          "settings"
-        ]
+        "required": ["settings"]
       },
       "BusinessSettingsUpdateRequest": {
         "type": "object",
@@ -3499,9 +3162,7 @@
             "$ref": "#/components/schemas/SalonPresence"
           }
         },
-        "required": [
-          "presence"
-        ]
+        "required": ["presence"]
       },
       "SalonPresence": {
         "type": "object",
@@ -3598,12 +3259,7 @@
             }
           }
         },
-        "required": [
-          "slug",
-          "salonName",
-          "settings",
-          "services"
-        ]
+        "required": ["slug", "salonName", "settings", "services"]
       },
       "ManagerPublicSettingsView": {
         "type": "object",
@@ -3643,10 +3299,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "service",
-          "visible"
-        ]
+        "required": ["service", "visible"]
       },
       "PublicSettingsUpdateRequest": {
         "type": "object",
@@ -3660,21 +3313,11 @@
           },
           "themeId": {
             "type": "string",
-            "enum": [
-              "rose",
-              "sage",
-              "ocean",
-              "sand",
-              "plum",
-              "charcoal"
-            ]
+            "enum": ["rose", "sage", "ocean", "sand", "plum", "charcoal"]
           },
           "layoutId": {
             "type": "string",
-            "enum": [
-              "agenda",
-              "inline"
-            ]
+            "enum": ["agenda", "inline"]
           },
           "appointmentRequestsEnabled": {
             "type": "boolean"
@@ -3697,10 +3340,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "serviceId",
-          "visible"
-        ]
+        "required": ["serviceId", "visible"]
       },
       "SlugUpdateRequest": {
         "type": "object",
@@ -3710,9 +3350,7 @@
             "example": "my-salon"
           }
         },
-        "required": [
-          "slug"
-        ]
+        "required": ["slug"]
       },
       "OnboardingResponse": {
         "type": "object",
@@ -3721,9 +3359,7 @@
             "$ref": "#/components/schemas/OnboardingStatus"
           }
         },
-        "required": [
-          "onboarding"
-        ]
+        "required": ["onboarding"]
       },
       "OnboardingStatus": {
         "type": "object",
@@ -3763,12 +3399,7 @@
             ]
           }
         },
-        "required": [
-          "salon",
-          "steps",
-          "completedAt",
-          "skippedAt"
-        ]
+        "required": ["salon", "steps", "completedAt", "skippedAt"]
       },
       "OnboardingSalon": {
         "type": "object",
@@ -3792,13 +3423,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "phone",
-          "address"
-        ]
+        "required": ["id", "name", "slug", "phone", "address"]
       },
       "OnboardingSteps": {
         "type": "object",
@@ -3838,9 +3463,7 @@
             "$ref": "#/components/schemas/OnboardingAction"
           }
         },
-        "required": [
-          "action"
-        ]
+        "required": ["action"]
       },
       "OnboardingAction": {
         "type": "string",
@@ -3925,20 +3548,11 @@
             "type": "number"
           }
         },
-        "required": [
-          "status",
-          "count"
-        ]
+        "required": ["status", "count"]
       },
       "AppointmentStatus": {
         "type": "string",
-        "enum": [
-          "scheduled",
-          "confirmed",
-          "completed",
-          "cancelled",
-          "no-show"
-        ]
+        "enum": ["scheduled", "confirmed", "completed", "cancelled", "no-show"]
       },
       "PopularServiceCount": {
         "type": "object",
@@ -3950,10 +3564,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "name",
-          "count"
-        ]
+        "required": ["name", "count"]
       },
       "StaffLoadItem": {
         "type": "object",
@@ -3968,11 +3579,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "name",
-          "color",
-          "count"
-        ]
+        "required": ["name", "color", "count"]
       },
       "TodayData": {
         "type": "object",
@@ -4077,13 +3684,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "id",
-          "type",
-          "title",
-          "detail",
-          "priority"
-        ]
+        "required": ["id", "type", "title", "detail", "priority"]
       },
       "TodayStaffLoad": {
         "type": "object",
@@ -4124,11 +3725,7 @@
             }
           }
         },
-        "required": [
-          "staffId",
-          "staffName",
-          "ranges"
-        ]
+        "required": ["staffId", "staffName", "ranges"]
       },
       "TodayOpenSlotRange": {
         "type": "object",
@@ -4140,10 +3737,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "startTime",
-          "endTime"
-        ]
+        "required": ["startTime", "endTime"]
       },
       "RetentionListResponse": {
         "type": "object",
@@ -4155,9 +3749,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "RetentionItem": {
         "type": "object",
@@ -4219,9 +3811,7 @@
             "$ref": "#/components/schemas/ClientFollowUp"
           }
         },
-        "required": [
-          "followUp"
-        ]
+        "required": ["followUp"]
       },
       "RetentionUpdateRequest": {
         "type": "object",
@@ -4230,9 +3820,7 @@
             "$ref": "#/components/schemas/FollowUpStatus"
           }
         },
-        "required": [
-          "status"
-        ]
+        "required": ["status"]
       },
       "RetentionBaleMessageResponse": {
         "type": "object",
@@ -4244,10 +3832,7 @@
             "$ref": "#/components/schemas/RetentionBaleMessageResult"
           }
         },
-        "required": [
-          "delivery",
-          "result"
-        ]
+        "required": ["delivery", "result"]
       },
       "RetentionMessageDelivery": {
         "type": "object",
@@ -4257,17 +3842,11 @@
           },
           "provider": {
             "type": "string",
-            "enum": [
-              "bale_safir"
-            ]
+            "enum": ["bale_safir"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "sent",
-              "failed",
-              "skipped"
-            ]
+            "enum": ["sent", "failed", "skipped"]
           },
           "providerMessageId": {
             "type": "string",
@@ -4278,24 +3857,14 @@
             "nullable": true
           }
         },
-        "required": [
-          "id",
-          "provider",
-          "status",
-          "providerMessageId",
-          "error"
-        ]
+        "required": ["id", "provider", "status", "providerMessageId", "error"]
       },
       "RetentionBaleMessageResult": {
         "type": "object",
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "sent",
-              "failed",
-              "skipped"
-            ]
+            "enum": ["sent", "failed", "skipped"]
           },
           "providerMessageId": {
             "type": "string",
@@ -4310,9 +3879,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "status"
-        ]
+        "required": ["status"]
       },
       "RetentionBaleMessageRequest": {
         "type": "object",
@@ -4339,10 +3906,7 @@
             }
           }
         },
-        "required": [
-          "providers",
-          "accounts"
-        ]
+        "required": ["providers", "accounts"]
       },
       "MessagingProviderSummary": {
         "type": "object",
@@ -4354,19 +3918,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "displayName"
-        ]
+        "required": ["id", "displayName"]
       },
       "MessagingProviderId": {
         "type": "string",
-        "enum": [
-          "telegram",
-          "bale",
-          "rubika",
-          "whatsapp"
-        ]
+        "enum": ["telegram", "bale", "rubika", "whatsapp"]
       },
       "MessagingAccount": {
         "type": "object",
@@ -4396,13 +3952,7 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "provider",
-          "displayName",
-          "enabled",
-          "linkedAt"
-        ]
+        "required": ["id", "provider", "displayName", "enabled", "linkedAt"]
       },
       "CreateMessagingLinkResponse": {
         "type": "object",
@@ -4422,10 +3972,7 @@
             ]
           }
         },
-        "required": [
-          "deepLink",
-          "expiresAt"
-        ]
+        "required": ["deepLink", "expiresAt"]
       },
       "CreateMessagingLinkRequest": {
         "type": "object",
@@ -4434,9 +3981,7 @@
             "$ref": "#/components/schemas/MessagingProviderId"
           }
         },
-        "required": [
-          "provider"
-        ]
+        "required": ["provider"]
       },
       "MessagingAccountResponse": {
         "type": "object",
@@ -4445,9 +3990,7 @@
             "$ref": "#/components/schemas/MessagingAccount"
           }
         },
-        "required": [
-          "account"
-        ]
+        "required": ["account"]
       },
       "PatchMessagingAccountRequest": {
         "type": "object",
@@ -4456,23 +3999,17 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ]
+        "required": ["enabled"]
       },
       "DeleteMessagingAccountResponse": {
         "type": "object",
         "properties": {
           "ok": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           }
         },
-        "required": [
-          "ok"
-        ]
+        "required": ["ok"]
       },
       "NotificationsListResponse": {
         "type": "object",
@@ -4484,9 +4021,7 @@
             }
           }
         },
-        "required": [
-          "notifications"
-        ]
+        "required": ["notifications"]
       },
       "AppNotification": {
         "type": "object",
@@ -4572,18 +4107,13 @@
         "properties": {
           "success": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "updatedCount": {
             "type": "integer"
           }
         },
-        "required": [
-          "success",
-          "updatedCount"
-        ]
+        "required": ["success", "updatedCount"]
       },
       "NotificationResponse": {
         "type": "object",
@@ -4592,9 +4122,7 @@
             "$ref": "#/components/schemas/AppNotification"
           }
         },
-        "required": [
-          "notification"
-        ]
+        "required": ["notification"]
       },
       "NotificationPreferencesResponse": {
         "type": "object",
@@ -4603,9 +4131,7 @@
             "$ref": "#/components/schemas/NotificationPreferences"
           }
         },
-        "required": [
-          "preferences"
-        ]
+        "required": ["preferences"]
       },
       "NotificationPreferences": {
         "type": "object",
@@ -4691,12 +4217,7 @@
             }
           }
         },
-        "required": [
-          "salon",
-          "publicSettings",
-          "presence",
-          "services"
-        ]
+        "required": ["salon", "publicSettings", "presence", "services"]
       },
       "PublicSalonInfo": {
         "type": "object",
@@ -4721,14 +4242,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "slug",
-          "name",
-          "phone",
-          "timezone",
-          "locale"
-        ]
+        "required": ["id", "slug", "name", "phone", "timezone", "locale"]
       },
       "PublicSalonSettings": {
         "type": "object",
@@ -4765,9 +4279,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ]
+        "required": ["token"]
       },
       "PublicAppointmentRequestBody": {
         "type": "object",
@@ -4889,24 +4401,17 @@
             "nullable": true
           }
         },
-        "required": [
-          "name",
-          "phone"
-        ]
+        "required": ["name", "phone"]
       },
       "PublicCancelAppointmentRequestResponse": {
         "type": "object",
         "properties": {
           "ok": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           }
         },
-        "required": [
-          "ok"
-        ]
+        "required": ["ok"]
       }
     },
     "parameters": {}
@@ -4914,9 +4419,7 @@
   "paths": {
     "/api/v1/admin/auth/me": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Get current platform admin",
         "security": [
           {
@@ -4960,11 +4463,55 @@
         }
       }
     },
+    "/api/v1/admin/runtime": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get admin runtime metadata",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get admin runtime metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRuntimeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated user is not an active platform admin or lacks permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/overview": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Get admin overview metrics",
         "security": [
           {
@@ -5010,9 +4557,7 @@
     },
     "/api/v1/admin/salons": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List salons for platform admin",
         "security": [
           {
@@ -5092,9 +4637,7 @@
     },
     "/api/v1/admin/salons/{id}": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Get salon detail for platform admin",
         "security": [
           {
@@ -5162,9 +4705,7 @@
     },
     "/api/v1/admin/salons/{id}/status": {
       "patch": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Update salon platform status",
         "security": [
           {
@@ -5275,9 +4816,7 @@
     },
     "/api/v1/admin/salons/{id}/notes": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List internal salon notes",
         "security": [
           {
@@ -5333,9 +4872,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Create internal salon note",
         "security": [
           {
@@ -5413,9 +4950,7 @@
     },
     "/api/v1/admin/users": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List users for platform admin",
         "security": [
           {
@@ -5495,9 +5030,7 @@
     },
     "/api/v1/admin/users/{id}": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Get user detail for platform admin",
         "security": [
           {
@@ -5565,9 +5098,7 @@
     },
     "/api/v1/admin/users/{id}/notes": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List internal user notes",
         "security": [
           {
@@ -5623,9 +5154,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Create internal user note",
         "security": [
           {
@@ -5703,9 +5232,7 @@
     },
     "/api/v1/admin/catalog-presets": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List catalog presets for platform admin",
         "security": [
           {
@@ -5783,9 +5310,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Create catalog preset",
         "security": [
           {
@@ -5851,9 +5376,7 @@
     },
     "/api/v1/admin/catalog-presets/{id}": {
       "patch": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Update catalog preset",
         "security": [
           {
@@ -5941,9 +5464,7 @@
     },
     "/api/v1/admin/messaging/health": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Get messaging health",
         "security": [
           {
@@ -5989,9 +5510,7 @@
     },
     "/api/v1/admin/notifications/deliveries": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List notification deliveries",
         "security": [
           {
@@ -6071,9 +5590,7 @@
     },
     "/api/v1/admin/support/appointments": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Search support appointments",
         "security": [
           {
@@ -6153,9 +5670,7 @@
     },
     "/api/v1/admin/support/appointment-requests": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Search support appointment requests",
         "security": [
           {
@@ -6235,9 +5750,7 @@
     },
     "/api/v1/admin/audit-log": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List admin audit events",
         "security": [
           {
@@ -6349,9 +5862,7 @@
     },
     "/api/v1/admin/platform-admins": {
       "get": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "List platform admins",
         "security": [
           {
@@ -6429,9 +5940,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Grant platform admin access",
         "security": [
           {
@@ -6497,9 +6006,7 @@
     },
     "/api/v1/admin/platform-admins/{id}": {
       "patch": {
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "summary": "Update platform admin access",
         "security": [
           {
@@ -6597,9 +6104,7 @@
     },
     "/api/v1/clients": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "List clients",
         "description": "Returns all non-placeholder clients for the authenticated salon tenant.",
         "security": [
@@ -6644,9 +6149,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Create client",
         "security": [
           {
@@ -6732,9 +6235,7 @@
     },
     "/api/v1/clients/bulk": {
       "post": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Bulk create clients",
         "description": "Creates up to 200 clients in one request. Partial success is allowed; duplicates and invalid rows are returned in skipped.",
         "security": [
@@ -6801,9 +6302,7 @@
     },
     "/api/v1/clients/{id}": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Get client by id",
         "security": [
           {
@@ -6869,9 +6368,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Update client",
         "security": [
           {
@@ -6979,9 +6476,7 @@
     },
     "/api/v1/clients/{id}/summary": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Get client summary",
         "security": [
           {
@@ -7049,9 +6544,7 @@
     },
     "/api/v1/clients/{id}/follow-ups": {
       "post": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "summary": "Create client follow-up",
         "security": [
           {
@@ -7138,9 +6631,7 @@
     },
     "/api/v1/staff": {
       "get": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "List staff",
         "description": "Returns all active staff and managers for the authenticated salon tenant.",
         "security": [
@@ -7185,9 +6676,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Create staff member",
         "security": [
           {
@@ -7273,9 +6762,7 @@
     },
     "/api/v1/staff/booking-availability": {
       "get": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Staff booking availability for a slot",
         "security": [
           {
@@ -7360,9 +6847,7 @@
     },
     "/api/v1/staff/{id}": {
       "patch": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Update staff member",
         "security": [
           {
@@ -7468,9 +6953,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Deactivate staff member",
         "security": [
           {
@@ -7548,9 +7031,7 @@
     },
     "/api/v1/staff/{id}/password": {
       "patch": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Update staff password",
         "security": [
           {
@@ -7638,9 +7119,7 @@
     },
     "/api/v1/staff/{id}/schedule": {
       "get": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Get staff schedule bundle",
         "security": [
           {
@@ -7706,9 +7185,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Update staff schedule",
         "security": [
           {
@@ -7796,9 +7273,7 @@
     },
     "/api/v1/staff/{id}/services": {
       "patch": {
-        "tags": [
-          "Staff"
-        ],
+        "tags": ["Staff"],
         "summary": "Update staff service assignments",
         "security": [
           {
@@ -7886,9 +7361,7 @@
     },
     "/api/v1/services": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "List services",
         "security": [
           {
@@ -7945,9 +7418,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Create service",
         "security": [
           {
@@ -8023,9 +7494,7 @@
     },
     "/api/v1/services/import-starter-templates": {
       "post": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Import starter service templates",
         "security": [
           {
@@ -8071,9 +7540,7 @@
     },
     "/api/v1/services/{id}": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Get service",
         "security": [
           {
@@ -8139,9 +7606,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Update service",
         "security": [
           {
@@ -8239,9 +7704,7 @@
     },
     "/api/v1/services/{id}/addons": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "List active addons for a service",
         "security": [
           {
@@ -8299,9 +7762,7 @@
     },
     "/api/v1/services/{id}/combo-components": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Get combo service components",
         "security": [
           {
@@ -8367,9 +7828,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Replace combo service components",
         "security": [
           {
@@ -8457,9 +7916,7 @@
     },
     "/api/v1/service-categories": {
       "get": {
-        "tags": [
-          "Service categories"
-        ],
+        "tags": ["Service categories"],
         "summary": "List service categories",
         "security": [
           {
@@ -8516,9 +7973,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Service categories"
-        ],
+        "tags": ["Service categories"],
         "summary": "Create service category",
         "security": [
           {
@@ -8594,9 +8049,7 @@
     },
     "/api/v1/service-categories/{id}": {
       "patch": {
-        "tags": [
-          "Service categories"
-        ],
+        "tags": ["Service categories"],
         "summary": "Update service category",
         "security": [
           {
@@ -8694,9 +8147,7 @@
     },
     "/api/v1/service-families": {
       "get": {
-        "tags": [
-          "Service families"
-        ],
+        "tags": ["Service families"],
         "summary": "List service families",
         "security": [
           {
@@ -8753,9 +8204,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Service families"
-        ],
+        "tags": ["Service families"],
         "summary": "Create service family",
         "security": [
           {
@@ -8831,9 +8280,7 @@
     },
     "/api/v1/service-families/{id}": {
       "patch": {
-        "tags": [
-          "Service families"
-        ],
+        "tags": ["Service families"],
         "summary": "Update service family",
         "security": [
           {
@@ -8931,9 +8378,7 @@
     },
     "/api/v1/service-addons": {
       "get": {
-        "tags": [
-          "Service addons"
-        ],
+        "tags": ["Service addons"],
         "summary": "List service addons",
         "security": [
           {
@@ -8990,9 +8435,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Service addons"
-        ],
+        "tags": ["Service addons"],
         "summary": "Create service addon",
         "security": [
           {
@@ -9068,9 +8511,7 @@
     },
     "/api/v1/service-addons/{id}": {
       "patch": {
-        "tags": [
-          "Service addons"
-        ],
+        "tags": ["Service addons"],
         "summary": "Update service addon",
         "security": [
           {
@@ -9168,9 +8609,7 @@
     },
     "/api/v1/catalog-presets": {
       "get": {
-        "tags": [
-          "Catalog presets"
-        ],
+        "tags": ["Catalog presets"],
         "summary": "List active catalog presets",
         "security": [
           {
@@ -9216,9 +8655,7 @@
     },
     "/api/v1/catalog-presets/{id}/apply": {
       "post": {
-        "tags": [
-          "Catalog presets"
-        ],
+        "tags": ["Catalog presets"],
         "summary": "Apply catalog preset selection",
         "security": [
           {
@@ -9316,9 +8753,7 @@
     },
     "/api/v1/appointments": {
       "get": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "List appointments in date range",
         "security": [
           {
@@ -9392,9 +8827,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Create appointment",
         "security": [
           {
@@ -9460,9 +8893,7 @@
     },
     "/api/v1/appointments/availability": {
       "get": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Search manager booking availability",
         "security": [
           {
@@ -9476,10 +8907,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "day",
-                "nearest"
-              ],
+              "enum": ["day", "nearest"],
               "example": "day"
             },
             "required": true,
@@ -9558,9 +8986,7 @@
     },
     "/api/v1/appointments/{id}": {
       "get": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Get appointment by id",
         "security": [
           {
@@ -9626,9 +9052,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Update appointment or status",
         "description": "Managers may update any field. Staff may patch status on their own appointments. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.",
         "security": [
@@ -9715,9 +9139,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Delete appointment",
         "security": [
           {
@@ -9785,9 +9207,7 @@
     },
     "/api/v1/appointments/{id}/complete-client": {
       "post": {
-        "tags": [
-          "Appointments"
-        ],
+        "tags": ["Appointments"],
         "summary": "Complete placeholder client on appointment",
         "security": [
           {
@@ -9885,9 +9305,7 @@
     },
     "/api/v1/appointment-requests": {
       "get": {
-        "tags": [
-          "Appointment requests"
-        ],
+        "tags": ["Appointment requests"],
         "summary": "List appointment requests",
         "description": "Manager inbox for public booking requests. Pending filter excludes past requested dates.",
         "security": [
@@ -9962,9 +9380,7 @@
     },
     "/api/v1/appointment-requests/{id}/approve": {
       "post": {
-        "tags": [
-          "Appointment requests"
-        ],
+        "tags": ["Appointment requests"],
         "summary": "Approve appointment request",
         "security": [
           {
@@ -10062,9 +9478,7 @@
     },
     "/api/v1/appointment-requests/{id}/reject": {
       "post": {
-        "tags": [
-          "Appointment requests"
-        ],
+        "tags": ["Appointment requests"],
         "summary": "Reject appointment request",
         "security": [
           {
@@ -10152,9 +9566,7 @@
     },
     "/api/v1/settings/business": {
       "get": {
-        "tags": [
-          "Settings"
-        ],
+        "tags": ["Settings"],
         "summary": "Get business settings",
         "description": "Salon working hours and slot duration. Readable by any tenant member.",
         "security": [
@@ -10189,9 +9601,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Settings"
-        ],
+        "tags": ["Settings"],
         "summary": "Update business settings",
         "security": [
           {
@@ -10257,9 +9667,7 @@
     },
     "/api/v1/salon-profile/presence": {
       "get": {
-        "tags": [
-          "Salon profile"
-        ],
+        "tags": ["Salon profile"],
         "summary": "Get salon presence",
         "description": "Address, maps, social links, and website shown on the public page.",
         "security": [
@@ -10304,9 +9712,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Salon profile"
-        ],
+        "tags": ["Salon profile"],
         "summary": "Update salon presence",
         "security": [
           {
@@ -10372,9 +9778,7 @@
     },
     "/api/v1/salon-public-settings": {
       "get": {
-        "tags": [
-          "Salon public settings"
-        ],
+        "tags": ["Salon public settings"],
         "summary": "Get manager public page settings",
         "security": [
           {
@@ -10418,9 +9822,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Salon public settings"
-        ],
+        "tags": ["Salon public settings"],
         "summary": "Update manager public page settings",
         "security": [
           {
@@ -10486,9 +9888,7 @@
     },
     "/api/v1/salon-public-settings/slug": {
       "patch": {
-        "tags": [
-          "Salon public settings"
-        ],
+        "tags": ["Salon public settings"],
         "summary": "Update public page slug",
         "security": [
           {
@@ -10564,9 +9964,7 @@
     },
     "/api/v1/onboarding": {
       "get": {
-        "tags": [
-          "Onboarding"
-        ],
+        "tags": ["Onboarding"],
         "summary": "Get onboarding status",
         "description": "Salon setup progress for the manager onboarding wizard. Step flags are derived from salon data.",
         "security": [
@@ -10611,9 +10009,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Onboarding"
-        ],
+        "tags": ["Onboarding"],
         "summary": "Update onboarding state",
         "description": "Apply a wizard action such as confirming business hours, marking the manager as solo staff, completing, skipping, or reopening onboarding.",
         "security": [
@@ -10680,9 +10076,7 @@
     },
     "/api/v1/dashboard": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "summary": "Get salon dashboard metrics",
         "description": "Aggregated counts, revenue, and breakdowns for the manager dashboard.",
         "security": [
@@ -10729,9 +10123,7 @@
     },
     "/api/v1/today": {
       "get": {
-        "tags": [
-          "Today"
-        ],
+        "tags": ["Today"],
         "summary": "Get today view data",
         "description": "Appointments, attention items, staff load, and open slots for a calendar day. Staff members only see their own appointments.",
         "security": [
@@ -10791,9 +10183,7 @@
     },
     "/api/v1/retention": {
       "get": {
-        "tags": [
-          "Retention"
-        ],
+        "tags": ["Retention"],
         "summary": "List retention follow-up queue",
         "description": "Open client follow-ups derived from appointment history. Does not send messages automatically.",
         "security": [
@@ -10840,9 +10230,7 @@
     },
     "/api/v1/retention/{id}": {
       "patch": {
-        "tags": [
-          "Retention"
-        ],
+        "tags": ["Retention"],
         "summary": "Update retention follow-up status",
         "security": [
           {
@@ -10930,9 +10318,7 @@
     },
     "/api/v1/retention/{id}/bale-message": {
       "post": {
-        "tags": [
-          "Retention"
-        ],
+        "tags": ["Retention"],
         "summary": "Send Bale retention message",
         "description": "Sends a one-off follow-up message via Bale Safir for an open retention item.",
         "security": [
@@ -11030,9 +10416,7 @@
     },
     "/api/v1/messaging/accounts": {
       "get": {
-        "tags": [
-          "Messaging"
-        ],
+        "tags": ["Messaging"],
         "summary": "List linked messaging accounts",
         "description": "Returns configured messaging providers and the authenticated user linked accounts.",
         "security": [
@@ -11079,9 +10463,7 @@
     },
     "/api/v1/messaging/link": {
       "post": {
-        "tags": [
-          "Messaging"
-        ],
+        "tags": ["Messaging"],
         "summary": "Create a messaging account link",
         "description": "Creates a short-lived deep link token for linking a messaging provider account.",
         "security": [
@@ -11158,9 +10540,7 @@
     },
     "/api/v1/messaging/accounts/{id}": {
       "patch": {
-        "tags": [
-          "Messaging"
-        ],
+        "tags": ["Messaging"],
         "summary": "Enable or disable a linked messaging account",
         "security": [
           {
@@ -11246,9 +10626,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Messaging"
-        ],
+        "tags": ["Messaging"],
         "summary": "Unlink a messaging account",
         "security": [
           {
@@ -11316,9 +10694,7 @@
     },
     "/api/v1/notifications": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "summary": "List in-app notifications",
         "security": [
           {
@@ -11332,9 +10708,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "true"
-              ],
+              "enum": ["true"],
               "description": "When \"true\", return only unread notifications"
             },
             "required": false,
@@ -11379,9 +10753,7 @@
     },
     "/api/v1/notifications/read-all": {
       "post": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "summary": "Mark all notifications as read",
         "security": [
           {
@@ -11427,9 +10799,7 @@
     },
     "/api/v1/notifications/test": {
       "post": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "summary": "Create a test notification",
         "description": "Development-only route. Returns 404 when ENABLE_NOTIFICATION_TEST is not set or in production.",
         "security": [
@@ -11486,9 +10856,7 @@
     },
     "/api/v1/notifications/{id}/read": {
       "post": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "summary": "Mark a notification as read",
         "security": [
           {
@@ -11556,9 +10924,7 @@
     },
     "/api/v1/notification-preferences": {
       "get": {
-        "tags": [
-          "Notification preferences"
-        ],
+        "tags": ["Notification preferences"],
         "summary": "Get notification preferences",
         "security": [
           {
@@ -11602,9 +10968,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Notification preferences"
-        ],
+        "tags": ["Notification preferences"],
         "summary": "Update notification preferences",
         "security": [
           {
@@ -11670,9 +11034,7 @@
     },
     "/api/v1/public/salons/{slug}": {
       "get": {
-        "tags": [
-          "Public booking"
-        ],
+        "tags": ["Public booking"],
         "summary": "Get public salon page data",
         "description": "Unauthenticated salon profile, public page settings, and visible services for the booking site.",
         "parameters": [
@@ -11713,9 +11075,7 @@
     },
     "/api/v1/public/salons/{slug}/availability": {
       "get": {
-        "tags": [
-          "Public booking"
-        ],
+        "tags": ["Public booking"],
         "summary": "Search public booking availability",
         "description": "Returns unioned free slots across staff qualified for the service. Customers do not pick staff in v1.",
         "parameters": [
@@ -11751,10 +11111,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "day",
-                "nearest"
-              ],
+              "enum": ["day", "nearest"],
               "default": "day",
               "example": "day"
             },
@@ -11819,9 +11176,7 @@
     },
     "/api/v1/public/salons/{slug}/appointment-requests": {
       "post": {
-        "tags": [
-          "Public booking"
-        ],
+        "tags": ["Public booking"],
         "summary": "Submit a public appointment request",
         "parameters": [
           {
@@ -11891,9 +11246,7 @@
     },
     "/api/v1/public/salons/{slug}/appointment-requests/{token}": {
       "get": {
-        "tags": [
-          "Public booking"
-        ],
+        "tags": ["Public booking"],
         "summary": "Get public appointment request status",
         "description": "Token-authorized status view. Customer identity fields are intentionally omitted.",
         "parameters": [
@@ -11944,9 +11297,7 @@
     },
     "/api/v1/public/salons/{slug}/appointment-requests/{token}/cancel": {
       "post": {
-        "tags": [
-          "Public booking"
-        ],
+        "tags": ["Public booking"],
         "summary": "Cancel a pending public appointment request",
         "parameters": [
           {

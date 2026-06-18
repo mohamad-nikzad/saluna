@@ -4,13 +4,17 @@ import { Button } from '#/components/ui/button'
 import { IconButton } from '#/components/ui/icon-button'
 import { Separator } from '#/components/ui/separator'
 import { SidebarTrigger } from '#/components/ui/sidebar'
+import { useAdminAuth } from '#/context/admin-auth-provider'
 import { useSearch } from '#/context/search-provider'
 import { useTheme } from '#/context/theme-provider'
+import { cn } from '#/lib/utils'
 
 export function AdminTopbar() {
   const { setOpen } = useSearch()
   const { theme, toggleTheme } = useTheme()
+  const { runtime } = useAdminAuth()
   const ThemeIcon = theme === 'light' ? Moon : Sun
+  const isLive = runtime.dataSource === 'live'
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center border-b border-border/80 bg-background/95 backdrop-blur">
@@ -29,6 +33,16 @@ export function AdminTopbar() {
           </kbd>
         </Button>
         <div className="ms-auto flex shrink-0 items-center gap-2">
+          <span
+            className={cn(
+              'rounded-md border px-2.5 py-1 text-xs font-semibold',
+              isLive
+                ? 'border-destructive bg-destructive text-destructive-foreground'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-300',
+            )}
+          >
+            {isLive ? 'LIVE DATA' : 'LOCAL DATA'}
+          </span>
           <IconButton label="تغییر پوسته" onClick={toggleTheme}>
             <ThemeIcon className="h-4 w-4" />
           </IconButton>

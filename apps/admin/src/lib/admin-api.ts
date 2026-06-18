@@ -42,7 +42,10 @@ type AuditParams = ListParams & {
   salonId?: string
 }
 
-function withQuery(path: string, params: Record<string, string | number | undefined>) {
+function withQuery(
+  path: string,
+  params: Record<string, string | number | undefined>,
+) {
   const query = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') query.set(key, String(value))
@@ -62,7 +65,8 @@ async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    const fallback = response.status === 401 ? 'ورود لازم است' : 'درخواست ادمین انجام نشد'
+    const fallback =
+      response.status === 401 ? 'ورود لازم است' : 'درخواست ادمین انجام نشد'
     let message = fallback
     try {
       const body = (await response.json()) as { error?: string }
@@ -85,41 +89,84 @@ function body(input: unknown): RequestInit {
 export const adminApi = {
   me: () => apiJson<AdminMeResponse>('/api/v1/admin/auth/me'),
   overview: () => apiJson<AdminOverviewResponse>('/api/v1/admin/overview'),
-  salons: (params: ListParams) => apiJson<AdminSalonsResponse>(withQuery('/api/v1/admin/salons', params)),
-  salon: (id: string) => apiJson<AdminSalonDetailResponse>(`/api/v1/admin/salons/${id}`),
-  updateSalonStatus: (id: string, status: AdminSalonStatus, reason: string) =>
+  salons: (params: ListParams) =>
+    apiJson<AdminSalonsResponse>(withQuery('/api/v1/admin/salons', params)),
+  salon: (id: string) =>
+    apiJson<AdminSalonDetailResponse>(`/api/v1/admin/salons/${id}`),
+  updateSalonStatus: (
+    id: string,
+    input: {
+      status: AdminSalonStatus
+      reason: string
+      liveConfirmation?: string
+    },
+  ) =>
     apiJson<AdminSalonDetailResponse>(`/api/v1/admin/salons/${id}/status`, {
       method: 'PATCH',
-      ...body({ status, reason }),
+      ...body(input),
     }),
-  salonNotes: (id: string) => apiJson<AdminNotesResponse>(`/api/v1/admin/salons/${id}/notes`),
+  salonNotes: (id: string) =>
+    apiJson<AdminNotesResponse>(`/api/v1/admin/salons/${id}/notes`),
   createSalonNote: (id: string, input: { body: string; reason: string }) =>
-    apiJson(`/api/v1/admin/salons/${id}/notes`, { method: 'POST', ...body(input) }),
-  users: (params: ListParams) => apiJson<AdminUsersResponse>(withQuery('/api/v1/admin/users', params)),
-  user: (id: string) => apiJson<AdminUserDetailResponse>(`/api/v1/admin/users/${id}`),
-  userNotes: (id: string) => apiJson<AdminNotesResponse>(`/api/v1/admin/users/${id}/notes`),
+    apiJson(`/api/v1/admin/salons/${id}/notes`, {
+      method: 'POST',
+      ...body(input),
+    }),
+  users: (params: ListParams) =>
+    apiJson<AdminUsersResponse>(withQuery('/api/v1/admin/users', params)),
+  user: (id: string) =>
+    apiJson<AdminUserDetailResponse>(`/api/v1/admin/users/${id}`),
+  userNotes: (id: string) =>
+    apiJson<AdminNotesResponse>(`/api/v1/admin/users/${id}/notes`),
   createUserNote: (id: string, input: { body: string; reason: string }) =>
-    apiJson(`/api/v1/admin/users/${id}/notes`, { method: 'POST', ...body(input) }),
+    apiJson(`/api/v1/admin/users/${id}/notes`, {
+      method: 'POST',
+      ...body(input),
+    }),
   catalogPresets: (params: ListParams) =>
-    apiJson<AdminCatalogPresetsResponse>(withQuery('/api/v1/admin/catalog-presets', params)),
+    apiJson<AdminCatalogPresetsResponse>(
+      withQuery('/api/v1/admin/catalog-presets', params),
+    ),
   createCatalogPreset: (input: AdminCatalogPresetCreateRequest) =>
-    apiJson('/api/v1/admin/catalog-presets', { method: 'POST', ...body(input) }),
+    apiJson('/api/v1/admin/catalog-presets', {
+      method: 'POST',
+      ...body(input),
+    }),
   updateCatalogPreset: (id: string, input: AdminCatalogPresetUpdateRequest) =>
-    apiJson(`/api/v1/admin/catalog-presets/${id}`, { method: 'PATCH', ...body(input) }),
-  messagingHealth: () => apiJson<AdminMessagingHealthResponse>('/api/v1/admin/messaging/health'),
+    apiJson(`/api/v1/admin/catalog-presets/${id}`, {
+      method: 'PATCH',
+      ...body(input),
+    }),
+  messagingHealth: () =>
+    apiJson<AdminMessagingHealthResponse>('/api/v1/admin/messaging/health'),
   notificationDeliveries: (params: ListParams) =>
-    apiJson<AdminCatalogPresetsResponse>(withQuery('/api/v1/admin/notifications/deliveries', params)),
+    apiJson<AdminCatalogPresetsResponse>(
+      withQuery('/api/v1/admin/notifications/deliveries', params),
+    ),
   supportAppointments: (params: ListParams) =>
-    apiJson<AdminSupportAppointmentsResponse>(withQuery('/api/v1/admin/support/appointments', params)),
+    apiJson<AdminSupportAppointmentsResponse>(
+      withQuery('/api/v1/admin/support/appointments', params),
+    ),
   supportAppointmentRequests: (params: ListParams) =>
     apiJson<AdminSupportAppointmentRequestsResponse>(
       withQuery('/api/v1/admin/support/appointment-requests', params),
     ),
-  auditLog: (params: AuditParams) => apiJson<AdminAuditLogResponse>(withQuery('/api/v1/admin/audit-log', params)),
+  auditLog: (params: AuditParams) =>
+    apiJson<AdminAuditLogResponse>(
+      withQuery('/api/v1/admin/audit-log', params),
+    ),
   platformAdmins: (params: ListParams) =>
-    apiJson<AdminPlatformAdminsResponse>(withQuery('/api/v1/admin/platform-admins', params)),
+    apiJson<AdminPlatformAdminsResponse>(
+      withQuery('/api/v1/admin/platform-admins', params),
+    ),
   createPlatformAdmin: (input: AdminPlatformAdminCreateRequest) =>
-    apiJson('/api/v1/admin/platform-admins', { method: 'POST', ...body(input) }),
+    apiJson('/api/v1/admin/platform-admins', {
+      method: 'POST',
+      ...body(input),
+    }),
   updatePlatformAdmin: (id: string, input: AdminPlatformAdminUpdateRequest) =>
-    apiJson(`/api/v1/admin/platform-admins/${id}`, { method: 'PATCH', ...body(input) }),
+    apiJson(`/api/v1/admin/platform-admins/${id}`, {
+      method: 'PATCH',
+      ...body(input),
+    }),
 }

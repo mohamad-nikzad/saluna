@@ -11,7 +11,7 @@ Triage label for all issues: `needs-triage`
    - **Blocked by**: None
    - **User stories covered**: Platform admin can enter a focused V1 admin shell with RTL layout, right sidebar navigation, login guard, and command search.
 
-2. **ADMIN-002: Expose admin runtime data source and show live-data guardrails**
+2. **ADMIN-002: Expose admin runtime data source and show live-data guardrails** ✅
    - **Type**: AFK
    - **Blocked by**: ADMIN-001
    - **User stories covered**: Platform admin can tell whether they are using local or live data before reading or mutating anything.
@@ -93,13 +93,13 @@ Make the local admin stack explicitly aware of whether the local API is connecte
 
 ## Acceptance criteria
 
-- [ ] Add `ADMIN_DATA_SOURCE=local | live` validation to the API runtime environment.
-- [ ] Expose the current data source through `/api/v1/admin/auth/me` or `/api/v1/admin/runtime`.
-- [ ] Add local scripts such as `dev:admin-stack:local-data` and `dev:admin-stack:live-data`.
-- [ ] The admin shell shows a persistent visible badge/banner in live-data mode.
-- [ ] Live-data mutation dialogs clearly state that they affect live production data.
-- [ ] High-impact live-data mutations, including salon status changes and platform admin changes, require an extra confirmation phrase such as `LIVE`.
-- [ ] API env parsing and admin runtime behavior have focused tests.
+- [x] Add `ADMIN_DATA_SOURCE=local | live` validation to the API runtime environment.
+- [x] Expose the current data source through `/api/v1/admin/auth/me` or `/api/v1/admin/runtime`.
+- [x] Add local scripts such as `dev:admin-stack:local-data` and `dev:admin-stack:live-data`.
+- [x] The admin shell shows a persistent visible badge/banner in live-data mode.
+- [x] Live-data mutation dialogs clearly state that they affect live production data.
+- [x] High-impact live-data mutations, including salon status changes and platform admin changes, require an extra confirmation phrase such as `LIVE`.
+- [x] API env parsing and admin runtime behavior have focused tests.
 
 ## Blocked by
 

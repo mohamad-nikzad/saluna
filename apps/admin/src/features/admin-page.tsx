@@ -26,7 +26,13 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '#/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '#/components/ui/sheet'
 import { Skeleton } from '#/components/ui/skeleton'
 import { useAdminAuth } from '#/context/admin-auth-provider'
 import { useTableUrlState } from '#/hooks/use-table-url-state'
@@ -63,7 +69,8 @@ type PageConfig = {
 const pageConfig: Record<AdminPageId, PageConfig> = {
   overview: {
     title: 'نمای کلی',
-    description: 'وضعیت پلتفرم، سلامت سالن‌ها، ارسال‌های ناموفق و آخرین رویدادهای حاکمیتی.',
+    description:
+      'وضعیت پلتفرم، سلامت سالن‌ها، ارسال‌های ناموفق و آخرین رویدادهای حاکمیتی.',
   },
   salons: {
     title: 'سالن‌ها',
@@ -71,7 +78,8 @@ const pageConfig: Record<AdminPageId, PageConfig> = {
   },
   users: {
     title: 'کاربران',
-    description: 'جستجوی حساب‌ها، عضویت‌ها، حساب‌های پیام‌رسانی و یادداشت‌های پشتیبانی.',
+    description:
+      'جستجوی حساب‌ها، عضویت‌ها، حساب‌های پیام‌رسانی و یادداشت‌های پشتیبانی.',
   },
   'catalog-presets': {
     title: 'قالب‌های کاتالوگ',
@@ -79,15 +87,18 @@ const pageConfig: Record<AdminPageId, PageConfig> = {
   },
   'messaging-health': {
     title: 'سلامت پیام‌رسانی',
-    description: 'وضعیت ارائه‌دهنده‌ها، ارسال‌های ناموفق، پیگیری‌های ناموفق و حساب‌های متصل.',
+    description:
+      'وضعیت ارائه‌دهنده‌ها، ارسال‌های ناموفق، پیگیری‌های ناموفق و حساب‌های متصل.',
   },
   'support-lookup': {
     title: 'جستجوی پشتیبانی',
-    description: 'جستجوی فقط‌خواندنی نوبت‌ها و درخواست‌های نوبت در همه سالن‌ها.',
+    description:
+      'جستجوی فقط‌خواندنی نوبت‌ها و درخواست‌های نوبت در همه سالن‌ها.',
   },
   'audit-log': {
     title: 'لاگ ممیزی',
-    description: 'تاریخچه تغییرات ادمین همراه با انجام‌دهنده، هدف، دلیل و زمینه درخواست.',
+    description:
+      'تاریخچه تغییرات ادمین همراه با انجام‌دهنده، هدف، دلیل و زمینه درخواست.',
   },
   'platform-admins': {
     title: 'ادمین‌های پلتفرم',
@@ -129,7 +140,10 @@ function HeaderAction({ pageId }: { pageId: AdminPageId }) {
 }
 
 function OverviewScreen() {
-  const overviewQuery = useQuery({ queryKey: ['admin', 'overview'], queryFn: adminApi.overview })
+  const overviewQuery = useQuery({
+    queryKey: ['admin', 'overview'],
+    queryFn: adminApi.overview,
+  })
   const data = overviewQuery.data
   const cards = [
     {
@@ -176,7 +190,9 @@ function OverviewScreen() {
                 <Icon className="h-4 w-4 text-muted-foreground/85" />
               </CardHeader>
               <CardContent className="flex min-h-20 flex-col items-end justify-end">
-                <div className="text-4xl font-semibold leading-none tracking-normal">{card.value}</div>
+                <div className="text-4xl font-semibold leading-none tracking-normal">
+                  {card.value}
+                </div>
                 <Badge className="mt-3" variant={card.tone}>
                   {card.hint}
                 </Badge>
@@ -187,7 +203,10 @@ function OverviewScreen() {
       </section>
 
       <section className="grid min-h-32 gap-4 lg:grid-cols-2">
-        <Panel title="ارائه‌دهنده‌های پیام‌رسانی" icon={<MessageSquareWarning className="h-4 w-4" />}>
+        <Panel
+          title="ارائه‌دهنده‌های پیام‌رسانی"
+          icon={<MessageSquareWarning className="h-4 w-4" />}
+        >
           <CompactRows
             rows={(data?.messagingAccounts ?? []).map((row) => ({
               label: `${text(row.provider)} ${truthy(row.enabled) ? 'فعال' : 'غیرفعال'}`,
@@ -197,7 +216,10 @@ function OverviewScreen() {
             empty="هنوز حساب پیام‌رسانی متصل نشده است."
           />
         </Panel>
-        <Panel title="رویدادهای ممیزی اخیر" icon={<FileClock className="h-4 w-4" />}>
+        <Panel
+          title="رویدادهای ممیزی اخیر"
+          icon={<FileClock className="h-4 w-4" />}
+        >
           <CompactRows
             rows={(data?.recentAuditEvents ?? []).map((row) => ({
               label: text(row.action),
@@ -216,12 +238,44 @@ function SalonsScreen() {
   const [selected, setSelected] = useState<RecordRow | null>(null)
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'name', header: 'سالن', cell: ({ row }) => <PrimaryCell title={text(row.original.name)} subtitle={text(row.original.slug)} /> },
-      { accessorKey: 'status', header: 'وضعیت', cell: ({ row }) => <StatusBadge status={text(row.original.status)} /> },
-      { accessorKey: 'phone', header: 'موبایل', cell: ({ row }) => <span dir="ltr">{text(row.original.phone)}</span> },
-      { accessorKey: 'memberCount', header: 'اعضا', cell: ({ row }) => number(row.original.memberCount) },
-      { accessorKey: 'publicEnabled', header: 'صفحه عمومی', cell: ({ row }) => <BooleanBadge value={truthy(row.original.publicEnabled)} /> },
-      { id: 'actions', cell: ({ row }) => <RowButton onClick={() => setSelected(row.original)} /> },
+      {
+        accessorKey: 'name',
+        header: 'سالن',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={text(row.original.name)}
+            subtitle={text(row.original.slug)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'وضعیت',
+        cell: ({ row }) => <StatusBadge status={text(row.original.status)} />,
+      },
+      {
+        accessorKey: 'phone',
+        header: 'موبایل',
+        cell: ({ row }) => <span dir="ltr">{text(row.original.phone)}</span>,
+      },
+      {
+        accessorKey: 'memberCount',
+        header: 'اعضا',
+        cell: ({ row }) => number(row.original.memberCount),
+      },
+      {
+        accessorKey: 'publicEnabled',
+        header: 'صفحه عمومی',
+        cell: ({ row }) => (
+          <BooleanBadge value={truthy(row.original.publicEnabled)} />
+        ),
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => (
+          <RowButton onClick={() => setSelected(row.original)} />
+        ),
+      },
     ],
     [],
   )
@@ -234,13 +288,24 @@ function SalonsScreen() {
         fetcher={adminApi.salons}
         searchPlaceholder="جستجو بر اساس نام سالن، اسلاگ یا شماره موبایل..."
       />
-      <SalonSheet row={selected} onOpenChange={(open) => !open && setSelected(null)} />
+      <SalonSheet
+        row={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+      />
     </>
   )
 }
 
-function SalonSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange: (open: boolean) => void }) {
+function SalonSheet({
+  row,
+  onOpenChange,
+}: {
+  row: RecordRow | null
+  onOpenChange: (open: boolean) => void
+}) {
   const queryClient = useQueryClient()
+  const { runtime } = useAdminAuth()
+  const isLiveData = runtime.dataSource === 'live'
   const id = text(row?.id)
   const detailQuery = useQuery({
     queryKey: ['admin', 'salon', id],
@@ -253,8 +318,11 @@ function SalonSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange
     enabled: Boolean(id),
   })
   const statusMutation = useMutation({
-    mutationFn: (input: { status: AdminSalonStatus; reason: string }) =>
-      adminApi.updateSalonStatus(id, input.status, input.reason),
+    mutationFn: (input: {
+      status: AdminSalonStatus
+      reason: string
+      liveConfirmation?: string
+    }) => adminApi.updateSalonStatus(id, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'salons'] })
       void queryClient.invalidateQueries({ queryKey: ['admin', 'salon', id] })
@@ -262,8 +330,12 @@ function SalonSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange
     },
   })
   const noteMutation = useMutation({
-    mutationFn: (input: { body: string; reason: string }) => adminApi.createSalonNote(id, input),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'salon-notes', id] }),
+    mutationFn: (input: { body: string; reason: string }) =>
+      adminApi.createSalonNote(id, input),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'salon-notes', id],
+      }),
   })
   const salon = detailQuery.data?.salon ?? row ?? {}
 
@@ -272,13 +344,18 @@ function SalonSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange
       <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>{text(salon.name) || 'جزئیات سالن'}</SheetTitle>
-          <SheetDescription>{text(salon.slug) || text(salon.id)}</SheetDescription>
+          <SheetDescription>
+            {text(salon.slug) || text(salon.id)}
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           {detailQuery.isLoading ? <ScreenSkeleton /> : null}
           <DetailGrid
             items={[
-              ['وضعیت', <StatusBadge key="status" status={text(salon.status)} />],
+              [
+                'وضعیت',
+                <StatusBadge key="status" status={text(salon.status)} />,
+              ],
               ['موبایل', text(salon.phone)],
               ['منطقه زمانی', text(salon.timezone)],
               ['صفحه عمومی', truthy(salon.publicEnabled) ? 'فعال' : 'غیرفعال'],
@@ -286,7 +363,12 @@ function SalonSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange
               ['نوبت‌ها', number(detailQuery.data?.stats.appointments)],
             ]}
           />
-          <StatusForm current={text(salon.status) as AdminSalonStatus} pending={statusMutation.isPending} onSubmit={(input) => statusMutation.mutate(input)} />
+          <StatusForm
+            current={text(salon.status) as AdminSalonStatus}
+            isLiveData={isLiveData}
+            pending={statusMutation.isPending}
+            onSubmit={(input) => statusMutation.mutate(input)}
+          />
           <Panel title="اعضا">
             <CompactRows
               rows={(detailQuery.data?.members ?? []).map((member) => ({
@@ -312,11 +394,44 @@ function UsersScreen() {
   const [selected, setSelected] = useState<RecordRow | null>(null)
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'name', header: 'کاربر', cell: ({ row }) => <PrimaryCell title={text(row.original.name)} subtitle={text(row.original.email) || text(row.original.phoneNumber)} /> },
-      { accessorKey: 'platformRole', header: 'نقش پلتفرمی', cell: ({ row }) => <RoleBadge role={text(row.original.platformRole)} active={truthy(row.original.platformActive)} /> },
-      { accessorKey: 'salonMembershipCount', header: 'سالن‌ها', cell: ({ row }) => number(row.original.salonMembershipCount) },
-      { accessorKey: 'createdAt', header: 'ساخته‌شده', cell: ({ row }) => formatDate(row.original.createdAt) },
-      { id: 'actions', cell: ({ row }) => <RowButton onClick={() => setSelected(row.original)} /> },
+      {
+        accessorKey: 'name',
+        header: 'کاربر',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={text(row.original.name)}
+            subtitle={
+              text(row.original.email) || text(row.original.phoneNumber)
+            }
+          />
+        ),
+      },
+      {
+        accessorKey: 'platformRole',
+        header: 'نقش پلتفرمی',
+        cell: ({ row }) => (
+          <RoleBadge
+            role={text(row.original.platformRole)}
+            active={truthy(row.original.platformActive)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'salonMembershipCount',
+        header: 'سالن‌ها',
+        cell: ({ row }) => number(row.original.salonMembershipCount),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'ساخته‌شده',
+        cell: ({ row }) => formatDate(row.original.createdAt),
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => (
+          <RowButton onClick={() => setSelected(row.original)} />
+        ),
+      },
     ],
     [],
   )
@@ -329,19 +444,40 @@ function UsersScreen() {
         fetcher={adminApi.users}
         searchPlaceholder="جستجو بر اساس نام، ایمیل، موبایل یا نام کاربری..."
       />
-      <UserSheet row={selected} onOpenChange={(open) => !open && setSelected(null)} />
+      <UserSheet
+        row={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+      />
     </>
   )
 }
 
-function UserSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange: (open: boolean) => void }) {
+function UserSheet({
+  row,
+  onOpenChange,
+}: {
+  row: RecordRow | null
+  onOpenChange: (open: boolean) => void
+}) {
   const queryClient = useQueryClient()
   const id = text(row?.id)
-  const detailQuery = useQuery({ queryKey: ['admin', 'user', id], queryFn: () => adminApi.user(id), enabled: Boolean(id) })
-  const notesQuery = useQuery({ queryKey: ['admin', 'user-notes', id], queryFn: () => adminApi.userNotes(id), enabled: Boolean(id) })
+  const detailQuery = useQuery({
+    queryKey: ['admin', 'user', id],
+    queryFn: () => adminApi.user(id),
+    enabled: Boolean(id),
+  })
+  const notesQuery = useQuery({
+    queryKey: ['admin', 'user-notes', id],
+    queryFn: () => adminApi.userNotes(id),
+    enabled: Boolean(id),
+  })
   const noteMutation = useMutation({
-    mutationFn: (input: { body: string; reason: string }) => adminApi.createUserNote(id, input),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'user-notes', id] }),
+    mutationFn: (input: { body: string; reason: string }) =>
+      adminApi.createUserNote(id, input),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'user-notes', id],
+      }),
   })
   const user = detailQuery.data?.user ?? row ?? {}
 
@@ -350,14 +486,23 @@ function UserSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange:
       <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>{text(user.name) || 'جزئیات کاربر'}</SheetTitle>
-          <SheetDescription>{text(user.email) || text(user.phoneNumber) || text(user.id)}</SheetDescription>
+          <SheetDescription>
+            {text(user.email) || text(user.phoneNumber) || text(user.id)}
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <DetailGrid
             items={[
               ['موبایل', text(user.phoneNumber)],
               ['نام کاربری', text(user.username)],
-              ['نقش پلتفرمی', <RoleBadge key="role" role={text(user.platformRole)} active={truthy(user.platformActive)} />],
+              [
+                'نقش پلتفرمی',
+                <RoleBadge
+                  key="role"
+                  role={text(user.platformRole)}
+                  active={truthy(user.platformActive)}
+                />,
+              ],
               ['ساخته‌شده', formatDate(user.createdAt)],
               ['به‌روزشده', formatDate(user.updatedAt)],
             ]}
@@ -374,11 +519,13 @@ function UserSheet({ row, onOpenChange }: { row: RecordRow | null; onOpenChange:
           </Panel>
           <Panel title="حساب‌های پیام‌رسانی">
             <CompactRows
-              rows={(detailQuery.data?.messagingAccounts ?? []).map((account) => ({
-                label: text(account.provider),
-                value: truthy(account.enabled) ? 'فعال' : 'غیرفعال',
-                badge: text(account.displayName) || text(account.externalId),
-              }))}
+              rows={(detailQuery.data?.messagingAccounts ?? []).map(
+                (account) => ({
+                  label: text(account.provider),
+                  value: truthy(account.enabled) ? 'فعال' : 'غیرفعال',
+                  badge: text(account.displayName) || text(account.externalId),
+                }),
+              )}
               empty="حساب پیام‌رسانی متصل نیست."
             />
           </Panel>
@@ -398,11 +545,48 @@ function CatalogPresetsScreen() {
   const [editing, setEditing] = useState<RecordRow | null | 'new'>(null)
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'name', header: 'قالب', cell: ({ row }) => <PrimaryCell title={text(row.original.name)} subtitle={text(row.original.slug)} /> },
-      { accessorKey: 'isActive', header: 'وضعیت', cell: ({ row }) => <BooleanBadge value={truthy(row.original.isActive)} trueLabel="فعال" falseLabel="آرشیوشده" /> },
-      { accessorKey: 'sortOrder', header: 'ترتیب', cell: ({ row }) => number(row.original.sortOrder) },
-      { accessorKey: 'tree', header: 'درخت', cell: ({ row }) => `${Array.isArray(row.original.tree) ? row.original.tree.length : 0} دسته` },
-      { id: 'actions', cell: ({ row }) => <RowButton label="ویرایش" icon={<Save className="h-4 w-4" />} onClick={() => setEditing(row.original)} /> },
+      {
+        accessorKey: 'name',
+        header: 'قالب',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={text(row.original.name)}
+            subtitle={text(row.original.slug)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'isActive',
+        header: 'وضعیت',
+        cell: ({ row }) => (
+          <BooleanBadge
+            value={truthy(row.original.isActive)}
+            trueLabel="فعال"
+            falseLabel="آرشیوشده"
+          />
+        ),
+      },
+      {
+        accessorKey: 'sortOrder',
+        header: 'ترتیب',
+        cell: ({ row }) => number(row.original.sortOrder),
+      },
+      {
+        accessorKey: 'tree',
+        header: 'درخت',
+        cell: ({ row }) =>
+          `${Array.isArray(row.original.tree) ? row.original.tree.length : 0} دسته`,
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => (
+          <RowButton
+            label="ویرایش"
+            icon={<Save className="h-4 w-4" />}
+            onClick={() => setEditing(row.original)}
+          />
+        ),
+      },
     ],
     [],
   )
@@ -424,7 +608,11 @@ function CatalogPresetsScreen() {
       <CatalogPresetSheet
         preset={editing}
         onOpenChange={(open) => !open && setEditing(null)}
-        onSaved={() => void queryClient.invalidateQueries({ queryKey: ['admin', 'catalog-presets'] })}
+        onSaved={() =>
+          void queryClient.invalidateQueries({
+            queryKey: ['admin', 'catalog-presets'],
+          })
+        }
       />
     </>
   )
@@ -464,8 +652,12 @@ function CatalogPresetSheet({
     <Sheet open={Boolean(preset)} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{isNew ? 'قالب کاتالوگ جدید' : 'ویرایش قالب کاتالوگ'}</SheetTitle>
-          <SheetDescription>ساختار JSON باید با schema قالب کاتالوگ فعلی هم‌خوان باشد.</SheetDescription>
+          <SheetTitle>
+            {isNew ? 'قالب کاتالوگ جدید' : 'ویرایش قالب کاتالوگ'}
+          </SheetTitle>
+          <SheetDescription>
+            ساختار JSON باید با schema قالب کاتالوگ فعلی هم‌خوان باشد.
+          </SheetDescription>
         </SheetHeader>
         <CatalogPresetForm
           source={source}
@@ -498,7 +690,11 @@ function CatalogPresetForm({
   }) => void
 }) {
   const [treeError, setTreeError] = useState('')
-  const treeValue = JSON.stringify(Array.isArray(source.tree) ? source.tree : [{ name: '', families: [] }], null, 2)
+  const treeValue = JSON.stringify(
+    Array.isArray(source.tree) ? source.tree : [{ name: '', families: [] }],
+    null,
+    2,
+  )
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -517,23 +713,61 @@ function CatalogPresetForm({
         reason: String(form.get('reason') ?? ''),
       })
     } catch (caught) {
-      setTreeError(caught instanceof Error ? caught.message : 'JSON نامعتبر است')
+      setTreeError(
+        caught instanceof Error ? caught.message : 'JSON نامعتبر است',
+      )
     }
   }
 
   return (
     <form className="mt-6 space-y-4" onSubmit={submit}>
-      <FormField label="اسلاگ" name="slug" defaultValue={text(source.slug)} required />
-      <FormField label="نام" name="name" defaultValue={text(source.name)} required />
-      <FormField label="توضیحات" name="description" defaultValue={text(source.description)} />
-      <FormField label="ترتیب نمایش" name="sortOrder" type="number" defaultValue={String(number(source.sortOrder))} />
+      <FormField
+        label="اسلاگ"
+        name="slug"
+        defaultValue={text(source.slug)}
+        required
+      />
+      <FormField
+        label="نام"
+        name="name"
+        defaultValue={text(source.name)}
+        required
+      />
+      <FormField
+        label="توضیحات"
+        name="description"
+        defaultValue={text(source.description)}
+      />
+      <FormField
+        label="ترتیب نمایش"
+        name="sortOrder"
+        type="number"
+        defaultValue={String(number(source.sortOrder))}
+      />
       <label className="flex items-center gap-2 text-sm">
-        <input name="isActive" type="checkbox" defaultChecked={source.isActive !== false} />
+        <input
+          name="isActive"
+          type="checkbox"
+          defaultChecked={source.isActive !== false}
+        />
         فعال
       </label>
-      <TextAreaField label="ویرایشگر درخت" name="tree" defaultValue={treeValue} rows={12} />
-      {treeError ? <p className="text-sm text-destructive">{treeError}</p> : null}
-      <TextAreaField label="دلیل" name="reason" placeholder="دلیل الزامی برای ممیزی" rows={3} required />
+      <TextAreaField
+        label="ویرایشگر درخت"
+        name="tree"
+        defaultValue={treeValue}
+        rows={12}
+      />
+      {treeError ? (
+        <p className="text-sm text-destructive">{treeError}</p>
+      ) : null}
+      <TextAreaField
+        label="دلیل"
+        name="reason"
+        placeholder="دلیل الزامی برای ممیزی"
+        rows={3}
+        required
+      />
       <MutationError error={error} />
       <Button disabled={pending} type="submit">
         <Save className="h-4 w-4" />
@@ -544,14 +778,46 @@ function CatalogPresetForm({
 }
 
 function MessagingHealthScreen() {
-  const healthQuery = useQuery({ queryKey: ['admin', 'messaging-health'], queryFn: adminApi.messagingHealth })
+  const healthQuery = useQuery({
+    queryKey: ['admin', 'messaging-health'],
+    queryFn: adminApi.messagingHealth,
+  })
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'title', header: 'اعلان', cell: ({ row }) => <PrimaryCell title={text(row.original.title) || text(row.original.notificationType)} subtitle={text(row.original.error)} /> },
-      { accessorKey: 'channel', header: 'کانال', cell: ({ row }) => text(row.original.channel) },
-      { accessorKey: 'provider', header: 'ارائه‌دهنده', cell: ({ row }) => text(row.original.provider) },
-      { accessorKey: 'status', header: 'وضعیت', cell: ({ row }) => <Badge variant="danger">{text(row.original.status)}</Badge> },
-      { accessorKey: 'createdAt', header: 'ساخته‌شده', cell: ({ row }) => formatDate(row.original.createdAt) },
+      {
+        accessorKey: 'title',
+        header: 'اعلان',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={
+              text(row.original.title) || text(row.original.notificationType)
+            }
+            subtitle={text(row.original.error)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'channel',
+        header: 'کانال',
+        cell: ({ row }) => text(row.original.channel),
+      },
+      {
+        accessorKey: 'provider',
+        header: 'ارائه‌دهنده',
+        cell: ({ row }) => text(row.original.provider),
+      },
+      {
+        accessorKey: 'status',
+        header: 'وضعیت',
+        cell: ({ row }) => (
+          <Badge variant="danger">{text(row.original.status)}</Badge>
+        ),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'ساخته‌شده',
+        cell: ({ row }) => formatDate(row.original.createdAt),
+      },
     ],
     [],
   )
@@ -559,7 +825,10 @@ function MessagingHealthScreen() {
   return (
     <div className="space-y-5">
       <section className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Linked accounts" icon={<ShieldCheck className="h-4 w-4" />}>
+        <Panel
+          title="Linked accounts"
+          icon={<ShieldCheck className="h-4 w-4" />}
+        >
           <CompactRows
             rows={(healthQuery.data?.accounts ?? []).map((row) => ({
               label: text(row.provider),
@@ -579,7 +848,10 @@ function MessagingHealthScreen() {
             empty="اعلان ناموفقی وجود ندارد."
           />
         </Panel>
-        <Panel title="پیگیری‌های ناموفق" icon={<MessageSquareWarning className="h-4 w-4" />}>
+        <Panel
+          title="پیگیری‌های ناموفق"
+          icon={<MessageSquareWarning className="h-4 w-4" />}
+        >
           <CompactRows
             rows={(healthQuery.data?.failedFollowUps ?? []).map((row) => ({
               label: text(row.provider),
@@ -605,18 +877,70 @@ function SupportLookupScreen() {
     () =>
       kind === 'appointments'
         ? [
-            { accessorKey: 'clientName', header: 'مشتری', cell: ({ row }) => <PrimaryCell title={text(row.original.clientName)} subtitle={text(row.original.clientPhone)} /> },
-            { accessorKey: 'salonName', header: 'سالن', cell: ({ row }) => text(row.original.salonName) },
-            { accessorKey: 'bookedServiceName', header: 'خدمت', cell: ({ row }) => text(row.original.bookedServiceName) },
-            { accessorKey: 'date', header: 'تاریخ', cell: ({ row }) => `${text(row.original.date)} ${text(row.original.startTime)}` },
-            { accessorKey: 'status', header: 'وضعیت', cell: ({ row }) => <Badge>{text(row.original.status)}</Badge> },
+            {
+              accessorKey: 'clientName',
+              header: 'مشتری',
+              cell: ({ row }) => (
+                <PrimaryCell
+                  title={text(row.original.clientName)}
+                  subtitle={text(row.original.clientPhone)}
+                />
+              ),
+            },
+            {
+              accessorKey: 'salonName',
+              header: 'سالن',
+              cell: ({ row }) => text(row.original.salonName),
+            },
+            {
+              accessorKey: 'bookedServiceName',
+              header: 'خدمت',
+              cell: ({ row }) => text(row.original.bookedServiceName),
+            },
+            {
+              accessorKey: 'date',
+              header: 'تاریخ',
+              cell: ({ row }) =>
+                `${text(row.original.date)} ${text(row.original.startTime)}`,
+            },
+            {
+              accessorKey: 'status',
+              header: 'وضعیت',
+              cell: ({ row }) => <Badge>{text(row.original.status)}</Badge>,
+            },
           ]
         : [
-            { accessorKey: 'customerName', header: 'مشتری', cell: ({ row }) => <PrimaryCell title={text(row.original.customerName)} subtitle={text(row.original.customerPhone)} /> },
-            { accessorKey: 'salonName', header: 'سالن', cell: ({ row }) => text(row.original.salonName) },
-            { accessorKey: 'bookedServiceName', header: 'خدمت', cell: ({ row }) => text(row.original.bookedServiceName) },
-            { accessorKey: 'requestedDate', header: 'درخواست‌شده', cell: ({ row }) => `${text(row.original.requestedDate)} ${text(row.original.requestedStartTime)}` },
-            { accessorKey: 'status', header: 'وضعیت', cell: ({ row }) => <Badge>{text(row.original.status)}</Badge> },
+            {
+              accessorKey: 'customerName',
+              header: 'مشتری',
+              cell: ({ row }) => (
+                <PrimaryCell
+                  title={text(row.original.customerName)}
+                  subtitle={text(row.original.customerPhone)}
+                />
+              ),
+            },
+            {
+              accessorKey: 'salonName',
+              header: 'سالن',
+              cell: ({ row }) => text(row.original.salonName),
+            },
+            {
+              accessorKey: 'bookedServiceName',
+              header: 'خدمت',
+              cell: ({ row }) => text(row.original.bookedServiceName),
+            },
+            {
+              accessorKey: 'requestedDate',
+              header: 'درخواست‌شده',
+              cell: ({ row }) =>
+                `${text(row.original.requestedDate)} ${text(row.original.requestedStartTime)}`,
+            },
+            {
+              accessorKey: 'status',
+              header: 'وضعیت',
+              cell: ({ row }) => <Badge>{text(row.original.status)}</Badge>,
+            },
           ],
     [kind],
   )
@@ -624,14 +948,30 @@ function SupportLookupScreen() {
   return (
     <div className="space-y-3">
       <div className="flex w-fit rounded-md border border-border p-1">
-        <Button size="sm" variant={kind === 'appointments' ? 'secondary' : 'ghost'} onClick={() => setKind('appointments')}>نوبت‌ها</Button>
-        <Button size="sm" variant={kind === 'requests' ? 'secondary' : 'ghost'} onClick={() => setKind('requests')}>درخواست‌ها</Button>
+        <Button
+          size="sm"
+          variant={kind === 'appointments' ? 'secondary' : 'ghost'}
+          onClick={() => setKind('appointments')}
+        >
+          نوبت‌ها
+        </Button>
+        <Button
+          size="sm"
+          variant={kind === 'requests' ? 'secondary' : 'ghost'}
+          onClick={() => setKind('requests')}
+        >
+          درخواست‌ها
+        </Button>
       </div>
       <AdminListTable
         key={kind}
         queryKey={`support-${kind}`}
         columns={columns}
-        fetcher={kind === 'appointments' ? adminApi.supportAppointments : adminApi.supportAppointmentRequests}
+        fetcher={
+          kind === 'appointments'
+            ? adminApi.supportAppointments
+            : adminApi.supportAppointmentRequests
+        }
         searchPlaceholder="جستجو بر اساس مشتری، موبایل یا خدمت..."
       />
     </div>
@@ -639,14 +979,47 @@ function SupportLookupScreen() {
 }
 
 function AuditLogScreen() {
-  const [filters, setFilters] = useState({ action: '', targetType: '', targetId: '', salonId: '' })
+  const [filters, setFilters] = useState({
+    action: '',
+    targetType: '',
+    targetId: '',
+    salonId: '',
+  })
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'action', header: 'عملیات', cell: ({ row }) => <PrimaryCell title={text(row.original.action)} subtitle={text(row.original.reason)} /> },
-      { accessorKey: 'actorName', header: 'انجام‌دهنده', cell: ({ row }) => <RoleBadge role={text(row.original.actorPlatformRole)} active /> },
-      { accessorKey: 'targetType', header: 'هدف', cell: ({ row }) => `${text(row.original.targetType)} ${shortId(row.original.targetId)}` },
-      { accessorKey: 'ip', header: 'IP', cell: ({ row }) => <span dir="ltr">{text(row.original.ip)}</span> },
-      { accessorKey: 'createdAt', header: 'ساخته‌شده', cell: ({ row }) => formatDate(row.original.createdAt) },
+      {
+        accessorKey: 'action',
+        header: 'عملیات',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={text(row.original.action)}
+            subtitle={text(row.original.reason)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'actorName',
+        header: 'انجام‌دهنده',
+        cell: ({ row }) => (
+          <RoleBadge role={text(row.original.actorPlatformRole)} active />
+        ),
+      },
+      {
+        accessorKey: 'targetType',
+        header: 'هدف',
+        cell: ({ row }) =>
+          `${text(row.original.targetType)} ${shortId(row.original.targetId)}`,
+      },
+      {
+        accessorKey: 'ip',
+        header: 'IP',
+        cell: ({ row }) => <span dir="ltr">{text(row.original.ip)}</span>,
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'ساخته‌شده',
+        cell: ({ row }) => formatDate(row.original.createdAt),
+      },
     ],
     [],
   )
@@ -654,18 +1027,30 @@ function AuditLogScreen() {
   return (
     <div className="space-y-3">
       <div className="grid gap-2 rounded-lg border border-border bg-card p-3 md:grid-cols-4">
-        {(['action', 'targetType', 'targetId', 'salonId'] as const).map((field) => (
-          <Input
-            key={field}
-            value={filters[field]}
-            onChange={(event) => setFilters((current) => ({ ...current, [field]: event.target.value }))}
-            placeholder={field}
-          />
-        ))}
+        {(['action', 'targetType', 'targetId', 'salonId'] as const).map(
+          (field) => (
+            <Input
+              key={field}
+              value={filters[field]}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  [field]: event.target.value,
+                }))
+              }
+              placeholder={field}
+            />
+          ),
+        )}
       </div>
       <AdminListTable
         queryKey="audit-log"
-        queryIdentity={[filters.action, filters.targetType, filters.targetId, filters.salonId]}
+        queryIdentity={[
+          filters.action,
+          filters.targetType,
+          filters.targetId,
+          filters.salonId,
+        ]}
         columns={columns}
         fetcher={(params) => adminApi.auditLog({ ...params, ...filters })}
         searchPlaceholder="برای فیلتر دقیق لاگ ممیزی از فیلدهای بالا استفاده کنید."
@@ -679,11 +1064,50 @@ function PlatformAdminsScreen() {
   const [selected, setSelected] = useState<RecordRow | null | 'new'>(null)
   const columns = useMemo<ColumnDef<RecordRow>[]>(
     () => [
-      { accessorKey: 'name', header: 'ادمین', cell: ({ row }) => <PrimaryCell title={text(row.original.name)} subtitle={text(row.original.email) || text(row.original.phoneNumber)} /> },
-      { accessorKey: 'role', header: 'نقش', cell: ({ row }) => <RoleBadge role={text(row.original.role)} active={truthy(row.original.active)} /> },
-      { accessorKey: 'active', header: 'دسترسی', cell: ({ row }) => <BooleanBadge value={truthy(row.original.active)} trueLabel="فعال" falseLabel="لغوشده" /> },
-      { accessorKey: 'updatedAt', header: 'به‌روزشده', cell: ({ row }) => formatDate(row.original.updatedAt) },
-      { id: 'actions', cell: ({ row }) => <RowButton label="مدیریت" onClick={() => setSelected(row.original)} /> },
+      {
+        accessorKey: 'name',
+        header: 'ادمین',
+        cell: ({ row }) => (
+          <PrimaryCell
+            title={text(row.original.name)}
+            subtitle={
+              text(row.original.email) || text(row.original.phoneNumber)
+            }
+          />
+        ),
+      },
+      {
+        accessorKey: 'role',
+        header: 'نقش',
+        cell: ({ row }) => (
+          <RoleBadge
+            role={text(row.original.role)}
+            active={truthy(row.original.active)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'active',
+        header: 'دسترسی',
+        cell: ({ row }) => (
+          <BooleanBadge
+            value={truthy(row.original.active)}
+            trueLabel="فعال"
+            falseLabel="لغوشده"
+          />
+        ),
+      },
+      {
+        accessorKey: 'updatedAt',
+        header: 'به‌روزشده',
+        cell: ({ row }) => formatDate(row.original.updatedAt),
+      },
+      {
+        id: 'actions',
+        cell: ({ row }) => (
+          <RowButton label="مدیریت" onClick={() => setSelected(row.original)} />
+        ),
+      },
     ],
     [],
   )
@@ -705,7 +1129,11 @@ function PlatformAdminsScreen() {
       <PlatformAdminSheet
         admin={selected}
         onOpenChange={(open) => !open && setSelected(null)}
-        onSaved={() => void queryClient.invalidateQueries({ queryKey: ['admin', 'platform-admins'] })}
+        onSaved={() =>
+          void queryClient.invalidateQueries({
+            queryKey: ['admin', 'platform-admins'],
+          })
+        }
       />
     </>
   )
@@ -721,14 +1149,23 @@ function PlatformAdminSheet({
   onSaved: () => void
 }) {
   const isNew = admin === 'new'
+  const { runtime } = useAdminAuth()
+  const isLiveData = runtime.dataSource === 'live'
   const source = admin && admin !== 'new' ? admin : {}
   const mutation = useMutation({
-    mutationFn: (input: { userId: string; role: PlatformRole; active: boolean; reason: string }) => {
+    mutationFn: (input: {
+      userId: string
+      role: PlatformRole
+      active: boolean
+      reason: string
+      liveConfirmation?: string
+    }) => {
       if (isNew) return adminApi.createPlatformAdmin(input)
       return adminApi.updatePlatformAdmin(text(source.id), {
         role: input.role,
         active: input.active,
         reason: input.reason,
+        liveConfirmation: input.liveConfirmation,
       })
     },
     onSuccess: () => {
@@ -745,6 +1182,7 @@ function PlatformAdminSheet({
       role: String(form.get('role') ?? 'platform_viewer') as PlatformRole,
       active: form.get('active') === 'on',
       reason: String(form.get('reason') ?? ''),
+      liveConfirmation: liveConfirmationFromForm(form, isLiveData),
     })
   }
 
@@ -752,17 +1190,41 @@ function PlatformAdminSheet({
     <Sheet open={Boolean(admin)} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>{isNew ? 'اعطای دسترسی پلتفرم' : 'مدیریت ادمین پلتفرم'}</SheetTitle>
-          <SheetDescription>محافظت از آخرین مالک فعال در API اعمال می‌شود.</SheetDescription>
+          <SheetTitle>
+            {isNew ? 'اعطای دسترسی پلتفرم' : 'مدیریت ادمین پلتفرم'}
+          </SheetTitle>
+          <SheetDescription>
+            محافظت از آخرین مالک فعال در API اعمال می‌شود.
+          </SheetDescription>
         </SheetHeader>
         <form className="mt-6 space-y-4" onSubmit={submit}>
-          <FormField label="شناسه کاربر" name="userId" defaultValue={text(source.userId)} required readOnly={!isNew} />
-          <SelectField label="نقش" name="role" defaultValue={text(source.role) || 'platform_viewer'} options={roleOptions} />
+          <LiveDataWarning
+            show={isLiveData}
+            message="این تغییر دسترسی ادمین روی داده زنده تولید اعمال می‌شود."
+          />
+          <FormField
+            label="شناسه کاربر"
+            name="userId"
+            defaultValue={text(source.userId)}
+            required
+            readOnly={!isNew}
+          />
+          <SelectField
+            label="نقش"
+            name="role"
+            defaultValue={text(source.role) || 'platform_viewer'}
+            options={roleOptions}
+          />
           <label className="flex items-center gap-2 text-sm">
-            <input name="active" type="checkbox" defaultChecked={source.active !== false} />
+            <input
+              name="active"
+              type="checkbox"
+              defaultChecked={source.active !== false}
+            />
             دسترسی فعال
           </label>
           <TextAreaField label="دلیل" name="reason" rows={3} required />
+          <LiveConfirmationInput show={isLiveData} />
           <MutationError error={mutation.error} />
           <Button disabled={mutation.isPending} type="submit">
             <ShieldCheck className="h-4 w-4" />
@@ -808,7 +1270,11 @@ function AdminListTable({
   queryKey: string
   queryIdentity?: unknown[]
   columns: ColumnDef<RecordRow>[]
-  fetcher: (params: { page: number; pageSize: number; search?: string }) => Promise<ListResult>
+  fetcher: (params: {
+    page: number
+    pageSize: number
+    search?: string
+  }) => Promise<ListResult>
   searchPlaceholder: string
   actions?: ReactNode
 }) {
@@ -818,7 +1284,14 @@ function AdminListTable({
     pageSize: tableState.pageSize,
   }
   const listQuery = useQuery({
-    queryKey: ['admin', queryKey, tableState.page, tableState.pageSize, tableState.query, ...queryIdentity],
+    queryKey: [
+      'admin',
+      queryKey,
+      tableState.page,
+      tableState.pageSize,
+      tableState.query,
+      ...queryIdentity,
+    ],
     queryFn: () =>
       fetcher({
         page: tableState.page,
@@ -841,18 +1314,24 @@ function AdminListTable({
       </div>
       <p className="text-xs text-muted-foreground">{searchPlaceholder}</p>
       {listQuery.isLoading ? <ScreenSkeleton /> : null}
-      {listQuery.isError ? <ErrorPanel message="بارگذاری رکوردهای ادمین انجام نشد." /> : null}
+      {listQuery.isError ? (
+        <ErrorPanel message="بارگذاری رکوردهای ادمین انجام نشد." />
+      ) : null}
       <DataTable
         columns={columns}
         data={listQuery.data?.items ?? []}
         pageCount={pageCount}
         pagination={pagination}
-        onPaginationChange={(next) => setTableState({ page: next.pageIndex + 1, pageSize: next.pageSize })}
+        onPaginationChange={(next) =>
+          setTableState({ page: next.pageIndex + 1, pageSize: next.pageSize })
+        }
       />
       <DataTablePagination
         pagination={pagination}
         pageCount={pageCount}
-        onPaginationChange={(next) => setTableState({ page: next.pageIndex + 1, pageSize: next.pageSize })}
+        onPaginationChange={(next) =>
+          setTableState({ page: next.pageIndex + 1, pageSize: next.pageSize })
+        }
       />
     </section>
   )
@@ -860,12 +1339,18 @@ function AdminListTable({
 
 function StatusForm({
   current,
+  isLiveData,
   pending,
   onSubmit,
 }: {
   current: AdminSalonStatus
+  isLiveData: boolean
   pending: boolean
-  onSubmit: (input: { status: AdminSalonStatus; reason: string }) => void
+  onSubmit: (input: {
+    status: AdminSalonStatus
+    reason: string
+    liveConfirmation?: string
+  }) => void
 }) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -873,31 +1358,73 @@ function StatusForm({
     onSubmit({
       status: String(form.get('status') ?? current) as AdminSalonStatus,
       reason: String(form.get('reason') ?? ''),
+      liveConfirmation: liveConfirmationFromForm(form, isLiveData),
     })
     event.currentTarget.reset()
   }
 
   return (
     <Panel title="کنترل وضعیت">
-      <form className="grid gap-3 sm:grid-cols-[160px_1fr_auto]" onSubmit={submit}>
-        <SelectField
-          label="وضعیت"
-          name="status"
-          defaultValue={current || 'active'}
-          options={[
-            ['active', 'فعال'],
-            ['suspended', 'تعلیق‌شده'],
-            ['archived', 'آرشیوشده'],
-          ]}
-          hideLabel
+      <form className="space-y-3" onSubmit={submit}>
+        <LiveDataWarning
+          show={isLiveData}
+          message="تغییر وضعیت سالن روی داده زنده تولید اعمال می‌شود."
         />
-        <Input name="reason" placeholder="دلیل الزامی" required />
-        <Button type="submit" disabled={pending}>
-          <RefreshCw className="h-4 w-4" />
-          به‌روزرسانی
-        </Button>
+        <div className="grid gap-3 sm:grid-cols-[160px_1fr_auto]">
+          <SelectField
+            label="وضعیت"
+            name="status"
+            defaultValue={current || 'active'}
+            options={[
+              ['active', 'فعال'],
+              ['suspended', 'تعلیق‌شده'],
+              ['archived', 'آرشیوشده'],
+            ]}
+            hideLabel
+          />
+          <Input name="reason" placeholder="دلیل الزامی" required />
+          <Button type="submit" disabled={pending}>
+            <RefreshCw className="h-4 w-4" />
+            به‌روزرسانی
+          </Button>
+        </div>
+        <LiveConfirmationInput show={isLiveData} />
       </form>
     </Panel>
+  )
+}
+
+function liveConfirmationFromForm(form: FormData, isLiveData: boolean) {
+  if (!isLiveData) return undefined
+  return String(form.get('liveConfirmation') ?? '')
+}
+
+function LiveDataWarning({
+  show,
+  message,
+}: {
+  show: boolean
+  message: string
+}) {
+  if (!show) return null
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-destructive/35 bg-destructive/10 p-3 text-sm text-destructive">
+      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+      <p className="leading-6">{message} برای ادامه عبارت LIVE را وارد کنید.</p>
+    </div>
+  )
+}
+
+function LiveConfirmationInput({ show }: { show: boolean }) {
+  if (!show) return null
+  return (
+    <FormField
+      label="تأیید داده زنده"
+      name="liveConfirmation"
+      placeholder="LIVE"
+      pattern="LIVE"
+      required
+    />
   )
 }
 
@@ -931,9 +1458,16 @@ function NotesPanel({
         </Button>
       </form>
       <div className="mt-4 space-y-2">
-        {notes.length === 0 ? <p className="text-sm text-muted-foreground">هنوز یادداشتی ثبت نشده است.</p> : null}
+        {notes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            هنوز یادداشتی ثبت نشده است.
+          </p>
+        ) : null}
         {notes.map((note) => (
-          <div key={`${note.createdAt}-${note.body}`} className="rounded-md border border-border p-3">
+          <div
+            key={`${note.createdAt}-${note.body}`}
+            className="rounded-md border border-border p-3"
+          >
             <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span>{note.authorName}</span>
               <span>{formatDate(note.createdAt)}</span>
@@ -946,7 +1480,15 @@ function NotesPanel({
   )
 }
 
-function Panel({ title, icon, children }: { title: string; icon?: ReactNode; children: ReactNode }) {
+function Panel({
+  title,
+  icon,
+  children,
+}: {
+  title: string
+  icon?: ReactNode
+  children: ReactNode
+}) {
   return (
     <section className="rounded-lg border border-border/80 bg-card shadow-sm">
       <div className="flex items-center gap-2 border-b border-border/80 px-4 py-3">
@@ -964,7 +1506,9 @@ function DetailGrid({ items }: { items: Array<[string, ReactNode]> }) {
       {items.map(([label, value]) => (
         <div key={label} className="min-w-0">
           <div className="text-xs text-muted-foreground">{label}</div>
-          <div className="mt-1 truncate text-sm font-medium">{value || '-'}</div>
+          <div className="mt-1 truncate text-sm font-medium">
+            {value || '-'}
+          </div>
         </div>
       ))}
     </div>
@@ -978,7 +1522,8 @@ function CompactRows({
   rows: Array<{ label: string; value: string; badge?: string }>
   empty: string
 }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">{empty}</p>
+  if (rows.length === 0)
+    return <p className="text-sm text-muted-foreground">{empty}</p>
   return (
     <div className="space-y-2">
       {rows.map((row, index) => (
@@ -987,21 +1532,37 @@ function CompactRows({
           className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-background/35 px-3 py-2.5"
         >
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">{row.label || '-'}</div>
-            {row.badge ? <div className="truncate text-xs text-muted-foreground">{row.badge}</div> : null}
+            <div className="truncate text-sm font-medium">
+              {row.label || '-'}
+            </div>
+            {row.badge ? (
+              <div className="truncate text-xs text-muted-foreground">
+                {row.badge}
+              </div>
+            ) : null}
           </div>
-          <span className="shrink-0 text-sm text-muted-foreground">{row.value}</span>
+          <span className="shrink-0 text-sm text-muted-foreground">
+            {row.value}
+          </span>
         </div>
       ))}
     </div>
   )
 }
 
-function PrimaryCell({ title, subtitle }: { title: string; subtitle?: string }) {
+function PrimaryCell({
+  title,
+  subtitle,
+}: {
+  title: string
+  subtitle?: string
+}) {
   return (
     <div className="min-w-0">
       <div className="truncate font-medium">{title || '-'}</div>
-      {subtitle ? <div className="truncate text-xs text-muted-foreground">{subtitle}</div> : null}
+      {subtitle ? (
+        <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+      ) : null}
     </div>
   )
 }
@@ -1027,6 +1588,8 @@ function FormField({
   label,
   name,
   defaultValue,
+  placeholder,
+  pattern,
   type = 'text',
   required,
   readOnly,
@@ -1034,6 +1597,8 @@ function FormField({
   label: string
   name: string
   defaultValue?: string
+  placeholder?: string
+  pattern?: string
   type?: string
   required?: boolean
   readOnly?: boolean
@@ -1041,7 +1606,15 @@ function FormField({
   return (
     <label className="block space-y-1.5 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <Input name={name} type={type} defaultValue={defaultValue} required={required} readOnly={readOnly} />
+      <Input
+        name={name}
+        type={type}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        pattern={pattern}
+        required={required}
+        readOnly={readOnly}
+      />
     </label>
   )
 }
@@ -1090,8 +1663,12 @@ function SelectField({
   hideLabel?: boolean
 }) {
   return (
-    <label className={cn('block space-y-1.5 text-sm', hideLabel ? 'space-y-0' : '')}>
-      {hideLabel ? null : <span className="text-muted-foreground">{label}</span>}
+    <label
+      className={cn('block space-y-1.5 text-sm', hideLabel ? 'space-y-0' : '')}
+    >
+      {hideLabel ? null : (
+        <span className="text-muted-foreground">{label}</span>
+      )}
       <select
         name={name}
         defaultValue={defaultValue}
@@ -1123,21 +1700,35 @@ function BooleanBadge({
   trueLabel?: string
   falseLabel?: string
 }) {
-  return <Badge variant={value ? 'success' : 'outline'}>{value ? trueLabel : falseLabel}</Badge>
+  return (
+    <Badge variant={value ? 'success' : 'outline'}>
+      {value ? trueLabel : falseLabel}
+    </Badge>
+  )
 }
 
 function RoleBadge({ role, active }: { role: string; active: boolean }) {
   if (!role) return <Badge variant="outline">بدون نقش پلتفرمی</Badge>
-  return <Badge variant={active ? 'default' : 'outline'}>{formatRole(role)}</Badge>
+  return (
+    <Badge variant={active ? 'default' : 'outline'}>{formatRole(role)}</Badge>
+  )
 }
 
 function MutationError({ error }: { error: unknown }) {
   if (!error) return null
-  return <p className="text-sm text-destructive">{error instanceof Error ? error.message : 'عملیات انجام نشد'}</p>
+  return (
+    <p className="text-sm text-destructive">
+      {error instanceof Error ? error.message : 'عملیات انجام نشد'}
+    </p>
+  )
 }
 
 function ErrorPanel({ message }: { message: string }) {
-  return <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{message}</div>
+  return (
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+      {message}
+    </div>
+  )
 }
 
 function ScreenSkeleton() {
@@ -1171,7 +1762,8 @@ function text(value: unknown): string {
   if (value === null || value === undefined) return ''
   if (value instanceof Date) return value.toISOString()
   if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return String(value)
   return ''
 }
 

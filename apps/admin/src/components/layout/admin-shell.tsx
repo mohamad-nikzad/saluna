@@ -35,7 +35,8 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   }
 
   if (meQuery.isError) {
-    const status = meQuery.error instanceof AdminApiError ? meQuery.error.status : 500
+    const status =
+      meQuery.error instanceof AdminApiError ? meQuery.error.status : 500
     const isUnauthenticated = status === 401
     return (
       <main className="grid min-h-svh place-items-center bg-sidebar p-4">
@@ -45,7 +46,9 @@ export function AdminShell({ children }: { children?: ReactNode }) {
               <ShieldAlert className="h-5 w-5" />
             </div>
             <h1 className="mt-4 text-xl font-semibold">
-              {isUnauthenticated ? 'ورود به ادمین لازم است' : 'دسترسی ادمین مجاز نیست'}
+              {isUnauthenticated
+                ? 'ورود به ادمین لازم است'
+                : 'دسترسی ادمین مجاز نیست'}
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {isUnauthenticated
@@ -66,14 +69,20 @@ export function AdminShell({ children }: { children?: ReactNode }) {
 
   if (!meQuery.data) return null
 
-  const me = meQuery.data.user
+  const { user: me, runtime } = meQuery.data
 
   return (
-    <AdminAuthProvider me={me}>
+    <AdminAuthProvider me={me} runtime={runtime}>
       <SidebarProvider>
         <AppSidebar dir="rtl" side="right" variant="inset" collapsible="icon" />
         <SidebarInset className="min-h-svh overflow-hidden">
           <AdminTopbar />
+          {runtime.dataSource === 'live' ? (
+            <div className="border-b border-destructive/35 bg-destructive px-4 py-2 text-center text-sm font-semibold text-destructive-foreground">
+              اتصال به داده زنده تولید فعال است. تغییرات این پنل روی اطلاعات
+              واقعی اعمال می‌شود.
+            </div>
+          ) : null}
           <main className="flex w-full flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-7">
             {children ?? <Outlet />}
           </main>

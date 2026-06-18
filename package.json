@@ -20,6 +20,8 @@
     "dev:pwa-lan": "node scripts/dev-pwa-lan.mjs",
     "dev:local": "turbo run dev:local --filter=@repo/pwa --filter=@repo/web --filter=@repo/api",
     "dev:admin-stack": "turbo run dev:local --filter=@repo/api --filter=@repo/admin",
+    "dev:admin-stack:local-data": "turbo run dev:local-data --filter=@repo/api --filter=@repo/admin",
+    "dev:admin-stack:live-data": "turbo run dev:live-data --filter=@repo/api --filter=@repo/admin",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

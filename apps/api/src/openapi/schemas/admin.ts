@@ -3,7 +3,12 @@ import { z } from '@hono/zod-openapi'
 const isoDateTimeSchema = z.string().datetime().or(z.string())
 
 export const platformRoleSchema = z
-  .enum(['platform_owner', 'platform_admin', 'platform_support', 'platform_viewer'])
+  .enum([
+    'platform_owner',
+    'platform_admin',
+    'platform_support',
+    'platform_viewer',
+  ])
   .openapi('PlatformRole')
 
 export const salonStatusSchema = z
@@ -12,27 +17,53 @@ export const salonStatusSchema = z
 
 export const adminListQuerySchema = z
   .object({
-    page: z.coerce.number().int().positive().optional().openapi({
-      param: { name: 'page', in: 'query' },
-      example: 1,
-    }),
-    pageSize: z.coerce.number().int().positive().max(100).optional().openapi({
-      param: { name: 'pageSize', in: 'query' },
-      example: 25,
-    }),
-    search: z.string().optional().openapi({
-      param: { name: 'search', in: 'query' },
-      example: 'saluna',
-    }),
+    page: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .openapi({
+        param: { name: 'page', in: 'query' },
+        example: 1,
+      }),
+    pageSize: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(100)
+      .optional()
+      .openapi({
+        param: { name: 'pageSize', in: 'query' },
+        example: 25,
+      }),
+    search: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'search', in: 'query' },
+        example: 'saluna',
+      }),
   })
   .openapi('AdminListQuery')
 
 export const adminAuditQuerySchema = adminListQuerySchema
   .extend({
-    action: z.string().optional().openapi({ param: { name: 'action', in: 'query' } }),
-    targetType: z.string().optional().openapi({ param: { name: 'targetType', in: 'query' } }),
-    targetId: z.string().optional().openapi({ param: { name: 'targetId', in: 'query' } }),
-    salonId: z.string().optional().openapi({ param: { name: 'salonId', in: 'query' } }),
+    action: z
+      .string()
+      .optional()
+      .openapi({ param: { name: 'action', in: 'query' } }),
+    targetType: z
+      .string()
+      .optional()
+      .openapi({ param: { name: 'targetType', in: 'query' } }),
+    targetId: z
+      .string()
+      .optional()
+      .openapi({ param: { name: 'targetId', in: 'query' } }),
+    salonId: z
+      .string()
+      .optional()
+      .openapi({ param: { name: 'salonId', in: 'query' } }),
   })
   .openapi('AdminAuditQuery')
 
@@ -65,8 +96,17 @@ export const adminUserMeResponseSchema = z
         active: z.boolean(),
       })
       .passthrough(),
+    runtime: z.object({
+      dataSource: z.enum(['local', 'live']),
+    }),
   })
   .openapi('AdminMeResponse')
+
+export const adminRuntimeResponseSchema = z
+  .object({
+    dataSource: z.enum(['local', 'live']),
+  })
+  .openapi('AdminRuntimeResponse')
 
 export const adminOverviewResponseSchema = z
   .object({
@@ -89,9 +129,13 @@ const adminListResponse = (name: string) =>
     })
     .openapi(name)
 
-export const adminSalonsResponseSchema = adminListResponse('AdminSalonsResponse')
+export const adminSalonsResponseSchema = adminListResponse(
+  'AdminSalonsResponse',
+)
 export const adminUsersResponseSchema = adminListResponse('AdminUsersResponse')
-export const adminCatalogPresetsResponseSchema = adminListResponse('AdminCatalogPresetsResponse')
+export const adminCatalogPresetsResponseSchema = adminListResponse(
+  'AdminCatalogPresetsResponse',
+)
 export const adminNotificationDeliveriesResponseSchema = adminListResponse(
   'AdminNotificationDeliveriesResponse',
 )
@@ -101,8 +145,12 @@ export const adminSupportAppointmentsResponseSchema = adminListResponse(
 export const adminSupportAppointmentRequestsResponseSchema = adminListResponse(
   'AdminSupportAppointmentRequestsResponse',
 )
-export const adminAuditLogResponseSchema = adminListResponse('AdminAuditLogResponse')
-export const adminPlatformAdminsResponseSchema = adminListResponse('AdminPlatformAdminsResponse')
+export const adminAuditLogResponseSchema = adminListResponse(
+  'AdminAuditLogResponse',
+)
+export const adminPlatformAdminsResponseSchema = adminListResponse(
+  'AdminPlatformAdminsResponse',
+)
 
 export const adminSalonDetailResponseSchema = z
   .object({
@@ -142,6 +190,7 @@ export const adminStatusUpdateBodySchema = z
   .object({
     status: salonStatusSchema,
     reason: adminReasonSchema,
+    liveConfirmation: z.string().optional(),
   })
   .openapi('AdminSalonStatusUpdateRequest')
 
@@ -191,6 +240,7 @@ export const adminPlatformAdminCreateBodySchema = z
     role: platformRoleSchema,
     active: z.boolean().optional(),
     reason: adminReasonSchema,
+    liveConfirmation: z.string().optional(),
   })
   .openapi('AdminPlatformAdminCreateRequest')
 
@@ -199,6 +249,7 @@ export const adminPlatformAdminPatchBodySchema = z
     role: platformRoleSchema.optional(),
     active: z.boolean().optional(),
     reason: adminReasonSchema,
+    liveConfirmation: z.string().optional(),
   })
   .openapi('AdminPlatformAdminUpdateRequest')
 
