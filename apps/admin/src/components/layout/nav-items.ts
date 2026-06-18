@@ -1,15 +1,9 @@
 import {
-  Activity,
-  ClipboardList,
   Gauge,
-  HeartHandshake,
-  MessageSquareWarning,
   ScrollText,
   Settings,
-  ShieldCheck,
   Sparkles,
   Store,
-  Users,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -27,34 +21,30 @@ export type AdminNavGroup = {
 
 export const adminNavGroups: AdminNavGroup[] = [
   {
-    title: 'Operations',
+    title: 'عملیات',
     items: [
-      { title: 'Overview', href: '/overview', icon: Gauge, keywords: ['dashboard', 'metrics', 'home'] },
-      { title: 'Salons', href: '/salons', icon: Store, keywords: ['tenants', 'status', 'profiles'] },
-      { title: 'Users', href: '/users', icon: Users, keywords: ['people', 'accounts', 'memberships'] },
+      { title: 'نمای کلی', href: '/overview', icon: Gauge, keywords: ['dashboard', 'metrics', 'home', 'داشبورد', 'آمار'] },
+      { title: 'سالن‌ها', href: '/salons', icon: Store, keywords: ['tenants', 'status', 'profiles', 'سالن', 'وضعیت'] },
     ],
   },
   {
-    title: 'Platform',
+    title: 'پلتفرم',
     items: [
-      { title: 'Catalog Presets', href: '/catalog-presets', icon: Sparkles, keywords: ['services', 'templates'] },
-      { title: 'Messaging Health', href: '/messaging-health', icon: MessageSquareWarning, keywords: ['sms', 'telegram', 'deliveries'] },
-      { title: 'Support Lookup', href: '/support-lookup', icon: HeartHandshake, keywords: ['appointments', 'requests', 'support'] },
+      { title: 'قالب‌های کاتالوگ', href: '/catalog-presets', icon: Sparkles, keywords: ['services', 'templates', 'خدمات', 'قالب'] },
     ],
   },
   {
-    title: 'Governance',
+    title: 'حاکمیت',
     items: [
-      { title: 'Audit Log', href: '/audit-log', icon: ScrollText, keywords: ['events', 'reasons', 'history'] },
-      { title: 'Platform Admins', href: '/platform-admins', icon: ShieldCheck, keywords: ['roles', 'access', 'owners'] },
-      { title: 'Settings', href: '/settings', icon: Settings, keywords: ['preferences', 'admin'] },
+      { title: 'لاگ ممیزی', href: '/audit-log', icon: ScrollText, keywords: ['events', 'reasons', 'history', 'ممیزی', 'رویداد'] },
+      { title: 'تنظیمات', href: '/settings', icon: Settings, keywords: ['preferences', 'admin', 'تنظیمات'] },
     ],
   },
 ]
 
 export const commandActions = [
-  { title: 'Review failed deliveries', href: '/messaging-health', icon: Activity },
-  { title: 'Open latest audit events', href: '/audit-log', icon: ClipboardList },
+  { title: 'آخرین رویدادهای ممیزی', href: '/audit-log', icon: ScrollText },
+  { title: 'تنظیمات ادمین', href: '/settings', icon: Settings },
 ]
 
 export const adminNavItems = adminNavGroups.flatMap((group) => group.items)

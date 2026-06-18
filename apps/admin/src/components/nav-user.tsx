@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { BadgeCheck, ChevronsUpDown, LogOut, ScrollText, Settings } from 'lucide-react'
+import { ChevronsUpDown, LogOut, ScrollText, Settings } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar'
 import {
@@ -27,7 +27,7 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -65,32 +65,22 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link to="/platform-admins">
-                  <BadgeCheck />
-                  Platform access
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
                 <Link to="/audit-log">
                   <ScrollText />
-                  Audit log
+                  لاگ ممیزی
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/settings">
                   <Settings />
-                  Settings
+                  تنظیمات
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <BadgeCheck />
-                Auth in Phase 4
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled>
               <LogOut />
-              Log out
+              خروج
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

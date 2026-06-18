@@ -25,16 +25,16 @@ export function CommandMenu() {
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search routes, salons, users..."
+            placeholder="جستجوی مسیرهای ادمین V1..."
             className="border-0 bg-transparent px-0 shadow-none focus:ring-0"
           />
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close command menu">
+          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="بستن جستجو">
             <X className="h-4 w-4" />
           </Button>
         </div>
         <div className="max-h-[460px] overflow-y-auto p-2">
           <div className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Routes
+            مسیرها
           </div>
           {results.map((item) => {
             const Icon = item.icon
@@ -54,7 +54,7 @@ export function CommandMenu() {
             )
           })}
           <div className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Actions
+            عملیات سریع
           </div>
           {commandActions.map((action) => {
             const Icon = action.icon

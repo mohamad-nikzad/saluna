@@ -1,3 +1,4 @@
+import { DirectionProvider as RadixDirectionProvider } from '@radix-ui/react-direction'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 type Direction = 'rtl' | 'ltr'
@@ -25,7 +26,11 @@ export function DirectionProvider({
 
   const value = useMemo(() => ({ direction, setDirection }), [direction])
 
-  return <DirectionContext.Provider value={value}>{children}</DirectionContext.Provider>
+  return (
+    <RadixDirectionProvider dir={direction}>
+      <DirectionContext.Provider value={value}>{children}</DirectionContext.Provider>
+    </RadixDirectionProvider>
+  )
 }
 
 export function useDirection() {

@@ -24,11 +24,11 @@ export function AdminSidebar() {
               S
             </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold tracking-normal">Saluna Admin</div>
-              <div className="truncate text-xs text-muted-foreground">Internal Operations</div>
+              <div className="truncate text-sm font-semibold tracking-normal">ادمین سالونا</div>
+              <div className="truncate text-xs text-muted-foreground">عملیات داخلی</div>
             </div>
           </div>
-          <IconButton label="Close navigation" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <IconButton label="بستن ناوبری" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
@@ -62,9 +62,9 @@ export function AdminSidebar() {
         </nav>
         <div className="p-2">
           <div className="rounded-md border border-sidebar-border bg-sidebar-accent p-3">
-            <div className="text-sm font-medium">Platform session</div>
+            <div className="text-sm font-medium">نشست پلتفرم</div>
             <div className="mt-1 text-xs leading-5 text-muted-foreground">
-              API auth guard lands in Phase 4 after `/api/v1/admin/auth/me`.
+              دسترسی ادمین با مسیر `/api/v1/admin/auth/me` بررسی می‌شود.
             </div>
           </div>
         </div>

@@ -18,22 +18,22 @@ export function DataTableToolbar({
         <Input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Filter table..."
+          placeholder="جستجو در جدول..."
           className="max-w-sm"
         />
         <Button variant="outline" size="sm">
           <Filter className="h-4 w-4" />
-          Filters
+          فیلترها
         </Button>
       </div>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onReset}>
           <RotateCcw className="h-4 w-4" />
-          Reset
+          پاک‌سازی
         </Button>
         <Button variant="outline" size="sm">
           <SlidersHorizontal className="h-4 w-4" />
-          View
+          نمایش
         </Button>
       </div>
     </div>

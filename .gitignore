@@ -46,3 +46,4 @@ playwright/.cache/
 # Air-gapped deploy artifacts
 deploy/releases/
 .codex/
+saluna-icons/

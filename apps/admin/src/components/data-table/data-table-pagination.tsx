@@ -17,7 +17,7 @@ export function DataTablePagination({
   return (
     <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <div>
-        Page {page} of {Math.max(pageCount, 1)}
+        صفحه {page} از {Math.max(pageCount, 1)}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -27,7 +27,7 @@ export function DataTablePagination({
           onClick={() => onPaginationChange({ ...pagination, pageIndex: pagination.pageIndex - 1 })}
         >
           <ChevronRight className="h-4 w-4" />
-          Previous
+          قبلی
         </Button>
         <Button
           variant="outline"
@@ -35,7 +35,7 @@ export function DataTablePagination({
           disabled={page >= pageCount}
           onClick={() => onPaginationChange({ ...pagination, pageIndex: pagination.pageIndex + 1 })}
         >
-          Next
+          بعدی
           <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
