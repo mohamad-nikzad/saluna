@@ -1,0 +1,98 @@
+---
+import { brand } from '@repo/brand'
+import { displayClass } from '@/content/landing'
+import Icon from './Icon.astro'
+
+const brandFa = brand.name.fa
+
+type FaqItem = {
+  question: string
+  answer: string
+}
+
+interface Props {
+  pricingPoints: string[]
+  faqItems: FaqItem[]
+}
+
+const { pricingPoints, faqItems } = Astro.props
+---
+
+<section id="pricing" class="relative px-5 py-20 sm:px-8 sm:py-24">
+  <div
+    class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start"
+  >
+    <div>
+      <p class="text-sm font-extrabold text-[#9b3348]">
+        پلن‌ها و دسترسی آزمایشی
+      </p>
+      <h2
+        class={`${displayClass} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}
+      >
+        فعلا {brandFa} را رایگان تست کنید
+      </h2>
+      <p class="mt-5 text-base leading-8 text-[#6b4955]">
+        هنوز پلن‌های نهایی را اعلام نکرده‌ایم. می‌خواهیم قبل از قیمت‌گذاری،
+        رفتار واقعی سالن‌ها، نیازهای تکرارشونده و ارزش محصول را بهتر ببینیم.
+      </p>
+
+      <div
+        class="mt-8 rounded-2xl border border-[#f3d5dd] bg-white/85 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.07)] backdrop-blur"
+      >
+        <div class="flex items-center gap-3">
+          <span
+            class="grid h-11 w-11 place-items-center rounded-xl bg-[#fce5ec] text-[#9b2f4a]"
+          >
+            <Icon name="wallet" class="h-5 w-5" />
+          </span>
+          <div>
+            <p class="text-sm font-extrabold text-[#3f2730]">
+              وضعیت قیمت‌گذاری
+            </p>
+            <p class="mt-1 text-xs text-[#8b6b73]">شفاف، اما هنوز نهایی نشده</p>
+          </div>
+        </div>
+
+        <ul class="mt-6 space-y-3">
+          {
+            pricingPoints.map((point) => (
+              <li class="flex gap-3 text-sm leading-7 text-[#6b4955]">
+                <span
+                  class="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#c3425b]"
+                  aria-hidden="true"
+                />
+                <span>{point}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div
+      id="faq"
+      class="rounded-3xl border border-[#f3d5dd] bg-white/85 p-5 shadow-[0_18px_50px_rgba(155,51,72,0.07)] backdrop-blur sm:p-7"
+    >
+      <p class="text-sm font-extrabold text-[#9b3348]">پرسش‌های رایج</p>
+      <h2 class={`${displayClass} mt-3 text-3xl leading-tight text-[#3f2730]`}>
+        قبل از تست سالونا
+      </h2>
+
+      <div class="mt-7 divide-y divide-[#f3d5dd]">
+        {
+          faqItems.map((item) => (
+            <details class="group py-5" open={item === faqItems[0]}>
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-extrabold text-[#3f2730]">
+                <span>{item.question}</span>
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#fdf5f8] text-[#9b2f4a] transition group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p class="mt-3 text-sm leading-8 text-[#6b4955]">{item.answer}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

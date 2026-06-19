@@ -32,6 +32,7 @@ vi.mock('@repo/database/members', () => ({
 vi.mock('@repo/database/client', () => {
   const stub = {
     insert: () => ({ values: async () => undefined }),
+    update: () => ({ set: () => ({ where: async () => undefined }) }),
   }
   return { getDb: () => stub }
 })

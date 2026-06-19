@@ -26,16 +26,30 @@ const PRESENCE_FIELDS = [
   'website',
 ] as const
 
-function toView(row: typeof salonProfile.$inferSelect): SalonPresenceView {
+type SalonPresenceRow = Pick<
+  typeof salonProfile.$inferSelect,
+  | 'address'
+  | 'mapGoogle'
+  | 'mapNeshan'
+  | 'mapBalad'
+  | 'socialInstagram'
+  | 'socialTelegram'
+  | 'socialWhatsapp'
+  | 'website'
+>
+
+export function toSalonPresenceView(
+  row: SalonPresenceRow | null | undefined,
+): SalonPresenceView {
   return {
-    address: row.address,
-    mapGoogle: row.mapGoogle,
-    mapNeshan: row.mapNeshan,
-    mapBalad: row.mapBalad,
-    socialInstagram: row.socialInstagram,
-    socialTelegram: row.socialTelegram,
-    socialWhatsapp: row.socialWhatsapp,
-    website: row.website,
+    address: row?.address ?? null,
+    mapGoogle: row?.mapGoogle ?? null,
+    mapNeshan: row?.mapNeshan ?? null,
+    mapBalad: row?.mapBalad ?? null,
+    socialInstagram: row?.socialInstagram ?? null,
+    socialTelegram: row?.socialTelegram ?? null,
+    socialWhatsapp: row?.socialWhatsapp ?? null,
+    website: row?.website ?? null,
   }
 }
 
@@ -69,14 +83,14 @@ export async function updateSalonPresence(
     .returning()
 
   const row = rows[0]
-  if (row) return toView(row)
+  if (row) return toSalonPresenceView(row)
 
   // Row missing (defensive): create it so presence persists.
   const inserted = await db
     .insert(salonProfile)
     .values({ organizationId: salonId, ...set })
     .returning()
-  return toView(inserted[0]!)
+  return toSalonPresenceView(inserted[0]!)
 }
 
 export async function getSalonPresence(
@@ -89,17 +103,5 @@ export async function getSalonPresence(
     .where(eq(salonProfile.organizationId, salonId))
     .limit(1)
   const row = rows[0]
-  if (!row) {
-    return {
-      address: null,
-      mapGoogle: null,
-      mapNeshan: null,
-      mapBalad: null,
-      socialInstagram: null,
-      socialTelegram: null,
-      socialWhatsapp: null,
-      website: null,
-    }
-  }
-  return toView(row)
+  return toSalonPresenceView(row)
 }

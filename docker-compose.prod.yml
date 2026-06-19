@@ -31,7 +31,7 @@ services:
       - saluna
 
   api:
-    image: ${SALUNA_IMAGE_REGISTRY:-}saluna-api:${SALUNA_API_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
+    image: ${SALUNA_API_IMAGE_REGISTRY:-${SALUNA_IMAGE_REGISTRY:-}}saluna-api:${SALUNA_API_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
     container_name: saluna-api
     restart: unless-stopped
     env_file:
@@ -59,7 +59,7 @@ services:
       - saluna
 
   web:
-    image: ${SALUNA_IMAGE_REGISTRY:-}saluna-web:${SALUNA_WEB_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
+    image: ${SALUNA_WEB_IMAGE_REGISTRY:-${SALUNA_IMAGE_REGISTRY:-}}saluna-web:${SALUNA_WEB_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
     container_name: saluna-web
     restart: unless-stopped
     environment:
@@ -85,7 +85,7 @@ services:
       - saluna
 
   pwa:
-    image: ${SALUNA_IMAGE_REGISTRY:-}saluna-pwa:${SALUNA_PWA_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
+    image: ${SALUNA_PWA_IMAGE_REGISTRY:-${SALUNA_IMAGE_REGISTRY:-}}saluna-pwa:${SALUNA_PWA_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
     container_name: saluna-pwa
     restart: unless-stopped
     expose:

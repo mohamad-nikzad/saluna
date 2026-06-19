@@ -35,6 +35,11 @@ const dates = Array.from({ length: PUBLIC_REQUEST_WINDOW_DAYS + 1 }, (_, i) =>
   addDaysYmd(today, i),
 )
 const pageUrl = Astro.url
+const description =
+  view.publicSettings.bioText ??
+  `مشاهده خدمات و رزرو نوبت آنلاین ${view.salon.name}${
+    view.presence.address ? ` در ${view.presence.address}` : ''
+  }`
 const jsonLd = [
   buildSalonJsonLd(view, pageUrl),
   buildSalonBreadcrumbJsonLd(view.salon.name, pageUrl),
@@ -49,13 +54,13 @@ const islandProps = {
   salonName: view.salon.name,
   phone: view.salon.phone,
   bio: view.publicSettings.bioText,
+  presence: view.presence,
 }
-
 ---
 
 <SalonLayout
   title={titleWithBrand(view.salon.name)}
-  description={view.publicSettings.bioText ?? undefined}
+  description={description}
   canonical={pageUrl.toString()}
   ogImage={ogImage}
   jsonLd={jsonLd}

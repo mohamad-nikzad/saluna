@@ -1,25 +1,35 @@
 import { Hono } from 'hono'
-import { eq } from 'drizzle-orm'
+import { eq, or } from 'drizzle-orm'
+import { z } from 'zod'
 import { auth } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import {
   businessSettings,
   organization,
+  salonOnboarding,
   salonMember,
   salonProfile,
+  user,
 } from '@repo/database/schema'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { STAFF_COLORS } from '@repo/salon-core/types'
-import { signupSchema } from '@repo/salon-core/forms/auth'
+import {
+  preWorkspaceAccountSchema,
+  preWorkspaceSchema,
+  signupSchema,
+} from '@repo/salon-core/forms/auth'
+import { phoneSchema } from '@repo/salon-core/forms/primitives'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import { getUserWithServiceIds } from '@repo/database/staff'
+import { getMemberForUser } from '@repo/database/members'
+import { mapRole } from '@repo/auth/permissions'
 import type { AppEnv } from '../factory'
-import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { brand } from '@repo/brand'
 import { error, ok } from '../lib/responses'
 
 const OWNER_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
+const phoneStatusSchema = z.object({ phone: phoneSchema })
 
 function phoneToEmail(phone: string): string {
   return `${phone}@${brand.emailLocalDomain}`
@@ -67,6 +77,55 @@ function isConflict(err: unknown): boolean {
   )
 }
 
+function getBetterAuthErrorCode(err: unknown): string | undefined {
+  if (typeof err !== 'object' || err === null) return undefined
+  const body = (err as { body?: { code?: unknown } }).body
+  return typeof body?.code === 'string' ? body.code : undefined
+}
+
+async function getSessionUser(c: Parameters<typeof ok>[0]) {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers })
+  return session?.user
+}
+
+async function getOrganizationById(db: ReturnType<typeof getDb>, id: string) {
+  const rows = await db
+    .select({
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+    })
+    .from(organization)
+    .where(eq(organization.id, id))
+    .limit(1)
+  return rows[0]
+}
+
+async function createWorkspaceSidecars(input: {
+  db: ReturnType<typeof getDb>
+  userId: string
+  orgId: string
+  managerName: string
+}) {
+  await input.db.transaction(async (tx) => {
+    await tx.insert(salonProfile).values({ organizationId: input.orgId })
+    await tx.insert(salonMember).values({
+      userId: input.userId,
+      organizationId: input.orgId,
+      displayName: input.managerName,
+      color: OWNER_COLOR,
+      active: true,
+    })
+    await tx.insert(businessSettings).values({
+      salonId: input.orgId,
+      workingStart: '09:00',
+      workingEnd: '19:00',
+      slotDurationMinutes: 30,
+    })
+    await tx.insert(salonOnboarding).values({ salonId: input.orgId })
+  })
+}
+
 /**
  * Signup wrapper: creates the owner user via Better Auth, then the salon
  * organization, sidecars, and initial business hours. The Better Auth sign-in
@@ -75,19 +134,37 @@ function isConflict(err: unknown): boolean {
  * Login / logout / get-session are served directly by the mounted Better Auth
  * handler at /api/v1/auth/sign-in/*, /sign-out, /get-session.
  *
- * `/me` is a shim that resolves the Better Auth session into the legacy `User`
- * shape (role mapped, salonId + color from the member/sidecar rows) so the PWA
- * auth layer stays unchanged.
+ * `/me` first resolves the Better Auth session, then optionally resolves salon
+ * membership. OTP-created users can be authenticated before workspace creation,
+ * so the route returns `needs_workspace` when no membership exists yet.
  */
 export const authRoute = new Hono<AppEnv>()
-  .get('/me', requireTenant(), async (c) => {
-    const { userId, salonId } = c.var.tenant
+  .get('/me', async (c) => {
+    const sessionUser = await getSessionUser(c)
+    if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+    const member = await getMemberForUser(sessionUser.id)
+    if (!member) {
+      return ok(c, {
+        status: 'needs_workspace',
+        user: {
+          id: sessionUser.id,
+          name: sessionUser.name,
+          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+        },
+      })
+    }
+
+    const role = mapRole(member.role)
+    const userId = member.userId
+    const salonId = member.organizationId
     const user = await getUserWithServiceIds(userId, salonId)
     if (!user) return error(c, 'وارد نشده‌اید', 401)
 
     if (user.role === 'manager') {
       const flags = await getManagerOnboardingFlags(salonId)
       return ok(c, {
+        status: 'ready',
         user: {
           ...user,
           needsOnboarding: flags.needsOnboarding,
@@ -96,12 +173,131 @@ export const authRoute = new Hono<AppEnv>()
       })
     }
 
-    return ok(c, { user })
+    return ok(c, { status: 'ready', user: { ...user, role } })
+  })
+  .post('/phone-status', zValidator('json', phoneStatusSchema), async (c) => {
+    const { phone } = c.req.valid('json')
+    const rows = await getDb()
+      .select({ id: user.id })
+      .from(user)
+      .where(or(eq(user.phoneNumber, phone), eq(user.username, phone)))
+      .limit(1)
+
+    return ok(c, { registered: Boolean(rows[0]) })
   })
   .post(
-  '/signup',
-  zValidator('json', signupSchema),
-  async (c) => {
+    '/signup/account',
+    zValidator('json', preWorkspaceAccountSchema),
+    async (c) => {
+      const sessionUser = await getSessionUser(c)
+      if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+      const { managerName, password } = c.req.valid('json')
+      try {
+        await auth.api.setPassword({
+          body: { newPassword: password },
+          headers: c.req.raw.headers,
+        })
+      } catch (err) {
+        const code = getBetterAuthErrorCode(err)
+        if (code === 'PASSWORD_ALREADY_SET') {
+          return error(c, 'رمز عبور قبلاً تنظیم شده است', 409, code)
+        }
+        if (code === 'PASSWORD_TOO_SHORT') {
+          return error(c, 'رمز عبور باید حداقل ۸ کاراکتر باشد', 400, code)
+        }
+        throw err
+      }
+
+      await getDb()
+        .update(user)
+        .set({ name: managerName, updatedAt: new Date() })
+        .where(eq(user.id, sessionUser.id))
+
+      return ok(c, {
+        user: {
+          id: sessionUser.id,
+          name: managerName,
+          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+        },
+      })
+    },
+  )
+  .post(
+    '/signup/workspace',
+    zValidator('json', preWorkspaceSchema),
+    async (c) => {
+      const sessionUser = await getSessionUser(c)
+      if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+      const db = getDb()
+      const existingMember = await getMemberForUser(sessionUser.id)
+      if (existingMember) {
+        const existingOrg = await getOrganizationById(
+          db,
+          existingMember.organizationId,
+        )
+        if (!existingOrg) return error(c, 'سالن یافت نشد', 404)
+        return ok(c, {
+          salon: existingOrg,
+          user: {
+            id: sessionUser.id,
+            name: existingMember.name,
+            phone: existingMember.username,
+          },
+          redirectTo: '/onboarding',
+        })
+      }
+
+      const { salonName, slug: requestedSlug } = c.req.valid('json')
+      let slug: string
+      if (requestedSlug) {
+        const existingSlug = await db
+          .select({ id: organization.id })
+          .from(organization)
+          .where(eq(organization.slug, requestedSlug))
+          .limit(1)
+        if (existingSlug[0]) {
+          return error(c, 'این آدرس سالن قبلاً ثبت شده است', 409)
+        }
+        slug = requestedSlug
+      } else {
+        slug = await generateUniqueSlug(db)
+      }
+
+      let orgId: string
+      try {
+        const createdOrg = await auth.api.createOrganization({
+          body: { name: salonName, slug, userId: sessionUser.id },
+        })
+        if (!createdOrg) throw new Error('createOrganization returned empty')
+        orgId = createdOrg.id
+      } catch (err) {
+        if (isConflict(err)) {
+          return error(c, 'این آدرس سالن قبلاً ثبت شده است', 409)
+        }
+        throw err
+      }
+
+      await createWorkspaceSidecars({
+        db,
+        userId: sessionUser.id,
+        orgId,
+        managerName: sessionUser.name,
+      })
+
+      return ok(c, {
+        salon: { id: orgId, name: salonName, slug },
+        user: {
+          id: sessionUser.id,
+          name: sessionUser.name,
+          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+        },
+        redirectTo: '/onboarding',
+      })
+    },
+  )
+  .post('/signup', zValidator('json', signupSchema), async (c) => {
     const {
       salonName,
       slug: requestedSlug,
@@ -155,6 +351,15 @@ export const authRoute = new Hono<AppEnv>()
       user: { id: string }
     }
     const userId = signUpBody.user.id
+    await db
+      .update(user)
+      .set({
+        phoneNumber: managerPhone,
+        phoneNumberVerified: true,
+        displayUsername: managerPhone,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, userId))
 
     let orgId: string
     try {
@@ -193,7 +398,6 @@ export const authRoute = new Hono<AppEnv>()
       user: { id: userId, name: managerName, phone: managerPhone },
       redirectTo: '/onboarding',
     })
-  }
-)
+  })
 
 export type AuthRoute = typeof authRoute

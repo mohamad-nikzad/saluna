@@ -4,27 +4,41 @@ interface Props {
   description?: string
   canonical?: string
   ogImage?: string
+  ogImageAlt?: string
   jsonLd?: unknown | unknown[]
 }
 
-const { title, description, canonical, ogImage, jsonLd } = Astro.props
-const jsonLdBlocks = jsonLd == null ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd]
+const { title, description, canonical, ogImage, ogImageAlt, jsonLd } =
+  Astro.props
+const jsonLdBlocks =
+  jsonLd == null ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd]
 ---
 
 <title>{title}</title>
 {description ? <meta name="description" content={description} /> : null}
 {canonical ? <link rel="canonical" href={canonical} /> : null}
+<meta name="theme-color" content="#fdf5f8" />
 <meta property="og:type" content="website" />
+<meta property="og:locale" content="fa_IR" />
+<meta property="og:site_name" content="سالونا" />
 <meta property="og:title" content={title} />
 {description ? <meta property="og:description" content={description} /> : null}
 {canonical ? <meta property="og:url" content={canonical} /> : null}
 {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+{ogImage ? <meta property="og:image:width" content="1200" /> : null}
+{ogImage ? <meta property="og:image:height" content="630" /> : null}
+{ogImageAlt ? <meta property="og:image:alt" content={ogImageAlt} /> : null}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
 {description ? <meta name="twitter:description" content={description} /> : null}
 {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+{ogImageAlt ? <meta name="twitter:image:alt" content={ogImageAlt} /> : null}
 {
   jsonLdBlocks.map((block) => (
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(block)} />
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(block)}
+    />
   ))
 }

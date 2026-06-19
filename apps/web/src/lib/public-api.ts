@@ -15,26 +15,12 @@ import type {
   DayAvailabilityResponse,
   PublicAppointmentRequestBody,
   PublicAppointmentRequestStatusView,
+  PublicSalonView as GeneratedPublicSalonView,
 } from '@repo/api-client/types'
 
 configureGeneratedApiClient({ baseUrl: PUBLIC_API_URL })
 
-export type PublicSalonView = {
-  salon: {
-    id: string
-    slug: string
-    name: string
-    phone: string | null
-    timezone: string
-    locale: string
-  }
-  publicSettings: {
-    enabled: boolean
-    bioText: string | null
-    themeId: string
-    layoutId: string
-    appointmentRequestsEnabled: boolean
-  }
+export type PublicSalonView = Omit<GeneratedPublicSalonView, 'services'> & {
   services: Service[]
 }
 export type PublicAvailabilitySlot = AvailabilitySlot
@@ -58,6 +44,59 @@ function rethrowPublicApiError(error: unknown): never {
   throw error
 }
 
+const LEGACY_SERVICE_CATEGORIES = ['hair', 'nails', 'skincare', 'spa'] as const
+
+function isLegacyServiceCategory(
+  value: unknown,
+): value is Service['category'] {
+  return (
+    typeof value === 'string' &&
+    LEGACY_SERVICE_CATEGORIES.includes(value as Service['category'])
+  )
+}
+
+function toPublicService(service: GeneratedPublicSalonView['services'][number]) {
+  if (
+    !isLegacyServiceCategory(service.category) ||
+    typeof service.categoryId !== 'string' ||
+    typeof service.duration !== 'number' ||
+    typeof service.price !== 'number' ||
+    typeof service.color !== 'string' ||
+    typeof service.active !== 'boolean'
+  ) {
+    throw new PublicApiError('پاسخی از سرور دریافت نشد.', 500)
+  }
+
+  return {
+    id: service.id,
+    name: service.name,
+    category: service.category,
+    categoryId: service.categoryId,
+    categoryName:
+      typeof service.categoryName === 'string' ? service.categoryName : null,
+    familyId: typeof service.familyId === 'string' ? service.familyId : null,
+    familyName:
+      typeof service.familyName === 'string' ? service.familyName : null,
+    duration: service.duration,
+    price: service.price,
+    color: service.color,
+    active: service.active,
+    description:
+      typeof service.description === 'string' ? service.description : null,
+    kind:
+      service.kind === 'standard' || service.kind === 'combo'
+        ? service.kind
+        : undefined,
+  } satisfies Service
+}
+
+function toPublicSalonView(view: GeneratedPublicSalonView): PublicSalonView {
+  return {
+    ...view,
+    services: view.services.map(toPublicService),
+  }
+}
+
 export async function fetchPublicSalon(
   slug: string,
   init?: RequestInit,
@@ -68,7 +107,7 @@ export async function fetchPublicSalon(
       signal: init?.signal ?? undefined,
       throwOnError: true,
     })
-    return data as unknown as PublicSalonView
+    return toPublicSalonView(data)
   } catch (error) {
     rethrowPublicApiError(error)
   }
@@ -121,11 +160,13 @@ export async function fetchAppointmentRequest(
   init?: RequestInit,
 ): Promise<AppointmentRequestStatusView> {
   try {
-    const { data } = await getApiV1PublicSalonsBySlugAppointmentRequestsByToken({
-      path: { slug, token },
-      signal: init?.signal ?? undefined,
-      throwOnError: true,
-    })
+    const { data } = await getApiV1PublicSalonsBySlugAppointmentRequestsByToken(
+      {
+        path: { slug, token },
+        signal: init?.signal ?? undefined,
+        throwOnError: true,
+      },
+    )
     return data
   } catch (error) {
     rethrowPublicApiError(error)

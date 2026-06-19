@@ -1,0 +1,61 @@
+---
+import Base from '@/layouts/Base.astro'
+import Footer from '@/components/landing/Footer.astro'
+import { displayClass } from '@/content/landing'
+import { publicNavLinks } from '@/content/public-site'
+import { brand } from '@repo/brand'
+
+interface Props {
+  title: string
+  description: string
+  canonical: string
+  jsonLd?: unknown | unknown[]
+}
+
+const { title, description, canonical, jsonLd } = Astro.props
+---
+
+<Base
+  title={title}
+  description={description}
+  canonical={canonical}
+  jsonLd={jsonLd}
+  preloadLalezar={true}
+>
+  <main
+    dir="rtl"
+    class="min-h-dvh bg-[#fdf5f8] text-[#3f2730]"
+  >
+    <header class="border-b border-[#f3d5dd] bg-white/80 px-5 py-4 sm:px-8">
+      <div class="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <a href="/" class="flex items-center gap-2.5" aria-label={brand.name.fa}>
+          <img
+            src="/landing/saloora-mark.png"
+            alt=""
+            width="40"
+            height="40"
+            decoding="async"
+            class="h-10 w-10"
+          />
+          <span class={`${displayClass} text-2xl leading-none text-[#7a2a40]`}>
+            {brand.name.fa}
+          </span>
+        </a>
+
+        <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#6b4955]">
+          {
+            publicNavLinks.map((link) => (
+              <a href={link.href} class="transition hover:text-[#7a2a40]">
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <Footer />
+  </main>
+</Base>

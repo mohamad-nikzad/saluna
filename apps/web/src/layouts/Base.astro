@@ -8,12 +8,20 @@ interface Props {
   description?: string
   canonical?: string
   ogImage?: string
+  ogImageAlt?: string
   jsonLd?: unknown | unknown[]
   preloadLalezar?: boolean
 }
 
-const { title, description, canonical, ogImage, jsonLd, preloadLalezar = false } =
-  Astro.props
+const {
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogImageAlt,
+  jsonLd,
+  preloadLalezar = false,
+} = Astro.props
 ---
 
 <html lang="fa" dir="rtl">
@@ -21,6 +29,8 @@ const { title, description, canonical, ogImage, jsonLd, preloadLalezar = false }
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <Font cssVariable="--font-vazirmatn" preload />
     {preloadLalezar ? <Font cssVariable="--font-lalezar" preload /> : null}
     <Head
@@ -28,6 +38,7 @@ const { title, description, canonical, ogImage, jsonLd, preloadLalezar = false }
       description={description}
       canonical={canonical}
       ogImage={ogImage}
+      ogImageAlt={ogImageAlt}
       jsonLd={jsonLd}
     />
   </head>

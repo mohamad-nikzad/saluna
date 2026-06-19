@@ -1,161 +1,107 @@
 ---
-import { brand } from '@repo/brand'
-import {
-  displayClass,
-  toneClass,
-  type MetricTone,
-} from '@/content/landing'
-
-const brandFa = brand.name.fa
-import Icon from './Icon.astro'
-
-type DashboardMetric = {
-  label: string
-  value: string
-  delta: string
-  tone: MetricTone
-}
-
-type UpcomingAppointment = {
-  time: string
-  name: string
-  staff: string
-}
-
-type PopularService = {
-  name: string
-  value: number
-}
-
-type Stat = {
-  value: string
-  label: string
-}
+import { displayClass, toneClass, type ManagementArea } from '@/content/landing'
 
 interface Props {
-  dashboardMetrics: DashboardMetric[]
-  upcomingAppointments: UpcomingAppointment[]
-  popularServices: PopularService[]
-  stats: Stat[]
+  managementAreas: ManagementArea[]
+  requestFlow: { title: string; text: string }[]
+  productSignals: { value: string; label: string }[]
+  seoTopics: string[]
 }
 
-const { dashboardMetrics, upcomingAppointments, popularServices, stats } = Astro.props
+const { managementAreas, requestFlow, productSignals, seoTopics } = Astro.props
 ---
 
-<section
-  id="preview"
-  class="relative isolate overflow-hidden px-5 py-20 sm:px-8 sm:py-24"
->
-  <img
-    src="/landing/section-bg.webp"
-    alt=""
-    width="1920"
-    height="1080"
-    decoding="async"
-    class="absolute inset-0 -z-10 h-full w-full object-cover"
-  />
+<section id="requests" class="relative px-5 py-20 sm:px-8 sm:py-24">
   <div
-    class="absolute inset-0 -z-10 bg-gradient-to-b from-[#fdf5f8]/30 via-[#fdf5f8]/10 to-[#fdf5f8]/40"
+    class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start"
   >
-  </div>
-
-  <div class="mx-auto max-w-7xl">
-    <div class="mx-auto max-w-2xl text-center">
-      <p class="text-sm font-extrabold text-[#9b3348]">داشبورد {brandFa}</p>
-      <h2 class={`${displayClass} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}>
-        همه آنچه نیاز دارید در یک نگاه
+    <div>
+      <p class="text-sm font-extrabold text-[#9b3348]">تصویر کلی محصول</p>
+      <h2
+        class={`${displayClass} mt-3 text-3xl leading-tight text-[#3f2730] sm:text-5xl`}
+      >
+        همه چیز برای مدیریت روزانه سالن
       </h2>
-      <p class="mt-4 text-base leading-8 text-[#6b4955]">
-        برنامه روز، آمار درآمد، مشتریان و عملکرد پرسنل به‌صورت زنده.
+      <p class="mt-5 text-base leading-8 text-[#6b4955]">
+        سالونا امکانات اصلی سالن را کنار هم می‌آورد: تقویم، مشتری، خدمات، پرسنل،
+        صفحه عمومی و مسیر درخواست نوبت. این محتوا هم برای مشتری سالن خواناست و
+        هم برای موتورهای جست‌وجو دقیق و قابل فهم است.
       </p>
-    </div>
 
-    <div
-      class="mt-12 overflow-hidden rounded-3xl border border-white/60 bg-white/85 p-4 shadow-[0_30px_80px_rgba(155,51,72,0.14)] backdrop-blur-md sm:p-6 lg:p-8"
-    >
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-8 grid gap-3 sm:grid-cols-3">
         {
-          dashboardMetrics.map((m) => (
-            <div class="rounded-xl border border-[#f3d5dd] bg-white p-4 shadow-sm">
-              <div class="flex items-center justify-between">
-                <span
-                  class={`grid h-9 w-9 place-items-center rounded-lg ${toneClass[m.tone]}`}
-                >
-                  <Icon name="sparkles" class="h-4 w-4" />
-                </span>
-                <span class="text-xs font-bold text-emerald-600">{m.delta}</span>
-              </div>
-              <p class="mt-4 text-xs text-[#8b6b73]">{m.label}</p>
-              <p class={`${displayClass} mt-1 text-2xl text-[#3f2730]`}>{m.value}</p>
+          productSignals.map((signal) => (
+            <div class="rounded-2xl border border-[#f3d5dd] bg-white/75 p-4">
+              <p class="text-sm font-extrabold text-[#7a2a40]">
+                {signal.value}
+              </p>
+              <p class="mt-2 text-xs leading-6 text-[#7b5b64]">
+                {signal.label}
+              </p>
             </div>
           ))
         }
       </div>
 
-      <div class="mt-4 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div class="rounded-xl border border-[#f3d5dd] bg-white p-5">
-          <div class="flex items-center justify-between border-b border-[#f3d5dd] pb-3">
-            <p class="text-sm font-extrabold text-[#3f2730]">رزروهای امروز</p>
-            <span class="rounded-md bg-[#fce5ec] px-2 py-0.5 text-xs font-bold text-[#9b2f4a]">
-              امروز
+      <div class="mt-8 flex flex-wrap gap-2">
+        {
+          seoTopics.map((topic) => (
+            <span class="rounded-full border border-[#f3d5dd] bg-white/70 px-3 py-1.5 text-xs font-bold text-[#7a2a40]">
+              {topic}
             </span>
-          </div>
-          <ul class="mt-4 space-y-3">
-            {
-              upcomingAppointments.map((a) => (
-                <li class="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border border-[#f8e0e7] bg-[#fdf5f8] p-3">
-                  <span class={`${displayClass} text-base text-[#9b2f4a]`} dir="ltr">
-                    {a.time}
-                  </span>
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-bold text-[#3f2730]">{a.name}</p>
-                    <p class="mt-0.5 truncate text-xs text-[#8b6b73]">{a.staff}</p>
-                  </div>
-                  <span class="h-2 w-2 rounded-full bg-rose-400" aria-hidden="true" />
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-
-        <div class="rounded-xl border border-[#f3d5dd] bg-white p-5">
-          <div class="flex items-center justify-between border-b border-[#f3d5dd] pb-3">
-            <p class="text-sm font-extrabold text-[#3f2730]">سرویس‌های پرطرفدار</p>
-            <span class="text-xs text-[#8b6b73]">این هفته</span>
-          </div>
-          <ul class="mt-4 space-y-4">
-            {
-              popularServices.map((s) => (
-                <li>
-                  <div class="mb-1.5 flex items-center justify-between text-sm">
-                    <span class="font-bold text-[#3f2730]">{s.name}</span>
-                    <span class="font-bold text-[#9b2f4a]" dir="ltr">
-                      {s.value}%
-                    </span>
-                  </div>
-                  <div class="h-2 overflow-hidden rounded-full bg-[#fce5ec]">
-                    <div
-                      class="h-full rounded-full bg-gradient-to-l from-[#c3425b] to-[#e8a8ba]"
-                      style={`width: ${s.value}%`}
-                    />
-                  </div>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
+          ))
+        }
       </div>
     </div>
 
-    <div class="mt-10 grid gap-4 sm:grid-cols-3">
-      {
-        stats.map((s) => (
-          <div class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 text-center backdrop-blur">
-            <p class={`${displayClass} text-3xl text-[#9b2f4a]`}>{s.value}</p>
-            <p class="mt-2 text-sm text-[#6b4955]">{s.label}</p>
-          </div>
-        ))
-      }
+    <div
+      class="rounded-3xl border border-[#f3d5dd] bg-white/85 p-4 shadow-[0_24px_70px_rgba(155,51,72,0.12)] backdrop-blur sm:p-5"
+    >
+      <div class="grid gap-3 sm:grid-cols-2">
+        {
+          managementAreas.map((area) => (
+            <article class="rounded-2xl border border-[#f3d5dd] bg-[#fff9fb] p-4">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs font-extrabold text-[#8b5d68]">
+                  {area.label}
+                </span>
+                <span
+                  class={`rounded-lg px-2 py-1 text-[11px] font-bold ${toneClass[area.tone]}`}
+                >
+                  فعال
+                </span>
+              </div>
+              <h3 class="mt-3 text-base font-extrabold text-[#3f2730]">
+                {area.value}
+              </h3>
+              <p class="mt-2 text-xs leading-6 text-[#765964]">{area.detail}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="mt-5 rounded-2xl border border-[#f3d5dd] bg-white p-4">
+        <p class="text-sm font-extrabold text-[#3f2730]">مسیر درخواست نوبت</p>
+        <ol class="mt-4 space-y-3">
+          {
+            requestFlow.map((step, index) => (
+              <li class="flex gap-3">
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#c3425b] text-xs font-extrabold text-white">
+                  {index + 1}
+                </span>
+                <span>
+                  <strong class="block text-sm text-[#3f2730]">
+                    {step.title}
+                  </strong>
+                  <span class="mt-1 block text-xs leading-6 text-[#765964]">
+                    {step.text}
+                  </span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
     </div>
   </div>
 </section>

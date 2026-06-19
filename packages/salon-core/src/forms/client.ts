@@ -1,5 +1,5 @@
 /**
- * Client form schema — shared between PWA (`apps/pwa`) and native (`apps/native`).
+ * Client form schema shared by Saluna clients.
  * Both validates and normalizes (phone becomes canonical in the payload).
  */
 import { z } from 'zod'
@@ -15,7 +15,10 @@ const tagsSchema = z
   .max(MAX_TAGS)
   .default([])
   .transform((labels) =>
-    [...new Set(labels.map((t) => t.trim()).filter(Boolean))].slice(0, MAX_TAGS),
+    [...new Set(labels.map((t) => t.trim()).filter(Boolean))].slice(
+      0,
+      MAX_TAGS,
+    ),
   )
 
 const notesSchema = z
@@ -61,7 +64,10 @@ export const clientUpdateSchema = z.object({
     .transform((labels) =>
       labels == null
         ? undefined
-        : [...new Set(labels.map((t) => t.trim()).filter(Boolean))].slice(0, MAX_TAGS),
+        : [...new Set(labels.map((t) => t.trim()).filter(Boolean))].slice(
+            0,
+            MAX_TAGS,
+          ),
     ),
 })
 
@@ -71,8 +77,12 @@ export type ClientCreateInput = z.input<typeof clientCreateSchema>
 export type ClientCreatePayload = z.output<typeof clientCreateSchema>
 export type ClientUpdateInput = z.input<typeof clientUpdateSchema>
 export type ClientUpdatePayload = z.output<typeof clientUpdateSchema>
-export type ClientBulkCreateItemInput = z.input<typeof clientBulkCreateItemSchema>
-export type ClientBulkCreateItemPayload = z.output<typeof clientBulkCreateItemSchema>
+export type ClientBulkCreateItemInput = z.input<
+  typeof clientBulkCreateItemSchema
+>
+export type ClientBulkCreateItemPayload = z.output<
+  typeof clientBulkCreateItemSchema
+>
 export type ClientBulkCreateInput = z.input<typeof clientBulkCreateSchema>
 export type ClientBulkCreatePayload = z.output<typeof clientBulkCreateSchema>
 

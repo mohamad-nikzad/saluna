@@ -27,12 +27,17 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const fetchImpl = options.fetchImpl ?? fetch
   const baseUrl = options.baseUrl.replace(/\/+$/, '')
 
-  async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
+  async function request<T>(
+    path: string,
+    opts: RequestOptions = {},
+  ): Promise<T> {
     const url = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
 
     const headers: Record<string, string> = {
       Accept: 'application/json',
-      ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(opts.body !== undefined
+        ? { 'Content-Type': 'application/json' }
+        : {}),
       ...opts.headers,
     }
 
@@ -66,9 +71,19 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     if (!response.ok) {
       const message =
-        (payload && typeof payload === 'object' && 'error' in payload && typeof (payload as { error: unknown }).error === 'string'
+        (payload &&
+        typeof payload === 'object' &&
+        'error' in payload &&
+        typeof (payload as { error: unknown }).error === 'string'
           ? (payload as { error: string }).error
-          : null) ?? `Request failed with status ${response.status}`
+          : null) ??
+        (payload &&
+        typeof payload === 'object' &&
+        'message' in payload &&
+        typeof (payload as { message: unknown }).message === 'string'
+          ? (payload as { message: string }).message
+          : null) ??
+        `Request failed with status ${response.status}`
       throw new ApiError(message, response.status, payload)
     }
 

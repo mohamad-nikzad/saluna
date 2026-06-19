@@ -28,10 +28,11 @@ const { loginHref, signupHref } = Astro.props
 
     <div class="mx-auto max-w-3xl px-6 py-16 text-center sm:px-10 sm:py-20">
       <h2 class={`${displayClass} text-3xl leading-tight text-[#4a1e2e] sm:text-5xl`}>
-        آماده‌ای سالن خود را آنلاین کنی؟
+        آماده‌ای {brandFa} را با سالن خودت تست کنی؟
       </h2>
       <p class="mt-5 text-base leading-8 text-[#6b4955] sm:text-lg">
-        همین حالا حساب مدیر بساز و اولین نوبت سالن را در {brandFa} ثبت کن.
+        فعلا دسترسی آزمایشی رایگان است. حساب مدیر بساز، سالن را تنظیم کن و ببین
+        {brandFa} چقدر با کار روزانه تیم تو هماهنگ می‌شود.
       </p>
 
       <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -39,7 +40,7 @@ const { loginHref, signupHref } = Astro.props
           href={signupHref}
           class="w-full rounded-md bg-[#c3425b] px-8 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.32)] transition hover:bg-[#a82b46] sm:w-auto"
         >
-          ساخت حساب رایگان
+          تست رایگان {brandFa}
         </a>
         <a
           href={loginHref}

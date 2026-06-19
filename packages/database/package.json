@@ -22,8 +22,10 @@
     "./public": "./src/public.ts",
     "./appointment-requests": "./src/appointment-requests.ts",
     "./rate-limit": "./src/rate-limit.ts",
+    "./admin": "./src/admin.ts",
     "./client": "./src/client.ts",
     "./config": "./src/config.ts",
+    "./auth-password": "./src/auth-password.ts",
     "./keys": "./src/keys.ts",
     "./seed/catalog-presets": "./src/seed/catalog-presets.ts",
     "./schema": "./src/schema.ts"

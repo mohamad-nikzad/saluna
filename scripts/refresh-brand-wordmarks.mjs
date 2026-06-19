@@ -12,7 +12,6 @@ const markPath = join(root, 'apps/pwa/public/brand/saloora-mark-clean.png')
 
 const outputs = [
   join(root, 'apps/pwa/public/brand/saloora-logo-clean.png'),
-  join(root, 'apps/native/assets/images/saloora-logo-clean.png'),
   join(root, 'apps/pwa/public/logo.png'),
   join(root, 'apps/web/public/landing/saloora-mark.png'),
 ]
@@ -44,9 +43,8 @@ async function writeMarkLogo(outPath, width) {
 
 async function main() {
   await writeMarkLogo(outputs[0], 512)
-  await copyFile(outputs[0], outputs[1])
-  await writeMarkLogo(outputs[2], 1024)
-  await copyFile(markPath, outputs[3])
+  await writeMarkLogo(outputs[1], 1024)
+  await copyFile(markPath, outputs[2])
   console.log('Refreshed mark-only brand assets (no Saloora wordmark):')
   for (const p of outputs) console.log(`  ${p}`)
 }

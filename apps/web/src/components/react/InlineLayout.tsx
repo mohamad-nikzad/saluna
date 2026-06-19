@@ -16,8 +16,16 @@ import { usePublicDates } from './hooks/usePublicDates'
 import type { PublicLayoutProps } from './public-layout-props'
 
 export function InlineLayout(props: PublicLayoutProps) {
-  const { slug, services, dates, theme, bookingEnabled, salonName, phone, bio } =
-    props
+  const {
+    slug,
+    services,
+    dates,
+    theme,
+    bookingEnabled,
+    salonName,
+    phone,
+    bio,
+  } = props
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -44,7 +52,13 @@ export function InlineLayout(props: PublicLayoutProps) {
       className="min-h-dvh pb-24"
       style={{ backgroundColor: theme.bg, color: theme.text }}
     >
-      <SalonInfoCard name={salonName} phone={phone} bio={bio} theme={theme} />
+      <SalonInfoCard
+        name={salonName}
+        phone={phone}
+        bio={bio}
+        theme={theme}
+        presence={props.presence}
+      />
 
       <section className="mx-auto mt-6 w-full max-w-3xl px-5 sm:px-8">
         {!bookingEnabled ? (
@@ -183,7 +197,9 @@ function InlineBooking({
                 setSelectedStart(null)
               }}
               className={`flex min-w-16 flex-col items-center rounded-xl border px-3 py-2 text-center transition ${
-                active ? 'border-transparent text-white' : 'border-black/10 bg-white'
+                active
+                  ? 'border-transparent text-white'
+                  : 'border-black/10 bg-white'
               }`}
               style={active ? { backgroundColor: theme.primary } : undefined}
             >
@@ -197,7 +213,10 @@ function InlineBooking({
         })}
       </div>
 
-      <p className="mb-2 mt-4 text-xs font-bold" style={{ color: theme.primary }}>
+      <p
+        className="mb-2 mt-4 text-xs font-bold"
+        style={{ color: theme.primary }}
+      >
         انتخاب زمان
       </p>
       {loading ? (
@@ -224,7 +243,9 @@ function InlineBooking({
                 onClick={() => setSelectedStart(slot.startTime)}
                 dir="ltr"
                 className={`rounded-xl border px-2 py-2 text-center text-sm font-bold transition ${
-                  active ? 'border-transparent text-white' : 'border-black/10 bg-white'
+                  active
+                    ? 'border-transparent text-white'
+                    : 'border-black/10 bg-white'
                 }`}
                 style={active ? { backgroundColor: theme.primary } : undefined}
               >

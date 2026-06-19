@@ -23,18 +23,25 @@ import type { MessagingProviderId } from './messaging-provider-id'
 // PKs are uuid so the existing uuid salon_id FKs repoint to organization.id.
 // ─────────────────────────────────────────────────────────────────────────
 
-export const user = pgTable('user', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  image: text('image'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  // username plugin
-  username: text('username').unique(),
-  displayUsername: text('display_username'),
-})
+export const user = pgTable(
+  'user',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    email: text('email').notNull().unique(),
+    emailVerified: boolean('email_verified').notNull().default(false),
+    image: text('image'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    // username plugin
+    username: text('username').unique(),
+    displayUsername: text('display_username'),
+    // phone-number plugin. Kept in sync with username during rollout.
+    phoneNumber: text('phone_number'),
+    phoneNumberVerified: boolean('phone_number_verified').notNull().default(false),
+  },
+  (t) => [uniqueIndex('user_phone_number_unique').on(t.phoneNumber)]
+)
 
 export const session = pgTable(
   'session',
@@ -161,6 +168,86 @@ export const salonProfile = pgTable('salon_profile', {
   socialWhatsapp: text('social_whatsapp'),
   website: text('website'),
 })
+
+export const platformAdmins = pgTable(
+  'platform_admins',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    role: text('role')
+      .notNull()
+      .$type<'platform_owner' | 'platform_admin' | 'platform_support' | 'platform_viewer'>(),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdByUserId: uuid('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    revokedByUserId: uuid('revoked_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (t) => [
+    uniqueIndex('platform_admins_user_id_unique').on(t.userId),
+    index('platform_admins_active_role_idx').on(t.active, t.role),
+  ]
+)
+
+export const adminAuditEvents = pgTable(
+  'admin_audit_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    actorUserId: uuid('actor_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'restrict' }),
+    actorPlatformRole: text('actor_platform_role')
+      .notNull()
+      .$type<'platform_owner' | 'platform_admin' | 'platform_support' | 'platform_viewer'>(),
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: text('target_id').notNull(),
+    salonId: uuid('salon_id').references(() => organization.id, {
+      onDelete: 'set null',
+    }),
+    reason: text('reason').notNull(),
+    metadata: jsonb('metadata').notNull().$type<Record<string, unknown>>().default({}),
+    requestId: text('request_id'),
+    ip: text('ip'),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('admin_audit_events_actor_created_idx').on(t.actorUserId, t.createdAt),
+    index('admin_audit_events_target_idx').on(t.targetType, t.targetId),
+    index('admin_audit_events_salon_created_idx').on(t.salonId, t.createdAt),
+    index('admin_audit_events_action_created_idx').on(t.action, t.createdAt),
+  ]
+)
+
+export const adminInternalNotes = pgTable(
+  'admin_internal_notes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    subjectType: text('subject_type').notNull().$type<'salon' | 'user'>(),
+    subjectId: text('subject_id').notNull(),
+    body: text('body').notNull(),
+    authorUserId: uuid('author_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('admin_internal_notes_subject_created_idx').on(
+      t.subjectType,
+      t.subjectId,
+      t.createdAt
+    ),
+    index('admin_internal_notes_author_created_idx').on(t.authorUserId, t.createdAt),
+  ]
+)
 
 export const salonMember = pgTable(
   'salon_member',

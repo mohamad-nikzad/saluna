@@ -35,7 +35,6 @@ export const salonPresenceSchema = z
     socialWhatsapp: z.string().nullable(),
     website: z.string().nullable(),
   })
-  .passthrough()
   .openapi('SalonPresence')
 
 export const salonPresenceResponseSchema = z

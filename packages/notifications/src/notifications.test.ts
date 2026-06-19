@@ -35,7 +35,10 @@ vi.mock('@repo/database/auth-users', () => ({
 }))
 
 vi.mock('./sms', () => ({
+  sendSmsBulk: vi.fn(),
   sendSmsNotification: mocks.sendSmsNotification,
+  sendSmsOtp: vi.fn(),
+  sendSmsText: vi.fn(),
 }))
 
 vi.mock('./providers/bale-safir', () => ({
@@ -88,7 +91,7 @@ beforeEach(() => {
     status: 'skipped',
     provider: null,
     providerMessageId: null,
-    error: 'sms_provider_not_configured',
+    error: 'provider_not_configured',
   })
   mocks.findAccountByUserAndProvider.mockResolvedValue(undefined)
   mocks.getNotificationPreferences.mockResolvedValue({

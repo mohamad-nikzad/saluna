@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Content-Security-Policy (see apps/admin/csp.ts)
+      - default-src 'self': same-origin defaults
+      - script-src 'self' (+'unsafe-inline' in Vite dev for HMR)
+      - style-src 'self' 'unsafe-inline': Tailwind / runtime styles
+      - connect-src 'self' (+ ws:// in dev for HMR; API via /api proxy)
+      - img-src 'self' data: : avatars and inline placeholders
+      - font-src 'self': self-hosted Vazirmatn
+      - frame-ancestors 'none': admin is not embeddable
+      - base-uri 'self': restrict <base> injection
+      Vite rewrites the meta tag content in dev vs production builds.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+    />
+    <meta name="theme-color" content="#17211c" />
+    <title>مدیریت Saluna</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

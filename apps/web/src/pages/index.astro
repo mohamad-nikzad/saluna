@@ -5,30 +5,61 @@ import Base from '@/layouts/Base.astro'
 import Hero from '@/components/landing/Hero.astro'
 import Features from '@/components/landing/Features.astro'
 import DashboardPreview from '@/components/landing/DashboardPreview.astro'
-import Testimonials from '@/components/landing/Testimonials.astro'
+import PricingFaq from '@/components/landing/PricingFaq.astro'
 import Cta from '@/components/landing/Cta.astro'
 import Footer from '@/components/landing/Footer.astro'
 import {
   features,
-  stats,
-  testimonials,
-  dashboardMetrics,
-  upcomingAppointments,
-  popularServices,
+  productSignals,
+  managementAreas,
+  requestFlow,
+  seoTopics,
+  pricingPoints,
+  faqItems,
   loginHref,
   signupHref,
 } from '@/content/landing'
-import { brandCopy } from '@repo/brand'
+import { brand } from '@repo/brand'
 
-const title = brandCopy.landingTitle
-const description = brandCopy.landingDescription
-const canonical = new URL('/', Astro.site ?? Astro.url.origin).toString()
+const title = `${brand.name.fa} | نرم‌افزار مدیریت سالن زیبایی و نوبت‌ها`
+const description = `${brand.name.fa} نرم‌افزار فارسی مدیریت سالن زیبایی برای نوبت‌ها، مشتریان، پرسنل، خدمات، صفحه عمومی سالن و درخواست نوبت است. فعلا رایگان تست کنید؛ پلن‌ها به‌زودی اعلام می‌شوند.`
+const canonical = new URL('/', Astro.url.origin).toString()
+const ogImage = new URL('/og/landing.png', canonical).toString()
+const ogImageAlt = `${brand.name.fa}؛ نرم‌افزار مدیریت سالن زیبایی، فعلا رایگان برای تست`
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: brand.name.fa,
+    alternateName: brand.name.en,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    url: canonical,
+    inLanguage: 'fa-IR',
+    description,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  },
+]
 ---
 
 <Base
   title={title}
   description={description}
   canonical={canonical}
+  ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
+  jsonLd={jsonLd}
   preloadLalezar={true}
 >
   <main
@@ -45,12 +76,12 @@ const canonical = new URL('/', Astro.site ?? Astro.url.origin).toString()
     <Hero loginHref={loginHref} signupHref={signupHref} />
     <Features features={features} />
     <DashboardPreview
-      dashboardMetrics={dashboardMetrics}
-      upcomingAppointments={upcomingAppointments}
-      popularServices={popularServices}
-      stats={stats}
+      managementAreas={managementAreas}
+      requestFlow={requestFlow}
+      productSignals={productSignals}
+      seoTopics={seoTopics}
     />
-    <Testimonials testimonials={testimonials} />
+    <PricingFaq pricingPoints={pricingPoints} faqItems={faqItems} />
     <Cta loginHref={loginHref} signupHref={signupHref} />
     <Footer />
   </main>

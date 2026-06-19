@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import {
   Link,
   createFileRoute,
@@ -9,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft } from 'lucide-react'
+import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
@@ -16,16 +18,28 @@ import { Spinner } from '@repo/ui/spinner'
 import { cn } from '@repo/ui/utils'
 import { ApiError } from '@repo/api-client'
 import { displayPhone } from '@repo/salon-core/phone'
-import { signupSchema } from '@repo/salon-core/forms/auth'
+import {
+  preWorkspaceAccountSchema,
+  preWorkspaceSchema,
+} from '@repo/salon-core/forms/auth'
+import { phoneSchema } from '@repo/salon-core/forms/primitives'
 import { formMessages } from '@repo/salon-core/forms/messages'
-import type { User } from '@repo/salon-core/types'
 
 import { brand } from '@repo/brand'
+import { OtpCodeInput } from '#/components/auth/otp-code-input'
 import { SalooraMark } from '#/components/brand/saloora-mark'
 import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
+import {
+  AUTH_OTP_CODE_LENGTH,
+  AUTH_OTP_RESEND_SECONDS,
+  getOtpErrorMessage,
+  normalizeOtpCode,
+  useResendCountdown,
+} from '#/lib/auth-otp'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import { authQueryKey, useAuth } from '#/lib/auth'
+import type { AuthSession } from '#/lib/auth'
 import { homePathForRole } from '#/lib/navigation'
 import { getApiV1ClientsQueryKey } from '#/lib/clients-queries'
 import { getApiV1ServicesQueryKey } from '#/lib/services-queries'
@@ -35,11 +49,11 @@ import { getApiV1SalonProfilePresenceQueryKey } from '#/lib/salon-profile-querie
 import { getApiV1SalonPublicSettingsQueryKey } from '#/lib/salon-public-settings-queries'
 import { getApiV1OnboardingQueryKey } from '#/lib/onboarding-queries'
 
-// The booking-page slug is minted server-side (Persian salon names can't form a
-// Latin URL); the owner picks a friendly one later in onboarding. The confirm
-// field guards against silent password typos and never reaches the server.
-const signupFormSchema = signupSchema
-  .omit({ slug: true })
+const phoneStepSchema = z.object({ phone: phoneSchema })
+type PhoneStepInput = z.input<typeof phoneStepSchema>
+type PhoneStepPayload = z.output<typeof phoneStepSchema>
+
+const accountStepSchema = preWorkspaceAccountSchema
   .extend({
     confirmPassword: z
       .string({ error: formMessages.required })
@@ -49,16 +63,21 @@ const signupFormSchema = signupSchema
     path: ['confirmPassword'],
     message: formMessages.passwordMismatch,
   })
+type AccountStepInput = z.input<typeof accountStepSchema>
+type AccountStepPayload = z.output<typeof accountStepSchema>
 
-type SignupFormInput = z.input<typeof signupFormSchema>
+type SignupStep = 'phone' | 'otp' | 'account' | 'workspace'
 
 export const Route = createFileRoute('/signup')({
   beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.ensureQueryData<User | null>({
+    const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
-    if (user) {
-      throw redirect({ to: homePathForRole(user.role) })
+    if (!session) {
+      throw redirect({ to: '/auth' })
+    }
+    if (session && session.status !== 'needs_workspace') {
+      throw redirect({ to: homePathForRole(session.user.role) })
     }
   },
   component: SignupPage,
@@ -67,82 +86,185 @@ export const Route = createFileRoute('/signup')({
 function SignupPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { setUser } = useAuth()
+  const { preWorkspaceUser, refresh, setUser } = useAuth()
+  const [step, setStep] = useState<SignupStep>(
+    preWorkspaceUser ? 'account' : 'phone',
+  )
+  const [verifiedPhone, setVerifiedPhone] = useState(
+    preWorkspaceUser?.phone ?? '',
+  )
+  const [otp, setOtp] = useState('')
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(
+    null,
+  )
+  const resendRemaining = useResendCountdown(resendAvailableAt)
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<SignupFormInput>({
-    resolver: zodResolver(signupFormSchema),
+  const phoneForm = useForm<PhoneStepInput, unknown, PhoneStepPayload>({
+    resolver: zodResolver(phoneStepSchema),
+    defaultValues: { phone: preWorkspaceUser?.phone ?? '' },
+  })
+
+  const accountForm = useForm<AccountStepInput, unknown, AccountStepPayload>({
+    resolver: zodResolver(accountStepSchema),
     defaultValues: {
-      salonName: '',
-      managerName: '',
-      managerPhone: '',
+      managerName:
+        preWorkspaceUser?.name &&
+        preWorkspaceUser.name !== preWorkspaceUser.phone
+          ? preWorkspaceUser.name
+          : '',
       password: '',
       confirmPassword: '',
     },
   })
 
-  const managerPhone = watch('managerPhone')
+  const workspaceForm = useForm<
+    z.input<typeof preWorkspaceSchema>,
+    unknown,
+    z.output<typeof preWorkspaceSchema>
+  >({
+    resolver: zodResolver(preWorkspaceSchema),
+    defaultValues: { salonName: '' },
+  })
 
-  const signup = useMutation({
-    mutationFn: (values: SignupFormInput) =>
-      api.auth.signup({
-        salonName: values.salonName,
-        managerName: values.managerName,
-        managerPhone: values.managerPhone,
-        password: values.password,
-      }),
+  const displayStep = useMemo(() => {
+    if (step === 'phone') return 'شماره موبایل'
+    if (step === 'otp') return 'کد تایید'
+    if (step === 'account') return 'تکمیل حساب'
+    return 'ساخت سالن'
+  }, [step])
+
+  const invalidateNewWorkspaceQueries = async () => {
+    await queryClient.removeQueries({ queryKey: getApiV1OnboardingQueryKey() })
+    await queryClient.removeQueries({
+      queryKey: getApiV1SettingsBusinessQueryKey(),
+    })
+    await queryClient.removeQueries({ queryKey: getApiV1ServicesQueryKey() })
+    await queryClient.removeQueries({ queryKey: getApiV1StaffQueryKey() })
+    await queryClient.removeQueries({ queryKey: getApiV1ClientsQueryKey() })
+    await queryClient.removeQueries({
+      queryKey: getApiV1SalonProfilePresenceQueryKey(),
+    })
+    await queryClient.removeQueries({
+      queryKey: getApiV1SalonPublicSettingsQueryKey(),
+    })
+  }
+
+  const sendOtp = useMutation({
+    mutationFn: ({ phone }: PhoneStepPayload) =>
+      api.auth.sendPhoneOtp({ phone }),
     meta: { skipToast: true },
-    onSuccess: async (data) => {
-      setUser(data.user)
-      await queryClient.removeQueries({
-        queryKey: getApiV1OnboardingQueryKey(),
-      })
-      await queryClient.removeQueries({
-        queryKey: getApiV1SettingsBusinessQueryKey(),
-      })
-      await queryClient.removeQueries({ queryKey: getApiV1ServicesQueryKey() })
-      await queryClient.removeQueries({ queryKey: getApiV1StaffQueryKey() })
-      await queryClient.removeQueries({ queryKey: getApiV1ClientsQueryKey() })
-      await queryClient.removeQueries({
-        queryKey: getApiV1SalonProfilePresenceQueryKey(),
-      })
-      await queryClient.removeQueries({
-        queryKey: getApiV1SalonPublicSettingsQueryKey(),
-      })
-      await navigate({ to: '/onboarding/welcome' })
+    onSuccess: (_, values) => {
+      setVerifiedPhone(values.phone)
+      setOtp('')
+      setOtpError(null)
+      setResendAvailableAt(Date.now() + AUTH_OTP_RESEND_SECONDS * 1000)
+      setStep('otp')
     },
   })
 
-  const onSubmit = handleSubmit((values) => {
-    signup.mutate(values, {
+  const verifyOtp = useMutation({
+    mutationFn: (code: string) =>
+      api.auth.verifyPhoneOtp({ phone: verifiedPhone, code }),
+    meta: { skipToast: true },
+    onSuccess: async () => {
+      setOtpError(null)
+      await refresh()
+      setStep('account')
+    },
+  })
+
+  const completeAccount = useMutation({
+    mutationFn: ({ managerName, password }: AccountStepPayload) =>
+      api.auth.completeSignupAccount({ managerName, password }),
+    meta: { skipToast: true },
+    onSuccess: async () => {
+      await refresh()
+      setStep('workspace')
+    },
+  })
+
+  const createWorkspace = useMutation({
+    mutationFn: (values: z.output<typeof preWorkspaceSchema>) =>
+      api.auth.createSignupWorkspace(values),
+    meta: { skipToast: true },
+    onSuccess: async () => {
+      const session = await refresh()
+      if (session?.status !== 'needs_workspace' && session?.user) {
+        setUser(session.user)
+        await invalidateNewWorkspaceQueries()
+        await navigate({ to: '/onboarding/welcome' })
+      }
+    },
+  })
+
+  const phoneValue = phoneForm.watch('phone')
+  const startPhone = phoneForm.handleSubmit((values) => {
+    sendOtp.mutate(values, {
       onError: (err) => {
         const message =
           err instanceof ApiError
-            ? err.message || 'ثبت‌نام انجام نشد. دوباره تلاش کنید.'
-            : getMutationErrorMessage(
-                err,
-                'خطایی رخ داد. لطفاً دوباره تلاش کنید.',
-              )
-        setError('root', { message })
+            ? err.status === 429
+              ? 'برای دریافت کد جدید کمی صبر کنید.'
+              : err.message || 'ارسال کد تایید انجام نشد.'
+            : getMutationErrorMessage(err, 'ارسال کد تایید انجام نشد.')
+        phoneForm.setError('root', { message })
       },
     })
   })
 
-  const managerNameField = register('managerName')
-  const salonNameField = register('salonName')
-  const passwordField = register('password')
-  const confirmPasswordField = register('confirmPassword')
+  const submitOtp = (value?: string) => {
+    if (verifyOtp.isPending) return
+    const code = normalizeOtpCode(value ?? otp)
+    if (code.length !== AUTH_OTP_CODE_LENGTH) {
+      setOtpError(`کد ${AUTH_OTP_CODE_LENGTH} رقمی را کامل وارد کنید`)
+      return
+    }
+    verifyOtp.mutate(code, {
+      onError: (err) => setOtpError(getOtpErrorMessage(err)),
+    })
+  }
+
+  const resendOtp = () => {
+    if (!verifiedPhone || resendRemaining > 0) return
+    sendOtp.mutate(
+      { phone: verifiedPhone },
+      { onError: (err) => setOtpError(getOtpErrorMessage(err)) },
+    )
+  }
+
+  const submitAccount = accountForm.handleSubmit((values) => {
+    completeAccount.mutate(values, {
+      onError: (err) => {
+        const message =
+          err instanceof ApiError
+            ? err.message || 'تکمیل حساب انجام نشد. دوباره تلاش کنید.'
+            : getMutationErrorMessage(err, 'تکمیل حساب انجام نشد.')
+        accountForm.setError('root', { message })
+      },
+    })
+  })
+
+  const submitWorkspace = workspaceForm.handleSubmit((values) => {
+    createWorkspace.mutate(values, {
+      onError: (err) => {
+        const message =
+          err instanceof ApiError
+            ? err.message || 'ساخت سالن انجام نشد. دوباره تلاش کنید.'
+            : getMutationErrorMessage(err, 'ساخت سالن انجام نشد.')
+        workspaceForm.setError('root', { message })
+      },
+    })
+  })
+
+  const accountPasswordField = accountForm.register('password')
+  const accountConfirmPasswordField = accountForm.register('confirmPassword')
+  const accountManagerNameField = accountForm.register('managerName')
+  const workspaceSalonNameField = workspaceForm.register('salonName')
 
   return (
     <main className="flex min-h-dvh justify-center bg-gradient-to-b from-blush-soft/60 to-background p-4">
       <div className="flex w-full max-w-md flex-col">
-        {/* Brand mark — Saluna */}
         <div className="flex items-center gap-2 px-1 pt-2">
           <span className="inline-flex size-9 items-center justify-center rounded-xl bg-primary/10">
             <SalooraMark className="size-[22px]" />
@@ -152,141 +274,220 @@ function SignupPage() {
           </span>
         </div>
 
-        {/* Eyebrow + big conversational question */}
         <div className="mt-8 px-1">
           <span className="inline-flex w-fit items-center rounded-full bg-blush-soft px-3 py-1 text-[11px] font-semibold text-primary">
-            بیایید آشنا شویم
+            {displayStep}
           </span>
           <h1 className="mt-3 text-2xl font-extrabold leading-snug tracking-tight text-foreground">
-            سالن‌تان را در چند ثانیه بسازیم
+            {step === 'workspace'
+              ? 'سالن‌تان را بسازیم'
+              : 'ثبت‌نام با شماره موبایل'}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-sage-deep">
-            همین نام روی صفحه‌ی رزرو و پیام‌های مشتری‌ها نمایش داده می‌شود.
+            {step === 'phone'
+              ? 'اول شماره را تایید می‌کنیم، بعد رمز عبور و نام سالن را می‌گیریم.'
+              : step === 'otp'
+                ? `کد ۶ رقمی ارسال‌شده به ${displayPhone(verifiedPhone)} را وارد کنید.`
+                : step === 'account'
+                  ? 'نام مدیر و رمز عبور حساب را تنظیم کنید.'
+                  : 'این نام روی صفحه‌ی رزرو و پیام‌های مشتری‌ها نمایش داده می‌شود.'}
           </p>
         </div>
 
-        <form onSubmit={onSubmit} noValidate className="mt-6">
-          <FieldGroup className="gap-5">
-            {/* Salon name — big focal input */}
-            <Field>
-              <FieldLabel htmlFor="salonName">نام سالن</FieldLabel>
-              <Input
-                id="salonName"
-                placeholder="مثلاً سالن رز"
-                autoComplete="organization"
-                disabled={signup.isPending}
-                className="h-14 rounded-2xl bg-card text-lg font-bold shadow-sm"
-                {...salonNameField}
+        {step === 'phone' && (
+          <form onSubmit={startPhone} noValidate className="mt-6">
+            <FieldGroup className="gap-5">
+              <Field>
+                <FieldLabel htmlFor="phone">شماره موبایل</FieldLabel>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={displayPhone(phoneValue)}
+                  onChange={(event) =>
+                    phoneForm.setValue('phone', event.target.value, {
+                      shouldValidate: false,
+                    })
+                  }
+                  placeholder="۰۹۱۲۰۰۰۰۰۰۰"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  disabled={sendOtp.isPending}
+                  dir="ltr"
+                  className="h-14 rounded-2xl bg-card text-left text-lg font-bold tabular-nums shadow-sm"
+                />
+                {phoneForm.formState.errors.phone && (
+                  <FieldError>
+                    {phoneForm.formState.errors.phone.message}
+                  </FieldError>
+                )}
+              </Field>
+              <FormRootError
+                message={phoneForm.formState.errors.root?.message}
               />
-              {errors.salonName && (
-                <FieldError>{errors.salonName.message}</FieldError>
-              )}
-              <p className="px-1 text-xs leading-relaxed text-sage-deep">
-                لینک صفحه‌ی رزرو را بعداً در مراحل راه‌اندازی انتخاب می‌کنید.
-              </p>
-            </Field>
+              <PrimarySubmitButton pending={sendOtp.isPending}>
+                دریافت کد تایید
+              </PrimarySubmitButton>
+            </FieldGroup>
+          </form>
+        )}
 
-            {/* Manager name + phone — paired */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {step === 'otp' && (
+          <div className="mt-6">
+            <FieldGroup className="gap-5">
+              <Field>
+                <FieldLabel htmlFor="otp">کد پیامکی</FieldLabel>
+                <OtpCodeInput
+                  value={otp}
+                  onValueChange={(value) => {
+                    setOtp(value)
+                    setOtpError(null)
+                  }}
+                  onComplete={submitOtp}
+                  disabled={verifyOtp.isPending}
+                  invalid={Boolean(otpError)}
+                  slotClassName="bg-card"
+                />
+                {otpError && <FieldError>{otpError}</FieldError>}
+              </Field>
+
+              <Button
+                type="button"
+                className="h-12 rounded-xl text-base font-semibold"
+                disabled={verifyOtp.isPending}
+                onClick={() => submitOtp()}
+              >
+                {verifyOtp.isPending ? <Spinner className="ml-2" /> : null}
+                تایید کد
+              </Button>
+
+              <div className="flex items-center justify-between text-sm text-sage-deep">
+                <button
+                  type="button"
+                  className="font-semibold text-primary disabled:text-muted-foreground"
+                  disabled={sendOtp.isPending || resendRemaining > 0}
+                  onClick={resendOtp}
+                >
+                  ارسال دوباره کد
+                </button>
+                <span>
+                  {resendRemaining > 0 ? `${resendRemaining} ثانیه` : null}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="text-sm font-semibold text-muted-foreground"
+                onClick={() => setStep('phone')}
+              >
+                تغییر شماره موبایل
+              </button>
+            </FieldGroup>
+          </div>
+        )}
+
+        {step === 'account' && (
+          <form onSubmit={submitAccount} noValidate className="mt-6">
+            <FieldGroup className="gap-5">
               <Field>
                 <FieldLabel htmlFor="managerName">نام مدیر</FieldLabel>
                 <Input
                   id="managerName"
                   placeholder="نام و نام خانوادگی"
                   autoComplete="name"
-                  disabled={signup.isPending}
+                  disabled={completeAccount.isPending}
                   className="h-12 rounded-2xl bg-card"
-                  {...managerNameField}
+                  {...accountManagerNameField}
                 />
-                {errors.managerName && (
-                  <FieldError>{errors.managerName.message}</FieldError>
+                {accountForm.formState.errors.managerName && (
+                  <FieldError>
+                    {accountForm.formState.errors.managerName.message}
+                  </FieldError>
                 )}
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="managerPhone">شماره موبایل</FieldLabel>
-                <Input
-                  id="managerPhone"
-                  type="tel"
-                  value={displayPhone(managerPhone)}
-                  onChange={(e) =>
-                    setValue('managerPhone', e.target.value, {
-                      shouldValidate: false,
-                    })
-                  }
-                  placeholder="۰۹۱۲۰۰۰۰۰۰۰"
-                  autoComplete="username"
-                  inputMode="numeric"
-                  disabled={signup.isPending}
-                  dir="ltr"
-                  className="h-12 rounded-2xl bg-card text-left tabular-nums"
+                <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
+                <PasswordInput
+                  id="password"
+                  placeholder="حداقل ۸ کاراکتر"
+                  autoComplete="new-password"
+                  disabled={completeAccount.isPending}
+                  className="h-12 rounded-2xl bg-card"
+                  {...accountPasswordField}
                 />
-                {errors.managerPhone && (
-                  <FieldError>{errors.managerPhone.message}</FieldError>
+                {accountForm.formState.errors.password && (
+                  <FieldError>
+                    {accountForm.formState.errors.password.message}
+                  </FieldError>
                 )}
               </Field>
-            </div>
 
-            {/* Password */}
-            <Field>
-              <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
-              <PasswordInput
-                id="password"
-                placeholder="حداقل ۸ کاراکتر"
-                autoComplete="new-password"
-                disabled={signup.isPending}
-                className="h-12 rounded-2xl bg-card"
-                {...passwordField}
+              <Field>
+                <FieldLabel htmlFor="confirmPassword">
+                  تکرار رمز عبور
+                </FieldLabel>
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="رمز عبور را دوباره وارد کنید"
+                  autoComplete="new-password"
+                  disabled={completeAccount.isPending}
+                  className="h-12 rounded-2xl bg-card"
+                  {...accountConfirmPasswordField}
+                />
+                {accountForm.formState.errors.confirmPassword && (
+                  <FieldError>
+                    {accountForm.formState.errors.confirmPassword.message}
+                  </FieldError>
+                )}
+              </Field>
+
+              <FormRootError
+                message={accountForm.formState.errors.root?.message}
               />
-              {errors.password && (
-                <FieldError>{errors.password.message}</FieldError>
-              )}
-            </Field>
+              <PrimarySubmitButton pending={completeAccount.isPending}>
+                ادامه
+              </PrimarySubmitButton>
+            </FieldGroup>
+          </form>
+        )}
 
-            {/* Confirm password — guards against silent typos */}
-            <Field>
-              <FieldLabel htmlFor="confirmPassword">تکرار رمز عبور</FieldLabel>
-              <PasswordInput
-                id="confirmPassword"
-                placeholder="رمز عبور را دوباره وارد کنید"
-                autoComplete="new-password"
-                disabled={signup.isPending}
-                className="h-12 rounded-2xl bg-card"
-                {...confirmPasswordField}
+        {step === 'workspace' && (
+          <form onSubmit={submitWorkspace} noValidate className="mt-6">
+            <FieldGroup className="gap-5">
+              <Field>
+                <FieldLabel htmlFor="salonName">نام سالن</FieldLabel>
+                <Input
+                  id="salonName"
+                  placeholder="مثلاً سالن رز"
+                  autoComplete="organization"
+                  disabled={createWorkspace.isPending}
+                  className="h-14 rounded-2xl bg-card text-lg font-bold shadow-sm"
+                  {...workspaceSalonNameField}
+                />
+                {workspaceForm.formState.errors.salonName && (
+                  <FieldError>
+                    {workspaceForm.formState.errors.salonName.message}
+                  </FieldError>
+                )}
+                <p className="px-1 text-xs leading-relaxed text-sage-deep">
+                  لینک صفحه‌ی رزرو را بعداً در مراحل راه‌اندازی انتخاب می‌کنید.
+                </p>
+              </Field>
+
+              <FormRootError
+                message={workspaceForm.formState.errors.root?.message}
               />
-              {errors.confirmPassword && (
-                <FieldError>{errors.confirmPassword.message}</FieldError>
-              )}
-            </Field>
-
-            <FormRootError message={errors.root?.message} />
-
-            <button
-              type="submit"
-              disabled={signup.isPending}
-              className={cn(
-                'flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl',
-                'bg-primary text-base font-extrabold text-primary-foreground',
-                'shadow-[0_10px_26px_-12px_rgba(0,0,0,0.45)] transition-opacity touch-manipulation',
-                'disabled:cursor-not-allowed disabled:opacity-60',
-              )}
-            >
-              {signup.isPending ? (
-                <Spinner className="size-5" />
-              ) : (
-                <>
-                  ساخت سالن
-                  <ArrowLeft className="size-5" />
-                </>
-              )}
-            </button>
-          </FieldGroup>
-        </form>
+              <PrimarySubmitButton pending={createWorkspace.isPending}>
+                ساخت سالن
+              </PrimarySubmitButton>
+            </FieldGroup>
+          </form>
+        )}
 
         <p className="mt-6 px-1 text-center text-sm text-sage-deep">
           حساب دارید؟{' '}
           <Link
-            to="/login"
+            to="/auth"
             className="font-semibold text-primary underline-offset-4 hover:underline"
           >
             ورود
@@ -294,5 +495,35 @@ function SignupPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+function PrimarySubmitButton({
+  children,
+  pending,
+}: {
+  children: React.ReactNode
+  pending: boolean
+}) {
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className={cn(
+        'flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl',
+        'bg-primary text-base font-extrabold text-primary-foreground',
+        'shadow-[0_10px_26px_-12px_rgba(0,0,0,0.45)] transition-opacity touch-manipulation',
+        'disabled:cursor-not-allowed disabled:opacity-60',
+      )}
+    >
+      {pending ? (
+        <Spinner className="size-5" />
+      ) : (
+        <>
+          {children}
+          <ArrowLeft className="size-5" />
+        </>
+      )}
+    </button>
   )
 }

@@ -1,6 +1,6 @@
 # packages/ui — agent guide
 
-Shared primitives consumed by `apps/pwa`, `apps/web`, and `apps/native`. Touch-first PWA. Read this before editing primitives or adding call-sites.
+Shared primitives consumed by `apps/pwa` and `apps/web`. Touch-first PWA. Read this before editing primitives or adding call-sites.
 
 ## Touch sizing — single canonical size per role
 
@@ -8,17 +8,17 @@ The whole point of the touch pass is **one size per role**, not a buffet. Mixed 
 
 Canonical heights (touch = `@media (pointer: coarse)`, desktop = `pointer: fine`):
 
-| Role | Touch | Desktop |
-|---|---|---|
-| Form-row control (Input, Textarea row, Select/Combobox/DatePicker/TimePicker trigger, Input-group, default Button) | **44 px** (`h-11`) | **36 px** (`h-9`) |
-| Primary action button (CTA, sticky footer button, submit) | **48 px** (`h-12`) | **40 px** (`h-10`) |
-| Icon button | **44 px** (`size-11`) | **36 px** (`size-9`) |
-| Dense icon button (inside an already-44 px tappable row) | **40 px** (`size-10`) | **32 px** (`size-8`) |
-| Bottom-nav item | **56 px** | — |
-| List row (`Item`) | **min 56 px** | **min 44 px** |
-| Option row (Select / Dropdown / Command item) | **44 px** | **32 px** |
-| Tabs / Toggle / Segmented control | **44 px** | **36 px** |
-| Calendar / time-slot cell | **44 px** | **44 px** |
+| Role                                                                                                               | Touch                 | Desktop              |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------- | -------------------- |
+| Form-row control (Input, Textarea row, Select/Combobox/DatePicker/TimePicker trigger, Input-group, default Button) | **44 px** (`h-11`)    | **36 px** (`h-9`)    |
+| Primary action button (CTA, sticky footer button, submit)                                                          | **48 px** (`h-12`)    | **40 px** (`h-10`)   |
+| Icon button                                                                                                        | **44 px** (`size-11`) | **36 px** (`size-9`) |
+| Dense icon button (inside an already-44 px tappable row)                                                           | **40 px** (`size-10`) | **32 px** (`size-8`) |
+| Bottom-nav item                                                                                                    | **56 px**             | —                    |
+| List row (`Item`)                                                                                                  | **min 56 px**         | **min 44 px**        |
+| Option row (Select / Dropdown / Command item)                                                                      | **44 px**             | **32 px**            |
+| Tabs / Toggle / Segmented control                                                                                  | **44 px**             | **36 px**            |
+| Calendar / time-slot cell                                                                                          | **44 px**             | **44 px**            |
 
 Hard rules:
 
@@ -29,14 +29,14 @@ Hard rules:
 
 Button variant → role:
 
-| Variant | Role | Touch | Desktop |
-|---|---|---|---|
-| `sm` | Dense (inside tappable rows only) | 40 | 32 |
-| `default` | Form-row / standard | 44 | 36 |
-| `lg` | Primary CTA | 48 | 40 |
-| `icon` | Icon, default | size-11 | size-9 |
-| `icon-sm` | Icon, dense | size-10 | size-8 |
-| `icon-lg` | Icon, primary | size-12 | size-10 |
+| Variant   | Role                              | Touch   | Desktop |
+| --------- | --------------------------------- | ------- | ------- |
+| `sm`      | Dense (inside tappable rows only) | 40      | 32      |
+| `default` | Form-row / standard               | 44      | 36      |
+| `lg`      | Primary CTA                       | 48      | 40      |
+| `icon`    | Icon, default                     | size-11 | size-9  |
+| `icon-sm` | Icon, dense                       | size-10 | size-8  |
+| `icon-lg` | Icon, primary                     | size-12 | size-10 |
 
 `<Button size="sm">` outside a tappable row is wrong — promote to `default`. `<Button>` used as a hero CTA → `lg`.
 

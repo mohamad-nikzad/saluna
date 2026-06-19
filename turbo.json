@@ -18,6 +18,14 @@
       "cache": false,
       "persistent": true
     },
+    "dev:local-data": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:live-data": {
+      "cache": false,
+      "persistent": true
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },

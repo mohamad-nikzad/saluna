@@ -1,0 +1,42 @@
+---
+export const prerender = true
+
+import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
+import { displayClass } from '@/content/landing'
+import { publicSiteInfo } from '@/content/public-site'
+
+const title = `حریم خصوصی | ${publicSiteInfo.brandName}`
+const description = `حریم خصوصی ${publicSiteInfo.brandName} درباره نگهداری اطلاعات حساب، شماره تماس و داده‌های مدیریتی سالن.`
+const canonical = new URL('/privacy', Astro.url.origin).toString()
+---
+
+<PublicInfoLayout title={title} description={description} canonical={canonical}>
+  <section class="px-5 py-16 sm:px-8 sm:py-20">
+    <div class="mx-auto max-w-4xl">
+      <p class="text-sm font-extrabold text-[#9b3348]">حریم خصوصی</p>
+      <h1 class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}>
+        حفاظت از اطلاعات کاربران و سالن‌ها
+      </h1>
+      <div class="mt-8 space-y-6 text-base leading-8 text-[#6b4955]">
+        <p>
+          {publicSiteInfo.brandName} برای ارائه نرم‌افزار مدیریت سالن، اطلاعاتی مثل
+          شماره تماس کاربران، اطلاعات پایه سالن، خدمات، پرسنل، مشتریان و نوبت‌ها را
+          دریافت و نگهداری می‌کند.
+        </p>
+        <p>
+          شماره تماس برای ورود، احراز هویت، ارسال کد تایید یک‌بارمصرف و ارتباط‌های
+          ضروری مربوط به حساب کاربری استفاده می‌شود.
+        </p>
+        <p>
+          اطلاعات کاربران برای فروش یا ارسال تبلیغات غیرمرتبط در اختیار اشخاص ثالث
+          قرار نمی‌گیرد. دسترسی به داده‌ها فقط برای ارائه، نگهداری و پشتیبانی محصول
+          انجام می‌شود.
+        </p>
+        <p>
+          برای درخواست پشتیبانی یا سوال درباره داده‌ها، از صفحه تماس با ما با
+          {` ${publicSiteInfo.operatorName} `} ارتباط بگیرید.
+        </p>
+      </div>
+    </div>
+  </section>
+</PublicInfoLayout>

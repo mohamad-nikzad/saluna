@@ -1,0 +1,107 @@
+---
+export const prerender = true
+
+import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
+import { displayClass } from '@/content/landing'
+import { publicSiteInfo } from '@/content/public-site'
+
+const title = `تماس با ما | ${publicSiteInfo.brandName}`
+const description = `راه‌های ارتباط با ${publicSiteInfo.operatorName}: شماره تماس، ایمیل، موقعیت و شبکه‌های اجتماعی ${publicSiteInfo.brandName}.`
+const canonical = new URL('/contact', Astro.url.origin).toString()
+const hasEmail = publicSiteInfo.contact.email.trim().length > 0
+const hasTelegram = publicSiteInfo.contact.telegram.trim().length > 0
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: title,
+  url: canonical,
+  mainEntity: {
+    '@type': 'Organization',
+    name: publicSiteInfo.brandName,
+    telephone: publicSiteInfo.contact.phone || undefined,
+    email: hasEmail ? publicSiteInfo.contact.email : undefined,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Tehran',
+      addressCountry: 'IR',
+    },
+  },
+}
+---
+
+<PublicInfoLayout title={title} description={description} canonical={canonical} jsonLd={jsonLd}>
+  <section class="px-5 py-16 sm:px-8 sm:py-20">
+    <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+      <div>
+        <p class="text-sm font-extrabold text-[#9b3348]">تماس با ما</p>
+        <h1 class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}>
+          ارتباط با تیم سالونا
+        </h1>
+        <p class="mt-6 text-base leading-8 text-[#6b4955]">
+          برای سوال درباره دسترسی آزمایشی، گزارش مشکل یا پیگیری استفاده از
+          {` ${publicSiteInfo.brandName} `} می‌توانید از راه‌های زیر با ما در ارتباط
+          باشید.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)]">
+        <dl class="grid gap-5">
+          <div>
+            <dt class="text-xs font-bold text-[#9b3348]">شماره تماس</dt>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
+              <a href={`tel:${publicSiteInfo.contact.phone}`} class="hover:text-[#9b3348]">
+                {publicSiteInfo.contact.phone}
+              </a>
+            </dd>
+          </div>
+          {
+            hasEmail ? (
+              <div>
+                <dt class="text-xs font-bold text-[#9b3348]">ایمیل</dt>
+                <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
+                  <a href={`mailto:${publicSiteInfo.contact.email}`} class="hover:text-[#9b3348]">
+                    {publicSiteInfo.contact.email}
+                  </a>
+                </dd>
+              </div>
+            ) : null
+          }
+          {
+            hasTelegram ? (
+              <div>
+                <dt class="text-xs font-bold text-[#9b3348]">تلگرام</dt>
+                <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
+                  <a href={publicSiteInfo.contact.telegram} class="hover:text-[#9b3348]">
+                    {publicSiteInfo.contact.telegram}
+                  </a>
+                </dd>
+              </div>
+            ) : null
+          }
+          <div>
+            <dt class="text-xs font-bold text-[#9b3348]">موقعیت</dt>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.location}</dd>
+          </div>
+        </dl>
+
+        {
+          publicSiteInfo.socialLinks.length > 0 ? (
+            <div class="mt-6 border-t border-[#f3d5dd] pt-5">
+              <p class="text-xs font-bold text-[#9b3348]">شبکه‌های اجتماعی</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                {publicSiteInfo.socialLinks.map((link) => (
+                  <a
+                    href={link.href}
+                    class="rounded-md border border-[#d68aa0] px-3 py-2 text-sm font-bold text-[#7a2a40] transition hover:bg-[#7a2a40] hover:text-white"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null
+        }
+      </div>
+    </div>
+  </section>
+</PublicInfoLayout>

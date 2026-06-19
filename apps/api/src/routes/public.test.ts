@@ -82,15 +82,31 @@ describe('public routes', () => {
           enabled: true,
           bioText: null,
           themeId: 'rose',
+          layoutId: 'agenda',
           appointmentRequestsEnabled: true,
+        },
+        presence: {
+          address: 'خیابان ولیعصر',
+          mapGoogle: 'https://maps.app.goo.gl/example',
+          mapNeshan: null,
+          mapBalad: null,
+          socialInstagram: '@foo',
+          socialTelegram: null,
+          socialWhatsapp: '09121234567',
+          website: 'https://foo.example',
         },
         services: [],
       },
     } as never)
     const res = await app.request('/api/v1/public/salons/foo')
     expect(res.status).toBe(200)
-    const body = (await res.json()) as { salon: { slug: string } }
+    const body = (await res.json()) as {
+      salon: { slug: string }
+      presence: { address: string; socialInstagram: string }
+    }
     expect(body.salon.slug).toBe('foo')
+    expect(body.presence.address).toBe('خیابان ولیعصر')
+    expect(body.presence.socialInstagram).toBe('@foo')
   })
 
   it('GET /salons/:slug 404 when not found', async () => {

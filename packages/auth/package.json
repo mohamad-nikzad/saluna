@@ -7,6 +7,7 @@
     "./server": "./src/server.ts",
     "./permissions": "./src/permissions.ts",
     "./auth": "./src/auth.ts",
+    "./platform": "./src/platform.ts",
     "./keys": "./src/keys.ts",
     "./signup": "./src/signup.ts",
     "./tenant": "./src/tenant.ts"
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@repo/database": "workspace:*",
+    "@repo/notifications": "workspace:*",
     "@repo/salon-core": "workspace:*",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.11",

@@ -54,7 +54,13 @@ export function AgendaLayout(props: PublicLayoutProps) {
       className="min-h-dvh pb-24"
       style={{ backgroundColor: theme.bg, color: theme.text }}
     >
-      <SalonInfoCard name={salonName} phone={phone} bio={bio} theme={theme} />
+      <SalonInfoCard
+        name={salonName}
+        phone={phone}
+        bio={bio}
+        theme={theme}
+        presence={props.presence}
+      />
 
       <div className="mx-auto mt-5 w-full max-w-3xl space-y-3 px-5 sm:px-8">
         {!bookingEnabled ? (

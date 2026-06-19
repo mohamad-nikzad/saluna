@@ -12,16 +12,20 @@ Run this on the VPS from /opt/saluna after CI has pushed one app image.
 It updates that app's deployment state, pulls only that image, restarts only
 that service, and runs the relevant smoke check.
 
-Required:
-  SALUNA_IMAGE_REGISTRY   Registry/repository prefix, e.g.
-                          registry.hamdocker.ir/my-team/
+Required (one of):
+  SALUNA_IMAGE_REGISTRY       Default registry/repository prefix, e.g.
+                              registry.hamdocker.ir/my-team/
+  SALUNA_<APP>_IMAGE_REGISTRY Per-app override used by multi-registry CI/CD.
 
 Optional:
   ENV_FILE                Env file to update (default: .env.production)
   COMPOSE_FILE            Compose file (default: docker-compose.prod.yml)
   SALUNA_API_VERSION      API app version to persist
+  SALUNA_API_IMAGE_REGISTRY
   SALUNA_WEB_VERSION      Web app version to persist
+  SALUNA_WEB_IMAGE_REGISTRY
   SALUNA_PWA_VERSION      PWA app version to persist
+  SALUNA_PWA_IMAGE_REGISTRY
   SKIP_BACKUP             Skip API pre-migration backup when set to 1
   SEED_CATALOG_PRESETS    Seed presets on API deploy (default: 1)
 USAGE
@@ -47,6 +51,22 @@ if [[ -z "$image_tag" ]]; then
   exit 1
 fi
 
+case "$app" in
+  api) registry_var="SALUNA_API_IMAGE_REGISTRY" ;;
+  web) registry_var="SALUNA_WEB_IMAGE_REGISTRY" ;;
+  pwa) registry_var="SALUNA_PWA_IMAGE_REGISTRY" ;;
+esac
+
+# An explicit per-app registry selects a non-default CI/CD path. Legacy callers
+# that only set SALUNA_IMAGE_REGISTRY intentionally keep using that global
+# registry, even after another pipeline persisted a per-app registry.
+registry_override_set=0
+registry_override_value=""
+if [[ -n "${!registry_var+x}" ]]; then
+  registry_override_set=1
+  registry_override_value="${!registry_var}"
+fi
+
 ENV_FILE="${ENV_FILE:-.env.production}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 SKIP_BACKUP="${SKIP_BACKUP:-0}"
@@ -62,9 +82,12 @@ preserved_env_keys=(
   APP_DOMAIN
   PUBLIC_DOMAIN
   SALUNA_API_VERSION
+  SALUNA_API_IMAGE_REGISTRY
   SALUNA_IMAGE_REGISTRY
   SALUNA_PWA_VERSION
+  SALUNA_PWA_IMAGE_REGISTRY
   SALUNA_WEB_VERSION
+  SALUNA_WEB_IMAGE_REGISTRY
 )
 preserved_env_values=()
 for key in "${preserved_env_keys[@]}"; do
@@ -82,10 +105,19 @@ for preserved_env_value in "${preserved_env_values[@]}"; do
   export "$preserved_env_value"
 done
 
-if [[ -z "${SALUNA_IMAGE_REGISTRY:-}" ]]; then
-  echo "SALUNA_IMAGE_REGISTRY is required in ${ENV_FILE} or the environment." >&2
+if [[ "$registry_override_set" == "1" ]]; then
+  registry_value="$registry_override_value"
+else
+  registry_value="${SALUNA_IMAGE_REGISTRY:-}"
+fi
+
+if [[ -z "$registry_value" ]]; then
+  echo "${registry_var} or SALUNA_IMAGE_REGISTRY is required." >&2
   exit 1
 fi
+
+registry_value="${registry_value%/}/"
+export "$registry_var=$registry_value"
 
 set_env_value() {
   local key="$1"
@@ -247,6 +279,7 @@ wait_for_service_health gateway
 smoke_check "$smoke_host" "$smoke_path" "$app"
 
 set_env_value "$tag_var" "$image_tag" "$ENV_FILE"
+set_env_value "$registry_var" "$registry_value" "$ENV_FILE"
 if [[ -n "$version_value" ]]; then
   set_env_value "$version_var" "$version_value" "$ENV_FILE"
 fi

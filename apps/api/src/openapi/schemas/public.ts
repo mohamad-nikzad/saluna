@@ -3,6 +3,7 @@ import { publicAppointmentRequestSchema } from '@repo/salon-core/forms/public'
 
 import { appointmentRequestStatusSchema } from './appointment-requests'
 import { availabilityResponseSchema } from './appointments'
+import { salonPresenceSchema } from './salon-profile'
 import { serviceSchema } from './services'
 
 const isoDateTimeSchema = z.string().datetime().or(z.string())
@@ -32,23 +33,32 @@ function bodyFromCoreSchema<T extends z.ZodType>(
 
 export const publicSlugParamSchema = z
   .object({
-    slug: z.string().min(1).openapi({
-      param: { name: 'slug', in: 'path' },
-      example: 'my-salon',
-    }),
+    slug: z
+      .string()
+      .min(1)
+      .openapi({
+        param: { name: 'slug', in: 'path' },
+        example: 'my-salon',
+      }),
   })
   .openapi('PublicSlugParam')
 
 export const publicSlugTokenParamSchema = z
   .object({
-    slug: z.string().min(1).openapi({
-      param: { name: 'slug', in: 'path' },
-      example: 'my-salon',
-    }),
-    token: z.string().uuid().openapi({
-      param: { name: 'token', in: 'path' },
-      example: '550e8400-e29b-41d4-a716-446655440000',
-    }),
+    slug: z
+      .string()
+      .min(1)
+      .openapi({
+        param: { name: 'slug', in: 'path' },
+        example: 'my-salon',
+      }),
+    token: z
+      .string()
+      .uuid()
+      .openapi({
+        param: { name: 'token', in: 'path' },
+        example: '550e8400-e29b-41d4-a716-446655440000',
+      }),
   })
   .openapi('PublicSlugTokenParam')
 
@@ -77,15 +87,19 @@ export const publicSalonViewSchema = z
   .object({
     salon: publicSalonInfoSchema,
     publicSettings: publicSalonSettingsSchema,
+    presence: salonPresenceSchema,
     services: z.array(serviceSchema),
   })
   .openapi('PublicSalonView')
 
 export const publicAvailabilityQuerySchema = z
   .object({
-    serviceId: z.string().min(1).openapi({
-      param: { name: 'serviceId', in: 'query' },
-    }),
+    serviceId: z
+      .string()
+      .min(1)
+      .openapi({
+        param: { name: 'serviceId', in: 'query' },
+      }),
     date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -93,14 +107,21 @@ export const publicAvailabilityQuerySchema = z
         param: { name: 'date', in: 'query' },
         example: '2026-06-07',
       }),
-    mode: z.enum(['day', 'nearest']).optional().default('day').openapi({
-      param: { name: 'mode', in: 'query' },
-      example: 'day',
-    }),
-    days: z.string().optional().openapi({
-      param: { name: 'days', in: 'query' },
-      description: 'Nearest-mode search window in days (max 60).',
-    }),
+    mode: z
+      .enum(['day', 'nearest'])
+      .optional()
+      .default('day')
+      .openapi({
+        param: { name: 'mode', in: 'query' },
+        example: 'day',
+      }),
+    days: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'days', in: 'query' },
+        description: 'Nearest-mode search window in days (max 60).',
+      }),
   })
   .openapi('PublicAvailabilityQuery')
 

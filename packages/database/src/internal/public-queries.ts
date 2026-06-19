@@ -34,6 +34,10 @@ import {
 } from '../schema'
 import { getAppointmentsByDateRange } from './appointment-queries'
 import { getAllServices, getServiceById } from './service-queries'
+import {
+  toSalonPresenceView,
+  type SalonPresenceView,
+} from './salon-profile-queries'
 import { getAllStaff, getStaffSchedules } from './staff-queries'
 import { getBusinessSettings } from './settings-queries'
 
@@ -53,6 +57,7 @@ export type PublicSalonView = {
     layoutId: string
     appointmentRequestsEnabled: boolean
   }
+  presence: SalonPresenceView
   services: Service[]
 }
 
@@ -72,6 +77,14 @@ export async function getPublicSalon(slug: string): Promise<PublicSalonLookupRes
       slug: organization.slug,
       name: organization.name,
       phone: salonProfile.phone,
+      address: salonProfile.address,
+      mapGoogle: salonProfile.mapGoogle,
+      mapNeshan: salonProfile.mapNeshan,
+      mapBalad: salonProfile.mapBalad,
+      socialInstagram: salonProfile.socialInstagram,
+      socialTelegram: salonProfile.socialTelegram,
+      socialWhatsapp: salonProfile.socialWhatsapp,
+      website: salonProfile.website,
       timezone: salonProfile.timezone,
       locale: salonProfile.locale,
       status: salonProfile.status,
@@ -127,6 +140,7 @@ export async function getPublicSalon(slug: string): Promise<PublicSalonLookupRes
         layoutId: settingsRow.layoutId,
         appointmentRequestsEnabled: settingsRow.appointmentRequestsEnabled,
       },
+      presence: toSalonPresenceView(salonRow),
       services: visible,
     },
   }
@@ -474,4 +488,3 @@ export async function cancelAppointmentRequestByToken(
   }
   return { ok: true }
 }
-

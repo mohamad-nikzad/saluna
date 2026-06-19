@@ -1,4 +1,5 @@
 import { brand } from '@repo/brand'
+import { presenceSameAs } from '@repo/salon-core/presence-links'
 import type { Service } from '@repo/salon-core/types'
 import type { PublicSalonView } from './public-api'
 
@@ -25,6 +26,8 @@ type SalonJsonLd = {
   url: string
   image: string
   description?: string
+  address?: string
+  sameAs?: string[]
   makesOffer: JsonLdOffer[]
 }
 
@@ -49,9 +52,13 @@ function buildServiceOffer(service: Service): JsonLdOffer {
   }
 }
 
-export function buildSalonJsonLd(view: PublicSalonView, pageUrl: URL): SalonJsonLd {
-  const { salon, services, publicSettings } = view
+export function buildSalonJsonLd(
+  view: PublicSalonView,
+  pageUrl: URL,
+): SalonJsonLd {
+  const { salon, services, publicSettings, presence } = view
   const image = new URL(`/og/${salon.slug}.png`, pageUrl.origin).toString()
+  const sameAs = presenceSameAs(presence)
 
   return {
     '@context': 'https://schema.org',
@@ -61,6 +68,8 @@ export function buildSalonJsonLd(view: PublicSalonView, pageUrl: URL): SalonJson
     url: pageUrl.toString(),
     image,
     ...(publicSettings.bioText ? { description: publicSettings.bioText } : {}),
+    ...(presence.address ? { address: presence.address } : {}),
+    ...(sameAs.length > 0 ? { sameAs } : {}),
     makesOffer: services.filter((s) => s.active).map(buildServiceOffer),
   }
 }

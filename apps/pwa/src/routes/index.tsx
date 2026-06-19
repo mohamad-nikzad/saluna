@@ -1,17 +1,21 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { authQueryKey } from '#/lib/auth'
+import type { AuthSession } from '#/lib/auth'
 import { homePathForRole } from '#/lib/navigation'
-import type { User } from '@repo/salon-core/types'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.ensureQueryData<User | null>({
+    const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
-    if (!user) {
-      throw redirect({ to: '/login' })
+    if (!session) {
+      throw redirect({ to: '/auth' })
     }
+    if (session.status === 'needs_workspace') {
+      throw redirect({ to: '/signup' })
+    }
+    const { user } = session
     throw redirect({ to: homePathForRole(user.role) })
   },
 })

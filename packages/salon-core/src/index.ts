@@ -8,6 +8,7 @@ export * from "./jalali";
 export * from "./jalali-display";
 export * from "./phone";
 export * from "./persian-digits";
+export * from "./presence-links";
 export * from "./public-themes";
 export * from "./salon-local-time";
 export * from "./service-catalog";

@@ -1,0 +1,204 @@
+name: Build production images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'apps/web/**'
+      - 'apps/pwa/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - 'turbo.json'
+      - 'tsconfig.json'
+      - 'scripts/with-root-env.mjs'
+      - '.github/workflows/build-production-images.yml'
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: Apps to rebuild
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - api
+          - web
+          - pwa
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect affected apps
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: changes
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/auth/**'
+              - 'packages/brand/**'
+              - 'packages/database/**'
+              - 'packages/eslint-config/**'
+              - 'packages/notifications/**'
+              - 'packages/salon-core/**'
+              - 'packages/typescript-config/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'scripts/with-root-env.mjs'
+              - '.github/workflows/build-production-images.yml'
+            web:
+              - 'apps/web/**'
+              - 'packages/api-client/**'
+              - 'packages/brand/**'
+              - 'packages/salon-core/**'
+              - 'packages/typescript-config/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - 'scripts/with-root-env.mjs'
+              - '.github/workflows/build-production-images.yml'
+            pwa:
+              - 'apps/pwa/**'
+              - 'packages/api-client/**'
+              - 'packages/brand/**'
+              - 'packages/brand-tokens/**'
+              - 'packages/database/**'
+              - 'packages/salon-core/**'
+              - 'packages/typescript-config/**'
+              - 'packages/ui/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - 'tsconfig.json'
+              - '.github/workflows/build-production-images.yml'
+
+      - id: matrix
+        name: Create build matrix
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SELECTED_APPS: ${{ inputs.apps }}
+          API_CHANGED: ${{ steps.changes.outputs.api }}
+          WEB_CHANGED: ${{ steps.changes.outputs.web }}
+          PWA_CHANGED: ${{ steps.changes.outputs.pwa }}
+        run: |
+          apps=()
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$SELECTED_APPS" == "all" ]]; then
+              apps=(api web pwa)
+            else
+              apps=("$SELECTED_APPS")
+            fi
+          else
+            [[ "$API_CHANGED" == "true" ]] && apps+=(api)
+            [[ "$WEB_CHANGED" == "true" ]] && apps+=(web)
+            [[ "$PWA_CHANGED" == "true" ]] && apps+=(pwa)
+          fi
+
+          json="$(jq -cn --args '$ARGS.positional' "${apps[@]}")"
+          echo "apps=$json" >> "$GITHUB_OUTPUT"
+          echo "Building: $json"
+
+  build:
+    name: Build ${{ matrix.app }}
+    needs: detect
+    if: needs.detect.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: image
+        name: Prepare image metadata
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          version="$(node -p "require('./apps/${APP}/package.json').version")"
+          short_sha="${GITHUB_SHA:0:7}"
+          tag="${version}-${short_sha}"
+          registry="ghcr.io/${owner}/"
+
+          echo "registry=$registry" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "name=saluna-${APP}" >> "$GITHUB_OUTPUT"
+          echo "image=${registry}saluna-${APP}:${tag}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo 'build_args<<EOF'
+            echo 'NODE_IMAGE=node:22.12.0-alpine'
+            echo 'NGINX_IMAGE=nginx:1.27-alpine'
+            echo 'PNPM_VERSION=9.15.9'
+            if [[ "$APP" == "web" ]]; then
+              echo 'PUBLIC_APP_URL=https://saluna.ir'
+              echo 'PUBLIC_API_URL=https://api.saluna.ir'
+              echo 'PUBLIC_MANAGER_APP_URL=https://app.saluna.ir'
+            elif [[ "$APP" == "pwa" ]]; then
+              echo 'VITE_API_BASE_URL=https://api.saluna.ir'
+              echo 'VITE_APP_URL=https://app.saluna.ir'
+              echo 'VITE_WEB_URL=https://saluna.ir'
+              echo "VITE_PWA_ASSET_VERSION=$tag"
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.image.outputs.image }}
+          build-args: ${{ steps.image.outputs.build_args }}
+          labels: |
+            org.opencontainers.image.title=${{ steps.image.outputs.name }}
+            org.opencontainers.image.version=${{ steps.image.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=saluna-${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=saluna-${{ matrix.app }}
+          provenance: false
+
+      - name: Add job summary
+        run: echo 'Built `${{ steps.image.outputs.image }}`' >> "$GITHUB_STEP_SUMMARY"

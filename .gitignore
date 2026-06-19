@@ -18,6 +18,7 @@ next.user-config.*
 # Common ignores
 node_modules
 dist/
+/apps/native/
 **/dist-portability/
 .next/
 .turbo/
@@ -46,3 +47,4 @@ playwright/.cache/
 # Air-gapped deploy artifacts
 deploy/releases/
 .codex/
+saluna-icons/

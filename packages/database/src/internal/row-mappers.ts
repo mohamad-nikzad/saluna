@@ -41,7 +41,8 @@ export const staffUserSelect = {
   salonId: member.organizationId,
   fullName: user.name,
   displayName: salonMember.displayName,
-  phone: user.username,
+  phone: user.phoneNumber,
+  fallbackPhone: user.username,
   role: member.role,
   color: salonMember.color,
   createdAt: user.createdAt,
@@ -53,6 +54,7 @@ export type StaffUserRow = {
   fullName: string
   displayName: string | null
   phone: string | null
+  fallbackPhone: string | null
   role: string
   color: string | null
   createdAt: Date
@@ -68,7 +70,7 @@ export function rowToUser(row: StaffUserRow): User {
     name: nickname ?? fullName,
     fullName,
     nickname,
-    phone: row.phone ?? '',
+    phone: row.phone ?? row.fallbackPhone ?? '',
     role: row.role === 'owner' || row.role === 'admin' ? 'manager' : 'staff',
     color: row.color ?? DEFAULT_STAFF_COLOR,
     createdAt: row.createdAt,

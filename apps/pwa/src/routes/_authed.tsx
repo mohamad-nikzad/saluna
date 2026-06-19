@@ -4,23 +4,27 @@ import {
   redirect,
   useRouterState,
 } from '@tanstack/react-router'
-import type { User } from '@repo/salon-core/types'
 
 import { authQueryKey } from '#/lib/auth'
+import type { AuthSession } from '#/lib/auth'
 import { BottomNav } from '#/components/bottom-nav'
 
 export const Route = createFileRoute('/_authed')({
   beforeLoad: async ({ context, location }) => {
-    const user = await context.queryClient.ensureQueryData<User | null>({
+    const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
-    if (!user) {
+    if (!session) {
       throw redirect({
-        to: '/login',
+        to: '/auth',
         search: { redirect: location.href },
       })
     }
+    if (session.status === 'needs_workspace') {
+      throw redirect({ to: '/signup' })
+    }
 
+    const { user } = session
     if (
       user.role === 'manager' &&
       user.needsOnboarding &&

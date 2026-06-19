@@ -1,5 +1,5 @@
 /**
- * Service form schema — shared between PWA (`apps/pwa`) and native (`apps/native`).
+ * Service form schema shared by Saluna clients.
  * Normalizes category/color/number fields into API-ready payload values.
  */
 import { z } from 'zod'

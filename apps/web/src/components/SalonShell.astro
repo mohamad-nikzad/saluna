@@ -1,5 +1,6 @@
 ---
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import { buildPresenceLinks } from '@repo/salon-core/presence-links'
 import type { PublicSalonView } from '@/lib/public-api'
 import { formatDuration, formatPrice } from '@/lib/format'
 
@@ -8,8 +9,11 @@ interface Props {
 }
 
 const { view } = Astro.props
-const { salon, services, publicSettings } = view
+const { salon, services, publicSettings, presence } = view
 const activeServices = services.filter((s) => s.active)
+const presenceLinks = buildPresenceLinks(presence)
+const mapLinks = presenceLinks.filter((link) => link.kind === 'map')
+const contactLinks = presenceLinks.filter((link) => link.kind !== 'map')
 ---
 
 <!--
@@ -25,6 +29,25 @@ const activeServices = services.filter((s) => s.active)
         <a href={`tel:${salon.phone}`} dir="ltr">
           {toPersianDigits(salon.phone)}
         </a>
+      ) : null
+    }
+    {presence.address ? <p>{presence.address}</p> : null}
+    {
+      mapLinks.length > 0 ? (
+        <nav aria-label="لینک‌های نقشه سالن">
+          {mapLinks.map((link) => (
+            <a href={link.href}>{link.label}</a>
+          ))}
+        </nav>
+      ) : null
+    }
+    {
+      contactLinks.length > 0 ? (
+        <nav aria-label="لینک‌های ارتباطی سالن">
+          {contactLinks.map((link) => (
+            <a href={link.href}>{link.label}</a>
+          ))}
+        </nav>
       ) : null
     }
   </header>

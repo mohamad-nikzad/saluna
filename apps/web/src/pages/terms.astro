@@ -1,0 +1,42 @@
+---
+export const prerender = true
+
+import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
+import { displayClass } from '@/content/landing'
+import { publicSiteInfo } from '@/content/public-site'
+
+const title = `قوانین استفاده | ${publicSiteInfo.brandName}`
+const description = `قوانین استفاده از ${publicSiteInfo.brandName} برای دسترسی آزمایشی عمومی نرم‌افزار مدیریت سالن زیبایی.`
+const canonical = new URL('/terms', Astro.url.origin).toString()
+---
+
+<PublicInfoLayout title={title} description={description} canonical={canonical}>
+  <section class="px-5 py-16 sm:px-8 sm:py-20">
+    <div class="mx-auto max-w-4xl">
+      <p class="text-sm font-extrabold text-[#9b3348]">قوانین استفاده</p>
+      <h1 class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}>
+        شرایط دسترسی آزمایشی به سالونا
+      </h1>
+      <div class="mt-8 space-y-6 text-base leading-8 text-[#6b4955]">
+        <p>
+          استفاده از {publicSiteInfo.brandName} در وضعیت فعلی به صورت
+          {` ${publicSiteInfo.availability} `} ارائه می‌شود و ممکن است قابلیت‌ها،
+          محدودیت‌ها یا شرایط محصول در طول توسعه تغییر کند.
+        </p>
+        <p>
+          کاربران مسئول صحت اطلاعاتی هستند که درباره سالن، خدمات، پرسنل، مشتریان و
+          نوبت‌ها در سامانه ثبت می‌کنند.
+        </p>
+        <p>
+          ارسال کد تایید پیامکی فقط برای احراز هویت و دسترسی امن به حساب کاربری
+          استفاده می‌شود. کاربر با ثبت شماره تماس خود، دریافت پیامک‌های ضروری مربوط
+          به حساب را می‌پذیرد.
+        </p>
+        <p>
+          {publicSiteInfo.operatorName} تلاش می‌کند محصول پایدار و قابل اتکا باشد،
+          اما در دوره آزمایشی ممکن است اختلال، تغییر یا توقف موقت سرویس رخ دهد.
+        </p>
+      </div>
+    </div>
+  </section>
+</PublicInfoLayout>

@@ -39,6 +39,7 @@ const NAVIGATION_FALLBACK_PATHS = [
   '/services',
   '/retention',
   '/requests',
+  '/auth',
   '/login',
   '/',
 ]
@@ -66,6 +67,7 @@ function isHashedAssetRequest(url) {
 function shouldCacheNavigation(pathname) {
   return (
     pathname === '/' ||
+    pathname === '/auth' ||
     pathname === '/login' ||
     pathname === '/signup' ||
     pathname.startsWith('/calendar') ||
@@ -91,6 +93,7 @@ function getRouteLabel(pathname) {
   if (pathname.startsWith('/staff')) return 'پرسنل'
   if (pathname.startsWith('/retention')) return 'پیگیری'
   if (pathname.startsWith('/requests')) return 'درخواست‌ها'
+  if (pathname.startsWith('/auth')) return 'ورود یا ثبت‌نام'
   if (pathname.startsWith('/login')) return 'ورود'
   if (pathname.startsWith('/signup')) return 'ثبت‌نام'
   return 'سالونا'

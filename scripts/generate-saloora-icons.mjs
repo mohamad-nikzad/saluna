@@ -8,7 +8,6 @@ const execFileAsync = promisify(execFile)
 
 const root = new URL('..', import.meta.url).pathname
 const pwaPublic = join(root, 'apps/pwa/public')
-const nativeAssets = join(root, 'apps/native/assets')
 const brandDir = join(pwaPublic, 'brand')
 const iconsDir = join(pwaPublic, 'icons')
 const tempDir = join(root, 'node_modules/.cache/saluna-pwa-assets')
@@ -58,7 +57,9 @@ async function prepareCleanMark() {
 
   const cropWidth = maxX - minX + 1
   const cropHeight = maxY - minY + 1
-  const tightMark = await sharp(cleaned, { raw: { width, height, channels: 4 } })
+  const tightMark = await sharp(cleaned, {
+    raw: { width, height, channels: 4 },
+  })
     .extract({ left: minX, top: minY, width: cropWidth, height: cropHeight })
     .resize({ width: 1024 })
     .png()
@@ -88,13 +89,16 @@ async function prepareCleanMark() {
     .composite([
       {
         input: extracted,
-        left: Math.round((targetSize - (extractedMeta.width ?? targetSize)) / 2),
-        top: Math.round((targetSize - (extractedMeta.height ?? targetSize)) / 2),
+        left: Math.round(
+          (targetSize - (extractedMeta.width ?? targetSize)) / 2,
+        ),
+        top: Math.round(
+          (targetSize - (extractedMeta.height ?? targetSize)) / 2,
+        ),
       },
     ])
     .png()
     .toFile(preparedSourcePath)
-
 }
 
 async function runPwaAssetGenerator(args) {
@@ -107,7 +111,9 @@ async function runPwaAssetGenerator(args) {
 async function createFaviconIco(sourcePath) {
   const sizes = [16, 32, 48]
   const pngs = await Promise.all(
-    sizes.map((size) => sharp(sourcePath).resize(size, size, { fit: 'contain' }).png().toBuffer())
+    sizes.map((size) =>
+      sharp(sourcePath).resize(size, size, { fit: 'contain' }).png().toBuffer(),
+    ),
   )
 
   const header = Buffer.alloc(6)
@@ -131,7 +137,10 @@ async function createFaviconIco(sourcePath) {
     return entry
   })
 
-  await writeFile(join(pwaPublic, 'favicon.ico'), Buffer.concat([header, ...entries, ...pngs]))
+  await writeFile(
+    join(pwaPublic, 'favicon.ico'),
+    Buffer.concat([header, ...entries, ...pngs]),
+  )
 }
 
 async function writePngFromImage(imagePath, outPath, width) {
@@ -140,23 +149,59 @@ async function writePngFromImage(imagePath, outPath, width) {
 }
 
 async function copyGeneratedPwaIcons() {
-  await copyFile(join(tempDir, 'apple-icon-180.png'), join(pwaPublic, 'apple-touch-icon.png'))
-  await copyFile(join(tempDir, 'manifest-icon-192.maskable.png'), join(iconsDir, 'icon-192x192.png'))
-  await copyFile(join(tempDir, 'manifest-icon-192.maskable.png'), join(iconsDir, 'icon-maskable-192x192.png'))
-  await copyFile(join(tempDir, 'manifest-icon-512.maskable.png'), join(iconsDir, 'icon-512x512.png'))
-  await copyFile(join(tempDir, 'manifest-icon-512.maskable.png'), join(iconsDir, 'icon-maskable-512x512.png'))
-  await copyFile(join(tempDir, 'favicon-196.png'), join(pwaPublic, 'favicon-196x196.png'))
+  await copyFile(
+    join(tempDir, 'apple-icon-180.png'),
+    join(pwaPublic, 'apple-touch-icon.png'),
+  )
+  await copyFile(
+    join(tempDir, 'manifest-icon-192.maskable.png'),
+    join(iconsDir, 'icon-192x192.png'),
+  )
+  await copyFile(
+    join(tempDir, 'manifest-icon-192.maskable.png'),
+    join(iconsDir, 'icon-maskable-192x192.png'),
+  )
+  await copyFile(
+    join(tempDir, 'manifest-icon-512.maskable.png'),
+    join(iconsDir, 'icon-512x512.png'),
+  )
+  await copyFile(
+    join(tempDir, 'manifest-icon-512.maskable.png'),
+    join(iconsDir, 'icon-maskable-512x512.png'),
+  )
+  await copyFile(
+    join(tempDir, 'favicon-196.png'),
+    join(pwaPublic, 'favicon-196x196.png'),
+  )
 
   const baseIcon = join(tempDir, 'manifest-icon-512.maskable.png')
   for (const size of legacyIconSizes) {
-    await sharp(baseIcon).resize(size, size).png().toFile(join(iconsDir, `icon-${size}x${size}.png`))
+    await sharp(baseIcon)
+      .resize(size, size)
+      .png()
+      .toFile(join(iconsDir, `icon-${size}x${size}.png`))
   }
 
-  await sharp(baseIcon).resize(16, 16).png().toFile(join(pwaPublic, 'favicon-16x16.png'))
-  await sharp(baseIcon).resize(32, 32).png().toFile(join(pwaPublic, 'favicon-32x32.png'))
-  await sharp(baseIcon).resize(1024, 1024).png().toFile(join(pwaPublic, 'icon-base.png'))
-  await sharp(baseIcon).resize(32, 32).png().toFile(join(pwaPublic, 'icon-light-32x32.png'))
-  await sharp(baseIcon).resize(32, 32).png().toFile(join(pwaPublic, 'icon-dark-32x32.png'))
+  await sharp(baseIcon)
+    .resize(16, 16)
+    .png()
+    .toFile(join(pwaPublic, 'favicon-16x16.png'))
+  await sharp(baseIcon)
+    .resize(32, 32)
+    .png()
+    .toFile(join(pwaPublic, 'favicon-32x32.png'))
+  await sharp(baseIcon)
+    .resize(1024, 1024)
+    .png()
+    .toFile(join(pwaPublic, 'icon-base.png'))
+  await sharp(baseIcon)
+    .resize(32, 32)
+    .png()
+    .toFile(join(pwaPublic, 'icon-light-32x32.png'))
+  await sharp(baseIcon)
+    .resize(32, 32)
+    .png()
+    .toFile(join(pwaPublic, 'icon-dark-32x32.png'))
   await createFaviconIco(baseIcon)
 }
 
@@ -165,7 +210,8 @@ async function copyGeneratedSplashImages() {
   await mkdir(iconsDir, { recursive: true })
 
   for (const filename of filenames) {
-    if (!filename.startsWith('apple-splash-') || !filename.endsWith('.png')) continue
+    if (!filename.startsWith('apple-splash-') || !filename.endsWith('.png'))
+      continue
     await copyFile(join(tempDir, filename), join(iconsDir, filename))
   }
 }
@@ -174,8 +220,11 @@ async function removeLegacySplashImages() {
   const filenames = await readdir(iconsDir)
   await Promise.all(
     filenames
-      .filter((filename) => filename.startsWith('splash-') && filename.endsWith('.png'))
-      .map((filename) => rm(join(iconsDir, filename), { force: true }))
+      .filter(
+        (filename) =>
+          filename.startsWith('splash-') && filename.endsWith('.png'),
+      )
+      .map((filename) => rm(join(iconsDir, filename), { force: true })),
   )
 }
 
@@ -228,12 +277,12 @@ async function main() {
   await copyGeneratedSplashImages()
   const logoOut = join(pwaPublic, 'logo.png')
   const logoCleanOut = join(brandDir, 'saloora-logo-clean.png')
-  const nativeLogoOut = join(nativeAssets, 'images/saloora-logo-clean.png')
   await writePngFromImage(cleanMarkPath, logoOut, 1024)
   await writePngFromImage(cleanMarkPath, logoCleanOut, 512)
-  await mkdir(dirname(nativeLogoOut), { recursive: true })
-  await copyFile(logoCleanOut, nativeLogoOut)
-  await copyFile(cleanMarkPath, join(root, 'apps/web/public/landing/saloora-mark.png'))
+  await copyFile(
+    cleanMarkPath,
+    join(root, 'apps/web/public/landing/saloora-mark.png'),
+  )
 }
 
 main().catch((error) => {

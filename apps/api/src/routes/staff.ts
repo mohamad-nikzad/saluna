@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { eq } from 'drizzle-orm'
 import {
   getAllStaff,
   getBusinessSettings,
@@ -18,7 +19,7 @@ import {
 import { auth } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import { isDuplicatePhoneError } from '@repo/database/clients'
-import { salonMember } from '@repo/database/schema'
+import { salonMember, user } from '@repo/database/schema'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { validateAppointmentWindow } from '@repo/salon-core/appointment-time'
@@ -85,6 +86,15 @@ export const staff = new Hono<AppEnv>()
           },
         })
         newUserId = signUpRes.user.id
+        await getDb()
+          .update(user)
+          .set({
+            phoneNumber: phone,
+            phoneNumberVerified: true,
+            displayUsername: phone,
+            updatedAt: new Date(),
+          })
+          .where(eq(user.id, newUserId))
       } catch (err) {
         if (isDuplicatePhoneError(err)) {
           return error(c, 'این شماره موبایل قبلاً ثبت شده است', 409)

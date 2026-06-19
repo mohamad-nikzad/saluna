@@ -197,7 +197,7 @@ export async function guardStep(
       status = data.onboarding
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        throw redirect({ to: '/login', search: { redirect: '/onboarding' } })
+        throw redirect({ to: '/auth', search: { redirect: '/onboarding' } })
       }
       // Offline / fetch failure: don't block the step from rendering.
       return

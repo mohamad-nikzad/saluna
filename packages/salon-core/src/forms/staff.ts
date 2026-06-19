@@ -1,5 +1,5 @@
 /**
- * Staff form schemas — shared between PWA (`apps/pwa`) and native (`apps/native`).
+ * Staff form schemas shared by Saluna clients.
  * Covers staff creation and weekly working-schedule editing.
  */
 import { z } from 'zod'

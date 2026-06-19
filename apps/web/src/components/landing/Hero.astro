@@ -90,8 +90,10 @@ const { loginHref, signupHref } = Astro.props
 
     <nav class="hidden items-center gap-7 text-sm text-[#6b4955] md:flex">
       <a href="#features" class="transition hover:text-[#7a2a40]"> امکانات </a>
-      <a href="#preview" class="transition hover:text-[#7a2a40]"> داشبورد </a>
-      <a href="#testimonials" class="transition hover:text-[#7a2a40]"> نظرات </a>
+      <a href="/services" class="transition hover:text-[#7a2a40]"> خدمات </a>
+      <a href="/about" class="transition hover:text-[#7a2a40]"> درباره ما </a>
+      <a href="/contact" class="transition hover:text-[#7a2a40]"> تماس با ما </a>
+      <a href="#pricing" class="transition hover:text-[#7a2a40]"> پلن‌ها </a>
     </nav>
 
     <a
@@ -109,20 +111,20 @@ const { loginHref, signupHref } = Astro.props
       class="mb-6 inline-flex items-center gap-2 rounded-full border border-[#e9b4c2] bg-white/70 px-4 py-1.5 text-xs font-bold text-[#7a2a40] backdrop-blur sm:text-sm"
     >
       <Icon name="sparkles" class="h-4 w-4" />
-      مدیریت هوشمند سالن زیبایی
+      دسترسی آزمایشی رایگان برای سالن‌های زیبایی
     </p>
 
     <h1
       class={`${displayClass} text-4xl leading-[1.25] text-[#4a1e2e] sm:text-6xl lg:text-7xl lg:leading-[1.15]`}
     >
-      ساده، حرفه‌ای،
+      نرم‌افزار مدیریت
       <br />
-      <span class="text-[#9b2f4a]">{brandFa}</span>
+      <span class="text-[#9b2f4a]">سالن زیبایی</span>
     </h1>
 
     <p class="mt-6 max-w-2xl text-base leading-8 text-[#6b4955] sm:mt-8 sm:text-lg">
-      با {brandFa} تقویم نوبت‌ها، مشتریان، پرسنل و خدمات سالن را در یک مسیر مرتب نگه
-      می‌دارید و روز کاری را با تمرکز بیشتری جلو می‌برید.
+      {brandFa} به مدیر سالن کمک می‌کند نوبت‌ها، مشتریان، پرسنل، خدمات و
+      درخواست‌های نوبت از صفحه عمومی سالن را در یک مسیر منظم پیگیری کند.
     </p>
 
     <div class="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -130,7 +132,7 @@ const { loginHref, signupHref } = Astro.props
         href={signupHref}
         class="rounded-md bg-[#c3425b] px-7 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.28)] transition hover:bg-[#a82b46]"
       >
-        شروع رایگان
+        تست رایگان {brandFa}
       </a>
       <a
         href="#features"
@@ -139,5 +141,10 @@ const { loginHref, signupHref } = Astro.props
         مشاهده امکانات
       </a>
     </div>
+
+    <p class="mt-5 max-w-xl text-xs leading-6 text-[#7a5964] sm:text-sm">
+      پلن‌ها هنوز نهایی نشده‌اند؛ قیمت‌گذاری بعد از شناخت بهتر بازار و نیاز واقعی
+      سالن‌ها اعلام می‌شود.
+    </p>
   </div>
 </section>
