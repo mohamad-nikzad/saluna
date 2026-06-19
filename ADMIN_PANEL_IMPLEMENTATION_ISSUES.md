@@ -244,13 +244,18 @@ Expose ongoing platform access management through Settings for `platform_owner` 
 
 ## Acceptance criteria
 
-- [ ] Settings includes a `Platform Admins` area only for `platform_owner` users.
-- [ ] Platform owner can list platform admins through generated admin platform-admin queries.
-- [ ] Platform owner can grant/update platform admin access with a required reason.
-- [ ] Live-data mode requires production-data warning copy and extra confirmation phrase before platform admin mutations.
-- [ ] Non-owner platform roles cannot reach or use platform-admin management UI.
-- [ ] Bootstrap copy explains that `PLATFORM_ADMIN_BOOTSTRAP_PHONES` is for initial/emergency platform owner bootstrap only.
-- [ ] API and UI tests cover owner access, non-owner denial, and mutation reason handling.
+- [x] Settings includes a `Platform Admins` area only for `platform_owner` users.
+- [x] Platform owner can list platform admins through generated admin platform-admin queries.
+- [x] Platform owner can grant/update platform admin access with a required reason.
+- [x] Live-data mode requires production-data warning copy and extra confirmation phrase before platform admin mutations.
+- [x] Non-owner platform roles cannot reach or use platform-admin management UI.
+- [x] Bootstrap copy explains that `PLATFORM_ADMIN_BOOTSTRAP_PHONES` is for initial/emergency platform owner bootstrap only.
+- [x] API and UI tests cover owner access, non-owner denial, and mutation reason handling.
+
+## Verification evidence
+
+- 2026-06-19: implementation verified in `apps/admin/src/features/settings/index.tsx` and `apps/admin/src/features/settings/settings.test.tsx`.
+- 2026-06-19: API behavior verified in `apps/api/src/routes/admin.ts` and `apps/api/src/routes/admin.test.ts`.
 
 ## Blocked by
 
