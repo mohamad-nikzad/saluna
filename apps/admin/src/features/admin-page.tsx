@@ -73,7 +73,6 @@ type AdminPageId =
   | 'messaging-health'
   | 'support-lookup'
   | 'audit-log'
-  | 'platform-admins'
   | 'settings'
 
 type RecordRow = Record<string, unknown>
@@ -134,13 +133,9 @@ const pageConfig: Record<AdminPageId, PageConfig> = {
     description:
       'تاریخچه تغییرات ادمین همراه با انجام‌دهنده، هدف، دلیل و زمینه درخواست.',
   },
-  'platform-admins': {
-    title: 'ادمین‌های پلتفرم',
-    description: 'اعطا، تغییر و لغو دسترسی داخلی با محافظت از آخرین مالک.',
-  },
   settings: {
     title: 'تنظیمات',
-    description: 'تنظیمات داخلی ادمین که رفتار سالن‌ها را تغییر نمی‌دهد.',
+    description: 'تنظیمات داخلی ادمین، نشست و مدیریت دسترسی پلتفرم.',
   },
 }
 
@@ -160,7 +155,6 @@ export function AdminPage({ pageId }: { pageId: AdminPageId }) {
       {pageId === 'messaging-health' ? <MessagingHealthScreen /> : null}
       {pageId === 'support-lookup' ? <SupportLookupScreen /> : null}
       {pageId === 'audit-log' ? <AuditLogScreen /> : null}
-      {pageId === 'platform-admins' ? <PlatformAdminsScreen /> : null}
       {pageId === 'settings' ? <SettingsScreen /> : null}
     </>
   )
@@ -168,7 +162,6 @@ export function AdminPage({ pageId }: { pageId: AdminPageId }) {
 
 function HeaderAction({ pageId }: { pageId: AdminPageId }) {
   if (pageId === 'catalog-presets') return null
-  if (pageId === 'platform-admins') return null
   return null
 }
 
@@ -1190,24 +1183,47 @@ function PlatformAdminSheet({
 
 function SettingsScreen() {
   const { me } = useAdminAuth()
+  const isPlatformOwner = me.role === 'platform_owner'
+
   return (
-    <section className="grid gap-4 lg:grid-cols-2">
-      <Panel title="نشست" icon={<UserRound className="h-4 w-4" />}>
-        <DetailGrid
-          items={[
-            ['Name', me.name],
-            ['ایمیل', me.email],
-            ['موبایل', me.phoneNumber],
-            ['نقش', <RoleBadge key="role" role={me.role} active={me.active} />],
-          ]}
-        />
-      </Panel>
-      <Panel title="مدل دسترسی" icon={<LockKeyhole className="h-4 w-4" />}>
-        <p className="text-sm leading-6 text-muted-foreground">
-          دسترسی ادمین با نقش‌های پلتفرمی و نشست کوکی Better Auth کنترل می‌شود.
-        </p>
-      </Panel>
-    </section>
+    <div className="space-y-4">
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Panel title="نشست" icon={<UserRound className="h-4 w-4" />}>
+          <DetailGrid
+            items={[
+              ['Name', me.name],
+              ['ایمیل', me.email],
+              ['موبایل', me.phoneNumber],
+              [
+                'نقش',
+                <RoleBadge key="role" role={me.role} active={me.active} />,
+              ],
+            ]}
+          />
+        </Panel>
+        <Panel title="مدل دسترسی" icon={<LockKeyhole className="h-4 w-4" />}>
+          <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+            <p>
+              دسترسی ادمین با نقش‌های پلتفرمی و نشست کوکی Better Auth کنترل
+              می‌شود.
+            </p>
+            <p>
+              متغیر PLATFORM_ADMIN_BOOTSTRAP_PHONES فقط برای بوت‌استرپ اولیه یا
+              بازیابی اضطراری مالک پلتفرم است؛ بعد از بوت‌استرپ، دسترسی‌ها از
+              همین بخش تنظیمات مدیریت می‌شوند.
+            </p>
+          </div>
+        </Panel>
+      </section>
+      {isPlatformOwner ? (
+        <Panel
+          title="Platform Admins"
+          icon={<ShieldCheck className="h-4 w-4" />}
+        >
+          <PlatformAdminsScreen />
+        </Panel>
+      ) : null}
+    </div>
   )
 }
 

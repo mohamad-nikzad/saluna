@@ -50,11 +50,14 @@ import {
   getAdminSalon,
   getPlatformAdminForUser,
   getPlatformAdminMe,
+  listPlatformAdmins,
   listAdminCatalogPresets,
   listAdminInternalNotes,
   listAdminSalons,
   updateAdminCatalogPreset,
   updateAdminSalonStatus,
+  updatePlatformAdmin,
+  upsertPlatformAdmin,
 } from '@repo/database/admin'
 
 process.env.NODE_ENV = 'test'
@@ -66,6 +69,8 @@ const { app } = await import('../app')
 const authHeaders = { Authorization: 'Bearer testtoken' }
 const salonId = '11111111-1111-4111-8111-111111111111'
 const presetId = '22222222-2222-4222-8222-222222222222'
+const platformAdminId = '33333333-3333-4333-8333-333333333333'
+const platformAdminUserId = '44444444-4444-4444-8444-444444444444'
 const presetTree = [
   {
     name: 'مو',
@@ -435,5 +440,142 @@ describe('admin runtime data source', () => {
         reason: 'Archive old service variant language',
       }),
     )
+  })
+
+  it('lets platform owners list platform admins', async () => {
+    vi.mocked(listPlatformAdmins).mockResolvedValue({
+      items: [
+        {
+          id: platformAdminId,
+          userId: platformAdminUserId,
+          name: 'Support Admin',
+          email: 'support@example.com',
+          phoneNumber: null,
+          username: 'support',
+          role: 'platform_support',
+          active: true,
+        },
+      ],
+      pagination: { page: 1, pageSize: 20, total: 1 },
+    } as never)
+
+    const res = await app.request(
+      '/api/v1/admin/platform-admins?page=1&pageSize=20&search=support',
+      { headers: authHeaders },
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      items: [{ id: platformAdminId, role: 'platform_support' }],
+      pagination: { total: 1 },
+    })
+    expect(listPlatformAdmins).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      search: 'support',
+    })
+  })
+
+  it('denies platform admin management to non-owner platform roles', async () => {
+    vi.mocked(getPlatformAdminForUser).mockResolvedValue({
+      id: 'platform-admin-2',
+      userId: 'admin-user-1',
+      role: 'platform_admin',
+      active: true,
+    } as never)
+
+    const listRes = await app.request('/api/v1/admin/platform-admins', {
+      headers: authHeaders,
+    })
+    const createRes = await app.request('/api/v1/admin/platform-admins', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: platformAdminUserId,
+        role: 'platform_support',
+        active: true,
+        reason: 'Support coverage',
+        liveConfirmation: 'LIVE',
+      }),
+    })
+
+    expect(listRes.status).toBe(403)
+    expect(createRes.status).toBe(403)
+    expect(listPlatformAdmins).not.toHaveBeenCalled()
+    expect(upsertPlatformAdmin).not.toHaveBeenCalled()
+  })
+
+  it('creates platform admin access with reason and LIVE confirmation', async () => {
+    vi.mocked(upsertPlatformAdmin).mockResolvedValue({
+      id: platformAdminId,
+      userId: platformAdminUserId,
+      role: 'platform_support',
+      active: true,
+    } as never)
+    vi.mocked(createAdminAuditEvent).mockResolvedValue({
+      id: 'audit-platform-admin-create',
+    } as never)
+
+    const res = await app.request('/api/v1/admin/platform-admins', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: platformAdminUserId,
+        role: 'platform_support',
+        active: true,
+        reason: 'Support coverage',
+        liveConfirmation: 'LIVE',
+      }),
+    })
+
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({
+      admin: { id: platformAdminId, role: 'platform_support' },
+    })
+    expect(upsertPlatformAdmin).toHaveBeenCalledWith({
+      userId: platformAdminUserId,
+      role: 'platform_support',
+      active: true,
+      actorUserId: 'admin-user-1',
+    })
+    expect(createAdminAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'platform_admin.upsert',
+        targetType: 'platform_admin',
+        targetId: platformAdminId,
+        reason: 'Support coverage',
+      }),
+    )
+  })
+
+  it('requires a reason before platform admin mutations', async () => {
+    const createRes = await app.request('/api/v1/admin/platform-admins', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: platformAdminUserId,
+        role: 'platform_support',
+        active: true,
+        liveConfirmation: 'LIVE',
+      }),
+    })
+    const updateRes = await app.request(
+      `/api/v1/admin/platform-admins/${platformAdminId}`,
+      {
+        method: 'PATCH',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'platform_support',
+          active: true,
+          liveConfirmation: 'LIVE',
+        }),
+      },
+    )
+
+    expect(createRes.status).toBe(400)
+    expect(updateRes.status).toBe(400)
+    expect(upsertPlatformAdmin).not.toHaveBeenCalled()
+    expect(updatePlatformAdmin).not.toHaveBeenCalled()
+    expect(createAdminAuditEvent).not.toHaveBeenCalled()
   })
 })
