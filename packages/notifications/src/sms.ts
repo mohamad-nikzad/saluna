@@ -401,7 +401,7 @@ function createSmsIrProvider(
         providerBatchId: body.data?.packId ?? null,
         ...(providerMessageIds.length > 0 ? { providerMessageIds } : {}),
       }
-    } catch (err) {
+    } catch {
       const error = 'sms_ir_send_error'
       logSmsFailure({
         provider: 'sms_ir',
