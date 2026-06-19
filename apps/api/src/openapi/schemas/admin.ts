@@ -229,6 +229,7 @@ export const adminCatalogPresetBodySchema = z
     sortOrder: z.number().int().optional(),
     isActive: z.boolean().optional(),
     reason: adminReasonSchema,
+    liveConfirmation: z.string().optional(),
   })
   .openapi('AdminCatalogPresetCreateRequest')
 

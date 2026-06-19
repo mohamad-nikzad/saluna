@@ -682,6 +682,9 @@
             "minLength": 3,
             "maxLength": 500,
             "example": "درخواست پشتیبانی داخلی"
+          },
+          "liveConfirmation": {
+            "type": "string"
           }
         },
         "required": [
@@ -729,6 +732,9 @@
             "minLength": 3,
             "maxLength": 500,
             "example": "درخواست پشتیبانی داخلی"
+          },
+          "liveConfirmation": {
+            "type": "string"
           }
         },
         "required": [

@@ -433,6 +433,28 @@ describe('admin runtime data source', () => {
     })
   })
 
+  it('blocks live CatalogPreset create without LIVE confirmation', async () => {
+    const res = await app.request('/api/v1/admin/catalog-presets', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slug: 'hair-services',
+        name: 'قالب خدمات مو',
+        description: null,
+        tree: presetTree,
+        sortOrder: 1,
+        isActive: true,
+        reason: 'Add canonical hair service variants',
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: 'برای تغییر داده زنده عبارت LIVE را وارد کنید',
+    })
+    expect(createAdminCatalogPreset).not.toHaveBeenCalled()
+  })
+
   it('creates a CatalogPreset with a reason and writes audit event', async () => {
     vi.mocked(createAdminCatalogPreset).mockResolvedValue({
       id: presetId,
@@ -455,6 +477,7 @@ describe('admin runtime data source', () => {
         sortOrder: 1,
         isActive: true,
         reason: 'Add canonical hair service variants',
+        liveConfirmation: 'LIVE',
       }),
     })
 
@@ -470,6 +493,7 @@ describe('admin runtime data source', () => {
       sortOrder: 1,
       isActive: true,
       reason: 'Add canonical hair service variants',
+      liveConfirmation: 'LIVE',
     })
     expect(createAdminAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -479,6 +503,24 @@ describe('admin runtime data source', () => {
         reason: 'Add canonical hair service variants',
       }),
     )
+  })
+
+  it('blocks live CatalogPreset update without LIVE confirmation', async () => {
+    const res = await app.request(`/api/v1/admin/catalog-presets/${presetId}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'قالب خدمات مو و ابرو',
+        isActive: false,
+        reason: 'Archive old service variant language',
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: 'برای تغییر داده زنده عبارت LIVE را وارد کنید',
+    })
+    expect(updateAdminCatalogPreset).not.toHaveBeenCalled()
   })
 
   it('updates a CatalogPreset with a reason and writes audit event', async () => {
@@ -500,6 +542,7 @@ describe('admin runtime data source', () => {
         name: 'قالب خدمات مو و ابرو',
         isActive: false,
         reason: 'Archive old service variant language',
+        liveConfirmation: 'LIVE',
       }),
     })
 
@@ -512,6 +555,7 @@ describe('admin runtime data source', () => {
       name: 'قالب خدمات مو و ابرو',
       isActive: false,
       reason: 'Archive old service variant language',
+      liveConfirmation: 'LIVE',
     })
     expect(createAdminAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({

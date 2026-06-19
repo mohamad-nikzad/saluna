@@ -74,6 +74,7 @@ const catalogPresetCreateSchema = z.object({
   sortOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
   reason: reasonSchema,
+  liveConfirmation: z.string().trim().optional(),
 })
 
 const catalogPresetUpdateSchema = catalogPresetCreateSchema
@@ -400,6 +401,11 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('json', catalogPresetCreateSchema),
     async (c) => {
       const body = c.req.valid('json')
+      const liveConfirmationError = requireLiveConfirmation(
+        c,
+        body.liveConfirmation,
+      )
+      if (liveConfirmationError) return liveConfirmationError
       const preset = await createAdminCatalogPreset(body)
       await writeAudit({
         actorUserId: c.var.platformAdmin.userId,
@@ -422,6 +428,11 @@ export const adminRoute = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param')
       const body = c.req.valid('json')
+      const liveConfirmationError = requireLiveConfirmation(
+        c,
+        body.liveConfirmation,
+      )
+      if (liveConfirmationError) return liveConfirmationError
       const preset = await updateAdminCatalogPreset({ id, ...body })
       if (!preset) return error(c, 'قالب یافت نشد', 404)
       await writeAudit({

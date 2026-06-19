@@ -180,6 +180,7 @@ export type AdminCatalogPresetCreateRequest = {
     sortOrder?: number;
     isActive?: boolean;
     reason: string;
+    liveConfirmation?: string;
 };
 
 export type AdminCatalogPresetUpdateRequest = {
@@ -192,6 +193,7 @@ export type AdminCatalogPresetUpdateRequest = {
     sortOrder?: number;
     isActive?: boolean;
     reason: string;
+    liveConfirmation?: string;
 };
 
 export type AdminMessagingHealthResponse = {
