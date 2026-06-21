@@ -42,9 +42,13 @@ pnpm db:push          # schema -> dev branch (default)
 pnpm db:seed          # seed dev branch
 pnpm dev              # PWA + public web + API
 
-pnpm --filter @repo/pwa dev # manager PWA on port 3000
+# Individual apps (fixed ports — no overlap):
+pnpm dev:pwa          # manager PWA on port 3000
 pnpm dev:web          # marketing + booking (Astro) on port 3001
+pnpm dev:api          # Hono API on port 3002
+pnpm dev:admin        # platform admin on port 3003
 pnpm dev:web-stack    # Astro + API with .env.database.local
+pnpm dev:admin-stack  # admin + API with .env.database.local
 pnpm smoke:web        # smoke checks (set BASE_URL, optional SLUG)
 
 ### Local Postgres (Docker)

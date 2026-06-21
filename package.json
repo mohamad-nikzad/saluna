@@ -10,6 +10,8 @@
     "dev": "turbo run dev:local --filter=@repo/pwa --filter=@repo/web --filter=@repo/api",
     "dev:web-stack": "turbo run dev:local --filter=@repo/web --filter=@repo/api",
     "dev:web": "pnpm --filter @repo/web dev",
+    "dev:pwa": "pnpm --filter @repo/pwa dev",
+    "dev:admin": "pnpm --filter @repo/admin dev",
     "smoke:web": "node scripts/smoke-web.mjs",
     "fonts:web": "node scripts/fetch-web-fonts.mjs",
     "dev:api": "pnpm --filter @repo/api dev",

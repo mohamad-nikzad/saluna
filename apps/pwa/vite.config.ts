@@ -8,12 +8,13 @@ import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const useHttps = process.env.VITE_DEV_HTTPS === '1'
+const PWA_PORT = 3000
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   server: {
     host: '0.0.0.0',
-    port: 3000,
+    port: PWA_PORT,
     strictPort: true,
     proxy: {
       '/api': {
@@ -21,6 +22,10 @@ const config = defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    port: PWA_PORT,
+    strictPort: true,
   },
   plugins: [
     ...(useHttps ? [basicSsl()] : []),
