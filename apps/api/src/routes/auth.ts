@@ -23,6 +23,7 @@ import { STAFF_COLORS } from '@repo/salon-core/types'
 import {
   preWorkspaceAccountSchema,
   preWorkspaceSchema,
+  resetPasswordSchema,
   signupSchema,
 } from '@repo/salon-core/forms/auth'
 import { phoneSchema } from '@repo/salon-core/forms/primitives'
@@ -241,6 +242,18 @@ export const authRoute = new Hono<AppEnv>()
   })
   .post('/phone-number/send-otp', guardOtpLogin)
   .post('/phone-number/verify', guardOtpLogin)
+  .post('/reset-password', async (c) => {
+    const parsed = resetPasswordSchema.safeParse(
+      await c.req.raw
+        .clone()
+        .json()
+        .catch(() => null),
+    )
+    if (!parsed.success) {
+      return error(c, parsed.error.issues[0]?.message ?? 'داده نامعتبر', 400)
+    }
+    return auth.handler(c.req.raw)
+  })
   .post(
     '/phone-number/verify-password-reset-otp',
     zValidator('json', verifyPasswordResetOtpSchema),

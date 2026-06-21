@@ -19,6 +19,7 @@ import { cn } from '@repo/ui/utils'
 import { ApiError } from '@repo/api-client'
 import { displayPhone } from '@repo/salon-core/phone'
 import {
+  newPasswordSchema,
   preWorkspaceAccountSchema,
   preWorkspaceSchema,
 } from '@repo/salon-core/forms/auth'
@@ -53,13 +54,9 @@ const phoneStepSchema = z.object({ phone: phoneSchema })
 type PhoneStepInput = z.input<typeof phoneStepSchema>
 type PhoneStepPayload = z.output<typeof phoneStepSchema>
 
-const accountPasswordSchema = z
-  .string({ error: formMessages.required })
-  .min(8, formMessages.passwordTooShort)
-
 const accountStepWithPasswordSchema = preWorkspaceAccountSchema
   .extend({
-    password: accountPasswordSchema,
+    password: newPasswordSchema,
     confirmPassword: z
       .string({ error: formMessages.required })
       .min(1, formMessages.required),

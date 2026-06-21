@@ -485,6 +485,33 @@ describe('OTP signup continuation routes', () => {
     })
   })
 
+  it('rejects non-Latin passwords before account completion', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Temporary',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+
+    const res = await app.request('/api/v1/auth/signup/account', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        managerName: 'Ali',
+        password: 'secret۱۲۳',
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error:
+        'رمز عبور فقط می‌تواند شامل حروف انگلیسی، اعداد و نمادهای کیبورد انگلیسی باشد',
+    })
+    expect(authServer.api.setPassword).not.toHaveBeenCalled()
+  })
+
   it('updates only the real manager name when the account already has a password', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
@@ -545,6 +572,45 @@ describe('OTP signup continuation routes', () => {
 
     expect(res.status).toBe(401)
     expect(authServer.api.setPassword).not.toHaveBeenCalled()
+  })
+
+  it('rejects non-Latin password resets before Better Auth handling', async () => {
+    const res = await app.request('/api/v1/auth/reset-password', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        token: 'token',
+        newPassword: 'secret۱۲۳',
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error:
+        'رمز عبور فقط می‌تواند شامل حروف انگلیسی، اعداد و نمادهای کیبورد انگلیسی باشد',
+    })
+    expect(authServer.handler).not.toHaveBeenCalled()
+  })
+
+  it('passes valid password resets through to Better Auth', async () => {
+    vi.mocked(authServer.handler).mockResolvedValue(
+      new Response(JSON.stringify({ status: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }) as never,
+    )
+
+    const res = await app.request('/api/v1/auth/reset-password', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({
+        token: 'token',
+        newPassword: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(authServer.handler).toHaveBeenCalledOnce()
   })
 
   it('creates a workspace for an authenticated user without membership', async () => {

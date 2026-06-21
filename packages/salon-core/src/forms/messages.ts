@@ -8,6 +8,8 @@ export const formMessages = {
   phoneTooShort: 'شماره تلفن باید حداقل ۱۰ رقم باشد',
   emailInvalid: 'ایمیل معتبر نیست',
   passwordTooShort: 'رمز عبور باید حداقل ۸ کاراکتر باشد',
+  passwordLatinOnly:
+    'رمز عبور فقط می‌تواند شامل حروف انگلیسی، اعداد و نمادهای کیبورد انگلیسی باشد',
   passwordMismatch: 'رمز عبور و تکرار آن یکسان نیستند',
   jalaliDateInvalid: 'تاریخ معتبر نیست',
   hexColorInvalid: 'رنگ معتبر نیست (مثلاً ‎#A1B2C3)',
@@ -30,7 +32,8 @@ export const formMessages = {
   socialHandleInvalid: 'نشانی یا آیدی معتبر نیست',
   presenceBioTooLong: 'متن معرفی نمی‌تواند بیشتر از ۲۸۰ کاراکتر باشد',
   workingDaysRequired: 'حداقل یک روز کاری باید انتخاب شود',
-  slugInvalid: 'آدرس سالن فقط می‌تواند شامل حروف کوچک انگلیسی، اعداد و خط تیره باشد',
+  slugInvalid:
+    'آدرس سالن فقط می‌تواند شامل حروف کوچک انگلیسی، اعداد و خط تیره باشد',
   slugTooShort: 'آدرس سالن باید حداقل ۳ کاراکتر باشد',
   slugTooLong: 'آدرس سالن نمی‌تواند بیشتر از ۴۰ کاراکتر باشد',
 } as const

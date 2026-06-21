@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 import { normalizeCalendarColorId } from '../calendar-colors'
 import { STAFF_COLORS } from '../types'
+import { newPasswordSchema } from './auth'
 import { formMessages } from './messages'
 import {
   phoneSchema,
@@ -14,20 +15,14 @@ import {
   timeToMinutes,
 } from './primitives'
 
-const MIN_PASSWORD_LENGTH = 8
-
 export const staffRoleSchema = z.enum(['staff', 'manager'])
 export type StaffRole = z.infer<typeof staffRoleSchema>
-
-const passwordSchema = z
-  .string({ error: formMessages.required })
-  .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort)
 
 /** API / data-client payload — confirm-password is form-only UX. */
 export const staffCreateRequestSchema = z.object({
   name: requiredTextSchema,
   phone: phoneSchema,
-  password: passwordSchema,
+  password: newPasswordSchema,
   role: staffRoleSchema.default('staff'),
 })
 
@@ -80,7 +75,7 @@ export type StaffUpdateFormInput = z.input<typeof staffUpdateSchema>
 export type StaffUpdateFormPayload = z.output<typeof staffUpdateSchema>
 
 export const staffPasswordRequestSchema = z.object({
-  password: passwordSchema,
+  password: newPasswordSchema,
 })
 
 export type StaffPasswordRequestInput = z.input<
@@ -92,7 +87,7 @@ export type StaffPasswordRequestPayload = z.output<
 
 export const staffPasswordUpdateSchema = z
   .object({
-    password: passwordSchema,
+    password: newPasswordSchema,
     confirmPassword: z.string({ error: formMessages.required }),
   })
   .superRefine((value, ctx) => {

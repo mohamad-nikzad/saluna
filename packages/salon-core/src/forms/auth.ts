@@ -9,6 +9,14 @@ import { phoneSchema, requiredTextSchema } from './primitives'
 import { slugSchema } from './slug'
 
 const MIN_PASSWORD_LENGTH = 8
+export const PASSWORD_ALLOWED_CHARACTERS = 'ASCII printable characters'
+const PASSWORD_ALLOWED_CHARACTERS_REGEX = /^[\x20-\x7E]+$/
+
+export const newPasswordSchema = z
+  .string({ error: formMessages.required })
+  .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort)
+  .regex(PASSWORD_ALLOWED_CHARACTERS_REGEX, formMessages.passwordLatinOnly)
+  .describe(`Allowed characters: ${PASSWORD_ALLOWED_CHARACTERS}`)
 
 export const loginSchema = z.object({
   phone: phoneSchema,
@@ -28,9 +36,7 @@ export const signupSchema = z.object({
   slug: slugSchema.optional(),
   managerName: requiredTextSchema,
   managerPhone: phoneSchema,
-  password: z
-    .string({ error: formMessages.required })
-    .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort),
+  password: newPasswordSchema,
 })
 
 export type SignupFormInput = z.input<typeof signupSchema>
@@ -38,11 +44,18 @@ export type SignupFormPayload = z.output<typeof signupSchema>
 
 export const preWorkspaceAccountSchema = z.object({
   managerName: requiredTextSchema,
-  password: z
-    .string({ error: formMessages.required })
-    .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort)
-    .optional(),
+  password: newPasswordSchema.optional(),
 })
+
+export const resetPasswordSchema = z.object({
+  token: z
+    .string({ error: formMessages.required })
+    .min(1, formMessages.required),
+  newPassword: newPasswordSchema,
+})
+
+export type ResetPasswordInput = z.input<typeof resetPasswordSchema>
+export type ResetPasswordPayload = z.output<typeof resetPasswordSchema>
 
 export type PreWorkspaceAccountInput = z.input<typeof preWorkspaceAccountSchema>
 export type PreWorkspaceAccountPayload = z.output<

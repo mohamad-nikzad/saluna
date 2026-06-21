@@ -12,8 +12,9 @@ import { Spinner } from '@repo/ui/spinner'
 import { ApiError } from '@repo/api-client'
 import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import { loginSchema } from '@repo/salon-core/forms/auth'
+import { loginSchema, newPasswordSchema } from '@repo/salon-core/forms/auth'
 import type { LoginFormInput } from '@repo/salon-core/forms/auth'
+import { formMessages } from '@repo/salon-core/forms/messages'
 import { phoneSchema } from '@repo/salon-core/forms/primitives'
 
 import { brand } from '@repo/brand'
@@ -397,12 +398,15 @@ function AuthPage() {
   const passwordField = register('password')
   const submitNewPassword = () => {
     setRecoveryError(null)
-    if (newPassword.length < 8) {
-      setRecoveryError('رمز عبور باید حداقل ۸ کاراکتر باشد.')
+    const parsedPassword = newPasswordSchema.safeParse(newPassword)
+    if (!parsedPassword.success) {
+      setRecoveryError(
+        parsedPassword.error.issues[0]?.message ?? 'رمز عبور معتبر نیست.',
+      )
       return
     }
     if (newPassword !== confirmPassword) {
-      setRecoveryError('تکرار رمز عبور با رمز جدید یکسان نیست.')
+      setRecoveryError(formMessages.passwordMismatch)
       return
     }
     resetPassword.mutate(undefined, {

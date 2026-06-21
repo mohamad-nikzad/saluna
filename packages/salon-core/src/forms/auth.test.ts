@@ -1,6 +1,33 @@
 import { describe, expect, it } from 'vitest'
 
-import { loginSchema, preWorkspaceAccountSchema, signupSchema } from './auth'
+import {
+  PASSWORD_ALLOWED_CHARACTERS,
+  loginSchema,
+  newPasswordSchema,
+  preWorkspaceAccountSchema,
+  resetPasswordSchema,
+  signupSchema,
+} from './auth'
+import { formMessages } from './messages'
+
+describe('newPasswordSchema', () => {
+  it('documents and accepts ASCII printable characters', () => {
+    expect(PASSWORD_ALLOWED_CHARACTERS).toBe('ASCII printable characters')
+    expect(newPasswordSchema.parse('Az09!@# -_~')).toBe('Az09!@# -_~')
+  })
+
+  it('rejects Persian and other non-Latin characters', () => {
+    for (const password of ['secret۱۲۳', 'رمزsecret123', 'secreté123']) {
+      const result = newPasswordSchema.safeParse(password)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0]?.message).toBe(
+          formMessages.passwordLatinOnly,
+        )
+      }
+    }
+  })
+})
 
 describe('loginSchema', () => {
   it('normalizes Persian-digit phone in output', () => {
@@ -56,6 +83,22 @@ describe('signupSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects non-Latin password characters', () => {
+    const result = signupSchema.safeParse({
+      salonName: 'a',
+      slug: 'rose-salon',
+      managerName: 'a',
+      managerPhone: '09123456789',
+      password: 'secret۱۲۳',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        formMessages.passwordLatinOnly,
+      )
+    }
+  })
+
   it('rejects invalid slug', () => {
     const result = signupSchema.safeParse({
       salonName: 'a',
@@ -82,5 +125,33 @@ describe('preWorkspaceAccountSchema', () => {
       password: '12',
     })
     expect(result.success).toBe(false)
+  })
+
+  it('rejects non-Latin password characters when a password is provided', () => {
+    const result = preWorkspaceAccountSchema.safeParse({
+      managerName: 'علی',
+      password: 'secret۱۲۳',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        formMessages.passwordLatinOnly,
+      )
+    }
+  })
+})
+
+describe('resetPasswordSchema', () => {
+  it('rejects non-Latin new passwords', () => {
+    const result = resetPasswordSchema.safeParse({
+      token: 'token',
+      newPassword: 'secret۱۲۳',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        formMessages.passwordLatinOnly,
+      )
+    }
   })
 })
