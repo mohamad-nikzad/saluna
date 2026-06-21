@@ -373,6 +373,12 @@ function AuthPage() {
   }
 
   useEffect(() => {
+    clearErrors()
+    setOtpError(null)
+    setRecoveryError(null)
+  }, [mode, clearErrors])
+
+  useEffect(() => {
     const handlePopState = () => {
       if (!otpHistoryPushedRef.current || mode !== 'otp') return
       otpHistoryPushedRef.current = false
