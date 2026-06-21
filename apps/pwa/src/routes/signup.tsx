@@ -53,8 +53,13 @@ const phoneStepSchema = z.object({ phone: phoneSchema })
 type PhoneStepInput = z.input<typeof phoneStepSchema>
 type PhoneStepPayload = z.output<typeof phoneStepSchema>
 
-const accountStepSchema = preWorkspaceAccountSchema
+const accountPasswordSchema = z
+  .string({ error: formMessages.required })
+  .min(8, formMessages.passwordTooShort)
+
+const accountStepWithPasswordSchema = preWorkspaceAccountSchema
   .extend({
+    password: accountPasswordSchema,
     confirmPassword: z
       .string({ error: formMessages.required })
       .min(1, formMessages.required),
@@ -63,8 +68,18 @@ const accountStepSchema = preWorkspaceAccountSchema
     path: ['confirmPassword'],
     message: formMessages.passwordMismatch,
   })
-type AccountStepInput = z.input<typeof accountStepSchema>
-type AccountStepPayload = z.output<typeof accountStepSchema>
+
+const accountStepNameOnlySchema = preWorkspaceAccountSchema.extend({
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+})
+
+type AccountStepInput =
+  | z.input<typeof accountStepWithPasswordSchema>
+  | z.input<typeof accountStepNameOnlySchema>
+type AccountStepPayload =
+  | z.output<typeof accountStepWithPasswordSchema>
+  | z.output<typeof accountStepNameOnlySchema>
 
 type SignupStep = 'phone' | 'otp' | 'account' | 'workspace'
 
@@ -99,6 +114,14 @@ function SignupPage() {
     null,
   )
   const resendRemaining = useResendCountdown(resendAvailableAt)
+  const accountRequiresPassword = preWorkspaceUser?.hasPassword !== true
+  const accountStepSchema = useMemo(
+    () =>
+      accountRequiresPassword
+        ? accountStepWithPasswordSchema
+        : accountStepNameOnlySchema,
+    [accountRequiresPassword],
+  )
 
   const phoneForm = useForm<PhoneStepInput, unknown, PhoneStepPayload>({
     resolver: zodResolver(phoneStepSchema),
@@ -176,7 +199,10 @@ function SignupPage() {
 
   const completeAccount = useMutation({
     mutationFn: ({ managerName, password }: AccountStepPayload) =>
-      api.auth.completeSignupAccount({ managerName, password }),
+      api.auth.completeSignupAccount({
+        managerName,
+        ...(accountRequiresPassword ? { password: password ?? '' } : {}),
+      }),
     meta: { skipToast: true },
     onSuccess: async () => {
       await refresh()
@@ -289,7 +315,9 @@ function SignupPage() {
               : step === 'otp'
                 ? `کد ۶ رقمی ارسال‌شده به ${displayPhone(verifiedPhone)} را وارد کنید.`
                 : step === 'account'
-                  ? 'نام مدیر و رمز عبور حساب را تنظیم کنید.'
+                  ? accountRequiresPassword
+                    ? 'نام مدیر و رمز عبور حساب را تنظیم کنید.'
+                    : 'نام مدیر را برای ادامه ثبت کنید.'
                   : 'این نام روی صفحه‌ی رزرو و پیام‌های مشتری‌ها نمایش داده می‌شود.'}
           </p>
         </div>
@@ -405,41 +433,45 @@ function SignupPage() {
                 )}
               </Field>
 
-              <Field>
-                <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
-                <PasswordInput
-                  id="password"
-                  placeholder="حداقل ۸ کاراکتر"
-                  autoComplete="new-password"
-                  disabled={completeAccount.isPending}
-                  className="h-12 rounded-2xl bg-card"
-                  {...accountPasswordField}
-                />
-                {accountForm.formState.errors.password && (
-                  <FieldError>
-                    {accountForm.formState.errors.password.message}
-                  </FieldError>
-                )}
-              </Field>
+              {accountRequiresPassword && (
+                <>
+                  <Field>
+                    <FieldLabel htmlFor="password">رمز عبور</FieldLabel>
+                    <PasswordInput
+                      id="password"
+                      placeholder="حداقل ۸ کاراکتر"
+                      autoComplete="new-password"
+                      disabled={completeAccount.isPending}
+                      className="h-12 rounded-2xl bg-card"
+                      {...accountPasswordField}
+                    />
+                    {accountForm.formState.errors.password && (
+                      <FieldError>
+                        {accountForm.formState.errors.password.message}
+                      </FieldError>
+                    )}
+                  </Field>
 
-              <Field>
-                <FieldLabel htmlFor="confirmPassword">
-                  تکرار رمز عبور
-                </FieldLabel>
-                <PasswordInput
-                  id="confirmPassword"
-                  placeholder="رمز عبور را دوباره وارد کنید"
-                  autoComplete="new-password"
-                  disabled={completeAccount.isPending}
-                  className="h-12 rounded-2xl bg-card"
-                  {...accountConfirmPasswordField}
-                />
-                {accountForm.formState.errors.confirmPassword && (
-                  <FieldError>
-                    {accountForm.formState.errors.confirmPassword.message}
-                  </FieldError>
-                )}
-              </Field>
+                  <Field>
+                    <FieldLabel htmlFor="confirmPassword">
+                      تکرار رمز عبور
+                    </FieldLabel>
+                    <PasswordInput
+                      id="confirmPassword"
+                      placeholder="رمز عبور را دوباره وارد کنید"
+                      autoComplete="new-password"
+                      disabled={completeAccount.isPending}
+                      className="h-12 rounded-2xl bg-card"
+                      {...accountConfirmPasswordField}
+                    />
+                    {accountForm.formState.errors.confirmPassword && (
+                      <FieldError>
+                        {accountForm.formState.errors.confirmPassword.message}
+                      </FieldError>
+                    )}
+                  </Field>
+                </>
+              )}
 
               <FormRootError
                 message={accountForm.formState.errors.root?.message}

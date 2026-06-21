@@ -288,4 +288,37 @@ describe('legacy auth API wrapper', () => {
       }),
     )
   })
+
+  it('can complete pre-workspace account setup with only a manager name', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          user: { id: 'u1', name: 'Ali Manager', phone: '09121234567' },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    const auth = createAuthApi(
+      createApiClient({
+        baseUrl: 'https://api.example.test',
+        credentials: 'include',
+        fetchImpl: fetchMock,
+      }),
+    )
+
+    await auth.completeSignupAccount({ managerName: 'Ali Manager' })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.test/api/v1/auth/signup/account',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ managerName: 'Ali Manager' }),
+      }),
+    )
+  })
 })

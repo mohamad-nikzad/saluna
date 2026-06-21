@@ -14,7 +14,7 @@ export type MeResponse =
   | { status?: 'ready'; user: User }
   | {
       status: 'needs_workspace'
-      user: { id: string; name: string; phone: string }
+      user: PreWorkspaceUser
     }
 
 export type LoginResponse = { user: User }
@@ -31,6 +31,7 @@ export type PreWorkspaceUser = {
   id: string
   name: string
   phone: string
+  hasPassword?: boolean
 }
 
 export type VerifyPhoneOtpResponse = {

@@ -244,9 +244,38 @@ describe('auth /me shim', () => {
         id: 'u1',
         name: 'Ali',
         phone: '09121234567',
+        hasPassword: false,
       },
     })
     expect(getUserWithServiceIds).not.toHaveBeenCalled()
+  })
+
+  it('marks pre-workspace users that already have a credential password', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Ali',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue(undefined)
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'account1' }])
+
+    const res = await app.request('/api/v1/auth/me')
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      status: 'needs_workspace',
+      user: {
+        id: 'u1',
+        name: 'Ali',
+        phone: '09121234567',
+        hasPassword: true,
+      },
+    })
   })
 
   it('resolves the Better Auth session into the legacy User shape', async () => {
@@ -454,6 +483,52 @@ describe('OTP signup continuation routes', () => {
     expect(await res.json()).toEqual({
       user: { id: 'u1', name: 'Ali', phone: '09121234567' },
     })
+  })
+
+  it('updates only the real manager name when the account already has a password', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Temporary',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'account1' }])
+
+    const res = await app.request('/api/v1/auth/signup/account', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ managerName: 'Ali' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(authServer.api.setPassword).not.toHaveBeenCalled()
+    expect(await res.json()).toEqual({
+      user: { id: 'u1', name: 'Ali', phone: '09121234567' },
+    })
+  })
+
+  it('requires a password when the pre-workspace account has no credential password', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Temporary',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+
+    const res = await app.request('/api/v1/auth/signup/account', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ managerName: 'Ali' }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(authServer.api.setPassword).not.toHaveBeenCalled()
   })
 
   it('requires a session before setting account details', async () => {

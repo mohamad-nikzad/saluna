@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { loginSchema, signupSchema } from './auth'
+import { loginSchema, preWorkspaceAccountSchema, signupSchema } from './auth'
 
 describe('loginSchema', () => {
   it('normalizes Persian-digit phone in output', () => {
@@ -63,6 +63,23 @@ describe('signupSchema', () => {
       managerName: 'a',
       managerPhone: '09123456789',
       password: 'secret123',
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('preWorkspaceAccountSchema', () => {
+  it('accepts manager-name-only completion for accounts with an existing password', () => {
+    const result = preWorkspaceAccountSchema.safeParse({
+      managerName: 'علی',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a provided short password', () => {
+    const result = preWorkspaceAccountSchema.safeParse({
+      managerName: 'علی',
+      password: '12',
     })
     expect(result.success).toBe(false)
   })

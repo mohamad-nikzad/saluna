@@ -40,7 +40,8 @@ export const preWorkspaceAccountSchema = z.object({
   managerName: requiredTextSchema,
   password: z
     .string({ error: formMessages.required })
-    .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort),
+    .min(MIN_PASSWORD_LENGTH, formMessages.passwordTooShort)
+    .optional(),
 })
 
 export type PreWorkspaceAccountInput = z.input<typeof preWorkspaceAccountSchema>

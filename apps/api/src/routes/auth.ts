@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, eq, or } from 'drizzle-orm'
+import { and, eq, isNotNull, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { auth } from '@repo/auth/server'
 import { isAuthOtpLoginEnabled } from '@repo/auth/phone-otp'
@@ -100,6 +100,21 @@ async function getSessionUser(c: Parameters<typeof ok>[0]) {
   return session?.user
 }
 
+async function hasCredentialPassword(userId: string): Promise<boolean> {
+  const rows = await getDb()
+    .select({ id: account.id })
+    .from(account)
+    .where(
+      and(
+        eq(account.userId, userId),
+        eq(account.providerId, 'credential'),
+        isNotNull(account.password),
+      ),
+    )
+    .limit(1)
+  return Boolean(rows[0])
+}
+
 async function isCompletedAccount(phone: string): Promise<boolean> {
   const rows = await getDb()
     .select({ id: user.id })
@@ -192,12 +207,14 @@ export const authRoute = new Hono<AppEnv>()
 
     const member = await getMemberForUser(sessionUser.id)
     if (!member) {
+      const userHasPassword = await hasCredentialPassword(sessionUser.id)
       return ok(c, {
         status: 'needs_workspace',
         user: {
           id: sessionUser.id,
           name: sessionUser.name,
           phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+          hasPassword: userHasPassword,
         },
       })
     }
@@ -262,20 +279,29 @@ export const authRoute = new Hono<AppEnv>()
       if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
 
       const { managerName, password } = c.req.valid('json')
-      try {
-        await auth.api.setPassword({
-          body: { newPassword: password },
-          headers: c.req.raw.headers,
-        })
-      } catch (err) {
-        const code = getBetterAuthErrorCode(err)
-        if (code === 'PASSWORD_ALREADY_SET') {
-          return error(c, 'رمز عبور قبلاً تنظیم شده است', 409, code)
+      const userHasPassword = await hasCredentialPassword(sessionUser.id)
+      if (!userHasPassword && !password) {
+        return error(c, 'رمز عبور الزامی است', 400)
+      }
+
+      if (!userHasPassword && password) {
+        try {
+          await auth.api.setPassword({
+            body: { newPassword: password },
+            headers: c.req.raw.headers,
+          })
+        } catch (err) {
+          const code = getBetterAuthErrorCode(err)
+          if (code === 'PASSWORD_ALREADY_SET') {
+            // The account table is the source we can query, but Better Auth may
+            // still report an already-set password for older or concurrent
+            // sessions. Treat that as an idempotent account-completion state.
+          } else if (code === 'PASSWORD_TOO_SHORT') {
+            return error(c, 'رمز عبور باید حداقل ۸ کاراکتر باشد', 400, code)
+          } else {
+            throw err
+          }
         }
-        if (code === 'PASSWORD_TOO_SHORT') {
-          return error(c, 'رمز عبور باید حداقل ۸ کاراکتر باشد', 400, code)
-        }
-        throw err
       }
 
       await getDb()

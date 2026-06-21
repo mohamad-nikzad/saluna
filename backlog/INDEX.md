@@ -32,7 +32,6 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
-- [BL-0025 Pre-workspace signup asks for password again after reset](inbox/BL-0025-pre-workspace-password-after-reset.md)
 - [BL-0026 Enforce Latin-only characters in password fields](inbox/BL-0026-password-latin-characters-only.md)
 - [BL-0027 Fix onboarding notifications step — env-gated providers and Bale beside Telegram](inbox/BL-0027-bale-integration-in-onboarding.md)
 
@@ -41,6 +40,7 @@ No active backlog items.
 - [BL-0001 Improve landing page](done/BL-0001-improve-landing-page.md)
 - [BL-0002 Improve salons landing pages](done/BL-0002-improve-salons-landing-pages.md)
 - [BL-0024 Login validation errors persist through OTP flow and back to login](done/BL-0024-auth-credentials-persist-across-otp-navigation.md)
+- [BL-0025 Pre-workspace signup asks for password again after reset](done/BL-0025-pre-workspace-password-after-reset.md)
 - [BL-0028 Support ticket thread header hides when composer is focused on mobile](done/BL-0028-support-ticket-thread-mobile-header.md)
 
 ## Archive
