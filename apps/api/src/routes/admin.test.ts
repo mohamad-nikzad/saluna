@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@repo/auth/server', () => ({
-  auth: {
+vi.mock('@repo/auth/server', () => {
+  const auth = {
     api: {
       getSession: vi.fn(),
     },
     handler: vi.fn(),
-  },
-}))
+  }
+  return { auth, adminAuth: auth, getAuthForRequest: () => auth }
+})
 
 vi.mock('@repo/database/admin', () => ({
   bootstrapPlatformOwnerIfNeeded: vi.fn(),

@@ -2,13 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Hono } from 'hono'
 import type { AppEnv } from '../factory'
 
-vi.mock('@repo/auth/server', () => ({
-  auth: {
+vi.mock('@repo/auth/server', () => {
+  const auth = {
     api: {
       getSession: vi.fn(),
     },
-  },
-}))
+  }
+  const adminAuth = {
+    api: {
+      getSession: vi.fn(),
+    },
+  }
+  return { auth, adminAuth }
+})
 
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
@@ -24,7 +30,7 @@ process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
 process.env.PLATFORM_ADMIN_BOOTSTRAP_PHONES = '09121111111'
 
-const { auth } = await import('@repo/auth/server')
+const { adminAuth, auth } = await import('@repo/auth/server')
 const { getMemberForUser } = await import('@repo/database/members')
 const {
   getPlatformAdminForUser,
@@ -52,6 +58,14 @@ function appWithTenant() {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(auth.api.getSession).mockResolvedValue({
+    user: {
+      id: 'u1',
+      name: 'Ali',
+      phoneNumber: '09121111111',
+      username: '09121111111',
+    },
+  } as never)
+  vi.mocked(adminAuth.api.getSession).mockResolvedValue({
     user: {
       id: 'u1',
       name: 'Ali',
@@ -106,7 +120,7 @@ describe('requirePlatformAdmin', () => {
   ])(
     'uses a stable authenticated platform display-name fallback',
     async (user, expectedName) => {
-      vi.mocked(auth.api.getSession).mockResolvedValue({
+      vi.mocked(adminAuth.api.getSession).mockResolvedValue({
         user: { id: 'u1', ...user },
       } as never)
       vi.mocked(getPlatformAdminForUser).mockResolvedValue({
@@ -163,5 +177,14 @@ describe('requireTenant', () => {
     const res = await appWithTenant().request('/tenant')
 
     expect(res.status).toBe(403)
+  })
+
+  it('resolves only the PWA cookie namespace', async () => {
+    vi.mocked(getMemberForUser).mockResolvedValue(undefined)
+
+    await appWithTenant().request('/tenant')
+
+    expect(auth.api.getSession).toHaveBeenCalledOnce()
+    expect(adminAuth.api.getSession).not.toHaveBeenCalled()
   })
 })

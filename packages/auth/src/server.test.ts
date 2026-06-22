@@ -12,7 +12,7 @@ import {
   AUTH_OTP_SEND_MAX_PER_WINDOW,
   AUTH_OTP_SEND_WINDOW_SECONDS,
 } from './phone-otp'
-import { auth } from './server'
+import { adminAuth, auth, getAuthAppForOrigin } from './server'
 
 describe('Better Auth server config', () => {
   it('enables a strict cooldown for phone OTP send requests', () => {
@@ -26,5 +26,16 @@ describe('Better Auth server config', () => {
         },
       },
     })
+  })
+
+  it('uses independent cookie namespaces for the PWA and admin apps', () => {
+    expect(auth.options.advanced?.cookiePrefix).toBe('saluna-pwa')
+    expect(adminAuth.options.advanced?.cookiePrefix).toBe('saluna-admin')
+  })
+
+  it('maps local app origins to their cookie namespace', () => {
+    expect(getAuthAppForOrigin('http://localhost:3000')).toBe('pwa')
+    expect(getAuthAppForOrigin('http://localhost:3003')).toBe('admin')
+    expect(getAuthAppForOrigin('https://untrusted.example')).toBeNull()
   })
 })

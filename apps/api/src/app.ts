@@ -29,7 +29,7 @@ import { notifications } from './routes/notifications'
 import { push } from './routes/push'
 import { appointments } from './routes/appointments'
 import { authRoute } from './routes/auth'
-import { auth as authServer } from '@repo/auth/server'
+import { getAuthForRequest } from '@repo/auth/server'
 import { publicRoutes } from './routes/public'
 import { appointmentRequestsRoute } from './routes/appointment-requests'
 import { messagingRoute } from './routes/messaging'
@@ -70,7 +70,11 @@ const app = new Hono<AppEnv>()
   // `/api/v1/auth/*` (sign-in, sign-out, get-session, …) falls through to the
   // Better Auth handler below.
   .route('/api/v1/auth', authRoute)
-  .on(['GET', 'POST'], '/api/v1/auth/*', (c) => authServer.handler(c.req.raw))
+  .on(['GET', 'POST'], '/api/v1/auth/*', (c) => {
+    const authServer = getAuthForRequest(c.req.raw)
+    if (!authServer) return c.json({ error: 'مبدأ درخواست مجاز نیست' }, 403)
+    return authServer.handler(c.req.raw)
+  })
   .route('/health', health)
   .route('/api/v1/admin/support-tickets', adminSupportTicketsRoute)
   .route('/api/v1/admin', adminRoute)

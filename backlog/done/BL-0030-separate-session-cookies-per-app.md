@@ -1,7 +1,7 @@
 ---
 id: BL-0030
 title: Separate session cookies per app (PWA vs admin)
-status: ready
+status: done
 type: feature
 priority: medium
 size: medium
@@ -39,13 +39,13 @@ Give PWA and admin **independent session cookies** while keeping one Better Auth
 
 ## Acceptance Criteria
 
-- [ ] Logging into the PWA does not invalidate or replace the admin session, and vice versa, when both apps are open in the same browser.
-- [ ] Sign-out from the admin panel does not log out the PWA session (and vice versa), unless an explicit "sign out everywhere" action is added later.
-- [ ] `/api/v1/admin/auth/me` continues to require an active platform admin; PWA `/api/v1/auth/me` continues to resolve salon membership independently.
-- [ ] Local dev: simultaneous sessions work on `localhost:3000` and `localhost:3003`.
-- [ ] Production: simultaneous sessions work on `app.saluna.ir` and `admin.saluna.ir`.
-- [ ] Existing auth flows (OTP login, password login, signup, password reset) still work in both apps.
-- [ ] Tests cover dual-session behavior and origin/cookie isolation.
+- [x] Logging into the PWA does not invalidate or replace the admin session, and vice versa, when both apps are open in the same browser.
+- [x] Sign-out from the admin panel does not log out the PWA session (and vice versa), unless an explicit "sign out everywhere" action is added later.
+- [x] `/api/v1/admin/auth/me` continues to require an active platform admin; PWA `/api/v1/auth/me` continues to resolve salon membership independently.
+- [x] Local dev: simultaneous sessions work on `localhost:3000` and `localhost:3003`.
+- [x] Production: simultaneous sessions work on `app.saluna.ir` and `admin.saluna.ir`.
+- [x] Existing auth flows (OTP login, password login, signup, password reset) still work in both apps.
+- [x] Tests cover dual-session behavior and origin/cookie isolation.
 
 ## Out of Scope
 

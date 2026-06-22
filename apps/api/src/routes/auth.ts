@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { and, eq, isNotNull, or } from 'drizzle-orm'
 import { z } from 'zod'
-import { auth } from '@repo/auth/server'
+import { auth, getAuthForRequest } from '@repo/auth/server'
 import { isAuthOtpLoginEnabled } from '@repo/auth/phone-otp'
 import {
   exchangePasswordResetOtp,
@@ -131,7 +131,7 @@ async function isCompletedAccount(phone: string): Promise<boolean> {
 }
 
 async function guardOtpLogin(c: Parameters<typeof ok>[0]) {
-  if (isAuthOtpLoginEnabled()) return auth.handler(c.req.raw)
+  if (isAuthOtpLoginEnabled()) return handleAuthRequest(c)
 
   const parsed = phoneOtpRequestSchema.safeParse(
     await c.req.raw
@@ -139,7 +139,7 @@ async function guardOtpLogin(c: Parameters<typeof ok>[0]) {
       .json()
       .catch(() => null),
   )
-  if (!parsed.success) return auth.handler(c.req.raw)
+  if (!parsed.success) return handleAuthRequest(c)
   if (await isCompletedAccount(parsed.data.phoneNumber)) {
     return error(
       c,
@@ -148,7 +148,13 @@ async function guardOtpLogin(c: Parameters<typeof ok>[0]) {
       'OTP_LOGIN_DISABLED',
     )
   }
-  return auth.handler(c.req.raw)
+  return handleAuthRequest(c)
+}
+
+function handleAuthRequest(c: Parameters<typeof ok>[0]) {
+  const requestAuth = getAuthForRequest(c.req.raw)
+  if (!requestAuth) return error(c, 'مبدأ درخواست مجاز نیست', 403)
+  return requestAuth.handler(c.req.raw)
 }
 
 async function getOrganizationById(db: ReturnType<typeof getDb>, id: string) {
@@ -252,7 +258,7 @@ export const authRoute = new Hono<AppEnv>()
     if (!parsed.success) {
       return error(c, parsed.error.issues[0]?.message ?? 'داده نامعتبر', 400)
     }
-    return auth.handler(c.req.raw)
+    return handleAuthRequest(c)
   })
   .post(
     '/phone-number/verify-password-reset-otp',

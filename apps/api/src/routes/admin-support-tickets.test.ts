@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Hono } from 'hono'
 import type { AppEnv } from '../factory'
 
-vi.mock('@repo/auth/server', () => ({ auth: { api: { getSession: vi.fn() } } }))
+vi.mock('@repo/auth/server', () => {
+  const auth = { api: { getSession: vi.fn() } }
+  return { auth, adminAuth: auth }
+})
 vi.mock('../env', () => ({
   getEnv: () => ({
     PLATFORM_ADMIN_BOOTSTRAP_PHONES: [],

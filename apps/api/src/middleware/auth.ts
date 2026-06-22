@@ -1,4 +1,4 @@
-import { auth } from '@repo/auth/server'
+import { adminAuth, auth } from '@repo/auth/server'
 import { mapRole } from '@repo/auth/permissions'
 import {
   hasPlatformPermission,
@@ -44,7 +44,9 @@ export function requireTenant(permission?: TenantPermission) {
 
 export function requirePlatformAdmin(permission?: PlatformPermission) {
   return factory.createMiddleware(async (c, next) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers })
+    const session = await adminAuth.api.getSession({
+      headers: c.req.raw.headers,
+    })
     if (!session?.user) return error(c, 'دسترسی غیرمجاز', 401)
 
     const allowedPhones = getEnv().PLATFORM_ADMIN_BOOTSTRAP_PHONES

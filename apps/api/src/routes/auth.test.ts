@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@repo/auth/server', () => ({
-  auth: {
+vi.mock('@repo/auth/server', () => {
+  const auth = {
     api: {
       getSession: vi.fn(),
       signUpEmail: vi.fn(),
@@ -9,8 +9,22 @@ vi.mock('@repo/auth/server', () => ({
       setPassword: vi.fn(),
     },
     handler: vi.fn(),
-  },
-}))
+  }
+  const adminAuth = {
+    api: { getSession: vi.fn() },
+    handler: vi.fn(),
+  }
+  return {
+    auth,
+    adminAuth,
+    getAuthForRequest: vi.fn((request: Request) => {
+      const origin = request.headers.get('origin')
+      if (origin === 'http://localhost:3003') return adminAuth
+      if (!origin || origin === 'http://localhost:3000') return auth
+      return null
+    }),
+  }
+})
 
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
@@ -58,7 +72,7 @@ vi.mock('@repo/database/client', () => {
   return { getDb: () => stub }
 })
 
-import { auth as authServer } from '@repo/auth/server'
+import { adminAuth, auth as authServer } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import { getMemberForUser } from '@repo/database/members'
@@ -363,6 +377,39 @@ describe('auth phone status route', () => {
 })
 
 describe('Better Auth passthrough routes', () => {
+  it('routes admin sign-in to the admin cookie namespace', async () => {
+    vi.mocked(adminAuth.handler).mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200 }) as never,
+    )
+
+    const res = await app.request('/api/v1/auth/sign-in/phone-number', {
+      method: 'POST',
+      headers: {
+        ...jsonHeaders(),
+        Origin: 'http://localhost:3003',
+      },
+      body: JSON.stringify({
+        phoneNumber: '09121234567',
+        password: 'secret123',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(adminAuth.handler).toHaveBeenCalledOnce()
+    expect(authServer.handler).not.toHaveBeenCalled()
+  })
+
+  it('rejects auth requests from an explicit untrusted origin', async () => {
+    const res = await app.request('/api/v1/auth/sign-out', {
+      method: 'POST',
+      headers: { Origin: 'https://untrusted.example' },
+    })
+
+    expect(res.status).toBe(403)
+    expect(adminAuth.handler).not.toHaveBeenCalled()
+    expect(authServer.handler).not.toHaveBeenCalled()
+  })
+
   it('rejects OTP login for a completed account while the flag is disabled', async () => {
     ;(
       getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
