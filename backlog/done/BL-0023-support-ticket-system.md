@@ -1,12 +1,12 @@
 ---
 id: BL-0023
 title: Support ticket system
-status: ready
+status: done
 type: feature
 priority: medium
 size: large
 created: 2026-06-20
-updated: 2026-06-20
+updated: 2026-06-22
 ---
 
 ## Problem
@@ -59,19 +59,19 @@ Resolving a feature-request ticket completes the support conversation only; it d
 
 ## Acceptance Criteria
 
-- [ ] A manager can create a ticket with category, subject, and first message.
-- [ ] Every manager in that salon can view and reply to the salon's tickets; staff cannot access them.
-- [ ] Authorized platform users can view the admin inbox and ticket conversations according to their ticket permissions.
-- [ ] Manager and platform messages retain their real author internally and show the agreed manager-facing identities.
-- [ ] Platform replies and status changes appear in the admin audit log with their real actor.
-- [ ] Messages are immutable; corrections are sent as new messages.
-- [ ] Message authorship automatically applies the agreed lifecycle transitions.
-- [ ] Only authorized platform users can resolve a ticket.
-- [ ] A message on a resolved ticket reopens it.
-- [ ] Manager in-app unread indicators use salon-shared read state.
-- [ ] Admin header and inbox expose unresolved and new ticket activity.
-- [ ] Admin filtering, ordering, and search work as described.
-- [ ] Resolving a feature request does not create or change product-backlog work.
+- [x] A manager can create a ticket with category, subject, and first message.
+- [x] Every manager in that salon can view and reply to the salon's tickets; staff cannot access them.
+- [x] Authorized platform users can view the admin inbox and ticket conversations according to their ticket permissions.
+- [x] Manager and platform messages retain their real author internally and show the agreed manager-facing identities.
+- [x] Platform replies and status changes appear in the admin audit log with their real actor.
+- [x] Messages are immutable; corrections are sent as new messages.
+- [x] Message authorship automatically applies the agreed lifecycle transitions.
+- [x] Only authorized platform users can resolve a ticket.
+- [x] A message on a resolved ticket reopens it.
+- [x] Manager in-app unread indicators use salon-shared read state.
+- [x] Admin header and inbox expose unresolved and new ticket activity.
+- [x] Admin filtering, ordering, and search work as described.
+- [x] Resolving a feature request does not create or change product-backlog work.
 
 ## Out of Scope for V1
 

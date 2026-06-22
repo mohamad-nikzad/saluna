@@ -1,12 +1,12 @@
 ---
 id: BL-0004
 title: Login and register with OTP
-status: ready
+status: done
 type: feature
 priority: high
 size: large
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-06-22
 ---
 
 ## Problem
@@ -19,10 +19,10 @@ Add phone OTP authentication for salon users while preserving existing authentic
 
 ## Acceptance Criteria
 
-- [ ] User can request an OTP for a phone number.
-- [ ] User can verify OTP and receive an authenticated session.
-- [ ] OTPs expire and cannot be reused.
-- [ ] Rate limits or abuse controls exist for OTP requests.
+- [x] User can request an OTP for a phone number.
+- [x] User can verify OTP and receive an authenticated session.
+- [x] OTPs expire and cannot be reused.
+- [x] Rate limits or abuse controls exist for OTP requests.
 
 ## Notes
 
