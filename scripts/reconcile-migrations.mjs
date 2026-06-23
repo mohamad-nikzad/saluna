@@ -39,11 +39,10 @@ function loadEnvFile(fileName) {
 
 loadEnvFile('.env')
 loadEnvFile('.env.local')
-loadEnvFile('.env.database.local')
 
 const url = process.env.DATABASE_URL_DIRECT ?? process.env.DATABASE_URL
 if (!url) {
-  console.error('Missing DATABASE_URL — create .env.database.local first.')
+  console.error('Missing DATABASE_URL — add it to .env.local first.')
   process.exit(1)
 }
 

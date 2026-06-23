@@ -1,28 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env*", ".env.database.*"],
+  "globalDependencies": [".env*"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "dist/**", "playwright-report/**"]
     },
     "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:hono": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:local": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:local-data": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:live-data": {
       "cache": false,
       "persistent": true
     },

@@ -7,15 +7,10 @@
     ".": "./src/app.ts"
   },
   "scripts": {
-    "dev": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
-    "dev:local": "ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
-    "dev:local-data": "ADMIN_DATA_SOURCE=local ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
-    "dev:live-data": "ADMIN_DATA_SOURCE=live ROOT_ENV_FILES=.env.database.main node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
-    "dev:hono": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
+    "dev": "node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
     "build": "tsc --project tsconfig.json --noEmit",
     "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.cjs --sourcemap --log-level=warning && esbuild src/cli/migrate.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/migrate.cjs --sourcemap --log-level=warning && esbuild src/cli/seed-catalog-presets.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/seed-catalog-presets.cjs --sourcemap --log-level=warning",
-    "start": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/index.ts",
-    "start:local": "NODE_ENV=production PORT=3002 ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs tsx src/index.ts",
+    "start": "node ../../scripts/with-root-env.mjs tsx src/index.ts",
     "start:prod": "NODE_ENV=production node dist/index.cjs",
     "lint": "eslint .",
     "typecheck": "tsc --project tsconfig.json --noEmit",
@@ -23,8 +18,8 @@
     "test:unit": "vitest run --config vitest.config.ts",
     "generate:openapi": "tsx src/openapi/generate-openapi.ts",
     "boundaries": "eslint . --max-warnings=0",
-    "expire-requests": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/cli/expire-requests.ts",
-    "cli:messaging-set-webhook": "ROOT_ENV_FILES=.env.database.dev node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts"
+    "expire-requests": "node ../../scripts/with-root-env.mjs tsx src/cli/expire-requests.ts",
+    "cli:messaging-set-webhook": "node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

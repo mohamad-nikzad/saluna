@@ -8,10 +8,8 @@
   },
   "scripts": {
     "dev": "node ../../scripts/with-root-env.mjs astro dev --port 3001",
-    "dev:local": "ROOT_ENV_FILES=.env.database.local node ../../scripts/with-root-env.mjs astro dev --host 0.0.0.0 --port 3001",
     "build": "node ../../scripts/with-root-env.mjs astro build",
     "start": "HOST=0.0.0.0 PORT=3001 node ../../scripts/with-root-env.mjs node ./dist/server/entry.mjs",
-    "start:local": "ROOT_ENV_FILES=.env.database.local HOST=0.0.0.0 PORT=3001 node ../../scripts/with-root-env.mjs node ./dist/server/entry.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "smoke": "node ../../scripts/smoke-web.mjs",

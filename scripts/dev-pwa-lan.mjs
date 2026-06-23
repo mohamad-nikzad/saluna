@@ -26,7 +26,7 @@ if (!host) {
 const appUrl = `https://${host}:${pwaPort}`
 
 const children = [
-  spawn('pnpm', ['--filter', '@repo/api', 'dev:local'], {
+  spawn('pnpm', ['--filter', '@repo/api', 'dev'], {
     env: {
       ...process.env,
       PORT: apiPort,

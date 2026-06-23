@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * E2E runs against a real PWA dev server + Postgres (seeded salon).
  *
- * - Start the app first: `pnpm --filter @repo/pwa dev` (needs root `.env.local` + `.env.database.dev`), then:
+ * - Start the app first: `pnpm --filter @repo/pwa dev` (needs root `.env.local`), then:
  *   `pnpm test:e2e`
  * - Or let Playwright start it (same env files must exist):
  *   `pnpm test:e2e` with E2E_SKIP_SERVER unset.

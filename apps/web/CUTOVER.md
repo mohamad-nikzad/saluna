@@ -10,7 +10,7 @@
 
 ```bash
 pnpm dev:web              # Astro (default in `pnpm dev`)
-pnpm dev:web-stack        # Astro + API (.env.database.local)
+pnpm dev:web-stack        # Astro + API
 ```
 
 ## Validation

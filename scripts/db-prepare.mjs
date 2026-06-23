@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Start local Postgres (docker-compose) and apply checked-in Drizzle migrations
- * against `.env.database.local`.
+ * Start local Postgres (docker-compose) and apply checked-in Drizzle migrations.
  */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
@@ -18,7 +17,7 @@ function ensureDocker() {
   if (check.status === 0) return
   console.error('Docker is not available (is Docker Desktop running?).')
   console.error('If Postgres is already up on :5432, run:')
-  console.error('  pnpm db:reconcile:local && pnpm db:migrate:local')
+  console.error('  pnpm db:reconcile && pnpm db:migrate')
   process.exit(1)
 }
 
@@ -70,11 +69,9 @@ dockerCompose(['up', '-d', 'postgres'])
 waitForPostgres()
 
 console.log('Reconciling schema drift from db:push / manual patches…')
-run('node', ['scripts/reconcile-local-migrations.mjs'])
+run('node', ['scripts/reconcile-migrations.mjs'])
 
-console.log('Applying migrations (DATABASE_ENV_FILE=.env.database.local)…')
-run('pnpm', ['db:migrate:local'], {
-  env: { ...process.env, DATABASE_ENV_FILE: '.env.database.local' },
-})
+console.log('Applying migrations…')
+run('pnpm', ['db:migrate'])
 
 console.log('Local migrations applied.')

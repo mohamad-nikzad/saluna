@@ -9,10 +9,6 @@ next.user-config.*
 
 # Environment variables
 .env*.local
-.env.database.dev
-.env.database.main
-.env.database.multitenant
-.env.database.local
 .env.production
 
 # Common ignores

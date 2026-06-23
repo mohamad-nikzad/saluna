@@ -1,7 +1,7 @@
 /**
  * Production-safe seed: upserts global catalog presets only (no salons, users, or demo data).
  *
- *   DATABASE_ENV_FILE=.env.production pnpm db:seed:catalog-presets
+ *   pnpm db:seed:catalog-presets
  *
  * On the VPS (inside the api image):
  *
