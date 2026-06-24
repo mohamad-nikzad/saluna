@@ -54,9 +54,11 @@ function skipLabel(
 export function SalonSetupClients({
   salonId,
   isLiveData,
+  overrideMode,
 }: {
   salonId: string
   isLiveData: boolean
+  overrideMode: boolean
 }) {
   const queryClient = useQueryClient()
   const [source, setSource] = useState<AdminSetupClientImportSource | null>(
@@ -102,6 +104,7 @@ export function SalonSetupClients({
         tags: [],
         reason: String(form.get('reason') ?? ''),
         liveConfirmation: liveConfirmationFromForm(form, isLiveData),
+        ...(overrideMode ? { override: true as const } : {}),
       },
     })
   }
@@ -109,7 +112,11 @@ export function SalonSetupClients({
   async function selectFile(file: File | undefined) {
     if (!file) return
     const format = file.name.toLowerCase().endsWith('.vcf') ? 'vcf' : 'csv'
-    const nextSource = { format, source: await file.text() } as const
+    const nextSource = {
+      format,
+      source: await file.text(),
+      ...(overrideMode ? { override: true as const } : {}),
+    } as const
     setSource(nextSource)
     importMutation.reset()
     previewMutation.mutate({ path: { id: salonId }, body: nextSource })

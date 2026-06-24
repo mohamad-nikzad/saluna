@@ -152,6 +152,14 @@ const setupHandoffBodySchema = z.object({
 const setupMutationMetaSchema = z.object({
   reason: reasonSchema,
   liveConfirmation: z.string().trim().optional(),
+  override: z.literal(true).optional(),
+})
+
+const setupAccessQuerySchema = z.object({
+  override: z
+    .literal('true')
+    .transform(() => true)
+    .optional(),
 })
 
 const setupHoursBodySchema = businessSettingsSchema.and(setupMutationMetaSchema)
@@ -171,14 +179,22 @@ const setupStaffCreateBodySchema = z.object({
   schedule: z.array(setupStaffScheduleSchema).max(7),
   reason: reasonSchema,
   liveConfirmation: z.string().trim().optional(),
+  override: z.literal(true).optional(),
 })
-const setupStaffAccessQuerySchema = z.object({ phone: phoneSchema })
+const setupStaffAccessQuerySchema = z.object({
+  phone: phoneSchema,
+  override: z
+    .literal('true')
+    .transform(() => true)
+    .optional(),
+})
 const setupClientCreateBodySchema = clientFormSchema.and(
   setupMutationMetaSchema,
 )
 const setupClientImportSourceSchema = z.object({
   format: z.enum(['csv', 'vcf']),
   source: z.string().min(1).max(2_000_000),
+  override: z.literal(true).optional(),
 })
 const setupClientImportBodySchema = setupClientImportSourceSchema.extend({
   selectedLocalIds: z.array(z.string().min(1)).min(1).max(200),
@@ -283,9 +299,28 @@ async function requireExistingSalon(
   return error(c, 'سالن یافت نشد', 404)
 }
 
-async function requireSetupSalon(c: Parameters<typeof error>[0], id: string) {
+async function requireSetupSalon(
+  c: Parameters<typeof error>[0],
+  id: string,
+  override = false,
+  role?: PlatformRole,
+) {
   const result = await getAdminSalon(id)
   if (!result) return error(c, 'سالن یافت نشد', 404)
+  if (result.salon.status === 'setup' && !override) return null
+  if (
+    result.salon.status === 'active' &&
+    override &&
+    role === 'platform_owner'
+  ) {
+    return null
+  }
+  if (override && role !== 'platform_owner') {
+    return error(c, 'فقط مالک فعال پلتفرم می‌تواند وارد حالت Override شود', 403)
+  }
+  if (override) {
+    return error(c, 'Override فقط برای سالن فعال ممکن است', 409)
+  }
   if (result.salon.status !== 'setup') {
     return error(
       c,
@@ -294,6 +329,10 @@ async function requireSetupSalon(c: Parameters<typeof error>[0], id: string) {
     )
   }
   return null
+}
+
+function setupAction(action: string, override: boolean | undefined) {
+  return override ? action.replace('salon.setup.', 'salon.override.') : action
 }
 
 function setupCatalogError(c: Parameters<typeof error>[0], err: unknown) {
@@ -405,9 +444,16 @@ export const adminRoute = new Hono<AppEnv>()
     '/salons/:id/setup',
     requirePlatformAdmin('manage_salons'),
     zValidator('param', idParamSchema),
+    zValidator('query', setupAccessQuerySchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      const lifecycleError = await requireSetupSalon(c, id)
+      const { override } = c.req.valid('query')
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       const [hours, presence] = await Promise.all([
         getBusinessSettings(id),
@@ -521,7 +567,12 @@ export const adminRoute = new Hono<AppEnv>()
         body.liveConfirmation,
       )
       if (liveConfirmationError) return liveConfirmationError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       const hours = await updateBusinessSettings(id, {
         ...(body.workingStart !== undefined
@@ -540,12 +591,21 @@ export const adminRoute = new Hono<AppEnv>()
       await writeAudit({
         actorUserId: c.var.platformAdmin.userId,
         actorPlatformRole: c.var.platformAdmin.role,
-        action: 'salon.setup.hours.update',
+        action: setupAction('salon.setup.hours.update', body.override),
         targetType: 'salon',
         targetId: id,
         salonId: id,
         reason: body.reason,
-        metadata: { workingDays: hours.workingDays },
+        metadata: {
+          fields: [
+            ...(body.workingStart !== undefined ? ['workingStart'] : []),
+            ...(body.workingEnd !== undefined ? ['workingEnd'] : []),
+            ...(body.slotDurationMinutes !== undefined
+              ? ['slotDurationMinutes']
+              : []),
+            ...(body.workingDays !== undefined ? ['workingDays'] : []),
+          ],
+        },
         request: auditMeta(c),
       })
       return ok(c, { hours })
@@ -564,14 +624,24 @@ export const adminRoute = new Hono<AppEnv>()
         body.liveConfirmation,
       )
       if (liveConfirmationError) return liveConfirmationError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _liveConfirmation, ...payload } = body
+      const {
+        reason,
+        liveConfirmation: _liveConfirmation,
+        override,
+        ...payload
+      } = body
       const presence = await updateSalonPresence(id, payload)
       await writeAudit({
         actorUserId: c.var.platformAdmin.userId,
         actorPlatformRole: c.var.platformAdmin.role,
-        action: 'salon.setup.presence.update',
+        action: setupAction('salon.setup.presence.update', override),
         targetType: 'salon',
         targetId: id,
         salonId: id,
@@ -589,7 +659,13 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('query', setupStaffAccessQuerySchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      const lifecycleError = await requireSetupSalon(c, id)
+      const { override } = c.req.valid('query')
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       const access = await getClaimedStaffAccessForPhone({
         phone: c.req.valid('query').phone,
@@ -608,7 +684,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       try {
         const client = await createClient({
@@ -621,7 +702,7 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.client.create',
+          action: setupAction('salon.setup.client.create', body.override),
           targetType: 'client',
           targetId: client.id,
           salonId: id,
@@ -645,9 +726,15 @@ export const adminRoute = new Hono<AppEnv>()
     zValidator('json', setupClientImportSourceSchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      const lifecycleError = await requireSetupSalon(c, id)
+      const body = c.req.valid('json')
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const preview = await previewSetupClientImport(id, c.req.valid('json'))
+      const preview = await previewSetupClientImport(id, body)
       if (preview.counts.totalInFile === 0) {
         return error(c, 'هیچ ردیف مشتری در فایل پیدا نشد', 400)
       }
@@ -664,7 +751,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       const preview = await previewSetupClientImport(id, body)
       const selectedIds = new Set(body.selectedLocalIds)
@@ -685,7 +777,7 @@ export const adminRoute = new Hono<AppEnv>()
       await writeAudit({
         actorUserId: c.var.platformAdmin.userId,
         actorPlatformRole: c.var.platformAdmin.role,
-        action: 'salon.setup.client_import.create',
+        action: setupAction('salon.setup.client_import.create', body.override),
         targetType: 'salon',
         targetId: id,
         salonId: id,
@@ -711,9 +803,16 @@ export const adminRoute = new Hono<AppEnv>()
     '/salons/:id/setup/staff',
     requirePlatformAdmin('manage_salons'),
     zValidator('param', idParamSchema),
+    zValidator('query', setupAccessQuerySchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      const lifecycleError = await requireSetupSalon(c, id)
+      const { override } = c.req.valid('query')
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       return ok(c, { staff: await listSetupStaffProfiles(id) })
     },
@@ -728,7 +827,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       if (
         new Set(body.schedule.map((row) => row.dayOfWeek)).size !==
@@ -762,7 +866,10 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.staff_profile.create',
+          action: setupAction(
+            'salon.setup.staff_profile.create',
+            body.override,
+          ),
           targetType: 'staff_profile',
           targetId: profile.id,
           salonId: id,
@@ -792,9 +899,16 @@ export const adminRoute = new Hono<AppEnv>()
     '/salons/:id/setup/catalog',
     requirePlatformAdmin('manage_salons'),
     zValidator('param', idParamSchema),
+    zValidator('query', setupAccessQuerySchema),
     async (c) => {
       const { id } = c.req.valid('param')
-      const lifecycleError = await requireSetupSalon(c, id)
+      const { override } = c.req.valid('query')
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       const [categories, families, services, addons, presets] =
         await Promise.all([
@@ -817,7 +931,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       try {
         const result = await applyCatalogPreset({
@@ -828,7 +947,10 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.catalog_preset.apply',
+          action: setupAction(
+            'salon.setup.catalog_preset.apply',
+            body.override,
+          ),
           targetType: 'catalog_preset',
           targetId: presetId,
           salonId: id,
@@ -854,7 +976,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       try {
         const category = await createServiceCategory({
@@ -865,11 +992,15 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.catalog_category.create',
+          action: setupAction(
+            'salon.setup.catalog_category.create',
+            body.override,
+          ),
           targetType: 'service_category',
           targetId: category.id,
           salonId: id,
           reason: body.reason,
+          metadata: { fields: ['name', 'active'] },
           request: auditMeta(c),
         })
         return created(c, { category })
@@ -890,16 +1021,21 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _live, ...patch } = body
+      const { reason, liveConfirmation: _live, override, ...patch } = body
       try {
         const category = await updateServiceCategory(entityId, id, patch)
         if (!category) return error(c, 'دسته خدمات یافت نشد', 404)
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.catalog_category.update',
+          action: setupAction('salon.setup.catalog_category.update', override),
           targetType: 'service_category',
           targetId: entityId,
           salonId: id,
@@ -925,7 +1061,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       try {
         const family = await createServiceFamily({
@@ -937,11 +1078,15 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.catalog_family.create',
+          action: setupAction(
+            'salon.setup.catalog_family.create',
+            body.override,
+          ),
           targetType: 'service_family',
           targetId: family.id,
           salonId: id,
           reason: body.reason,
+          metadata: { fields: ['categoryId', 'name', 'active'] },
           request: auditMeta(c),
         })
         return created(c, { family })
@@ -962,16 +1107,21 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _live, ...patch } = body
+      const { reason, liveConfirmation: _live, override, ...patch } = body
       try {
         const family = await updateServiceFamily(entityId, id, patch)
         if (!family) return error(c, 'گروه خدمات یافت نشد', 404)
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.catalog_family.update',
+          action: setupAction('salon.setup.catalog_family.update', override),
           targetType: 'service_family',
           targetId: entityId,
           salonId: id,
@@ -997,7 +1147,12 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
       try {
         const service = await createService({
@@ -1015,11 +1170,27 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.service_variant.create',
+          action: setupAction(
+            'salon.setup.service_variant.create',
+            body.override,
+          ),
           targetType: 'service',
           targetId: service.id,
           salonId: id,
           reason: body.reason,
+          metadata: {
+            fields: [
+              'name',
+              'categoryId',
+              'familyId',
+              'duration',
+              'price',
+              'color',
+              'active',
+              'description',
+              'kind',
+            ],
+          },
           request: auditMeta(c),
         })
         return created(c, { service })
@@ -1040,9 +1211,14 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _live, ...input } = body
+      const { reason, liveConfirmation: _live, override, ...input } = body
       const patch: Partial<Service> = { ...input }
       if (input.familyId !== undefined) patch.familyId = input.familyId ?? null
       try {
@@ -1051,7 +1227,7 @@ export const adminRoute = new Hono<AppEnv>()
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.service_variant.update',
+          action: setupAction('salon.setup.service_variant.update', override),
           targetType: 'service',
           targetId: entityId,
           salonId: id,
@@ -1077,19 +1253,31 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _live, id: _clientId, ...input } = body
+      const {
+        reason,
+        liveConfirmation: _live,
+        override,
+        id: _clientId,
+        ...input
+      } = body
       try {
         const addon = await createServiceAddon({ ...input, salonId: id })
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.service_addon.create',
+          action: setupAction('salon.setup.service_addon.create', override),
           targetType: 'service_addon',
           targetId: addon.id,
           salonId: id,
           reason,
+          metadata: { fields: Object.keys(input) },
           request: auditMeta(c),
         })
         return created(c, { addon })
@@ -1110,16 +1298,21 @@ export const adminRoute = new Hono<AppEnv>()
       const body = c.req.valid('json')
       const liveError = requireLiveConfirmation(c, body.liveConfirmation)
       if (liveError) return liveError
-      const lifecycleError = await requireSetupSalon(c, id)
+      const lifecycleError = await requireSetupSalon(
+        c,
+        id,
+        body.override,
+        c.var.platformAdmin.role,
+      )
       if (lifecycleError) return lifecycleError
-      const { reason, liveConfirmation: _live, ...patch } = body
+      const { reason, liveConfirmation: _live, override, ...patch } = body
       try {
         const addon = await updateServiceAddon(entityId, id, patch)
         if (!addon) return error(c, 'افزودنی یافت نشد', 404)
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
           actorPlatformRole: c.var.platformAdmin.role,
-          action: 'salon.setup.service_addon.update',
+          action: setupAction('salon.setup.service_addon.update', override),
           targetType: 'service_addon',
           targetId: entityId,
           salonId: id,

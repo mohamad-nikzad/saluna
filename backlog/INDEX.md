@@ -22,7 +22,6 @@ No active backlog items.
 - [BL-0034 Configure the Setup Salon service catalog](done/BL-0034-configure-setup-salon-service-catalog.md)
 - [BL-0035 Create and claim unclaimed Staff Profiles](inbox/BL-0035-create-and-claim-unclaimed-staff-profiles.md)
 - [BL-0037 Add and import Setup Salon Clients](done/BL-0037-add-and-import-setup-salon-clients.md)
-- [BL-0040 Add audited Platform Owner Override](inbox/BL-0040-add-audited-platform-owner-override.md)
 - [BL-0011 Campaign support](inbox/BL-0011-campaign-support.md)
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
@@ -38,6 +37,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0040 Add audited Platform Owner Override](done/BL-0040-add-audited-platform-owner-override.md)
 - [BL-0039 Harden Salon Handoff for existing identities and retries](done/BL-0039-harden-salon-handoff-existing-identities-and-retries.md)
 - [BL-0038 Hand a Setup Salon to a new owner](done/BL-0038-hand-off-setup-salon-to-new-owner.md)
 - [BL-0036 Transfer verified staff access between salons](done/BL-0036-transfer-verified-staff-access-between-salons.md)

@@ -14,6 +14,8 @@ import {
 } from '@repo/api-client/query'
 import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ShieldAlert } from 'lucide-react'
+import { useState } from 'react'
 
 import { ErrorPanel } from '#/components/admin/error-panel'
 import {
@@ -31,6 +33,8 @@ import {
   BreadcrumbSeparator,
 } from '#/components/ui/breadcrumb'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
+import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
+import { Button } from '#/components/ui/button'
 import { useAdminAuth } from '#/context/admin-auth-provider'
 import { number, text } from '#/lib/admin-format'
 
@@ -91,6 +95,7 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
   const { me, runtime } = useAdminAuth()
   const { successMessage, showSuccess } = useMutationSuccess()
   const { tab, subtab, setTab, setSubtab } = useSalonDetailUrlState()
+  const [overrideSalonId, setOverrideSalonId] = useState<string | null>(null)
   const isLiveData = runtime.dataSource === 'live'
   const detailQuery = useQuery(
     getApiV1AdminSalonsByIdOptions({ path: { id: salonId } }),
@@ -100,9 +105,17 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
   )
   const canManageSetup =
     me.role === 'platform_owner' || me.role === 'platform_admin'
+  const detailStatus = normalizeStatus(detailQuery.data?.salon?.status)
+  const canEnterOverride =
+    me.role === 'platform_owner' && detailStatus === 'active'
+  const overrideMode = canEnterOverride && overrideSalonId === salonId
   const setupQuery = useQuery({
-    ...getApiV1AdminSalonsByIdSetupOptions({ path: { id: salonId } }),
-    enabled: detailQuery.data?.salon?.status === 'setup' && canManageSetup,
+    ...getApiV1AdminSalonsByIdSetupOptions({
+      path: { id: salonId },
+      ...(overrideMode ? { query: { override: true } } : {}),
+    }),
+    enabled:
+      (detailStatus === 'setup' && canManageSetup) || Boolean(overrideMode),
   })
   const statusMutation = useMutation({
     ...patchApiV1AdminSalonsByIdStatusMutation(),
@@ -186,8 +199,10 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
           <TabsTrigger value="overview">نمای کلی</TabsTrigger>
           <TabsTrigger value="governance">حاکمیت</TabsTrigger>
           <TabsTrigger value="operations">عملیات</TabsTrigger>
-          {currentStatus === 'setup' && canManageSetup ? (
-            <TabsTrigger value="setup">آماده‌سازی</TabsTrigger>
+          {(currentStatus === 'setup' && canManageSetup) || canEnterOverride ? (
+            <TabsTrigger value="setup">
+              {canEnterOverride ? 'Override مالک پلتفرم' : 'آماده‌سازی'}
+            </TabsTrigger>
           ) : null}
         </TabsList>
 
@@ -288,8 +303,48 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
           />
         </TabsContent>
 
-        {currentStatus === 'setup' && canManageSetup ? (
+        {(currentStatus === 'setup' && canManageSetup) || canEnterOverride ? (
           <TabsContent value="setup">
+            {canEnterOverride && !overrideMode ? (
+              <Alert variant="destructive">
+                <ShieldAlert />
+                <AlertTitle>ورود به Platform Owner Override</AlertTitle>
+                <AlertDescription className="flex flex-col items-start gap-3">
+                  <p>
+                    این حالت داده‌های عملیاتی سالن فعال را تغییر می‌دهد. هر
+                    تغییر به نام شما، با دلیل و جزئیات درخواست ممیزی می‌شود. هیچ
+                    نشست مستاجر یا جانشینی کاربر سالن ساخته نمی‌شود.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setOverrideSalonId(salonId)}
+                  >
+                    <ShieldAlert data-icon="inline-start" />
+                    ورود آگاهانه به Override
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {overrideMode ? (
+              <Alert variant="destructive" className="mb-4">
+                <ShieldAlert />
+                <AlertTitle>Override فعال است</AlertTitle>
+                <AlertDescription className="flex flex-col items-start gap-3">
+                  <p>
+                    در حال ویرایش داده زنده سالن هستید. دلیل و LIVE برای هر
+                    تغییر الزامی است.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOverrideSalonId(null)}
+                  >
+                    خروج از Override
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
             {setupQuery.isLoading ? (
               <ScreenSkeleton label="در حال بارگذاری تنظیمات راه‌اندازی" />
             ) : null}
@@ -299,13 +354,15 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
                 onRetry={() => void setupQuery.refetch()}
               />
             ) : null}
-            {setupQuery.data ? (
+            {setupQuery.data && (currentStatus === 'setup' || overrideMode) ? (
               <div className="space-y-4">
-                <SalonSetupHandoff
-                  salonId={salonId}
-                  intendedOwnerPhone={text(salon.intendedOwnerPhone)}
-                  isLiveData={isLiveData}
-                />
+                {overrideMode ? null : (
+                  <SalonSetupHandoff
+                    salonId={salonId}
+                    intendedOwnerPhone={text(salon.intendedOwnerPhone)}
+                    isLiveData={isLiveData}
+                  />
+                )}
                 <SalonSetupEditor
                   configuration={setupQuery.data}
                   hoursError={hoursMutation.error}
@@ -315,20 +372,44 @@ export function SalonDetailScreen({ salonId }: { salonId: string }) {
                   isLiveData={isLiveData}
                   onSaveHours={(body, options) =>
                     hoursMutation.mutate(
-                      { path: { id: salonId }, body },
+                      {
+                        path: { id: salonId },
+                        body: {
+                          ...body,
+                          ...(overrideMode ? { override: true } : {}),
+                        },
+                      },
                       options,
                     )
                   }
                   onSavePresence={(body, options) =>
                     presenceMutation.mutate(
-                      { path: { id: salonId }, body },
+                      {
+                        path: { id: salonId },
+                        body: {
+                          ...body,
+                          ...(overrideMode ? { override: true } : {}),
+                        },
+                      },
                       options,
                     )
                   }
                 />
-                <SalonSetupCatalog salonId={salonId} isLiveData={isLiveData} />
-                <SalonSetupStaff salonId={salonId} isLiveData={isLiveData} />
-                <SalonSetupClients salonId={salonId} isLiveData={isLiveData} />
+                <SalonSetupCatalog
+                  salonId={salonId}
+                  isLiveData={isLiveData}
+                  overrideMode={overrideMode}
+                />
+                <SalonSetupStaff
+                  salonId={salonId}
+                  isLiveData={isLiveData}
+                  overrideMode={overrideMode}
+                />
+                <SalonSetupClients
+                  salonId={salonId}
+                  isLiveData={isLiveData}
+                  overrideMode={overrideMode}
+                />
               </div>
             ) : null}
           </TabsContent>

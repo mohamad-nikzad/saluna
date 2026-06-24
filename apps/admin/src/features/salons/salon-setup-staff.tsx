@@ -49,16 +49,24 @@ function record(value: unknown): Record<string, unknown> {
 export function SalonSetupStaff({
   salonId,
   isLiveData,
+  overrideMode,
 }: {
   salonId: string
   isLiveData: boolean
+  overrideMode: boolean
 }) {
   const queryClient = useQueryClient()
   const staffQuery = useQuery(
-    getApiV1AdminSalonsByIdSetupStaffOptions({ path: { id: salonId } }),
+    getApiV1AdminSalonsByIdSetupStaffOptions({
+      path: { id: salonId },
+      ...(overrideMode ? { query: { override: true } } : {}),
+    }),
   )
   const catalogQuery = useQuery(
-    getApiV1AdminSalonsByIdSetupCatalogOptions({ path: { id: salonId } }),
+    getApiV1AdminSalonsByIdSetupCatalogOptions({
+      path: { id: salonId },
+      ...(overrideMode ? { query: { override: true } } : {}),
+    }),
   )
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -79,6 +87,7 @@ export function SalonSetupStaff({
       void queryClient.invalidateQueries({
         queryKey: getApiV1AdminSalonsByIdSetupStaffQueryKey({
           path: { id: salonId },
+          ...(overrideMode ? { query: { override: true } } : {}),
         }),
       })
     },
@@ -111,6 +120,7 @@ export function SalonSetupStaff({
                 schedule,
                 reason,
                 ...(isLiveData ? { liveConfirmation } : {}),
+                ...(overrideMode ? { override: true as const } : {}),
               },
             })
           }}

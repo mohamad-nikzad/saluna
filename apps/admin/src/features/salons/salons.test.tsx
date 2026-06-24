@@ -779,6 +779,77 @@ describe('salons feature', () => {
     expect(generated.getSetup).not.toHaveBeenCalled()
   })
 
+  it('requires a Platform Owner to deliberately enter a visually explicit active-salon override', async () => {
+    generated.getSalon.mockResolvedValue({
+      salon: { id: salonId, name: 'Active Aftab', status: 'active' },
+      members: [],
+      stats: {},
+    })
+    generated.getNotes.mockResolvedValue({ notes: [] })
+    generated.getSetup.mockResolvedValue({
+      hours: {
+        workingStart: '09:00',
+        workingEnd: '19:00',
+        slotDurationMinutes: 30,
+        workingDays: 126,
+      },
+      presence: {
+        address: null,
+        mapGoogle: null,
+        mapNeshan: null,
+        mapBalad: null,
+        socialInstagram: null,
+        socialTelegram: null,
+        socialWhatsapp: null,
+        website: null,
+      },
+    })
+
+    await renderSalonDetail(`/salons/${salonId}?tab=setup`, {
+      dataSource: 'live',
+    })
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'ورود به Platform Owner Override',
+      }),
+    ).toBeTruthy()
+    expect(generated.getSetup).not.toHaveBeenCalled()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /ورود آگاهانه به Override/ }),
+    )
+
+    expect(await screen.findByText('Override فعال است')).toBeTruthy()
+    await waitFor(() => {
+      expect(generated.getSetup).toHaveBeenCalledWith({
+        path: { id: salonId },
+        query: { override: true },
+      })
+    })
+    expect(screen.queryByText('تحویل به مالک')).toBeNull()
+  })
+
+  it('does not expose active-salon override to a platform admin', async () => {
+    mockAuthMe({ role: 'platform_admin' })
+    generated.getSalon.mockResolvedValue({
+      salon: { id: salonId, name: 'Active Aftab', status: 'active' },
+      members: [],
+      stats: {},
+    })
+    generated.getNotes.mockResolvedValue({ notes: [] })
+
+    renderAdminRoute(`/salons/${salonId}`)
+
+    expect((await screen.findAllByText('Active Aftab')).length).toBeGreaterThan(
+      0,
+    )
+    expect(
+      screen.queryByRole('tab', { name: 'Override مالک پلتفرم' }),
+    ).toBeNull()
+    expect(generated.getSetup).not.toHaveBeenCalled()
+  })
+
   it('renders salon overview detail and submits a live-data status change with reason and confirmation', async () => {
     generated.getSalon.mockResolvedValue({
       salon: {

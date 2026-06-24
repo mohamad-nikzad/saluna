@@ -620,6 +620,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -680,6 +686,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -814,6 +826,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -870,6 +888,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -999,6 +1023,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 2000000
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1210,6 +1240,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1234,6 +1270,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1258,6 +1300,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1284,6 +1332,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1312,6 +1366,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1364,6 +1424,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1421,6 +1487,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1524,6 +1596,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -1630,6 +1708,12 @@
           },
           "liveConfirmation": {
             "type": "string"
+          },
+          "override": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "required": [
@@ -7549,6 +7633,16 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "description": "Explicit Platform Owner Override for an active salon"
+            },
+            "required": false,
+            "description": "Explicit Platform Owner Override for an active salon",
+            "name": "override",
+            "in": "query"
           }
         ],
         "responses": {
@@ -8029,6 +8123,16 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "description": "Explicit Platform Owner Override for an active salon"
+            },
+            "required": false,
+            "description": "Explicit Platform Owner Override for an active salon",
+            "name": "override",
+            "in": "query"
           }
         ],
         "responses": {
@@ -8215,6 +8319,14 @@
             },
             "required": true,
             "name": "phone",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "name": "override",
             "in": "query"
           }
         ],
@@ -8576,6 +8688,16 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "description": "Explicit Platform Owner Override for an active salon"
+            },
+            "required": false,
+            "description": "Explicit Platform Owner Override for an active salon",
+            "name": "override",
+            "in": "query"
           }
         ],
         "responses": {

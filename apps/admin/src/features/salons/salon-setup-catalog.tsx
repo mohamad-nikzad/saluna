@@ -66,12 +66,17 @@ function number(form: FormData, name: string) {
   return Number(form.get(name) ?? 0)
 }
 
-function mutationMeta(form: FormData, isLiveData: boolean) {
+function mutationMeta(
+  form: FormData,
+  isLiveData: boolean,
+  overrideMode: boolean,
+) {
   return {
     reason: string(form, 'reason'),
     ...(isLiveData
       ? { liveConfirmation: string(form, 'liveConfirmation') }
       : {}),
+    ...(overrideMode ? { override: true as const } : {}),
   }
 }
 
@@ -113,18 +118,24 @@ function Field({
 export function SalonSetupCatalog({
   salonId,
   isLiveData,
+  overrideMode,
 }: {
   salonId: string
   isLiveData: boolean
+  overrideMode: boolean
 }) {
   const queryClient = useQueryClient()
   const catalog = useQuery(
-    getApiV1AdminSalonsByIdSetupCatalogOptions({ path: { id: salonId } }),
+    getApiV1AdminSalonsByIdSetupCatalogOptions({
+      path: { id: salonId },
+      ...(overrideMode ? { query: { override: true } } : {}),
+    }),
   )
   const refresh = () =>
     queryClient.invalidateQueries({
       queryKey: getApiV1AdminSalonsByIdSetupCatalogQueryKey({
         path: { id: salonId },
+        ...(overrideMode ? { query: { override: true } } : {}),
       }),
     })
   const applyPreset = useMutation({
@@ -215,7 +226,7 @@ export function SalonSetupCatalog({
                         }),
                       ),
                     })),
-                    ...mutationMeta(form, isLiveData),
+                    ...mutationMeta(form, isLiveData, overrideMode),
                   },
                 })
               }}
@@ -254,7 +265,7 @@ export function SalonSetupCatalog({
                 body: {
                   name: string(form, 'name'),
                   active: true,
-                  ...mutationMeta(form, isLiveData),
+                  ...mutationMeta(form, isLiveData, overrideMode),
                 },
               })
             }}
@@ -281,7 +292,7 @@ export function SalonSetupCatalog({
                   body: {
                     name: string(form, 'name'),
                     active: form.get('active') === 'on',
-                    ...mutationMeta(form, isLiveData),
+                    ...mutationMeta(form, isLiveData, overrideMode),
                   },
                 })
               }
@@ -302,7 +313,7 @@ export function SalonSetupCatalog({
                   categoryId: string(form, 'categoryId'),
                   name: string(form, 'name'),
                   active: true,
-                  ...mutationMeta(form, isLiveData),
+                  ...mutationMeta(form, isLiveData, overrideMode),
                 },
               })
             }}
@@ -345,7 +356,7 @@ export function SalonSetupCatalog({
                     categoryId: string(form, 'categoryId'),
                     name: string(form, 'name'),
                     active: form.get('active') === 'on',
-                    ...mutationMeta(form, isLiveData),
+                    ...mutationMeta(form, isLiveData, overrideMode),
                   },
                 })
               }
@@ -362,7 +373,7 @@ export function SalonSetupCatalog({
             onSubmit={(form) =>
               createService.mutate({
                 path: { id: salonId },
-                body: serviceBody(form, isLiveData, true),
+                body: serviceBody(form, isLiveData, overrideMode, true),
               })
             }
           />
@@ -381,7 +392,7 @@ export function SalonSetupCatalog({
               onSubmit={(form) =>
                 updateService.mutate({
                   path: { id: salonId, entityId: row.id },
-                  body: serviceBody(form, isLiveData),
+                  body: serviceBody(form, isLiveData, overrideMode),
                 })
               }
               isLiveData={isLiveData}
@@ -396,7 +407,7 @@ export function SalonSetupCatalog({
             onSubmit={(form) =>
               createAddon.mutate({
                 path: { id: salonId },
-                body: addonBody(form, isLiveData, true),
+                body: addonBody(form, isLiveData, overrideMode, true),
               })
             }
           />
@@ -409,7 +420,13 @@ export function SalonSetupCatalog({
               onSubmit={(form) =>
                 updateAddon.mutate({
                   path: { id: salonId, entityId: row.id },
-                  body: addonBody(form, isLiveData, false, row.scopes),
+                  body: addonBody(
+                    form,
+                    isLiveData,
+                    overrideMode,
+                    false,
+                    row.scopes,
+                  ),
                 })
               }
               isLiveData={isLiveData}
@@ -598,7 +615,12 @@ function ServiceForm({
   )
 }
 
-function serviceBody(form: FormData, isLiveData: boolean, isCreate = false) {
+function serviceBody(
+  form: FormData,
+  isLiveData: boolean,
+  overrideMode: boolean,
+  isCreate = false,
+) {
   return {
     name: string(form, 'name'),
     categoryId: string(form, 'categoryId'),
@@ -608,7 +630,7 @@ function serviceBody(form: FormData, isLiveData: boolean, isCreate = false) {
     color: string(form, 'color'),
     active: isCreate || form.get('active') !== null,
     kind: 'standard' as const,
-    ...mutationMeta(form, isLiveData),
+    ...mutationMeta(form, isLiveData, overrideMode),
   }
 }
 
@@ -668,6 +690,7 @@ function AddonForm({
 function addonBody(
   form: FormData,
   isLiveData: boolean,
+  overrideMode: boolean,
   isCreate = false,
   scopes: AddonScope[] = [],
 ) {
@@ -678,6 +701,6 @@ function addonBody(
     active: isCreate || form.get('active') !== null,
     sortOrder: 0,
     scopes,
-    ...mutationMeta(form, isLiveData),
+    ...mutationMeta(form, isLiveData, overrideMode),
   }
 }

@@ -410,6 +410,164 @@ describe('admin runtime data source', () => {
     )
   })
 
+  it('lets an active Platform Owner override active-salon operating data and audits the real actor', async () => {
+    vi.mocked(getAdminSalon).mockResolvedValue({
+      salon: { id: salonId, status: 'active' },
+      members: [],
+      stats: {},
+    } as never)
+    vi.mocked(getBusinessSettings).mockResolvedValue({
+      workingStart: '09:00',
+      workingEnd: '19:00',
+      slotDurationMinutes: 30,
+      workingDays: 126,
+    })
+    vi.mocked(getSalonPresence).mockResolvedValue({
+      address: null,
+      mapGoogle: null,
+      mapNeshan: null,
+      mapBalad: null,
+      socialInstagram: null,
+      socialTelegram: null,
+      socialWhatsapp: null,
+      website: null,
+    })
+    vi.mocked(updateBusinessSettings).mockResolvedValue({
+      workingStart: '10:00',
+      workingEnd: '19:00',
+      slotDurationMinutes: 30,
+      workingDays: 126,
+    })
+
+    const readRes = await app.request(
+      `/api/v1/admin/salons/${salonId}/setup?override=true`,
+      { headers: authHeaders },
+    )
+    const updateRes = await app.request(
+      `/api/v1/admin/salons/${salonId}/setup/hours`,
+      {
+        method: 'PATCH',
+        headers: {
+          ...authHeaders,
+          'Content-Type': 'application/json',
+          'User-Agent': 'override-test',
+          'X-Forwarded-For': '203.0.113.10',
+          'X-Request-Id': 'override-request-1',
+        },
+        body: JSON.stringify({
+          workingStart: '10:00',
+          reason: 'Owner requested emergency correction',
+          liveConfirmation: 'LIVE',
+          override: true,
+        }),
+      },
+    )
+
+    expect(readRes.status).toBe(200)
+    expect(JSON.stringify(await readRes.json())).not.toMatch(
+      /password|otp|session|credential|token|secret/i,
+    )
+    expect(updateRes.status).toBe(200)
+    expect(createAdminAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorUserId: 'admin-user-1',
+        actorPlatformRole: 'platform_owner',
+        action: 'salon.override.hours.update',
+        salonId,
+        targetId: salonId,
+        reason: 'Owner requested emergency correction',
+        metadata: { fields: ['workingStart'] },
+        ip: '203.0.113.10',
+        userAgent: 'override-test',
+        requestId: 'override-request-1',
+      }),
+    )
+  })
+
+  it.each(['platform_admin', 'platform_support', 'platform_viewer'] as const)(
+    'forbids active-salon override for %s',
+    async (role) => {
+      vi.mocked(getPlatformAdminForUser).mockResolvedValue({
+        id: 'platform-admin-2',
+        userId: 'admin-user-1',
+        role,
+        active: true,
+      } as never)
+      vi.mocked(getAdminSalon).mockResolvedValue({
+        salon: { id: salonId, status: 'active' },
+        members: [],
+        stats: {},
+      } as never)
+
+      const res = await app.request(
+        `/api/v1/admin/salons/${salonId}/setup/hours`,
+        {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workingStart: '10:00',
+            reason: 'Unauthorized override attempt',
+            liveConfirmation: 'LIVE',
+            override: true,
+          }),
+        },
+      )
+
+      expect(res.status).toBe(403)
+      expect(updateBusinessSettings).not.toHaveBeenCalled()
+      expect(createAdminAuditEvent).not.toHaveBeenCalled()
+    },
+  )
+
+  it('forbids override for an inactive Platform Owner', async () => {
+    vi.mocked(getPlatformAdminForUser).mockResolvedValue({
+      id: 'platform-owner-inactive',
+      userId: 'admin-user-1',
+      role: 'platform_owner',
+      active: false,
+    } as never)
+
+    const res = await app.request(
+      `/api/v1/admin/salons/${salonId}/setup?override=true`,
+      { headers: authHeaders },
+    )
+
+    expect(res.status).toBe(403)
+    expect(getBusinessSettings).not.toHaveBeenCalled()
+  })
+
+  it('requires override intent, reason, and live confirmation for active-salon changes', async () => {
+    vi.mocked(getAdminSalon).mockResolvedValue({
+      salon: { id: salonId, status: 'active' },
+      members: [],
+      stats: {},
+    } as never)
+
+    const requests = [
+      {
+        workingStart: '10:00',
+        reason: 'Missing override',
+        liveConfirmation: 'LIVE',
+      },
+      { workingStart: '10:00', override: true, liveConfirmation: 'LIVE' },
+      { workingStart: '10:00', override: true, reason: 'Missing confirmation' },
+    ]
+    const responses = await Promise.all(
+      requests.map((body) =>
+        app.request(`/api/v1/admin/salons/${salonId}/setup/hours`, {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      ),
+    )
+
+    expect(responses.map((response) => response.status)).toEqual([
+      409, 400, 400,
+    ])
+    expect(updateBusinessSettings).not.toHaveBeenCalled()
+  })
+
   it('updates the intended-owner phone and creates an opaque handoff link', async () => {
     vi.mocked(getAdminSalon).mockResolvedValue({
       salon: {

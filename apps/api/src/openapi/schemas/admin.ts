@@ -81,6 +81,16 @@ export const adminReasonSchema = z
   .max(500)
   .openapi({ example: 'درخواست پشتیبانی داخلی' })
 
+export const adminSetupAccessQuerySchema = z.object({
+  override: z
+    .boolean()
+    .optional()
+    .openapi({
+      param: { name: 'override', in: 'query' },
+      description: 'Explicit Platform Owner Override for an active salon',
+    }),
+})
+
 const anyRecordSchema = z.record(z.string(), z.unknown())
 
 export const adminUserMeResponseSchema = z
@@ -304,6 +314,7 @@ export const adminSetupStaffCreateBodySchema = z
     schedule: z.array(adminSetupStaffScheduleSchema).max(7),
     reason: adminReasonSchema,
     liveConfirmation: z.string().optional(),
+    override: z.literal(true).optional(),
   })
   .openapi('AdminSetupStaffCreateRequest')
 
@@ -317,6 +328,7 @@ export const adminSetupStaffCreateResponseSchema = z
 
 export const adminSetupStaffAccessQuerySchema = z.object({
   phone: z.string().regex(/^09\d{9}$/),
+  override: z.boolean().optional(),
 })
 
 export const adminSetupStaffAccessResponseSchema = z
@@ -339,6 +351,7 @@ export const adminSetupClientCreateBodySchema = z
     tags: z.array(z.string()).max(8).default([]),
     reason: adminReasonSchema,
     liveConfirmation: z.string().optional(),
+    override: z.literal(true).optional(),
   })
   .openapi('AdminSetupClientCreateRequest')
 
@@ -350,6 +363,7 @@ export const adminSetupClientImportSourceSchema = z
   .object({
     format: z.enum(['csv', 'vcf']),
     source: z.string().min(1).max(2_000_000),
+    override: z.literal(true).optional(),
   })
   .openapi('AdminSetupClientImportSource')
 
@@ -408,6 +422,7 @@ export const adminSetupClientImportResponseSchema = z
 const adminSetupMutationMetaShape = {
   reason: adminReasonSchema,
   liveConfirmation: z.string().optional(),
+  override: z.literal(true).optional(),
 }
 
 export const adminSetupHoursPatchBodySchema = adminSetupHoursSchema
@@ -431,6 +446,7 @@ export const adminSetupPresenceResponseSchema = z
 const adminSetupCatalogMutationMetaShape = {
   reason: adminReasonSchema,
   liveConfirmation: z.string().optional(),
+  override: z.literal(true).optional(),
 }
 
 const adminSetupCatalogScopeSchema = z.discriminatedUnion('type', [

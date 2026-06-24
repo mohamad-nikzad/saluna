@@ -148,6 +148,7 @@ export type AdminSetupSalonHoursPatchRequest = {
     workingDays?: number;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupSalonPresenceResponse = {
@@ -165,6 +166,7 @@ export type AdminSetupSalonPresencePatchRequest = {
     website?: string | null;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupStaffListResponse = {
@@ -201,6 +203,7 @@ export type AdminSetupStaffCreateRequest = {
     }>;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupClientCreateResponse = {
@@ -216,6 +219,7 @@ export type AdminSetupClientCreateRequest = {
     tags?: Array<string>;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupClientImportPreviewResponse = {
@@ -245,6 +249,7 @@ export type AdminSetupClientImportPreviewResponse = {
 export type AdminSetupClientImportSource = {
     format: 'csv' | 'vcf';
     source: string;
+    override?: true;
 };
 
 export type AdminSetupClientImportResponse = {
@@ -305,6 +310,7 @@ export type AdminSetupCatalogPresetApplyRequest = {
     }>;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupCategoryCreateRequest = {
@@ -312,6 +318,7 @@ export type AdminSetupCategoryCreateRequest = {
     active?: boolean;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupCategoryUpdateRequest = {
@@ -319,6 +326,7 @@ export type AdminSetupCategoryUpdateRequest = {
     active?: boolean;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupFamilyCreateRequest = {
@@ -327,6 +335,7 @@ export type AdminSetupFamilyCreateRequest = {
     active?: boolean;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupFamilyUpdateRequest = {
@@ -335,6 +344,7 @@ export type AdminSetupFamilyUpdateRequest = {
     active?: boolean;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupServiceCreateRequest = {
@@ -349,6 +359,7 @@ export type AdminSetupServiceCreateRequest = {
     kind?: 'standard' | 'combo';
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupServiceUpdateRequest = {
@@ -363,6 +374,7 @@ export type AdminSetupServiceUpdateRequest = {
     kind?: 'standard' | 'combo';
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupAddonCreateRequest = {
@@ -385,6 +397,7 @@ export type AdminSetupAddonCreateRequest = {
     }>;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSetupAddonUpdateRequest = {
@@ -407,6 +420,7 @@ export type AdminSetupAddonUpdateRequest = {
     }>;
     reason: string;
     liveConfirmation?: string;
+    override?: true;
 };
 
 export type AdminSalonClientsResponse = {
@@ -2063,7 +2077,12 @@ export type GetApiV1AdminSalonsByIdSetupData = {
     path: {
         id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Explicit Platform Owner Override for an active salon
+         */
+        override?: boolean;
+    };
     url: '/api/v1/admin/salons/{id}/setup';
 };
 
@@ -2274,7 +2293,12 @@ export type GetApiV1AdminSalonsByIdSetupStaffData = {
     path: {
         id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Explicit Platform Owner Override for an active salon
+         */
+        override?: boolean;
+    };
     url: '/api/v1/admin/salons/{id}/setup/staff';
 };
 
@@ -2358,6 +2382,7 @@ export type GetApiV1AdminSalonsByIdSetupStaffAccessData = {
     };
     query: {
         phone: string;
+        override?: boolean;
     };
     url: '/api/v1/admin/salons/{id}/setup/staff/access';
 };
@@ -2518,7 +2543,12 @@ export type GetApiV1AdminSalonsByIdSetupCatalogData = {
     path: {
         id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Explicit Platform Owner Override for an active salon
+         */
+        override?: boolean;
+    };
     url: '/api/v1/admin/salons/{id}/setup/catalog';
 };
 

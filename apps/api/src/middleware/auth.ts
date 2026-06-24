@@ -67,7 +67,7 @@ export function requirePlatformAdmin(permission?: PlatformPermission) {
       }
     }
 
-    if (!admin) return error(c, 'دسترسی غیرمجاز', 403)
+    if (!admin || !admin.active) return error(c, 'دسترسی غیرمجاز', 403)
     if (permission && !hasPlatformPermission(admin.role, permission)) {
       return error(c, 'دسترسی غیرمجاز', 403)
     }

@@ -31,6 +31,7 @@ import {
   adminSalonStaffResponseSchema,
   adminSalonsResponseSchema,
   adminSetupSalonCreateBodySchema,
+  adminSetupAccessQuerySchema,
   adminSetupSalonResponseSchema,
   adminSetupSalonConfigurationResponseSchema,
   adminSetupOwnerPhonePatchBodySchema,
@@ -281,7 +282,7 @@ export const getAdminSetupSalonConfigurationRoute = createRoute({
   tags: ['Admin'],
   summary: 'Get Setup Salon hours and presence',
   security: adminSecurity,
-  request: { params: idParamSchema },
+  request: { params: idParamSchema, query: adminSetupAccessQuerySchema },
   responses: {
     200: {
       description: 'Setup Salon configuration',
@@ -424,7 +425,7 @@ export const getAdminSetupStaffRoute = createRoute({
   tags: ['Admin'],
   summary: 'List prepared Staff Profiles',
   security: adminSecurity,
-  request: { params: idParamSchema },
+  request: { params: idParamSchema, query: adminSetupAccessQuerySchema },
   responses: {
     200: {
       description: 'Prepared Staff Profiles',
@@ -497,7 +498,7 @@ export const getAdminSetupCatalogRoute = createRoute({
   tags: ['Admin'],
   summary: 'Get the Setup Salon service catalog workspace',
   security: adminSecurity,
-  request: { params: idParamSchema },
+  request: { params: idParamSchema, query: adminSetupAccessQuerySchema },
   responses: {
     200: {
       description: 'Setup Salon catalog',
