@@ -9,8 +9,10 @@ A scheduled service on the staff calendar, with a validated client, assigned sta
 _Avoid_: booking (verb only, customer UI copy)
 
 **AppointmentRequest**:
-A customer-submitted proposal for an `Appointment`, awaiting manager review. Carries raw customer contact, a desired slot, and snapshot-shaped service fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
+A customer-submitted proposal for an `Appointment` or `Service Package`, awaiting manager review. Carries raw customer contact, desired timing, and snapshot-shaped service/package fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
 _Avoid_: booking request, public booking, pending appointment
+
+Approving a package request schedules every package task with staff and time, making the package operationally real on staff calendars.
 
 **Appointment Intake**:
 The validation gate that turns a requested create/update into a validated command or a precise rejection. Shared by internal create flows and `AppointmentRequest` approval.
@@ -27,20 +29,25 @@ The authenticated salon request context carried by API routes — tenant user, s
 Salon-scoped catalog group for a broad area (`ناخن`, `مو`, `پوست`, `مژه`, `ابرو`, `اسپا`). DB/API: `service_categories`; TS: `ServiceCategory`. Persian UI: `دسته`.
 
 **ServiceFamily**:
-Salon-scoped grouping inside a `ServiceCategory` (`کاشت ناخن`, `ترمیم ناخن`, `مانیکور`, `رنگ مو`). DB/API: `service_families`; TS: `ServiceFamily`. Persian UI: `گروه`.
+Legacy middle grouping inside a `ServiceCategory`. The target catalog language is `ServiceCategory` → `ServiceVariant`; avoid introducing family-level workflows unless a real salon workflow needs them.
+_Avoid_: required service group
 
 **ServiceVariant**:
-The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; call it "service variant" in copy that distinguishes it from category or family. Persian UI: `خدمت`.
+The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; call it "service" in ordinary product/admin copy and "service variant" only when distinguishing it from combos or add-ons. Persian UI: `خدمت`.
 _Avoid_: package, bundle, group, type, subtype, item, offering, option
 
 **Standard ServiceVariant**:
 A `ServiceVariant` sold as one standalone salon service.
 
-**Combo ServiceVariant**:
-A fixed `ServiceVariant` composed from other standard variants for booking as one sellable service. Duration and price live on the combo row, not on its components.
+**Service Package**:
+A sellable bundle composed from multiple staff-assigned package tasks, often across categories, for booking as one offering. Its duration comes from the scheduled tasks; its total price may be calculated from included services or overridden by the manager.
+_Avoid_: combo service, service group
 
-**ComboComponent**:
-A reference from a `Combo ServiceVariant` to a standard `ServiceVariant`. Documents composition; does not drive booking, availability, staff assignment, revenue, or snapshots.
+**PackageComponent**:
+A staff-assigned unit of work inside a `Service Package`, based on an included service and carrying its own duration and calendar slot.
+_Avoid_: combo component
+
+Package tasks may have gaps or run in parallel across different staff, but they must respect staff and client scheduling conflicts.
 
 **ServiceAddon**:
 An optional salon-defined extra selected alongside a `ServiceVariant` at booking.
@@ -48,11 +55,15 @@ An optional salon-defined extra selected alongside a `ServiceVariant` at booking
 ### Catalog Presets
 
 **CatalogPreset**:
-A ready-made tree of `PresetCategory` → `PresetFamily` → `PresetVariant` rows that a manager imports during onboarding to skip building the catalog by hand. UI copy: `قالب خدمات`. Not sellable, not tenant-scoped — defined by the product, picked by the salon.
+A ready-made service catalog assembly that a manager imports during onboarding to skip building the catalog by hand. It is built from preset categories and preset services but keeps its own curated defaults. UI copy: `قالب خدمات`. Not sellable, not tenant-scoped — defined by the product, picked by the salon.
 _Avoid_: package, bundle, template service, service group
 
 **PresetCategory / PresetFamily / PresetVariant**:
-The rows inside a `CatalogPreset` that map 1:1 to `ServiceCategory` / `ServiceFamily` / `ServiceVariant` when the preset is applied.
+Reusable product-maintained library items that map to salon catalog records when a `CatalogPreset` is applied. `PresetFamily` is legacy; the target preset language is `PresetCategory` and preset service.
+
+**Preset Catalog**:
+The product-maintained collection of preset categories, preset services, and assembled `CatalogPreset`s that platform staff uses to curate starter service catalogs.
+_Avoid_: service preset page, template manager
 
 ### Snapshots
 
@@ -88,6 +99,10 @@ _Avoid_: admin onboarding, impersonation
 A non-public salon created by authorized platform staff for preparation before it has a verified owner. It records the intended owner's phone, editable until handoff, while platform staff prepares its hours, catalog, Staff Profiles, Salon Presence, and Clients.
 _Avoid_: draft workspace, Setup Case
 
+**Setup Page**:
+A focused page in a `Salon Workspace` for preparing one part of a `Setup Salon`, such as basics, hours, presence, catalog, Staff Profiles, Clients, or handoff.
+_Avoid_: setup modal, setup tab bundle
+
 **Salon Handoff**:
 The one-time transfer of a `Setup Salon` to its intended `Salon Owner`. The owner verifies their phone and establishes login access; the salon becomes active and ordinary platform setup access ends without a separate review step.
 _Avoid_: owner approval, setup review, Setup Handoff
@@ -96,8 +111,12 @@ _Avoid_: owner approval, setup review, Setup Handoff
 The person who verifies their own identity and assumes ownership through self-service signup or `Salon Handoff`. Platform staff may prepare a salon but never assume this identity.
 _Avoid_: account owner, admin-created owner
 
+**Salon Workspace**:
+The per-salon admin area opened from the salon table, where platform staff reviews the salon overview and moves into related operational or setup pages.
+_Avoid_: salon detail, tenant tabs, setup case, governance
+
 **Platform Owner Override**:
-A reasoned action by a `Platform Owner` on an active salon after `Salon Handoff`. It is always attributable and excludes authentication secrets, session takeover, and acting as another user.
+A deliberate action by a `Platform Owner` on an active salon after `Salon Handoff`. It is attributable and excludes authentication secrets, session takeover, and acting as another user.
 _Avoid_: unrestricted access, super admin, impersonation, break-glass login
 
 **Salon Working Days**:
@@ -145,10 +164,10 @@ _Avoid_: ticket type, department
 
 ## Naming rules
 
-- Use `category`, `family`, and `service variant` in user-facing catalog language.
+- Prefer `category` and `service` in new product/admin catalog language; treat `family` as legacy unless a workflow explicitly needs a middle grouping.
 - Keep `services`, `serviceId`, `staff_services.service_id`, and `appointments.service_id` for the bookable variant level.
 - Use `categoryId`, `categoryName`, `familyId`, `familyName` on service read models.
 - Use `bookedServiceName`, `bookedServiceDuration`, `bookedServicePrice` for appointment snapshot fields.
-- Use `combo` only as a qualifier for a `ServiceVariant`.
-- Store combo composition in `service_combo_components` (`comboServiceId`, `componentServiceId`, `sortOrder`).
-- Require explicit staff capability on the combo `ServiceVariant`; do not infer it from components.
+- Use `Service Package` for sellable bundles, especially when included services span categories.
+- Treat existing combo tables and fields as legacy implementation names until renamed.
+- Require explicit staff capability on the `Service Package`; do not infer it from components.

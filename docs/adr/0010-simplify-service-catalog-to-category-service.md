@@ -1,0 +1,3 @@
+# Simplify the service catalog to category and service
+
+The target catalog model is Category → Service for normal bookable services, with ServiceFamily treated as legacy middle grouping rather than required product language. Sellable bundles, especially cross-category bridal-style bundles, are Service Packages made of staff-assigned package tasks rather than another category/grouping layer; packages may carry their own manager-overridden total price for discounts or curated offers. We chose this because Saluna's admin and salon workflows are small enough that a mandatory three-level category/family/service tree makes setup and preset maintenance harder than the value it provides.
