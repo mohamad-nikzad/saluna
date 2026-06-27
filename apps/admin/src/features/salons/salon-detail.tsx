@@ -48,7 +48,7 @@ import {
   BreadcrumbSeparator,
 } from '#/components/ui/breadcrumb'
 import { useAdminAuth } from '#/context/admin-auth-provider'
-import { number, text } from '#/lib/admin-format'
+import { formatDate, number, text } from '#/lib/admin-format'
 
 import { normalizeStatus, StatusBadge, truthy } from './salon-columns'
 import { NotesPanel, StatusForm } from './salon-governance'
@@ -337,9 +337,7 @@ function SalonWorkspaceScreen({
         <SetupSectionGate
           salonId={salonId}
           data={data}
-          fallback={
-            <SalonTenantDataPage salonId={salonId} tab="staff" />
-          }
+          fallback={<SalonTenantDataPage salonId={salonId} tab="staff" />}
           render={() => (
             <SalonSetupStaff
               salonId={salonId}
@@ -353,9 +351,7 @@ function SalonWorkspaceScreen({
         <SetupSectionGate
           salonId={salonId}
           data={data}
-          fallback={
-            <SalonTenantDataPage salonId={salonId} tab="services" />
-          }
+          fallback={<SalonTenantDataPage salonId={salonId} tab="services" />}
           render={() => (
             <SalonSetupCatalog
               salonId={salonId}
@@ -369,9 +365,7 @@ function SalonWorkspaceScreen({
         <SetupSectionGate
           salonId={salonId}
           data={data}
-          fallback={
-            <SalonTenantDataPage salonId={salonId} tab="clients" />
-          }
+          fallback={<SalonTenantDataPage salonId={salonId} tab="clients" />}
           render={() => (
             <SalonSetupClients
               salonId={salonId}
@@ -416,6 +410,19 @@ function SalonOverviewSection({
   data: WorkspaceData
 }) {
   const currentStatus = normalizeStatus(data.salon.status)
+  const stats = data.detailQuery.data?.stats ?? {}
+  const overview = data.detailQuery.data?.overview
+  const appointmentStatusCounts =
+    (overview?.appointmentStatusCounts as
+      | Record<string, unknown>
+      | undefined) ?? {}
+  const recentRequests =
+    (overview?.recentRequests as Array<Record<string, unknown>> | undefined) ??
+    []
+  const upcomingAppointments =
+    (overview?.upcomingAppointments as
+      | Array<Record<string, unknown>>
+      | undefined) ?? []
 
   return (
     <div className="space-y-4">
@@ -438,32 +445,200 @@ function SalonOverviewSection({
               'تلفن مالک موردنظر',
               text(data.salon.intendedOwnerPhone) || 'ثبت نشده',
             ],
+            [
+              'وضعیت تحویل',
+              currentStatus === 'setup' ? 'در انتظار تحویل' : 'تحویل‌شده',
+            ],
             ['منطقه زمانی', text(data.salon.timezone)],
-            ['صفحه عمومی', truthy(data.salon.publicEnabled) ? 'فعال' : 'غیرفعال'],
+            [
+              'صفحه عمومی',
+              truthy(data.salon.publicEnabled) ? 'فعال' : 'غیرفعال',
+            ],
           ]}
         />
       </Panel>
-      <Panel title="آمار">
-        <DetailGrid
-          items={[
-            ['خدمات', number(data.detailQuery.data?.stats.services)],
-            ['نوبت‌ها', number(data.detailQuery.data?.stats.appointments)],
-            ['اعضا', number(data.detailQuery.data?.members.length)],
-          ]}
-        />
+      <Panel title="نمای عملیاتی">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <OverviewMetric
+            label="پرسنل"
+            value={number(stats.staff)}
+            to="/salons/$salonId/staff"
+            salonId={text(data.salon.id)}
+          />
+          <OverviewMetric
+            label="خدمات"
+            value={number(stats.services)}
+            to="/salons/$salonId/services"
+            salonId={text(data.salon.id)}
+          />
+          <OverviewMetric
+            label="مشتریان"
+            value={number(stats.clients)}
+            to="/salons/$salonId/clients"
+            salonId={text(data.salon.id)}
+          />
+          <OverviewMetric
+            label="نوبت‌ها"
+            value={number(stats.appointments)}
+            to="/salons/$salonId/requests"
+            salonId={text(data.salon.id)}
+          />
+          <OverviewMetric
+            label="درخواست‌های معلق"
+            value={number(stats.pendingAppointmentRequests)}
+            to="/salons/$salonId/requests"
+            salonId={text(data.salon.id)}
+            accent
+          />
+        </div>
       </Panel>
-      <Panel title="اعضا">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <Panel title="وضعیت نوبت‌ها">
+          <DetailGrid
+            items={[
+              ['در انتظار', number(appointmentStatusCounts.scheduled)],
+              ['تأیید شده', number(appointmentStatusCounts.confirmed)],
+              ['انجام شده', number(appointmentStatusCounts.completed)],
+              ['لغو شده', number(appointmentStatusCounts.cancelled)],
+              ['غیبت', number(appointmentStatusCounts['no-show'])],
+              ['درخواست‌ها', number(stats.appointmentRequests)],
+            ]}
+          />
+        </Panel>
+        <Panel title="میانبرها">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {WORKSPACE_NAV_ITEMS.filter(
+              (item) =>
+                item.section !== 'overview' &&
+                (currentStatus === 'setup' || item.section !== 'handoff'),
+            ).map((item) => (
+              <Button
+                key={item.section}
+                asChild
+                variant="outline"
+                className="justify-start"
+              >
+                <Link to={item.to} params={{ salonId: text(data.salon.id) }}>
+                  <item.icon data-icon="inline-start" />
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </Panel>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Panel
+          title="درخواست‌های اخیر"
+          action={
+            <Button asChild size="sm" variant="outline">
+              <Link
+                to="/salons/$salonId/requests"
+                params={{ salonId: text(data.salon.id) }}
+              >
+                مشاهده همه
+              </Link>
+            </Button>
+          }
+        >
+          <CompactRows
+            rows={recentRequests.map((request) => ({
+              label: text(request.customerName) || 'مشتری بدون نام',
+              value:
+                REQUEST_STATUS_LABELS[text(request.status)] ??
+                text(request.status),
+              badge: [
+                text(request.bookedServiceName),
+                text(request.requestedDate),
+                text(request.requestedStartTime),
+              ]
+                .filter(Boolean)
+                .join(' · '),
+            }))}
+            empty="درخواست تازه‌ای برای این سالن ثبت نشده است."
+          />
+        </Panel>
+        <Panel
+          title="نوبت‌های بعدی"
+          action={
+            <Button asChild size="sm" variant="outline">
+              <Link
+                to="/salons/$salonId/requests"
+                params={{ salonId: text(data.salon.id) }}
+              >
+                صفحه عملیات
+              </Link>
+            </Button>
+          }
+        >
+          <CompactRows
+            rows={upcomingAppointments.map((appointment) => ({
+              label: text(appointment.clientName) || 'مشتری بدون نام',
+              value:
+                APPOINTMENT_STATUS_LABELS[text(appointment.status)] ??
+                text(appointment.status),
+              badge: [
+                text(appointment.bookedServiceName),
+                formatAppointmentSlot(
+                  text(appointment.date),
+                  text(appointment.startTime),
+                ),
+                text(appointment.staffName),
+              ]
+                .filter(Boolean)
+                .join(' · '),
+            }))}
+            empty="نوبت آینده‌ای برای این سالن پیدا نشد."
+          />
+        </Panel>
+      </div>
+      <Panel title="اعضای مالکیت">
         <CompactRows
           rows={(data.detailQuery.data?.members ?? []).map((member) => ({
             label: text(member.name),
             value: text(member.role),
             badge: text(member.phoneNumber) || text(member.email),
           }))}
-          empty="عضوی برای این سالن ثبت نشده است."
+          empty="عضوی برای مالکیت این سالن ثبت نشده است."
         />
       </Panel>
     </div>
   )
+}
+
+function OverviewMetric({
+  label,
+  value,
+  to,
+  salonId,
+  accent = false,
+}: {
+  label: string
+  value: number
+  to: string
+  salonId: string
+  accent?: boolean
+}) {
+  return (
+    <Link
+      to={to}
+      params={{ salonId }}
+      className={`rounded-md border px-3 py-3 transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        accent
+          ? 'border-primary/35 bg-primary/5'
+          : 'border-border/70 bg-background/35'
+      }`}
+    >
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div>
+    </Link>
+  )
+}
+
+function formatAppointmentSlot(date: string, time: string) {
+  if (!date && !time) return ''
+  if (!date) return time
+  return [formatDate(date), time].filter(Boolean).join('، ')
 }
 
 function SalonEditSection({ data }: { data: WorkspaceData }) {
@@ -615,21 +790,21 @@ function WorkspaceNav({
 }) {
   return (
     <nav className="flex flex-wrap gap-2" aria-label="بخش‌های فضای کاری سالن">
-      {WORKSPACE_NAV_ITEMS.filter((item) => showHandoff || item.section !== 'handoff').map(
-        (item) => (
-          <Button
-            key={item.section}
-            asChild
-            size="sm"
-            variant={section === item.section ? 'default' : 'outline'}
-          >
-            <Link to={item.to} params={{ salonId }}>
-              <item.icon data-icon="inline-start" />
-              {item.label}
-            </Link>
-          </Button>
-        ),
-      )}
+      {WORKSPACE_NAV_ITEMS.filter(
+        (item) => showHandoff || item.section !== 'handoff',
+      ).map((item) => (
+        <Button
+          key={item.section}
+          asChild
+          size="sm"
+          variant={section === item.section ? 'default' : 'outline'}
+        >
+          <Link to={item.to} params={{ salonId }}>
+            <item.icon data-icon="inline-start" />
+            {item.label}
+          </Link>
+        </Button>
+      ))}
     </nav>
   )
 }
@@ -652,6 +827,22 @@ const WORKSPACE_STATUS_LABELS = {
   suspended: 'تعلیق‌شده',
   archived: 'آرشیوشده',
 } as const
+
+const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
+  scheduled: 'در انتظار',
+  confirmed: 'تأیید شده',
+  completed: 'انجام شده',
+  cancelled: 'لغو شده',
+  'no-show': 'غیبت',
+}
+
+const REQUEST_STATUS_LABELS: Record<string, string> = {
+  pending: 'در انتظار',
+  approved: 'تأیید شده',
+  rejected: 'رد شده',
+  cancelled: 'لغو شده',
+  expired: 'منقضی',
+}
 
 const WORKSPACE_NAV_ITEMS: Array<{
   section: SalonWorkspaceSection

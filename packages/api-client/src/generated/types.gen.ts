@@ -86,6 +86,18 @@ export type AdminSalonDetailResponse = {
     stats: {
         [key: string]: unknown;
     };
+    overview: {
+        appointmentStatusCounts: {
+            [key: string]: unknown;
+        };
+        recentRequests: Array<{
+            [key: string]: unknown;
+        }>;
+        upcomingAppointments: Array<{
+            [key: string]: unknown;
+        }>;
+        [key: string]: unknown;
+    };
 };
 
 export type AdminSetupSalonConfigurationResponse = {
@@ -3206,6 +3218,18 @@ export type PatchApiV1AdminSalonsByIdStatusResponses = {
             [key: string]: unknown;
         }>;
         stats?: {
+            [key: string]: unknown;
+        };
+        overview?: {
+            appointmentStatusCounts: {
+                [key: string]: unknown;
+            };
+            recentRequests: Array<{
+                [key: string]: unknown;
+            }>;
+            upcomingAppointments: Array<{
+                [key: string]: unknown;
+            }>;
             [key: string]: unknown;
         };
     };

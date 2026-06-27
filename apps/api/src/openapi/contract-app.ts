@@ -487,7 +487,19 @@ const createSetupSalonStub: RouteHandler<typeof createSetupSalonRoute> = (c) =>
   c.json({ salon: {}, ownerConflict: null }, 201)
 
 const getAdminSalonStub: RouteHandler<typeof getAdminSalonRoute> = (c) =>
-  c.json({ salon: {}, members: [], stats: {} }, 200)
+  c.json(
+    {
+      salon: {},
+      members: [],
+      stats: {},
+      overview: {
+        appointmentStatusCounts: {},
+        recentRequests: [],
+        upcomingAppointments: [],
+      },
+    },
+    200,
+  )
 
 const setupHoursStub = {
   workingStart: '09:00',

@@ -177,6 +177,13 @@ export const adminSalonDetailResponseSchema = z
     salon: anyRecordSchema,
     members: z.array(anyRecordSchema),
     stats: anyRecordSchema,
+    overview: z
+      .object({
+        appointmentStatusCounts: anyRecordSchema,
+        recentRequests: z.array(anyRecordSchema),
+        upcomingAppointments: z.array(anyRecordSchema),
+      })
+      .passthrough(),
   })
   .openapi('AdminSalonDetailResponse')
 

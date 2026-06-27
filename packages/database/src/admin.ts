@@ -1,4 +1,15 @@
-import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  or,
+  sql,
+} from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
 import { getDb } from './client'
@@ -449,42 +460,131 @@ export async function getAdminSalon(id: string) {
   const salon = rows[0]
   if (!salon) return undefined
 
-  const [members, serviceRows, appointmentRows, requestRows] =
-    await Promise.all([
-      db
-        .select({
-          userId: user.id,
-          name: user.name,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          role: member.role,
-          createdAt: member.createdAt,
-        })
-        .from(member)
-        .innerJoin(user, eq(user.id, member.userId))
-        .where(eq(member.organizationId, id))
-        .orderBy(asc(member.createdAt)),
-      db
-        .select({ value: count() })
-        .from(services)
-        .where(eq(services.salonId, id)),
-      db
-        .select({ value: count() })
-        .from(appointments)
-        .where(eq(appointments.salonId, id)),
-      db
-        .select({ value: count() })
-        .from(appointmentRequests)
-        .where(eq(appointmentRequests.salonId, id)),
-    ])
+  const today = new Date().toISOString().slice(0, 10)
+  const [
+    members,
+    serviceRows,
+    staffRows,
+    clientRows,
+    appointmentRows,
+    appointmentStatusRows,
+    requestRows,
+    pendingRequestRows,
+    recentRequests,
+    upcomingAppointments,
+  ] = await Promise.all([
+    db
+      .select({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: member.role,
+        createdAt: member.createdAt,
+      })
+      .from(member)
+      .innerJoin(user, eq(user.id, member.userId))
+      .where(eq(member.organizationId, id))
+      .orderBy(asc(member.createdAt)),
+    db
+      .select({ value: count() })
+      .from(services)
+      .where(eq(services.salonId, id)),
+    db
+      .select({ value: count() })
+      .from(salonMember)
+      .where(eq(salonMember.organizationId, id)),
+    db.select({ value: count() }).from(clients).where(eq(clients.salonId, id)),
+    db
+      .select({ value: count() })
+      .from(appointments)
+      .where(eq(appointments.salonId, id)),
+    db
+      .select({ status: appointments.status, value: count() })
+      .from(appointments)
+      .where(eq(appointments.salonId, id))
+      .groupBy(appointments.status),
+    db
+      .select({ value: count() })
+      .from(appointmentRequests)
+      .where(eq(appointmentRequests.salonId, id)),
+    db
+      .select({ value: count() })
+      .from(appointmentRequests)
+      .where(
+        and(
+          eq(appointmentRequests.salonId, id),
+          eq(appointmentRequests.status, 'pending'),
+        ),
+      ),
+    db
+      .select({
+        id: appointmentRequests.id,
+        customerName: appointmentRequests.customerName,
+        customerPhone: appointmentRequests.customerPhone,
+        requestedDate: appointmentRequests.requestedDate,
+        requestedStartTime: appointmentRequests.requestedStartTime,
+        bookedServiceName: appointmentRequests.bookedServiceName,
+        status: appointmentRequests.status,
+        createdAt: appointmentRequests.createdAt,
+      })
+      .from(appointmentRequests)
+      .where(eq(appointmentRequests.salonId, id))
+      .orderBy(desc(appointmentRequests.createdAt))
+      .limit(3),
+    db
+      .select({
+        id: appointments.id,
+        clientName: clients.name,
+        clientPhone: clients.phone,
+        staffName: user.name,
+        date: appointments.date,
+        startTime: appointments.startTime,
+        bookedServiceName: appointments.bookedServiceName,
+        status: appointments.status,
+      })
+      .from(appointments)
+      .innerJoin(clients, eq(clients.id, appointments.clientId))
+      .innerJoin(user, eq(user.id, appointments.staffId))
+      .where(
+        and(
+          eq(appointments.salonId, id),
+          gte(appointments.date, today),
+          inArray(appointments.status, ['scheduled', 'confirmed']),
+        ),
+      )
+      .orderBy(asc(appointments.date), asc(appointments.startTime))
+      .limit(3),
+  ])
+
+  const appointmentStatusCounts = {
+    scheduled: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+    'no-show': 0,
+  }
+  for (const row of appointmentStatusRows) {
+    if (row.status in appointmentStatusCounts) {
+      appointmentStatusCounts[row.status] = row.value
+    }
+  }
 
   return {
     salon,
     members,
     stats: {
       services: serviceRows[0]?.value ?? 0,
+      staff: staffRows[0]?.value ?? 0,
+      clients: clientRows[0]?.value ?? 0,
       appointments: appointmentRows[0]?.value ?? 0,
       appointmentRequests: requestRows[0]?.value ?? 0,
+      pendingAppointmentRequests: pendingRequestRows[0]?.value ?? 0,
+    },
+    overview: {
+      appointmentStatusCounts,
+      recentRequests,
+      upcomingAppointments,
     },
   }
 }

@@ -388,12 +388,50 @@
             "additionalProperties": {
               "nullable": true
             }
+          },
+          "overview": {
+            "type": "object",
+            "properties": {
+              "appointmentStatusCounts": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                }
+              },
+              "recentRequests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              },
+              "upcomingAppointments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            },
+            "required": [
+              "appointmentStatusCounts",
+              "recentRequests",
+              "upcomingAppointments"
+            ],
+            "additionalProperties": {
+              "nullable": true
+            }
           }
         },
         "required": [
           "salon",
           "members",
-          "stats"
+          "stats",
+          "overview"
         ]
       },
       "AdminSetupSalonConfigurationResponse": {
@@ -10110,6 +10148,43 @@
                     },
                     "stats": {
                       "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "overview": {
+                      "type": "object",
+                      "properties": {
+                        "appointmentStatusCounts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "nullable": true
+                          }
+                        },
+                        "recentRequests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "upcomingAppointments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "nullable": true
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "appointmentStatusCounts",
+                        "recentRequests",
+                        "upcomingAppointments"
+                      ],
                       "additionalProperties": {
                         "nullable": true
                       }
