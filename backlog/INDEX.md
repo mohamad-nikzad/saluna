@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-06-23 (BL-0031–BL-0040 added to inbox)
+Last organized: 2026-06-30 (BL-0041-BL-0051 added to ready)
 
 ## Now
 
@@ -14,6 +14,17 @@ No active backlog items.
 - [BL-0008 Add SMS support](ready/BL-0008-add-sms-support.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
 - [BL-0030 Separate session cookies per app (PWA vs admin)](ready/BL-0030-separate-session-cookies-per-app.md)
+- [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
+- [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](ready/BL-0042-migrate-legacy-combos-and-addon-scopes.md)
+- [BL-0043 Replace service catalog API contracts](ready/BL-0043-replace-service-catalog-api-contracts.md)
+- [BL-0044 Simplify ServiceVariant create and update flows](ready/BL-0044-simplify-servicevariant-flows.md)
+- [BL-0045 Rebuild add-on scope management](ready/BL-0045-rebuild-addon-scope-management.md)
+- [BL-0046 Add Service Package setup and staff capabilities](ready/BL-0046-add-service-package-setup.md)
+- [BL-0047 Add manager-only package scheduling](ready/BL-0047-add-manager-package-scheduling.md)
+- [BL-0048 Keep public booking service-only](ready/BL-0048-keep-public-booking-service-only.md)
+- [BL-0049 Flatten CatalogPresets to categories and services](ready/BL-0049-flatten-catalog-presets.md)
+- [BL-0050 Update catalog and calendar surfaces for the new model](ready/BL-0050-update-catalog-and-calendar-surfaces.md)
+- [BL-0051 Finish service catalog cutover verification](ready/BL-0051-finish-service-catalog-cutover-verification.md)
 
 ## Inbox
 
