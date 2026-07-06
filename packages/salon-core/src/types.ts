@@ -33,7 +33,8 @@ export interface Service {
   category: 'hair' | 'nails' | 'skincare' | 'spa'
   categoryId: string
   categoryName?: string | null
-  familyId: string | null
+  /** Legacy storage only; new service catalog flows do not require a family. */
+  familyId?: string | null
   familyName?: string | null
   duration: number // in minutes
   price: number
@@ -79,10 +80,84 @@ export interface ComboComponentsSummary {
   totalPrice: number
 }
 
+export interface ServicePackageComponent {
+  id: string
+  salonId: string
+  packageId: string
+  serviceId: string
+  sortOrder: number
+  service: Service
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ServicePackage {
+  id: string
+  salonId: string
+  categoryId: string | null
+  categoryName?: string | null
+  name: string
+  description?: string | null
+  color?: string | null
+  active: boolean
+  priceOverride: number | null
+  sortOrder: number
+  components: ServicePackageComponent[]
+  totalDuration: number
+  componentPriceTotal: number
+  resolvedPrice: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ServicePackageBookingTask {
+  id: string
+  salonId: string
+  packageBookingId: string
+  packageComponentId: string
+  serviceId: string
+  appointmentId: string
+  staffId: string
+  startTime: string
+  endTime: string
+  sortOrder: number
+  appointment?: Appointment
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ServicePackageBooking {
+  id: string
+  salonId: string
+  packageId: string
+  clientId: string
+  leadStaffId: string
+  date: string
+  bookedPackageName: string
+  bookedPackagePrice: number
+  status: Appointment['status']
+  notes?: string | null
+  createdByUserId?: string | null
+  tasks: ServicePackageBookingTask[]
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type ServiceAddonScope =
-  | { type: 'category'; categoryId: string; categoryName: string; active: boolean }
-  | { type: 'family'; familyId: string; familyName: string; categoryId: string; active: boolean }
-  | { type: 'service'; serviceId: string; serviceName: string; familyId: string | null; active: boolean }
+  | { type: 'all' }
+  | {
+      type: 'category'
+      categoryId: string
+      categoryName: string
+      active: boolean
+    }
+  | {
+      type: 'service'
+      serviceId: string
+      serviceName: string
+      familyId?: string | null
+      active: boolean
+    }
 
 export interface ServiceAddon {
   id: string
@@ -196,7 +271,12 @@ export interface ClientTag {
   createdAt: Date
 }
 
-export type FollowUpReason = 'inactive' | 'no-show' | 'new-client' | 'vip' | 'manual'
+export type FollowUpReason =
+  | 'inactive'
+  | 'no-show'
+  | 'new-client'
+  | 'vip'
+  | 'manual'
 export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed'
 
 export interface ClientFollowUp {
@@ -231,7 +311,13 @@ export interface ClientSummary {
 
 export interface TodayAttentionItem {
   id: string
-  type: 'soon' | 'overdue' | 'no-show-risk' | 'first-time' | 'vip' | 'incomplete-client'
+  type:
+    | 'soon'
+    | 'overdue'
+    | 'no-show-risk'
+    | 'first-time'
+    | 'vip'
+    | 'incomplete-client'
   title: string
   detail: string
   appointmentId?: string

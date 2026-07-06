@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronLeft,
   FolderPlus,
-  Layers3,
   LayoutTemplate,
   Pencil,
   Plus,
@@ -27,17 +26,12 @@ import {
   SheetTitle,
 } from '@repo/ui/sheet'
 import { Spinner } from '@repo/ui/spinner'
-import type {
-  Service,
-  ServiceCategory,
-  ServiceFamily,
-} from '@repo/salon-core/types'
+import type { Service, ServiceCategory } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { CatalogPresetPicker } from '#/components/catalog-preset-picker'
 import { useImportStarterTemplatesMutation } from '#/lib/services-queries'
 import { ServiceCategoryDrawer } from './service-category-drawer'
 import { ServiceDrawer } from './service-drawer'
-import { ServiceFamilyDrawer } from './service-family-drawer'
 import { buildCatalog } from './catalog-tree'
 import type { CategoryNode } from './catalog-tree'
 import { brand } from '@repo/brand'
@@ -46,7 +40,6 @@ import { ServiceRow } from './service-row'
 interface ServiceCatalogManagerProps {
   services: Service[]
   categories: ServiceCategory[]
-  families: ServiceFamily[]
   starterImportKey?: string
   onChanged: () => void
 }
@@ -56,27 +49,20 @@ const STARTER_SERVICES_USED_KEY = brand.storage.starterServicesUsedBase
 export function ServiceCatalogManager({
   services,
   categories,
-  families,
   starterImportKey = STARTER_SERVICES_USED_KEY,
   onChanged,
 }: ServiceCatalogManagerProps) {
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false)
-  const [familyDrawerOpen, setFamilyDrawerOpen] = useState(false)
   const [serviceDrawerOpen, setServiceDrawerOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] =
     useState<ServiceCategory | null>(null)
-  const [selectedFamily, setSelectedFamily] = useState<ServiceFamily | null>(
-    null,
-  )
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [defaultCategoryId, setDefaultCategoryId] = useState<string | null>(
     null,
   )
-  const [defaultFamilyId, setDefaultFamilyId] = useState<string | null>(null)
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     {},
   )
-  const [openFamilies, setOpenFamilies] = useState<Record<string, boolean>>({})
   const [presetSheetOpen, setPresetSheetOpen] = useState(false)
   const [highlightedCategoryIds, setHighlightedCategoryIds] = useState<
     string[]
@@ -103,8 +89,8 @@ export function ServiceCatalogManager({
   const [search, setSearch] = useState('')
 
   const catalog = useMemo(
-    () => buildCatalog(categories, families, services),
-    [categories, families, services],
+    () => buildCatalog(categories, services),
+    [categories, services],
   )
   const activeServicesCount = useMemo(
     () => services.filter((service) => service.active).length,
@@ -121,50 +107,16 @@ export function ServiceCatalogManager({
           .toLocaleLowerCase('fa-IR')
           .includes(query)
 
-        const visibleFamilies = category.families
-          .map((family) => {
-            const familyMatches = family.name
-              .toLocaleLowerCase('fa-IR')
-              .includes(query)
-            const visibleServices =
-              categoryMatches || familyMatches
-                ? family.services
-                : family.services.filter((service) =>
-                    service.name.toLocaleLowerCase('fa-IR').includes(query),
-                  )
-
-            if (
-              !categoryMatches &&
-              !familyMatches &&
-              visibleServices.length === 0
-            )
-              return null
-            return { ...family, services: visibleServices }
-          })
-          .filter(
-            (
-              family,
-            ): family is ServiceFamily & {
-              services: Service[]
-            } => Boolean(family),
-          )
-
-        const visibleUngrouped = categoryMatches
-          ? category.ungroupedServices
-          : category.ungroupedServices.filter((service) =>
+        const visibleServices = categoryMatches
+          ? category.services
+          : category.services.filter((service) =>
               service.name.toLocaleLowerCase('fa-IR').includes(query),
             )
 
-        if (
-          !categoryMatches &&
-          visibleFamilies.length === 0 &&
-          visibleUngrouped.length === 0
-        )
-          return null
+        if (!categoryMatches && visibleServices.length === 0) return null
         return {
           ...category,
-          families: visibleFamilies,
-          ungroupedServices: visibleUngrouped,
+          services: visibleServices,
         }
       })
       .filter((category): category is CategoryNode => Boolean(category))
@@ -175,20 +127,11 @@ export function ServiceCatalogManager({
     setCategoryDrawerOpen(true)
   }
 
-  const addFamily = (categoryId?: string) => {
-    setSelectedFamily(null)
-    setDefaultCategoryId(
-      categoryId !== undefined ? categoryId : (categories[0]?.id ?? null),
-    )
-    setFamilyDrawerOpen(true)
-  }
-
-  const addService = (categoryId?: string, familyId?: string) => {
+  const addService = (categoryId?: string) => {
     setSelectedService(null)
     setDefaultCategoryId(
       categoryId !== undefined ? categoryId : (categories[0]?.id ?? null),
     )
-    setDefaultFamilyId(familyId ?? null)
     setServiceDrawerOpen(true)
   }
 
@@ -209,8 +152,7 @@ export function ServiceCatalogManager({
     return () => window.clearTimeout(timer)
   }, [highlightedCategoryIds])
 
-  const noCatalog =
-    categories.length === 0 && families.length === 0 && services.length === 0
+  const noCatalog = categories.length === 0 && services.length === 0
   const showStarterImport = noCatalog && !starterImportUsed
   const noSearchResults = !noCatalog && visibleCatalog.length === 0
 
@@ -228,24 +170,16 @@ export function ServiceCatalogManager({
                 لیست خدمات
               </CardTitle>
               <p className="hidden text-xs leading-5 text-muted-foreground sm:block">
-                ساختار خدمات را از بخش، گروه و خدمت مدیریت کنید.
+                ساختار خدمات را از بخش و خدمت مدیریت کنید.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-center sm:min-w-64 sm:gap-2">
+            <div className="grid grid-cols-2 gap-1.5 text-center sm:min-w-48 sm:gap-2">
               <div className="rounded-lg border border-border/50 bg-background px-1.5 py-1 sm:px-2 sm:py-2">
                 <p className="text-xs font-bold tabular-nums sm:text-sm">
                   {toPersianDigits(categories.length)}
                 </p>
                 <p className="text-[10px] leading-4 text-muted-foreground sm:text-[11px]">
                   بخش
-                </p>
-              </div>
-              <div className="rounded-lg border border-border/50 bg-background px-1.5 py-1 sm:px-2 sm:py-2">
-                <p className="text-xs font-bold tabular-nums sm:text-sm">
-                  {toPersianDigits(families.length)}
-                </p>
-                <p className="text-[10px] leading-4 text-muted-foreground sm:text-[11px]">
-                  گروه
                 </p>
               </div>
               <div className="rounded-lg border border-border/50 bg-background px-1.5 py-1 sm:px-2 sm:py-2">
@@ -258,13 +192,13 @@ export function ServiceCatalogManager({
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:gap-4">
-            <div className="relative col-span-3 sm:col-span-1">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_auto_auto] sm:gap-4">
+            <div className="relative col-span-2 sm:col-span-1">
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="جستجوی خدمت، گروه یا بخش…"
+                placeholder="جستجوی خدمت یا بخش…"
                 className="h-9 bg-blush-soft pr-9 text-sm"
               />
             </div>
@@ -276,16 +210,6 @@ export function ServiceCatalogManager({
             >
               <Plus className="h-4 w-4" />
               خدمت
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="justify-center gap-1 touch-manipulation"
-              onClick={() => addFamily()}
-              disabled={categories.length === 0}
-            >
-              <Layers3 className="h-4 w-4" />
-              گروه
             </Button>
             <Button
               size="sm"
@@ -385,11 +309,7 @@ export function ServiceCatalogManager({
           ) : (
             visibleCatalog.map((category) => {
               const categoryOpen = openCategories[category.id] ?? true
-              const categoryServiceCount =
-                category.families.reduce(
-                  (count, family) => count + family.services.length,
-                  0,
-                ) + category.ungroupedServices.length
+              const categoryServiceCount = category.services.length
               return (
                 <Collapsible
                   key={category.id}
@@ -433,7 +353,6 @@ export function ServiceCatalogManager({
                         )}
                       </div>
                       <p className="text-[11px] leading-4 text-muted-foreground sm:text-xs">
-                        {toPersianDigits(category.families.length)} گروه ·{' '}
                         {toPersianDigits(categoryServiceCount)} خدمت
                       </p>
                     </div>
@@ -453,15 +372,6 @@ export function ServiceCatalogManager({
                       size="icon-sm"
                       variant="ghost"
                       className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                      aria-label={`افزودن گروه به ${category.name}`}
-                      onClick={() => addFamily(category.id)}
-                    >
-                      <Layers3 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
                       aria-label={`افزودن خدمت به ${category.name}`}
                       onClick={() => addService(category.id)}
                     >
@@ -469,9 +379,9 @@ export function ServiceCatalogManager({
                     </Button>
                   </div>
                   <CollapsibleContent className="space-y-1.5 p-1.5 sm:space-y-2 sm:p-2">
-                    {category.ungroupedServices.length > 0 ? (
+                    {category.services.length > 0 ? (
                       <div className="space-y-1 sm:space-y-1.5">
-                        {category.ungroupedServices.map((service) => (
+                        {category.services.map((service) => (
                           <ServiceRow
                             key={service.id}
                             service={service}
@@ -483,138 +393,21 @@ export function ServiceCatalogManager({
                         ))}
                       </div>
                     ) : null}
-                    {category.families.length === 0 &&
-                    category.ungroupedServices.length === 0 ? (
+                    {category.services.length === 0 ? (
                       <div className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center sm:py-4">
                         <p className="text-xs text-muted-foreground">
                           هنوز خدمتی در این بخش نیست.
                         </p>
-                        <div className="mt-3 flex flex-col justify-center gap-2 sm:flex-row">
-                          <Button
-                            size="sm"
-                            className="gap-1 touch-manipulation"
-                            onClick={() => addService(category.id)}
-                          >
-                            <Plus className="h-4 w-4" />
-                            افزودن خدمت
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 touch-manipulation"
-                            onClick={() => addFamily(category.id)}
-                          >
-                            <Layers3 className="h-4 w-4" />
-                            ساخت گروه
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          className="mt-3 gap-1 touch-manipulation"
+                          onClick={() => addService(category.id)}
+                        >
+                          <Plus className="h-4 w-4" />
+                          افزودن خدمت
+                        </Button>
                       </div>
                     ) : null}
-                    {category.families.map((family) => {
-                      const familyOpen = openFamilies[family.id] ?? true
-                      return (
-                        <Collapsible
-                          key={family.id}
-                          open={familyOpen}
-                          onOpenChange={(open) =>
-                            setOpenFamilies((current) => ({
-                              ...current,
-                              [family.id]: open,
-                            }))
-                          }
-                          className="overflow-hidden rounded-lg border border-border/50 bg-card"
-                        >
-                          <div className="flex items-center gap-2 px-1.5 py-1.5 sm:px-2 sm:py-2">
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                                aria-label={
-                                  familyOpen ? 'بستن گروه' : 'باز کردن گروه'
-                                }
-                              >
-                                {familyOpen ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronLeft className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="truncate text-sm font-medium">
-                                  {family.name}
-                                </p>
-                                {!family.active && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px]"
-                                  >
-                                    غیرفعال
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-[11px] leading-4 text-muted-foreground sm:text-xs">
-                                {toPersianDigits(family.services.length)} خدمت
-                              </p>
-                            </div>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                              aria-label={`ویرایش گروه ${family.name}`}
-                              onClick={() => {
-                                setSelectedFamily(family)
-                                setFamilyDrawerOpen(true)
-                              }}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
-                              aria-label={`افزودن خدمت به ${family.name}`}
-                              onClick={() => addService(category.id, family.id)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <CollapsibleContent className="space-y-1 border-t border-border/40 bg-muted/20 p-1.5 sm:space-y-1.5 sm:p-2">
-                            {family.services.length === 0 ? (
-                              <div className="rounded-md border border-dashed border-border/60 bg-background px-3 py-3 text-center sm:py-4">
-                                <p className="text-xs text-muted-foreground">
-                                  خدمتی در این گروه نیست.
-                                </p>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-3 gap-1 touch-manipulation"
-                                  onClick={() =>
-                                    addService(category.id, family.id)
-                                  }
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  افزودن خدمت
-                                </Button>
-                              </div>
-                            ) : (
-                              family.services.map((service) => (
-                                <ServiceRow
-                                  key={service.id}
-                                  service={service}
-                                  onEdit={() => {
-                                    setSelectedService(service)
-                                    setServiceDrawerOpen(true)
-                                  }}
-                                />
-                              ))
-                            )}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      )
-                    })}
                   </CollapsibleContent>
                 </Collapsible>
               )
@@ -636,21 +429,6 @@ export function ServiceCatalogManager({
           onChanged()
         }}
       />
-      <ServiceFamilyDrawer
-        open={familyDrawerOpen}
-        onOpenChange={(open) => {
-          setFamilyDrawerOpen(open)
-          if (!open) setSelectedFamily(null)
-        }}
-        family={selectedFamily}
-        categories={categories}
-        defaultCategoryId={defaultCategoryId}
-        onSuccess={() => {
-          setFamilyDrawerOpen(false)
-          setSelectedFamily(null)
-          onChanged()
-        }}
-      />
       <ServiceDrawer
         open={serviceDrawerOpen}
         onOpenChange={(open) => {
@@ -658,11 +436,8 @@ export function ServiceCatalogManager({
           if (!open) setSelectedService(null)
         }}
         service={selectedService}
-        services={services}
         categories={categories}
-        families={families}
         defaultCategoryId={defaultCategoryId}
-        defaultFamilyId={defaultFamilyId}
         onSuccess={() => {
           setServiceDrawerOpen(false)
           setSelectedService(null)

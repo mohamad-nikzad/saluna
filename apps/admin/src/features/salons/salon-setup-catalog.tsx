@@ -3,11 +3,9 @@ import {
   getApiV1AdminSalonsByIdSetupCatalogQueryKey,
   patchApiV1AdminSalonsByIdSetupCatalogAddonsByEntityIdMutation,
   patchApiV1AdminSalonsByIdSetupCatalogCategoriesByEntityIdMutation,
-  patchApiV1AdminSalonsByIdSetupCatalogFamiliesByEntityIdMutation,
   patchApiV1AdminSalonsByIdSetupCatalogServicesByEntityIdMutation,
   postApiV1AdminSalonsByIdSetupCatalogAddonsMutation,
   postApiV1AdminSalonsByIdSetupCatalogCategoriesMutation,
-  postApiV1AdminSalonsByIdSetupCatalogFamiliesMutation,
   postApiV1AdminSalonsByIdSetupCatalogPresetsByPresetIdApplyMutation,
   postApiV1AdminSalonsByIdSetupCatalogServicesMutation,
 } from '@repo/api-client/query'
@@ -35,17 +33,14 @@ type Row = Record<string, unknown> & {
   name: string
   active?: boolean
 }
-type Family = Row & { categoryId: string }
-type Variant = Row & {
+type Service = Row & {
   categoryId: string
-  familyId?: string | null
   duration: number
   price: number
   color?: string
 }
 type AddonScope =
   | { type: 'category'; categoryId: string }
-  | { type: 'family'; familyId: string }
   | { type: 'service'; serviceId: string }
 type Addon = Row & {
   priceDelta: number
@@ -54,7 +49,7 @@ type Addon = Row & {
 }
 type Preset = Row & {
   tree: Array<{
-    families: Array<{ variants: unknown[] }>
+    services: unknown[]
   }>
 }
 
@@ -119,14 +114,6 @@ export function SalonSetupCatalog({
     ...patchApiV1AdminSalonsByIdSetupCatalogCategoriesByEntityIdMutation(),
     onSuccess: refresh,
   })
-  const createFamily = useMutation({
-    ...postApiV1AdminSalonsByIdSetupCatalogFamiliesMutation(),
-    onSuccess: refresh,
-  })
-  const updateFamily = useMutation({
-    ...patchApiV1AdminSalonsByIdSetupCatalogFamiliesByEntityIdMutation(),
-    onSuccess: refresh,
-  })
   const createService = useMutation({
     ...postApiV1AdminSalonsByIdSetupCatalogServicesMutation(),
     onSuccess: refresh,
@@ -155,16 +142,13 @@ export function SalonSetupCatalog({
     )
 
   const categories = (catalog.data?.categories ?? []) as Row[]
-  const families = (catalog.data?.families ?? []) as Family[]
-  const services = (catalog.data?.services ?? []) as Variant[]
+  const services = (catalog.data?.services ?? []) as Service[]
   const addons = (catalog.data?.addons ?? []) as Addon[]
   const presets = (catalog.data?.presets ?? []) as Preset[]
   const error =
     applyPreset.error ??
     createCategory.error ??
     updateCategory.error ??
-    createFamily.error ??
-    updateFamily.error ??
     createService.error ??
     updateService.error ??
     createAddon.error ??
@@ -185,13 +169,9 @@ export function SalonSetupCatalog({
                   body: {
                     selection: preset.tree.map((category, categoryIndex) => ({
                       categoryIndex,
-                      families: category.families.map(
-                        (family, familyIndex) => ({
-                          familyIndex,
-                          variantIndices: family.variants.map(
-                            (_, index) => index,
-                          ),
-                        }),
+                      serviceIndices: Array.from(
+                        { length: presetServiceCount(category) },
+                        (_, index) => index,
                       ),
                     })),
                     ...mutationMeta(overrideMode),
@@ -266,72 +246,9 @@ export function SalonSetupCatalog({
           ))}
         </CatalogSection>
 
-        <CatalogSection title="گروه‌های داخلی" count={families.length}>
-          <form
-            className="space-y-3 rounded-xl border border-dashed p-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              const form = new FormData(event.currentTarget)
-              createFamily.mutate({
-                path: { id: salonId },
-                body: {
-                  categoryId: string(form, 'categoryId'),
-                  name: string(form, 'name'),
-                  active: true,
-                  ...mutationMeta(overrideMode),
-                },
-              })
-            }}
-          >
-            <Field
-              label="گروه داخلی جدید"
-              name="name"
-              required
-              placeholder="مثلاً رنگ و لایت"
-            />
-            <CatalogSelect
-              name="categoryId"
-              label="دسته"
-              rows={categories}
-              required
-            />
-            <Button type="submit" variant="outline">
-              <Plus /> افزودن گروه داخلی
-            </Button>
-          </form>
-          {families.map((row) => (
-            <EditableRow
-              key={row.id}
-              label={row.name}
-              active={row.active}
-              extra={
-                <CatalogSelect
-                  name="categoryId"
-                  label="دسته"
-                  rows={categories}
-                  defaultValue={row.categoryId}
-                  required
-                />
-              }
-              onSubmit={(form) =>
-                updateFamily.mutate({
-                  path: { id: salonId, entityId: row.id },
-                  body: {
-                    categoryId: string(form, 'categoryId'),
-                    name: string(form, 'name'),
-                    active: form.get('active') === 'on',
-                    ...mutationMeta(overrideMode),
-                  },
-                })
-              }
-            />
-          ))}
-        </CatalogSection>
-
         <CatalogSection title="خدمات" count={services.length}>
           <ServiceForm
             categories={categories}
-            families={families}
             onSubmit={(form) =>
               createService.mutate({
                 path: { id: salonId },
@@ -344,13 +261,7 @@ export function SalonSetupCatalog({
               key={row.id}
               label={`${row.name} · ${row.duration} دقیقه · ${row.price.toLocaleString('fa-IR')}`}
               active={row.active}
-              extra={
-                <ServiceFields
-                  categories={categories}
-                  families={families}
-                  row={row}
-                />
-              }
+              extra={<ServiceFields categories={categories} row={row} />}
               onSubmit={(form) =>
                 updateService.mutate({
                   path: { id: salonId, entityId: row.id },
@@ -488,12 +399,10 @@ function CatalogSelect({
 
 function ServiceFields({
   categories,
-  families,
   row,
 }: {
   categories: Row[]
-  families: Family[]
-  row?: Variant
+  row?: Service
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -504,12 +413,6 @@ function ServiceFields({
         rows={categories}
         defaultValue={row?.categoryId}
         required
-      />
-      <CatalogSelect
-        name="familyId"
-        label="گروه داخلی (اختیاری)"
-        rows={families}
-        defaultValue={row?.familyId}
       />
       <Field
         label="مدت (دقیقه)"
@@ -539,11 +442,9 @@ function ServiceFields({
 
 function ServiceForm({
   categories,
-  families,
   onSubmit,
 }: {
   categories: Row[]
-  families: Family[]
   onSubmit: (form: FormData) => void
 }) {
   return (
@@ -554,7 +455,7 @@ function ServiceForm({
         onSubmit(new FormData(event.currentTarget))
       }}
     >
-      <ServiceFields categories={categories} families={families} />
+      <ServiceFields categories={categories} />
       <Button type="submit" variant="outline">
         <Plus /> افزودن خدمت
       </Button>
@@ -566,12 +467,10 @@ function serviceBody(form: FormData, overrideMode: boolean, isCreate = false) {
   return {
     name: string(form, 'name'),
     categoryId: string(form, 'categoryId'),
-    familyId: string(form, 'familyId') || null,
     duration: number(form, 'duration'),
     price: number(form, 'price'),
     color: string(form, 'color'),
     active: isCreate || form.get('active') !== null,
-    kind: 'standard' as const,
     ...mutationMeta(overrideMode),
   }
 }
@@ -637,4 +536,8 @@ function addonBody(
     scopes,
     ...mutationMeta(overrideMode),
   }
+}
+
+function presetServiceCount(category: Preset['tree'][number]) {
+  return Array.isArray(category.services) ? category.services.length : 0
 }

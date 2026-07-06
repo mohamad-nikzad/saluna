@@ -433,15 +433,14 @@ const adminSetupCatalogMutationMetaShape = {
 }
 
 const adminSetupCatalogScopeSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('all') }),
   z.object({ type: z.literal('category'), categoryId: z.string() }),
-  z.object({ type: z.literal('family'), familyId: z.string() }),
   z.object({ type: z.literal('service'), serviceId: z.string() }),
 ])
 
 export const adminSetupCatalogResponseSchema = z
   .object({
     categories: z.array(anyRecordSchema),
-    families: z.array(anyRecordSchema),
     services: z.array(anyRecordSchema),
     addons: z.array(anyRecordSchema),
     presets: z.array(anyRecordSchema),
@@ -453,12 +452,7 @@ export const adminSetupCatalogPresetApplyBodySchema = z
     selection: z.array(
       z.object({
         categoryIndex: z.number().int().nonnegative(),
-        families: z.array(
-          z.object({
-            familyIndex: z.number().int().nonnegative(),
-            variantIndices: z.array(z.number().int().nonnegative()),
-          }),
-        ),
+        serviceIndices: z.array(z.number().int().nonnegative()).min(1),
       }),
     ),
     ...adminSetupCatalogMutationMetaShape,
@@ -481,34 +475,14 @@ export const adminSetupCategoryUpdateBodySchema = z
   })
   .openapi('AdminSetupCategoryUpdateRequest')
 
-export const adminSetupFamilyCreateBodySchema = z
-  .object({
-    categoryId: z.string(),
-    name: z.string(),
-    active: z.boolean().optional(),
-    ...adminSetupCatalogMutationMetaShape,
-  })
-  .openapi('AdminSetupFamilyCreateRequest')
-
-export const adminSetupFamilyUpdateBodySchema = z
-  .object({
-    categoryId: z.string().optional(),
-    name: z.string().optional(),
-    active: z.boolean().optional(),
-    ...adminSetupCatalogMutationMetaShape,
-  })
-  .openapi('AdminSetupFamilyUpdateRequest')
-
 const adminSetupServiceShape = {
   name: z.string(),
   categoryId: z.string(),
-  familyId: z.string().nullable().optional(),
   duration: z.number().int().positive(),
   price: z.number().int().nonnegative(),
   color: z.string(),
   active: z.boolean().optional(),
   description: z.string().optional(),
-  kind: z.enum(['standard', 'combo']).optional(),
 }
 
 export const adminSetupServiceCreateBodySchema = z
@@ -522,13 +496,11 @@ export const adminSetupServiceUpdateBodySchema = z
   .object({
     name: z.string().optional(),
     categoryId: z.string().optional(),
-    familyId: z.string().nullable().optional(),
     duration: z.number().int().positive().optional(),
     price: z.number().int().nonnegative().optional(),
     color: z.string().optional(),
     active: z.boolean().optional(),
     description: z.string().optional(),
-    kind: z.enum(['standard', 'combo']).optional(),
     ...adminSetupCatalogMutationMetaShape,
   })
   .openapi('AdminSetupServiceUpdateRequest')
@@ -568,7 +540,6 @@ export const adminSetupAddonUpdateBodySchema = z
 export const adminSetupCatalogMutationResponseSchema = z
   .object({
     category: anyRecordSchema.optional(),
-    family: anyRecordSchema.optional(),
     service: anyRecordSchema.optional(),
     addon: anyRecordSchema.optional(),
     importedCategoryIds: z.array(z.string()).optional(),
@@ -586,12 +557,27 @@ export const adminNoteResponseSchema = z
   .object({ note: anyRecordSchema })
   .openapi('AdminNoteResponse')
 
+const adminCatalogPresetTreeSchema = z.array(
+  z.object({
+    name: z.string(),
+    services: z.array(
+      z.object({
+        name: z.string(),
+        duration: z.number().int(),
+        price: z.number(),
+        color: z.string(),
+        description: z.string().optional(),
+      }),
+    ),
+  }),
+)
+
 export const adminCatalogPresetBodySchema = z
   .object({
     slug: z.string().min(1).max(80),
     name: z.string().min(1).max(120),
     description: z.string().nullable().optional(),
-    tree: z.array(anyRecordSchema).min(1),
+    tree: adminCatalogPresetTreeSchema.min(1),
     sortOrder: z.number().int().optional(),
     isActive: z.boolean().optional(),
   })

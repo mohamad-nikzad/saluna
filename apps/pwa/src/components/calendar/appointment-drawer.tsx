@@ -6,7 +6,6 @@ import {
   FormSheetContent,
   FormSheetHeader,
   FormSheetTitle,
-  FormSheetDescription,
   FormSheetFooter,
 } from '#/components/form-sheet'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
@@ -25,6 +24,7 @@ import type {
   ServiceAddon,
   Client,
   AppointmentWithDetails,
+  ServicePackage,
 } from '@repo/salon-core/types'
 import {
   endTimeFromDuration,
@@ -60,8 +60,10 @@ import {
   LocalizedNumberInput,
   parseOptionalLocalizedInteger,
 } from '#/components/localized-number-input'
+import { PackageBookingForm } from '#/components/calendar/package-booking-form'
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120]
+type BookingMode = 'single' | 'package'
 
 interface AppointmentDrawerProps {
   open: boolean
@@ -71,10 +73,12 @@ interface AppointmentDrawerProps {
   initialStaffId?: string
   initialServiceId?: string
   initialClientId?: string
+  packages?: ServicePackage[]
   staff: User[]
   services: Service[]
   clients: Client[]
   onSuccess: (appointment: AppointmentWithDetails) => void
+  onPackageBooked?: () => void
   onClientsChanged?: () => void
 }
 
@@ -86,13 +90,16 @@ export function AppointmentDrawer({
   initialStaffId,
   initialServiceId,
   initialClientId,
+  packages = [],
   staff,
   services,
   clients,
   onSuccess,
+  onPackageBooked,
   onClientsChanged,
 }: AppointmentDrawerProps) {
   const [localClients, setLocalClients] = useState<Client[]>(clients)
+  const [mode, setMode] = useState<BookingMode>('single')
   const form = useForm<AppointmentFormInput>({
     resolver: zodResolver(appointmentFormSchema, undefined, { raw: true }),
     defaultValues: {
@@ -250,6 +257,7 @@ export function AppointmentDrawer({
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
+      setMode('single')
       resetFormForInitialSlot()
       onOpenChange(true)
       return
@@ -261,6 +269,7 @@ export function AppointmentDrawer({
 
   useEffect(() => {
     if (open && !wasOpenRef.current) {
+      setMode('single')
       resetFormForInitialSlot()
     }
     wasOpenRef.current = open
@@ -390,292 +399,359 @@ export function AppointmentDrawer({
   const durationLabel = `${toPersianDigits(durationMinutes)} دقیقه`
   const endTimeLabel = toPersianDigits(endTime)
   const priceLabel = `${tomansFormatter.format(previewPrice)} تومان`
+  const canCreatePackage = packages.length > 0 && staff.length > 0
+  const closeActiveMode = () => {
+    if (mode === 'single') requestClose(false)
+    else onOpenChange(false)
+  }
+  const tabClass = (selected: boolean) =>
+    cn(
+      'min-h-9 rounded-lg px-3 text-xs font-bold transition-colors',
+      selected
+        ? 'bg-card text-foreground shadow-sm'
+        : 'text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40',
+    )
 
   return (
     <FormSheet open={open} onOpenChange={handleOpenChange}>
-      <FormSheetContent onRequestClose={() => requestClose(false)}>
-        <FormSheetHeader className="pb-3">
-          <FormSheetTitle>نوبت جدید</FormSheetTitle>
-          <FormSheetDescription>
-            خدمت، پرسنل و زمان نوبت را انتخاب کنید.
-          </FormSheetDescription>
+      <FormSheetContent onRequestClose={closeActiveMode}>
+        <FormSheetHeader className="gap-2 pb-2">
+          <FormSheetTitle className="text-base">
+            {mode === 'single' ? 'ثبت نوبت' : 'ثبت پکیج'}
+          </FormSheetTitle>
+          <div className="rounded-xl bg-muted/70 p-0.5">
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                onClick={() => setMode('single')}
+                className={tabClass(mode === 'single')}
+                aria-pressed={mode === 'single'}
+              >
+                نوبت تکی
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('package')}
+                disabled={!canCreatePackage}
+                className={tabClass(mode === 'package')}
+                aria-pressed={mode === 'package'}
+              >
+                پکیج خدمات
+              </button>
+            </div>
+          </div>
         </FormSheetHeader>
 
-        <form
-          onSubmit={onSubmit}
-          className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-4"
-          onFocus={handleFormFocusScroll}
-        >
-          <FieldGroup className="gap-4">
-            <Field>
-              <FieldLabel>
-                مشتری <span className="text-destructive">*</span>
-              </FieldLabel>
-              <AppointmentClientField
-                checkboxId="temporary-client-mode"
-                useTemporaryClient={useTemporaryClient}
-                onTemporaryClientModeChange={handleTemporaryClientModeChange}
-                togglePlacement="below"
-                toggleVariant="subtle"
-                clients={localClients}
-                clientId={clientId ?? ''}
-                hostActive={open}
-                contactActionPlacement="beside"
-                onClientChange={(id) =>
-                  setValue('clientId', id, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                onClientCreated={handleClientCreated}
-                clientIdError={errors.clientId?.message}
-                temporaryClientName={temporaryClientName}
-                onTemporaryClientNameChange={(value) =>
-                  setValue('temporaryClientName', value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                temporaryClientNameError={errors.temporaryClientName?.message}
-                temporaryClientNotes={temporaryClientNotes}
-                onTemporaryClientNotesChange={(value) =>
-                  setValue('temporaryClientNotes', value, { shouldDirty: true })
-                }
-              />
-            </Field>
-
-            <div className="flex min-w-0 flex-col gap-4">
-              <Field>
-                <FieldLabel>
-                  خدمت <span className="text-destructive">*</span>
-                </FieldLabel>
-                <Controller
-                  control={control}
-                  name="serviceId"
-                  render={({ field }) => (
-                    <ServicePicker
-                      services={activeServices}
-                      value={field.value || undefined}
-                      onChange={handleServiceChange}
-                      onClear={clearService}
-                      getDisabledReason={serviceDisabledReason}
-                      getStatusReason={serviceStatusReason}
-                    />
-                  )}
-                />
-                {errors.serviceId && (
-                  <FieldError>{errors.serviceId.message}</FieldError>
-                )}
-              </Field>
-
-              {selectedService ? (
+        {mode === 'single' ? (
+          <>
+            <form
+              onSubmit={onSubmit}
+              className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-4"
+              onFocus={handleFormFocusScroll}
+            >
+              <FieldGroup className="gap-4">
                 <Field>
-                  <FieldLabel>افزودنی‌ها (اختیاری)</FieldLabel>
-                  {addonsLoading ? (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Spinner className="size-3.5" />
-                      در حال دریافت افزودنی‌ها...
-                    </div>
-                  ) : availableAddons.length > 0 ? (
-                    <>
-                      <div className="flex flex-wrap gap-2">
-                        {availableAddons.map((addon) => {
-                          const selected = addonIds.includes(addon.id)
-                          return (
-                            <button
-                              key={addon.id}
-                              type="button"
-                              onClick={() => toggleAddon(addon)}
-                              title={`+${toPersianDigits(addon.durationDelta)} دقیقه · +${tomansFormatter.format(addon.priceDelta)} تومان`}
-                              className={cn(
-                                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
-                                selected
-                                  ? 'border-transparent bg-primary text-primary-foreground'
-                                  : 'border-transparent bg-blush-soft text-foreground hover:bg-secondary/60',
-                              )}
-                            >
-                              {selected ? <Check className="size-3.5" /> : null}
-                              {addon.name}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        جمع پیش‌نمایش: {toPersianDigits(previewDuration)} دقیقه
-                        · {priceLabel}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      برای این خدمت افزودنی فعالی تعریف نشده است.
-                    </p>
-                  )}
-                </Field>
-              ) : null}
-
-              <Field>
-                <FieldLabel>پرسنل</FieldLabel>
-                <StaffPicker
-                  staff={staffRoleOnly}
-                  value={staffId || undefined}
-                  onChange={handleStaffChange}
-                  onClear={clearStaff}
-                  getStatus={staffPickerStatus}
-                />
-                {errors.staffId && (
-                  <FieldError>{errors.staffId.message}</FieldError>
-                )}
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="date">
-                  تاریخ <span className="text-destructive">*</span>
-                </FieldLabel>
-                <JalaliDatePicker
-                  id="date"
-                  value={date}
-                  onChange={(value) =>
-                    setValue('date', value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
-                  required
-                />
-                {errors.date && <FieldError>{errors.date.message}</FieldError>}
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="time">
-                  ساعت <span className="text-destructive">*</span>
-                </FieldLabel>
-                <TimePicker
-                  id="time"
-                  value={startTime}
-                  onChange={(st) => {
-                    setValue('startTime', st, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue(
-                      'endTime',
-                      endTimeFromDuration(st, durationMinutes),
-                      {
+                  <FieldLabel>
+                    مشتری <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <AppointmentClientField
+                    checkboxId="temporary-client-mode"
+                    useTemporaryClient={useTemporaryClient}
+                    onTemporaryClientModeChange={
+                      handleTemporaryClientModeChange
+                    }
+                    togglePlacement="below"
+                    toggleVariant="subtle"
+                    clients={localClients}
+                    clientId={clientId ?? ''}
+                    hostActive={open}
+                    contactActionPlacement="beside"
+                    onClientChange={(id) =>
+                      setValue('clientId', id, {
                         shouldDirty: true,
                         shouldValidate: true,
-                      },
-                    )
-                  }}
-                  label="ساعت شروع"
-                />
-                {errors.startTime && (
-                  <FieldError>{errors.startTime.message}</FieldError>
-                )}
-              </Field>
-            </div>
-
-            <Field>
-              <FieldLabel htmlFor="notes">یادداشت (اختیاری)</FieldLabel>
-              <Textarea
-                id="notes"
-                {...register('notes')}
-                rows={3}
-                placeholder="توضیحات اضافی درباره این نوبت…"
-              />
-            </Field>
-
-            <details className="group rounded-lg border border-transparent bg-blush-soft">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium touch-manipulation [&::-webkit-details-marker]:hidden">
-                <span>جزئیات زمان</span>
-                <span className="flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
-                  <span className="tabular-nums" dir="ltr">
-                    {endTimeLabel}
-                  </span>
-                  <span className="truncate">{durationLabel}</span>
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                      })
+                    }
+                    onClientCreated={handleClientCreated}
+                    clientIdError={errors.clientId?.message}
+                    temporaryClientName={temporaryClientName}
+                    onTemporaryClientNameChange={(value) =>
+                      setValue('temporaryClientName', value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    temporaryClientNameError={
+                      errors.temporaryClientName?.message
+                    }
+                    temporaryClientNotes={temporaryClientNotes}
+                    onTemporaryClientNotesChange={(value) =>
+                      setValue('temporaryClientNotes', value, {
+                        shouldDirty: true,
+                      })
+                    }
                   />
-                </span>
-              </summary>
-              <FieldGroup className="gap-4 border-t border-border/60 px-3 py-4">
-                <Field>
-                  <FieldLabel>مدت (دقیقه)</FieldLabel>
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {DURATION_PRESETS.map((m) => (
-                      <Button
-                        key={m}
-                        type="button"
-                        size="sm"
-                        variant={durationMinutes === m ? 'default' : 'outline'}
-                        onClick={() => applyDuration(m)}
-                      >
-                        {new Intl.NumberFormat('fa-IR').format(m)}
-                      </Button>
-                    ))}
-                  </div>
-                  <LocalizedNumberInput
-                    id="duration"
-                    value={durationInput}
-                    onValueChange={handleDurationInputChange}
-                    onBlur={() => {
-                      void trigger('durationMinutes')
-                    }}
-                  />
-                  {errors.durationMinutes && (
-                    <FieldError>{errors.durationMinutes.message}</FieldError>
-                  )}
                 </Field>
 
+                <div className="flex min-w-0 flex-col gap-4">
+                  <Field>
+                    <FieldLabel>
+                      خدمت <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <Controller
+                      control={control}
+                      name="serviceId"
+                      render={({ field }) => (
+                        <ServicePicker
+                          services={activeServices}
+                          value={field.value || undefined}
+                          onChange={handleServiceChange}
+                          onClear={clearService}
+                          getDisabledReason={serviceDisabledReason}
+                          getStatusReason={serviceStatusReason}
+                        />
+                      )}
+                    />
+                    {errors.serviceId && (
+                      <FieldError>{errors.serviceId.message}</FieldError>
+                    )}
+                  </Field>
+
+                  {selectedService ? (
+                    <Field>
+                      <FieldLabel>افزودنی‌ها (اختیاری)</FieldLabel>
+                      {addonsLoading ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Spinner className="size-3.5" />
+                          در حال دریافت افزودنی‌ها...
+                        </div>
+                      ) : availableAddons.length > 0 ? (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            {availableAddons.map((addon) => {
+                              const selected = addonIds.includes(addon.id)
+                              return (
+                                <button
+                                  key={addon.id}
+                                  type="button"
+                                  onClick={() => toggleAddon(addon)}
+                                  title={`+${toPersianDigits(addon.durationDelta)} دقیقه · +${tomansFormatter.format(addon.priceDelta)} تومان`}
+                                  className={cn(
+                                    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                                    selected
+                                      ? 'border-transparent bg-primary text-primary-foreground'
+                                      : 'border-transparent bg-blush-soft text-foreground hover:bg-secondary/60',
+                                  )}
+                                >
+                                  {selected ? (
+                                    <Check className="size-3.5" />
+                                  ) : null}
+                                  {addon.name}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            جمع پیش‌نمایش: {toPersianDigits(previewDuration)}{' '}
+                            دقیقه · {priceLabel}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          برای این خدمت افزودنی فعالی تعریف نشده است.
+                        </p>
+                      )}
+                    </Field>
+                  ) : null}
+
+                  <Field>
+                    <FieldLabel>پرسنل</FieldLabel>
+                    <StaffPicker
+                      staff={staffRoleOnly}
+                      value={staffId || undefined}
+                      onChange={handleStaffChange}
+                      onClear={clearStaff}
+                      getStatus={staffPickerStatus}
+                    />
+                    {errors.staffId && (
+                      <FieldError>{errors.staffId.message}</FieldError>
+                    )}
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="date">
+                      تاریخ <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <JalaliDatePicker
+                      id="date"
+                      value={date}
+                      onChange={(value) =>
+                        setValue('date', value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                      required
+                    />
+                    {errors.date && (
+                      <FieldError>{errors.date.message}</FieldError>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="time">
+                      ساعت <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <TimePicker
+                      id="time"
+                      value={startTime}
+                      onChange={(st) => {
+                        setValue('startTime', st, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                        setValue(
+                          'endTime',
+                          endTimeFromDuration(st, durationMinutes),
+                          {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          },
+                        )
+                      }}
+                      label="ساعت شروع"
+                    />
+                    {errors.startTime && (
+                      <FieldError>{errors.startTime.message}</FieldError>
+                    )}
+                  </Field>
+                </div>
+
                 <Field>
-                  <FieldLabel htmlFor="end-time">پایان</FieldLabel>
-                  <TimePicker
-                    id="end-time"
-                    value={endTime}
-                    onChange={applyEndTime}
-                    label="ساعت پایان"
+                  <FieldLabel htmlFor="notes">یادداشت (اختیاری)</FieldLabel>
+                  <Textarea
+                    id="notes"
+                    {...register('notes')}
+                    rows={3}
+                    placeholder="توضیحات اضافی درباره این نوبت…"
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    تغییر پایان، مدت را هم‌زمان به‌روز می‌کند.
-                  </p>
-                  {errors.endTime && (
-                    <FieldError>{errors.endTime.message}</FieldError>
-                  )}
                 </Field>
+
+                <details className="group rounded-lg border border-transparent bg-blush-soft">
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium touch-manipulation [&::-webkit-details-marker]:hidden">
+                    <span>جزئیات زمان</span>
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
+                      <span className="tabular-nums" dir="ltr">
+                        {endTimeLabel}
+                      </span>
+                      <span className="truncate">{durationLabel}</span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                      />
+                    </span>
+                  </summary>
+                  <FieldGroup className="gap-4 border-t border-border/60 px-3 py-4">
+                    <Field>
+                      <FieldLabel>مدت (دقیقه)</FieldLabel>
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        {DURATION_PRESETS.map((m) => (
+                          <Button
+                            key={m}
+                            type="button"
+                            size="sm"
+                            variant={
+                              durationMinutes === m ? 'default' : 'outline'
+                            }
+                            onClick={() => applyDuration(m)}
+                          >
+                            {new Intl.NumberFormat('fa-IR').format(m)}
+                          </Button>
+                        ))}
+                      </div>
+                      <LocalizedNumberInput
+                        id="duration"
+                        value={durationInput}
+                        onValueChange={handleDurationInputChange}
+                        onBlur={() => {
+                          void trigger('durationMinutes')
+                        }}
+                      />
+                      {errors.durationMinutes && (
+                        <FieldError>
+                          {errors.durationMinutes.message}
+                        </FieldError>
+                      )}
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="end-time">پایان</FieldLabel>
+                      <TimePicker
+                        id="end-time"
+                        value={endTime}
+                        onChange={applyEndTime}
+                        label="ساعت پایان"
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        تغییر پایان، مدت را هم‌زمان به‌روز می‌کند.
+                      </p>
+                      {errors.endTime && (
+                        <FieldError>{errors.endTime.message}</FieldError>
+                      )}
+                    </Field>
+                  </FieldGroup>
+                </details>
+
+                <FormRootError message={errors.root?.message} />
               </FieldGroup>
-            </details>
+            </form>
 
-            <FormRootError message={errors.root?.message} />
-          </FieldGroup>
-        </form>
-
-        <FormSheetFooter>
-          <Button
-            onClick={onSubmit}
-            disabled={
-              isSubmitting ||
-              !serviceId ||
-              !staffId ||
-              !selectedServiceHasStaff ||
-              !selectedStaffHasServices ||
-              !selectedStaffCanPerformSelectedService ||
-              (useTemporaryClient ? !temporaryClientName?.trim() : !clientId)
-            }
-          >
-            {isSubmitting && <Spinner className="ms-2" />}
-            {isSubmitting ? 'در حال ثبت…' : 'ثبت نوبت'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => requestClose(false)}
-            disabled={isSubmitting}
-          >
-            انصراف
-          </Button>
-        </FormSheetFooter>
+            <FormSheetFooter className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={onSubmit}
+                disabled={
+                  isSubmitting ||
+                  !serviceId ||
+                  !staffId ||
+                  !selectedServiceHasStaff ||
+                  !selectedStaffHasServices ||
+                  !selectedStaffCanPerformSelectedService ||
+                  (useTemporaryClient
+                    ? !temporaryClientName?.trim()
+                    : !clientId)
+                }
+              >
+                {isSubmitting && <Spinner className="ms-2" />}
+                {isSubmitting ? 'در حال ثبت…' : 'ثبت نوبت'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeActiveMode}
+                disabled={isSubmitting}
+              >
+                انصراف
+              </Button>
+            </FormSheetFooter>
+          </>
+        ) : (
+          <PackageBookingForm
+            active={open && mode === 'package'}
+            initialDate={initialDate}
+            initialTime={initialTime}
+            packages={packages}
+            staff={staff}
+            clients={clients}
+            onSuccess={() => {
+              onPackageBooked?.()
+              onOpenChange(false)
+            }}
+            onCancel={closeActiveMode}
+            onClientsChanged={onClientsChanged}
+          />
+        )}
       </FormSheetContent>
       {confirmDialog}
     </FormSheet>

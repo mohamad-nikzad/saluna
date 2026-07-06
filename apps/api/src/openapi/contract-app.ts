@@ -18,23 +18,24 @@ import {
   updateServiceCategoryRoute,
 } from './routes/service-categories'
 import {
-  createServiceFamilyRoute,
-  listServiceFamiliesRoute,
-  updateServiceFamilyRoute,
-} from './routes/service-families'
-import {
   createServiceAddonRoute,
   listServiceAddonsRoute,
   updateServiceAddonRoute,
 } from './routes/service-addons'
 import {
+  createServicePackageRoute,
+  createServicePackageBookingRoute,
+  getServicePackageRoute,
+  listServicePackagesRoute,
+  updateServicePackageComponentsRoute,
+  updateServicePackageRoute,
+} from './routes/service-packages'
+import {
   createServiceRoute,
-  getComboComponentsRoute,
   getServiceAddonsRoute,
   getServiceRoute,
   importStarterTemplatesRoute,
   listServicesRoute,
-  updateComboComponentsRoute,
   updateServiceRoute,
 } from './routes/services'
 import {
@@ -127,7 +128,6 @@ import {
   createAdminCatalogPresetRoute,
   createAdminSetupAddonRoute,
   createAdminSetupCategoryRoute,
-  createAdminSetupFamilyRoute,
   createAdminSetupServiceRoute,
   createAdminSetupStaffRoute,
   createAdminSetupClientRoute,
@@ -170,7 +170,6 @@ import {
   updateAdminSetupOwnerPhoneRoute,
   updateAdminSetupAddonRoute,
   updateAdminSetupCategoryRoute,
-  updateAdminSetupFamilyRoute,
   updateAdminSetupServiceRoute,
   updatePlatformAdminRoute,
 } from './routes/admin'
@@ -292,7 +291,6 @@ const stubService = {
   name: 'stub',
   category: 'hair' as const,
   categoryId: 'stub',
-  familyId: null,
   duration: 45,
   price: 0,
   color: 'plum',
@@ -301,15 +299,6 @@ const stubService = {
 
 const stubServiceCategory = {
   id: 'stub',
-  name: 'stub',
-  active: true,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-}
-
-const stubServiceFamily = {
-  id: 'stub',
-  categoryId: 'stub',
   name: 'stub',
   active: true,
   createdAt: new Date().toISOString(),
@@ -329,11 +318,40 @@ const stubServiceAddon = {
   updatedAt: new Date().toISOString(),
 }
 
-const stubComboComponents = {
-  comboServiceId: 'stub',
+const stubServicePackage = {
+  id: 'stub',
+  salonId: 'stub',
+  categoryId: null,
+  categoryName: null,
+  name: 'stub',
+  description: null,
+  color: null,
+  active: true,
+  priceOverride: null,
+  sortOrder: 0,
   components: [],
   totalDuration: 0,
-  totalPrice: 0,
+  componentPriceTotal: 0,
+  resolvedPrice: 0,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+}
+
+const stubServicePackageBooking = {
+  id: 'stub',
+  salonId: 'stub',
+  packageId: 'stub',
+  clientId: 'stub',
+  leadStaffId: 'stub',
+  date: '2026-07-02',
+  bookedPackageName: 'stub',
+  bookedPackagePrice: 0,
+  status: 'scheduled',
+  notes: null,
+  createdByUserId: 'stub',
+  tasks: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 }
 
 const stubCatalogPreset = {
@@ -344,17 +362,12 @@ const stubCatalogPreset = {
   tree: [
     {
       name: 'stub',
-      families: [
+      services: [
         {
           name: 'stub',
-          variants: [
-            {
-              name: 'stub',
-              duration: 45,
-              price: 0,
-              color: 'plum',
-            },
-          ],
+          duration: 45,
+          price: 0,
+          color: 'plum',
         },
       ],
     },
@@ -372,7 +385,7 @@ const createServiceStub: RouteHandler<typeof createServiceRoute> = (c) =>
 
 const importStarterTemplatesStub: RouteHandler<
   typeof importStarterTemplatesRoute
-> = (c) => c.json({ categories: [], families: [], services: [] }, 200)
+> = (c) => c.json({ categories: [], services: [] }, 200)
 
 const getServiceStub: RouteHandler<typeof getServiceRoute> = (c) =>
   c.json({ service: stubService }, 200)
@@ -382,14 +395,6 @@ const updateServiceStub: RouteHandler<typeof updateServiceRoute> = (c) =>
 
 const getServiceAddonsStub: RouteHandler<typeof getServiceAddonsRoute> = (c) =>
   c.json({ addons: [] }, 200)
-
-const getComboComponentsStub: RouteHandler<typeof getComboComponentsRoute> = (
-  c,
-) => c.json({ combo: stubComboComponents }, 200)
-
-const updateComboComponentsStub: RouteHandler<
-  typeof updateComboComponentsRoute
-> = (c) => c.json({ combo: stubComboComponents }, 200)
 
 const listServiceCategoriesStub: RouteHandler<
   typeof listServiceCategoriesRoute
@@ -403,18 +408,6 @@ const updateServiceCategoryStub: RouteHandler<
   typeof updateServiceCategoryRoute
 > = (c) => c.json({ category: stubServiceCategory }, 200)
 
-const listServiceFamiliesStub: RouteHandler<typeof listServiceFamiliesRoute> = (
-  c,
-) => c.json({ families: [] }, 200)
-
-const createServiceFamilyStub: RouteHandler<typeof createServiceFamilyRoute> = (
-  c,
-) => c.json({ family: stubServiceFamily }, 200)
-
-const updateServiceFamilyStub: RouteHandler<typeof updateServiceFamilyRoute> = (
-  c,
-) => c.json({ family: stubServiceFamily }, 200)
-
 const listServiceAddonsStub: RouteHandler<typeof listServiceAddonsRoute> = (
   c,
 ) => c.json({ addons: [] }, 200)
@@ -426,6 +419,30 @@ const createServiceAddonStub: RouteHandler<typeof createServiceAddonRoute> = (
 const updateServiceAddonStub: RouteHandler<typeof updateServiceAddonRoute> = (
   c,
 ) => c.json({ addon: stubServiceAddon }, 200)
+
+const listServicePackagesStub: RouteHandler<typeof listServicePackagesRoute> = (
+  c,
+) => c.json({ packages: [] }, 200)
+
+const createServicePackageStub: RouteHandler<
+  typeof createServicePackageRoute
+> = (c) => c.json({ package: stubServicePackage }, 200)
+
+const createServicePackageBookingStub: RouteHandler<
+  typeof createServicePackageBookingRoute
+> = (c) => c.json({ booking: stubServicePackageBooking }, 200)
+
+const getServicePackageStub: RouteHandler<typeof getServicePackageRoute> = (
+  c,
+) => c.json({ package: stubServicePackage }, 200)
+
+const updateServicePackageStub: RouteHandler<
+  typeof updateServicePackageRoute
+> = (c) => c.json({ package: stubServicePackage }, 200)
+
+const updateServicePackageComponentsStub: RouteHandler<
+  typeof updateServicePackageComponentsRoute
+> = (c) => c.json({ package: stubServicePackage }, 200)
 
 const listCatalogPresetsStub: RouteHandler<typeof listCatalogPresetsRoute> = (
   c,
@@ -558,10 +575,7 @@ const updateAdminSetupSalonPresenceStub: RouteHandler<
 const getAdminSetupCatalogStub: RouteHandler<
   typeof getAdminSetupCatalogRoute
 > = (c) =>
-  c.json(
-    { categories: [], families: [], services: [], addons: [], presets: [] },
-    200,
-  )
+  c.json({ categories: [], services: [], addons: [], presets: [] }, 200)
 
 const setupCatalogMutationStub = (c: any) => c.json({}, 200)
 
@@ -1211,8 +1225,6 @@ export const contractApp = new OpenAPIHono()
       .openapi(applyAdminSetupCatalogPresetRoute, setupCatalogMutationStub)
       .openapi(createAdminSetupCategoryRoute, setupCatalogMutationStub)
       .openapi(updateAdminSetupCategoryRoute, setupCatalogMutationStub)
-      .openapi(createAdminSetupFamilyRoute, setupCatalogMutationStub)
-      .openapi(updateAdminSetupFamilyRoute, setupCatalogMutationStub)
       .openapi(createAdminSetupServiceRoute, setupCatalogMutationStub)
       .openapi(updateAdminSetupServiceRoute, setupCatalogMutationStub)
       .openapi(createAdminSetupAddonRoute, setupCatalogMutationStub)
@@ -1288,9 +1300,7 @@ export const contractApp = new OpenAPIHono()
       .openapi(importStarterTemplatesRoute, importStarterTemplatesStub)
       .openapi(getServiceRoute, getServiceStub)
       .openapi(updateServiceRoute, updateServiceStub)
-      .openapi(getServiceAddonsRoute, getServiceAddonsStub)
-      .openapi(getComboComponentsRoute, getComboComponentsStub)
-      .openapi(updateComboComponentsRoute, updateComboComponentsStub),
+      .openapi(getServiceAddonsRoute, getServiceAddonsStub),
   )
   .route(
     '/api/v1/service-categories',
@@ -1300,18 +1310,27 @@ export const contractApp = new OpenAPIHono()
       .openapi(updateServiceCategoryRoute, updateServiceCategoryStub),
   )
   .route(
-    '/api/v1/service-families',
-    new OpenAPIHono()
-      .openapi(listServiceFamiliesRoute, listServiceFamiliesStub)
-      .openapi(createServiceFamilyRoute, createServiceFamilyStub)
-      .openapi(updateServiceFamilyRoute, updateServiceFamilyStub),
-  )
-  .route(
     '/api/v1/service-addons',
     new OpenAPIHono()
       .openapi(listServiceAddonsRoute, listServiceAddonsStub)
       .openapi(createServiceAddonRoute, createServiceAddonStub)
       .openapi(updateServiceAddonRoute, updateServiceAddonStub),
+  )
+  .route(
+    '/api/v1/service-packages',
+    new OpenAPIHono()
+      .openapi(listServicePackagesRoute, listServicePackagesStub)
+      .openapi(createServicePackageRoute, createServicePackageStub)
+      .openapi(
+        createServicePackageBookingRoute,
+        createServicePackageBookingStub,
+      )
+      .openapi(getServicePackageRoute, getServicePackageStub)
+      .openapi(updateServicePackageRoute, updateServicePackageStub)
+      .openapi(
+        updateServicePackageComponentsRoute,
+        updateServicePackageComponentsStub,
+      ),
   )
   .route(
     '/api/v1/catalog-presets',
@@ -1473,15 +1492,11 @@ export const openApiDocumentConfig = {
     },
     {
       name: 'Services',
-      description: 'Salon services, combo packages, and starter imports',
+      description: 'Salon services and starter imports',
     },
     {
       name: 'Service categories',
       description: 'Top-level service catalog sections',
-    },
-    {
-      name: 'Service families',
-      description: 'Grouped services within a category',
     },
     { name: 'Service addons', description: 'Optional booking add-ons' },
     { name: 'Catalog presets', description: 'Starter catalog templates' },

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   serviceAddonFormSchema,
+  serviceAddonScopeInputSchema,
   serviceFormSchema,
+  servicePackageBookingCreateSchema,
   serviceUpdateSchema,
 } from './service'
 
@@ -21,13 +23,11 @@ describe('serviceFormSchema', () => {
     expect(result).toEqual({
       name: 'کوتاهی مو',
       categoryId: 'cat1',
-      familyId: undefined,
       category: 'hair',
       duration: 60,
       price: 250000,
       color: 'mint',
       active: true,
-      kind: 'standard',
     })
   })
 
@@ -154,27 +154,72 @@ describe('serviceAddonFormSchema', () => {
       }).success,
     ).toBe(false)
   })
+
+  it('accepts simplified all/category/service scopes and rejects family scopes', () => {
+    expect(serviceAddonScopeInputSchema.parse({ type: 'all' })).toEqual({
+      type: 'all',
+    })
+    expect(
+      serviceAddonScopeInputSchema.parse({
+        type: 'category',
+        categoryId: 'cat-1',
+      }),
+    ).toEqual({ type: 'category', categoryId: 'cat-1' })
+    expect(
+      serviceAddonScopeInputSchema.parse({
+        type: 'service',
+        serviceId: 'svc-1',
+      }),
+    ).toEqual({ type: 'service', serviceId: 'svc-1' })
+    expect(
+      serviceAddonScopeInputSchema.safeParse({
+        type: 'family',
+        familyId: 'fam-1',
+      }).success,
+    ).toBe(false)
+  })
 })
 
-describe('serviceUpdateSchema familyId null semantics', () => {
-  it('omits familyId when absent from payload', () => {
-    const result = serviceUpdateSchema.parse({ name: 'x' })
-    expect(result.familyId).toBeUndefined()
-    expect('familyId' in result).toBe(false)
-  })
+describe('serviceUpdateSchema legacy catalog field handling', () => {
+  it('strips familyId and kind from update payloads', () => {
+    const result = serviceUpdateSchema.parse({
+      name: 'x',
+      familyId: null,
+      kind: 'combo',
+    })
 
-  it('preserves familyId: null to signal "clear the family"', () => {
-    const result = serviceUpdateSchema.parse({ familyId: null })
-    expect(result.familyId).toBeNull()
+    expect(result).toEqual({ name: 'x' })
   })
+})
 
-  it('treats empty string familyId as null (clear)', () => {
-    const result = serviceUpdateSchema.parse({ familyId: '   ' })
-    expect(result.familyId).toBeNull()
-  })
+describe('servicePackageBookingCreateSchema', () => {
+  const booking = {
+    clientId: 'client-1',
+    date: '2026-07-02',
+    tasks: [
+      {
+        packageComponentId: 'component-1',
+        staffId: 'staff-1',
+        startTime: '10:00',
+        endTime: '11:00',
+      },
+    ],
+  }
 
-  it('keeps a real familyId string', () => {
-    const result = serviceUpdateSchema.parse({ familyId: 'fam-123' })
-    expect(result.familyId).toBe('fam-123')
+  it('requires packageComponentId for each task', () => {
+    expect(servicePackageBookingCreateSchema.parse(booking)).toEqual(booking)
+    expect(
+      servicePackageBookingCreateSchema.safeParse({
+        ...booking,
+        tasks: [
+          {
+            componentOrder: 0,
+            staffId: 'staff-1',
+            startTime: '10:00',
+            endTime: '11:00',
+          },
+        ],
+      }).success,
+    ).toBe(false)
   })
 })

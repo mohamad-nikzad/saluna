@@ -1,8 +1,10 @@
 import { createRoute } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
 import {
-  comboComponentsResponseSchema,
-  comboComponentsUpdateBodySchema,
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
+import {
   importStarterTemplatesResponseSchema,
   includeInactiveQuerySchema,
   serviceCreateBodySchema,
@@ -156,54 +158,5 @@ export const getServiceAddonsRoute = createRoute({
     },
     401: unauthorizedResponse,
     403: forbiddenResponse,
-  },
-})
-
-export const getComboComponentsRoute = createRoute({
-  method: 'get',
-  path: '/{id}/combo-components',
-  tags: ['Services'],
-  summary: 'Get combo service components',
-  security: tenantSecurity,
-  request: { params: idParamSchema },
-  responses: {
-    200: {
-      description: 'Combo components summary',
-      content: {
-        'application/json': { schema: comboComponentsResponseSchema },
-      },
-    },
-    401: unauthorizedResponse,
-    403: forbiddenResponse,
-    404: notFoundResponse,
-  },
-})
-
-export const updateComboComponentsRoute = createRoute({
-  method: 'put',
-  path: '/{id}/combo-components',
-  tags: ['Services'],
-  summary: 'Replace combo service components',
-  security: tenantSecurity,
-  request: {
-    params: idParamSchema,
-    body: {
-      required: true,
-      content: {
-        'application/json': { schema: comboComponentsUpdateBodySchema },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: 'Updated combo components',
-      content: {
-        'application/json': { schema: comboComponentsResponseSchema },
-      },
-    },
-    400: validationErrorResponse,
-    401: unauthorizedResponse,
-    403: forbiddenResponse,
-    404: notFoundResponse,
   },
 })

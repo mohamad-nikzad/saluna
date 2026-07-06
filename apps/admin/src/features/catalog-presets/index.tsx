@@ -7,7 +7,7 @@ import {
 import type { AdminCatalogPresetCreateRequest } from '@repo/api-client/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { CopyPlus, FolderTree, Pencil, Plus, Save, Trash2 } from 'lucide-react'
+import { FolderTree, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { useMemo, useState, useId, type FormEvent, type ReactNode } from 'react'
 
 import { AdminListTable } from '#/components/admin/admin-list-table'
@@ -44,22 +44,17 @@ import { cn } from '#/lib/utils'
 
 type RecordRow = Record<string, unknown>
 
-type PresetVariant = {
+type PresetService = {
   name: string
   duration: number
   price: number
   color: string
-  description?: string | null
-}
-
-type PresetFamily = {
-  name: string
-  variants: PresetVariant[]
+  description?: string | undefined
 }
 
 type PresetCategory = {
   name: string
-  families: PresetFamily[]
+  services: PresetService[]
 }
 
 type CatalogPresetTree = PresetCategory[]
@@ -74,22 +69,16 @@ type CatalogPresetRow = RecordRow & {
   isActive?: boolean
 }
 
-const defaultVariant = (): PresetVariant => ({
+const defaultService = (): PresetService => ({
   name: '',
   duration: 30,
   price: 0,
   color: 'teal',
-  description: null,
-})
-
-const defaultFamily = (): PresetFamily => ({
-  name: '',
-  variants: [defaultVariant()],
 })
 
 const defaultCategory = (): PresetCategory => ({
   name: '',
-  families: [defaultFamily()],
+  services: [defaultService()],
 })
 
 const defaultTree = (): CatalogPresetTree => [defaultCategory()]
@@ -278,7 +267,7 @@ function CatalogPresetForm({
       slug: String(form.get('slug') ?? ''),
       name: String(form.get('name') ?? ''),
       description: String(form.get('description') || '') || null,
-      tree,
+      tree: toRequestTree(tree),
       sortOrder: Number(form.get('sortOrder') ?? 0),
       isActive: form.get('isActive') === 'on',
     })
@@ -396,11 +385,11 @@ function CategoryEditor({
 }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
 
-  function updateFamily(index: number, next: PresetFamily) {
+  function updateService(index: number, next: PresetService) {
     onChange({
       ...category,
-      families: category.families.map((family, i) =>
-        i === index ? next : family,
+      services: category.services.map((service, i) =>
+        i === index ? next : service,
       ),
     })
   }
@@ -430,17 +419,17 @@ function CategoryEditor({
           onOpenChange={setConfirmRemove}
         />
         <div className="flex flex-col gap-3 ps-0 md:ps-4">
-          {category.families.map((family, familyIndex) => (
-            <FamilyEditor
-              key={familyIndex}
-              family={family}
-              canRemove={category.families.length > 1}
-              onChange={(next) => updateFamily(familyIndex, next)}
+          {category.services.map((service, serviceIndex) => (
+            <ServiceEditor
+              key={serviceIndex}
+              service={service}
+              canRemove={category.services.length > 1}
+              onChange={(next) => updateService(serviceIndex, next)}
               onRemove={() =>
                 onChange({
                   ...category,
-                  families: category.families.filter(
-                    (_, index) => index !== familyIndex,
+                  services: category.services.filter(
+                    (_, index) => index !== serviceIndex,
                   ),
                 })
               }
@@ -453,94 +442,11 @@ function CategoryEditor({
             onClick={() =>
               onChange({
                 ...category,
-                families: [...category.families, defaultFamily()],
+                services: [...category.services, defaultService()],
               })
             }
           >
             <Plus className="h-4 w-4" />
-            گروه داخلی
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function FamilyEditor({
-  family,
-  canRemove,
-  onChange,
-  onRemove,
-}: {
-  family: PresetFamily
-  canRemove: boolean
-  onChange: (family: PresetFamily) => void
-  onRemove: () => void
-}) {
-  const [confirmRemove, setConfirmRemove] = useState(false)
-
-  function updateVariant(index: number, next: PresetVariant) {
-    onChange({
-      ...family,
-      variants: family.variants.map((variant, i) =>
-        i === index ? next : variant,
-      ),
-    })
-  }
-
-  return (
-    <Card className="bg-background/45">
-      <CardContent className="flex flex-col gap-3 p-3">
-        <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <LabeledInput
-            label="گروه داخلی"
-            value={family.name}
-            required
-            onChange={(name) => onChange({ ...family, name })}
-          />
-          <IconAction
-            label="حذف گروه داخلی"
-            disabled={!canRemove}
-            onClick={() => setConfirmRemove(true)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </IconAction>
-        </div>
-        <RemoveConfirmationDialog
-          open={confirmRemove}
-          message="این گروه داخلی و همه خدمات تو در تو حذف شوند؟"
-          onConfirm={onRemove}
-          onOpenChange={setConfirmRemove}
-        />
-        <div className="flex flex-col gap-2">
-          {family.variants.map((variant, variantIndex) => (
-            <VariantEditor
-              key={variantIndex}
-              variant={variant}
-              canRemove={family.variants.length > 1}
-              onChange={(next) => updateVariant(variantIndex, next)}
-              onRemove={() =>
-                onChange({
-                  ...family,
-                  variants: family.variants.filter(
-                    (_, index) => index !== variantIndex,
-                  ),
-                })
-              }
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              onChange({
-                ...family,
-                variants: [...family.variants, defaultVariant()],
-              })
-            }
-          >
-            <CopyPlus className="h-4 w-4" />
             خدمت
           </Button>
         </div>
@@ -549,15 +455,15 @@ function FamilyEditor({
   )
 }
 
-function VariantEditor({
-  variant,
+function ServiceEditor({
+  service,
   canRemove,
   onChange,
   onRemove,
 }: {
-  variant: PresetVariant
+  service: PresetService
   canRemove: boolean
-  onChange: (variant: PresetVariant) => void
+  onChange: (service: PresetService) => void
   onRemove: () => void
 }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -566,39 +472,39 @@ function VariantEditor({
     <div className="grid gap-2 rounded-md border border-border/70 bg-card px-3 py-2 md:grid-cols-[1.2fr_100px_120px_120px_1fr_auto]">
       <LabeledInput
         label="خدمت"
-        value={variant.name}
+        value={service.name}
         required
-        onChange={(name) => onChange({ ...variant, name })}
+        onChange={(name) => onChange({ ...service, name })}
       />
       <LabeledInput
         label="دقیقه"
         type="number"
-        value={String(variant.duration)}
+        value={String(service.duration)}
         required
         onChange={(duration) =>
-          onChange({ ...variant, duration: Number(duration) || 0 })
+          onChange({ ...service, duration: Number(duration) || 0 })
         }
       />
       <LabeledInput
         label="قیمت"
         type="number"
-        value={String(variant.price)}
+        value={String(service.price)}
         required
         onChange={(price) =>
-          onChange({ ...variant, price: Number(price) || 0 })
+          onChange({ ...service, price: Number(price) || 0 })
         }
       />
       <LabeledInput
         label="رنگ"
-        value={variant.color}
+        value={service.color}
         required
-        onChange={(color) => onChange({ ...variant, color })}
+        onChange={(color) => onChange({ ...service, color })}
       />
       <LabeledInput
         label="توضیحات خدمت"
-        value={variant.description ?? ''}
+        value={service.description ?? ''}
         onChange={(description) =>
-          onChange({ ...variant, description: description || null })
+          onChange({ ...service, description: description || undefined })
         }
       />
       <IconAction
@@ -662,27 +568,15 @@ function RemoveConfirmationDialog({
 
 function TreeSummary({ tree }: { tree: unknown }) {
   const normalized = normalizeTree(tree)
-  const familyCount = normalized.reduce(
-    (total, category) => total + category.families.length,
-    0,
-  )
-  const variantCount = normalized.reduce(
-    (total, category) =>
-      total +
-      category.families.reduce(
-        (familyTotal, family) => familyTotal + family.variants.length,
-        0,
-      ),
+  const serviceCount = normalized.reduce(
+    (total, category) => total + category.services.length,
     0,
   )
 
   return (
     <div className="flex flex-wrap gap-1.5">
       <Badge variant="outline">{normalized.length} دسته</Badge>
-      {familyCount > 0 ? (
-        <Badge variant="outline">{familyCount} گروه داخلی</Badge>
-      ) : null}
-      <Badge variant="outline">{variantCount} خدمت</Badge>
+      <Badge variant="outline">{serviceCount} خدمت</Badge>
     </div>
   )
 }
@@ -755,39 +649,56 @@ function normalizeTree(value: unknown): CatalogPresetTree {
 
 function normalizeCategory(value: unknown): PresetCategory | null {
   if (!isRecord(value)) return null
-  const familiesValue = value.families
-  const families = Array.isArray(familiesValue)
-    ? familiesValue.map((family) => normalizeFamily(family)).filter(isPresent)
-    : []
-  return {
-    name: text(value.name),
-    families: families.length > 0 ? families : [defaultFamily()],
-  }
-}
-
-function normalizeFamily(value: unknown): PresetFamily | null {
-  if (!isRecord(value)) return null
-  const variantsValue = value.variants
-  const variants = Array.isArray(variantsValue)
-    ? variantsValue
-        .map((variant) => normalizeVariant(variant))
+  const servicesValue = value.services
+  const services = Array.isArray(servicesValue)
+    ? servicesValue
+        .map((service) => normalizeService(service))
         .filter(isPresent)
-    : []
+    : normalizeLegacyServices(value.families)
   return {
     name: text(value.name),
-    variants: variants.length > 0 ? variants : [defaultVariant()],
+    services: services.length > 0 ? services : [defaultService()],
   }
 }
 
-function normalizeVariant(value: unknown): PresetVariant | null {
+function normalizeService(value: unknown): PresetService | null {
   if (!isRecord(value)) return null
+  const description = text(value.description)
   return {
     name: text(value.name),
     duration: number(value.duration) || 30,
     price: number(value.price),
     color: text(value.color) || 'teal',
-    description: text(value.description) || null,
+    ...(description ? { description } : {}),
   }
+}
+
+function normalizeLegacyServices(value: unknown): PresetService[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((family) => {
+    if (!isRecord(family) || !Array.isArray(family.variants)) return []
+    return family.variants
+      .map((variant) => normalizeService(variant))
+      .filter(isPresent)
+  })
+}
+
+function toRequestTree(
+  tree: CatalogPresetTree,
+): AdminCatalogPresetCreateRequest['tree'] {
+  return tree.map((category) => ({
+    name: category.name,
+    services: category.services.map((service) => {
+      const description = service.description?.trim()
+      return {
+        name: service.name,
+        duration: service.duration,
+        price: service.price,
+        color: service.color,
+        ...(description ? { description } : {}),
+      }
+    }),
+  }))
 }
 
 function isRecord(value: unknown): value is RecordRow {

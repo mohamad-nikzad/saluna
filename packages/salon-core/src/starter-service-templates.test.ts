@@ -12,11 +12,8 @@ describe('PERSIAN_STARTER_SERVICE_TEMPLATES', () => {
     const nails = PERSIAN_STARTER_SERVICE_TEMPLATES.find(
       (template) => template.category === 'ناخن',
     )
-    const nailBuild = nails?.families.find(
-      (family) => family.name === 'کاشت و ترمیم',
-    )
 
-    expect(nailBuild?.services).toEqual(
+    expect(nails?.services).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           name: 'کاشت پودری',
@@ -27,26 +24,28 @@ describe('PERSIAN_STARTER_SERVICE_TEMPLATES', () => {
     )
   })
 
-  it('uses stable unique category, family, and service names for idempotent imports', () => {
+  it('uses stable unique category and service names for idempotent imports', () => {
     const categories = new Set<string>()
-    const familyPaths = new Set<string>()
     const serviceNames = new Set<string>()
 
     for (const category of PERSIAN_STARTER_SERVICE_TEMPLATES) {
       expect(categories.has(category.category)).toBe(false)
       categories.add(category.category)
 
-      for (const family of category.families) {
-        const familyPath = `${category.category}/${family.name}`
-        expect(familyPaths.has(familyPath)).toBe(false)
-        familyPaths.add(familyPath)
+      for (const service of category.services) {
+        expect(serviceNames.has(service.name)).toBe(false)
+        serviceNames.add(service.name)
+        expect(service.duration).toBeGreaterThan(0)
+        expect(service.price).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
 
-        for (const service of family.services) {
-          expect(serviceNames.has(service.name)).toBe(false)
-          serviceNames.add(service.name)
-          expect(service.duration).toBeGreaterThan(0)
-          expect(service.price).toBeGreaterThanOrEqual(0)
-        }
+  it('does not define starter combo or package services', () => {
+    for (const category of PERSIAN_STARTER_SERVICE_TEMPLATES) {
+      for (const service of category.services) {
+        expect(service).not.toHaveProperty('kind')
+        expect(service.name).not.toContain('پکیج')
       }
     }
   })

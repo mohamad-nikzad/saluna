@@ -7,6 +7,7 @@ import { Skeleton } from '@repo/ui/skeleton'
 import { brand } from '@repo/brand'
 import { ServiceAddonManager } from '#/components/services/service-addon-manager'
 import { ServiceCatalogManager } from '#/components/services/service-catalog-manager'
+import { ServicePackageManager } from '#/components/services/service-package-manager'
 import { useAuth } from '#/lib/auth'
 import { serviceCatalogQueryOptions } from '#/lib/services-queries'
 
@@ -60,7 +61,6 @@ function ServicesPage() {
     enabled: user?.role === 'manager',
   })
   const categories = catalogQuery.data?.categories ?? []
-  const families = catalogQuery.data?.families ?? []
   const services = catalogQuery.data?.services ?? []
 
   const refreshCatalog = () => {
@@ -85,7 +85,7 @@ function ServicesPage() {
         <div className="min-w-0">
           <h1 className="truncate text-base font-bold sm:text-lg">خدمات</h1>
           <p className="hidden truncate text-xs text-muted-foreground sm:block">
-            بخش‌ها، گروه‌ها، قیمت و مدت زمان
+            بخش‌ها، خدمات، افزودنی‌ها و پکیج‌ها
           </p>
         </div>
       </header>
@@ -94,13 +94,16 @@ function ServicesPage() {
         <ServiceAddonManager
           services={services}
           categories={categories}
-          families={families}
+          onChanged={refreshCatalog}
+        />
+        <ServicePackageManager
+          services={services}
+          categories={categories}
           onChanged={refreshCatalog}
         />
         <ServiceCatalogManager
           services={services}
           categories={categories}
-          families={families}
           starterImportKey={brand.storage.starterServicesUsed(user.salonId)}
           onChanged={refreshCatalog}
         />

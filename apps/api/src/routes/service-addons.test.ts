@@ -13,7 +13,8 @@ vi.mock('@repo/database/services', () => ({
 }))
 
 vi.mock('@repo/database/clients', () => ({
-  isClientProvidedEntityId: (id: string | undefined) => typeof id === 'string' && id.length > 0,
+  isClientProvidedEntityId: (id: string | undefined) =>
+    typeof id === 'string' && id.length > 0,
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -56,8 +57,19 @@ const validCreate = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('service-addons router', () => {
@@ -67,7 +79,13 @@ describe('service-addons router', () => {
   })
 
   it('staff sees active-only with all=1', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(db.getAllServiceAddons).mockResolvedValue([] as never)
     await app.request('/api/v1/service-addons?all=1', { headers: authHeaders })
     expect(db.getAllServiceAddons).toHaveBeenCalledWith('s1', false)
@@ -75,14 +93,22 @@ describe('service-addons router', () => {
 
   it('manager includes inactive with all=1', async () => {
     vi.mocked(db.getAllServiceAddons).mockResolvedValue([{ id: 'a1' }] as never)
-    const res = await app.request('/api/v1/service-addons?all=1', { headers: authHeaders })
+    const res = await app.request('/api/v1/service-addons?all=1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ addons: [{ id: 'a1' }] })
     expect(db.getAllServiceAddons).toHaveBeenCalledWith('s1', true)
   })
 
   it('staff is 403 on POST', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/service-addons', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -95,7 +121,12 @@ describe('service-addons router', () => {
     const res = await app.request('/api/v1/service-addons', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Zero', priceDelta: 0, durationDelta: 0, scopes: [] }),
+      body: JSON.stringify({
+        name: 'Zero',
+        priceDelta: 0,
+        durationDelta: 0,
+        scopes: [],
+      }),
     })
     expect(res.status).toBe(400)
   })
@@ -109,6 +140,40 @@ describe('service-addons router', () => {
     })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ addon: { id: 'a1' } })
+  })
+
+  it('accepts all, category, and service scopes on create', async () => {
+    vi.mocked(db.createServiceAddon).mockResolvedValue({ id: 'a1' } as never)
+    const scopes = [
+      { type: 'all' },
+      { type: 'category', categoryId: 'cat1' },
+      { type: 'service', serviceId: 'svc1' },
+    ]
+
+    const res = await app.request('/api/v1/service-addons', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...validCreate, scopes }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.createServiceAddon).toHaveBeenCalledWith(
+      expect.objectContaining({ salonId: 's1', scopes }),
+    )
+  })
+
+  it('rejects legacy family scope on create', async () => {
+    const res = await app.request('/api/v1/service-addons', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...validCreate,
+        scopes: [{ type: 'family', familyId: 'fam1' }],
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(db.createServiceAddon).not.toHaveBeenCalled()
   })
 
   it('maps unique-per-salon error to 409', async () => {
@@ -127,14 +192,18 @@ describe('service-addons router', () => {
   })
 
   it('maps scope not found to 400', async () => {
-    vi.mocked(db.createServiceAddon).mockRejectedValue(new Error('scope not found'))
+    vi.mocked(db.createServiceAddon).mockRejectedValue(
+      new Error('scope not found'),
+    )
     const res = await app.request('/api/v1/service-addons', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(validCreate),
     })
     expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'یکی از محدوده‌های انتخاب‌شده پیدا نشد' })
+    expect(await res.json()).toEqual({
+      error: 'یکی از محدوده‌های انتخاب‌شده پیدا نشد',
+    })
   })
 
   it('404 on PATCH of missing addon', async () => {
@@ -145,5 +214,22 @@ describe('service-addons router', () => {
       body: JSON.stringify({ name: 'New' }),
     })
     expect(res.status).toBe(404)
+  })
+
+  it('accepts simplified scopes on update', async () => {
+    vi.mocked(db.updateServiceAddon).mockResolvedValue({ id: 'a1' } as never)
+    const scopes = [{ type: 'service', serviceId: 'svc1' }]
+    const res = await app.request('/api/v1/service-addons/a1', {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopes }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.updateServiceAddon).toHaveBeenCalledWith(
+      'a1',
+      's1',
+      expect.objectContaining({ scopes }),
+    )
   })
 })

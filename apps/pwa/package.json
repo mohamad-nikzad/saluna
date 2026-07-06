@@ -1,13 +1,13 @@
 {
   "name": "@repo/pwa",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "imports": {
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --port 3000 --strictPort",
     "build": "vite build",
     "preview": "vite preview --port 3000",
     "test": "vitest run",

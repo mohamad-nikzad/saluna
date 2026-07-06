@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { CalendarPlus, Check, Phone, Send, X } from 'lucide-react'
 import {
@@ -242,10 +247,10 @@ function RetentionPage() {
                     className="touch-manipulation gap-1"
                     asChild
                   >
-                    <a href={`/calendar?clientId=${item.client.id}`}>
+                    <Link to="/calendar" search={{ clientId: item.client.id }}>
                       <CalendarPlus className="h-3.5 w-3.5" />
                       نوبت
-                    </a>
+                    </Link>
                   </Button>
                   <Button
                     size="sm"

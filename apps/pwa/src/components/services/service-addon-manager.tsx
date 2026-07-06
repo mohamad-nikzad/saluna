@@ -9,7 +9,6 @@ import type {
   Service,
   ServiceAddon,
   ServiceCategory,
-  ServiceFamily,
 } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -22,24 +21,22 @@ import { ServiceAddonDrawer } from './service-addon-drawer'
 
 interface ServiceAddonManagerProps {
   categories: ServiceCategory[]
-  families: ServiceFamily[]
   services: Service[]
   onChanged: () => void
 }
 
 function scopeLabel(addon: ServiceAddon) {
   if (addon.scopes.length === 0) return 'بدون دامنه'
+  if (addon.scopes.some((scope) => scope.type === 'all')) return 'همه خدمات'
   const counts = addon.scopes.reduce(
     (sum, scope) => ({
       category: sum.category + (scope.type === 'category' ? 1 : 0),
-      family: sum.family + (scope.type === 'family' ? 1 : 0),
       service: sum.service + (scope.type === 'service' ? 1 : 0),
     }),
-    { category: 0, family: 0, service: 0 },
+    { category: 0, service: 0 },
   )
   return [
-    counts.category ? `${toPersianDigits(counts.category)} دسته` : null,
-    counts.family ? `${toPersianDigits(counts.family)} خانواده خدمت` : null,
+    counts.category ? `${toPersianDigits(counts.category)} بخش` : null,
     counts.service ? `${toPersianDigits(counts.service)} خدمت` : null,
   ]
     .filter(Boolean)
@@ -48,7 +45,6 @@ function scopeLabel(addon: ServiceAddon) {
 
 export function ServiceAddonManager({
   categories,
-  families,
   services,
   onChanged,
 }: ServiceAddonManagerProps) {
@@ -102,8 +98,8 @@ export function ServiceAddonManager({
                 افزودنی‌های خدمت
               </CardTitle>
               <p className="hidden text-xs leading-5 text-muted-foreground sm:block">
-                گزینه‌های قابل اضافه شدن به رزرو را با دامنه دسته، خانواده خدمت
-                یا خدمت مدیریت کنید.
+                گزینه‌های قابل اضافه شدن به رزرو را با دامنه همه خدمات، بخش یا
+                خدمت مدیریت کنید.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-1.5 text-center sm:min-w-64 sm:gap-2">
@@ -231,7 +227,6 @@ export function ServiceAddonManager({
         onOpenChange={setDrawerOpen}
         addon={selectedAddon}
         categories={categories}
-        families={families}
         services={services}
         nextSortOrder={nextSortOrder}
         onSuccess={handleSuccess}

@@ -6,8 +6,6 @@ vi.mock('@repo/database/services', () => ({
   getServiceById: vi.fn(),
   updateService: vi.fn(),
   getActiveServiceAddonsForService: vi.fn(),
-  getComboComponents: vi.fn(),
-  replaceComboComponents: vi.fn(),
   importStarterServiceTemplates: vi.fn(),
 }))
 
@@ -50,7 +48,6 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 const validCreate = {
   name: 'Haircut',
   categoryId: 'cat1',
-  familyId: 'fam1',
   duration: 30,
   price: 100000,
   color: 'staff-1',
@@ -58,8 +55,19 @@ const validCreate = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('services router', () => {
@@ -69,7 +77,13 @@ describe('services router', () => {
   })
 
   it('staff sees active-only with all=1', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(db.getAllServices).mockResolvedValue([] as never)
     await app.request('/api/v1/services?all=1', { headers: authHeaders })
     expect(db.getAllServices).toHaveBeenCalledWith('s1', false)
@@ -77,14 +91,22 @@ describe('services router', () => {
 
   it('manager includes inactive with all=1', async () => {
     vi.mocked(db.getAllServices).mockResolvedValue([{ id: 's1' }] as never)
-    const res = await app.request('/api/v1/services?all=1', { headers: authHeaders })
+    const res = await app.request('/api/v1/services?all=1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ services: [{ id: 's1' }] })
     expect(db.getAllServices).toHaveBeenCalledWith('s1', true)
   })
 
   it('staff is 403 on POST', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/services', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -103,25 +125,39 @@ describe('services router', () => {
     expect(await res.json()).toEqual({ error: 'بخش خدمات را انتخاب کنید' })
   })
 
-  it('200 on create without a family', async () => {
-    vi.mocked(db.createService).mockResolvedValue({ id: 'svc2', name: 'Haircut' } as never)
-    const res = await app.request('/api/v1/services', {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...validCreate, familyId: undefined }),
-    })
-    expect(res.status).toBe(200)
-  })
-
   it('200 on create', async () => {
-    vi.mocked(db.createService).mockResolvedValue({ id: 'svc1', name: 'Haircut' } as never)
+    vi.mocked(db.createService).mockResolvedValue({
+      id: 'svc1',
+      name: 'Haircut',
+    } as never)
     const res = await app.request('/api/v1/services', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(validCreate),
     })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ service: { id: 'svc1', name: 'Haircut' } })
+    expect(await res.json()).toEqual({
+      service: { id: 'svc1', name: 'Haircut' },
+    })
+  })
+
+  it('strips legacy familyId and kind on create', async () => {
+    vi.mocked(db.createService).mockResolvedValue({
+      id: 'svc1',
+      name: 'Haircut',
+    } as never)
+    const res = await app.request('/api/v1/services', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...validCreate, familyId: 'fam1', kind: 'combo' }),
+    })
+    expect(res.status).toBe(200)
+    expect(db.createService).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        familyId: expect.anything(),
+        kind: expect.anything(),
+      }),
+    )
   })
 
   it('409 on duplicate name', async () => {
@@ -137,59 +173,38 @@ describe('services router', () => {
     })
   })
 
-  it('400 when active combo missing components on create', async () => {
-    vi.mocked(db.createService).mockRejectedValue(
-      new Error('active combo service must have at least one component'),
-    )
-    const res = await app.request('/api/v1/services', {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...validCreate, kind: 'combo' }),
-    })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({
-      error: 'پکیج فعال باید حداقل یک خدمت در ترکیب خود داشته باشد',
-    })
-  })
-
   it('200 on GET /:id', async () => {
     vi.mocked(db.getServiceById).mockResolvedValue({ id: 'svc1' } as never)
-    const res = await app.request('/api/v1/services/svc1', { headers: authHeaders })
+    const res = await app.request('/api/v1/services/svc1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ service: { id: 'svc1' } })
   })
 
   it('404 on GET /:id missing', async () => {
     vi.mocked(db.getServiceById).mockResolvedValue(undefined as never)
-    const res = await app.request('/api/v1/services/missing', { headers: authHeaders })
+    const res = await app.request('/api/v1/services/missing', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(404)
   })
 
-  it('PATCH with familyId: null clears the family', async () => {
-    vi.mocked(db.updateService).mockResolvedValue({ id: 'svc1', familyId: null } as never)
-    const res = await app.request('/api/v1/services/svc1', {
-      method: 'PATCH',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ familyId: null }),
-    })
-    expect(res.status).toBe(200)
-    expect(db.updateService).toHaveBeenCalledWith(
-      'svc1',
-      's1',
-      expect.objectContaining({ familyId: null }),
-    )
-  })
-
-  it('PATCH without familyId omits the field from the patch', async () => {
+  it('PATCH strips legacy familyId and kind from the patch', async () => {
     vi.mocked(db.updateService).mockResolvedValue({ id: 'svc1' } as never)
     const res = await app.request('/api/v1/services/svc1', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Renamed' }),
+      body: JSON.stringify({ familyId: null, kind: 'combo', name: 'Renamed' }),
     })
     expect(res.status).toBe(200)
-    const patch = vi.mocked(db.updateService).mock.calls[0]?.[2] as Record<string, unknown>
+    const patch = vi.mocked(db.updateService).mock.calls[0]?.[2] as Record<
+      string,
+      unknown
+    >
     expect('familyId' in patch).toBe(false)
+    expect('kind' in patch).toBe(false)
+    expect(patch.name).toBe('Renamed')
   })
 
   it('404 on PATCH missing', async () => {
@@ -213,91 +228,30 @@ describe('services router', () => {
     expect(await res.json()).toEqual({ addons: [{ id: 'a1' }] })
   })
 
-  it('200 on GET /:id/combo-components', async () => {
-    vi.mocked(db.getComboComponents).mockResolvedValue({
-      comboServiceId: 'svc1',
-      components: [],
-      totalDuration: 0,
-      totalPrice: 0,
-    } as never)
+  it('404 on GET /:id/combo-components because combo contracts are removed', async () => {
     const res = await app.request('/api/v1/services/svc1/combo-components', {
       headers: authHeaders,
     })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({
-      combo: {
-        comboServiceId: 'svc1',
-        components: [],
-        totalDuration: 0,
-        totalPrice: 0,
-      },
-    })
-  })
-
-  it('404 on GET /:id/combo-components missing', async () => {
-    vi.mocked(db.getComboComponents).mockResolvedValue(undefined as never)
-    const res = await app.request('/api/v1/services/missing/combo-components', {
-      headers: authHeaders,
-    })
     expect(res.status).toBe(404)
-    expect(await res.json()).toEqual({ error: 'پکیج یافت نشد' })
   })
 
-  it('staff is 403 on PUT /:id/combo-components', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+  it('404 on PUT /:id/combo-components because combo contracts are removed', async () => {
     const res = await app.request('/api/v1/services/svc1/combo-components', {
       method: 'PUT',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ componentServiceIds: ['x'] }),
     })
-    expect(res.status).toBe(403)
-  })
-
-  it('200 on PUT /:id/combo-components', async () => {
-    vi.mocked(db.replaceComboComponents).mockResolvedValue({
-      comboServiceId: 'svc1',
-      components: [{ id: 'c1' }],
-      totalDuration: 30,
-      totalPrice: 1000,
-    } as never)
-    const res = await app.request('/api/v1/services/svc1/combo-components', {
-      method: 'PUT',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ componentServiceIds: ['c1'] }),
-    })
-    expect(res.status).toBe(200)
-  })
-
-  it('maps combo-cannot-contain-itself to 400', async () => {
-    vi.mocked(db.replaceComboComponents).mockRejectedValue(
-      new Error('combo service cannot contain itself'),
-    )
-    const res = await app.request('/api/v1/services/svc1/combo-components', {
-      method: 'PUT',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ componentServiceIds: ['svc1'] }),
-    })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'پکیج نمی‌تواند شامل خودش باشد' })
-  })
-
-  it('maps combo-duplicates to 400', async () => {
-    vi.mocked(db.replaceComboComponents).mockRejectedValue(
-      new Error('combo components cannot contain duplicates'),
-    )
-    const res = await app.request('/api/v1/services/svc1/combo-components', {
-      method: 'PUT',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ componentServiceIds: ['a', 'a'] }),
-    })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({
-      error: 'هر خدمت فقط یک بار می‌تواند در پکیج باشد',
-    })
+    expect(res.status).toBe(404)
   })
 
   it('staff is 403 on POST /import-starter-templates', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/services/import-starter-templates', {
       method: 'POST',
       headers: authHeaders,
@@ -308,7 +262,6 @@ describe('services router', () => {
   it('200 on POST /import-starter-templates', async () => {
     vi.mocked(db.importStarterServiceTemplates).mockResolvedValue({
       categories: [],
-      families: [],
       services: [],
     } as never)
     const res = await app.request('/api/v1/services/import-starter-templates', {
@@ -316,6 +269,6 @@ describe('services router', () => {
       headers: authHeaders,
     })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ categories: [], families: [], services: [] })
+    expect(await res.json()).toEqual({ categories: [], services: [] })
   })
 })

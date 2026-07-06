@@ -3,27 +3,22 @@ import { expect } from '@playwright/test'
 
 export const SEEDED_MANAGER = { phone: '09120000000', password: 'admin123' }
 export const SEEDED_STAFF = { phone: '09120000001', password: 'admin123' }
+const OTP_BYPASS_CODE = '123456'
 
 export async function login(page: Page, phone: string, password: string) {
   await page.goto('/auth')
-  await expect(page.getByRole('heading', { name: /سالونا|آراویرا/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /سالونا|آراویرا/ }),
+  ).toBeVisible()
   const phoneBox = page.getByRole('textbox', { name: 'شماره موبایل' })
-  const passBox = page.getByRole('textbox', { name: 'رمز عبور' })
   await phoneBox.click()
   await phoneBox.fill(phone)
+  await page.getByRole('button', { name: 'ادامه' }).click()
+  const passBox = page.getByRole('textbox', { name: 'رمز عبور' })
+  await expect(passBox).toBeVisible()
   await passBox.click()
   await passBox.fill(password)
-  const [loginRes] = await Promise.all([
-    page.waitForResponse(
-      (r) =>
-        r.url().includes('/api/v1/auth/sign-in/username') &&
-        r.request().method() === 'POST',
-    ),
-    page.getByRole('button', { name: 'ورود' }).click(),
-  ])
-  if (!loginRes.ok()) {
-    throw new Error(`Login API ${loginRes.status()}: ${await loginRes.text()}`)
-  }
+  await page.getByRole('button', { name: 'ورود', exact: true }).click()
   await page.waitForURL(/\/(today|dashboard|calendar)/, { timeout: 30_000 })
 }
 
@@ -35,7 +30,10 @@ export async function loginManagerExpectsToday(page: Page) {
 
 export async function loginManagerExpectsCalendar(page: Page) {
   await loginManagerExpectsToday(page)
-  await page.getByRole('navigation').getByRole('link', { name: 'تقویم' }).click()
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'تقویم' })
+    .click()
   await expect(page).toHaveURL(/\/calendar/)
   await expect(page.locator('.calendar-header-gradient')).toBeVisible()
 }
@@ -50,4 +48,42 @@ export async function logoutFromSettings(page: Page) {
   await page.goto('/settings')
   await page.getByRole('button', { name: /خروج از حساب/ }).click()
   await expect(page).toHaveURL(/\/auth/)
+}
+
+export async function signupNewSalon(
+  page: Page,
+  input: {
+    phone: string
+    salonLabel: string
+    managerName: string
+    password: string
+  },
+) {
+  await page.context().clearCookies()
+  await page.goto('/auth', { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('textbox', { name: 'شماره موبایل' }).fill(input.phone)
+  await page.getByRole('button', { name: 'ادامه' }).click()
+  await expect(
+    page.getByRole('button', { name: 'تایید و ادامه ثبت‌نام' }),
+  ).toBeVisible()
+  await page.locator('#otp').click()
+  await page.keyboard.type(OTP_BYPASS_CODE)
+  await expect(page.locator('#managerName')).toBeVisible()
+
+  await page.locator('#managerName').fill(input.managerName)
+  await page.locator('#password').fill(input.password)
+  await page.locator('#confirmPassword').fill(input.password)
+  await page.getByRole('button', { name: 'ادامه' }).click()
+
+  await page.locator('#salonName').fill(input.salonLabel)
+  const signupPost = page.waitForResponse(
+    (r) =>
+      /\/api\/(v\d+\/)?auth\/signup\/workspace/.test(r.url()) &&
+      r.request().method() === 'POST',
+  )
+  await page.getByRole('button', { name: 'ساخت سالن' }).click()
+  const res = await signupPost
+  expect(res.ok(), await res.text()).toBeTruthy()
+  await expect(page).toHaveURL(/\/onboarding\/welcome/)
 }

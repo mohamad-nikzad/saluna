@@ -27,7 +27,6 @@ import type {
   ServiceAddon,
   ServiceAddonScope,
   ServiceCategory,
-  ServiceFamily,
 } from '@repo/salon-core/types'
 import { serviceAddonFormSchema } from '@repo/salon-core/forms/service'
 import type {
@@ -45,23 +44,21 @@ interface ServiceAddonDrawerProps {
   onOpenChange: (open: boolean) => void
   addon: ServiceAddon | null
   categories: ServiceCategory[]
-  families: ServiceFamily[]
   services: Service[]
   nextSortOrder: number
   onSuccess: () => void
 }
 
 function scopeKey(scope: ServiceAddonScopeInput) {
+  if (scope.type === 'all') return 'all'
   if (scope.type === 'category') return `category:${scope.categoryId}`
-  if (scope.type === 'family') return `family:${scope.familyId}`
   return `service:${scope.serviceId}`
 }
 
 function addonScopeToInput(scope: ServiceAddonScope): ServiceAddonScopeInput {
+  if (scope.type === 'all') return { type: 'all' }
   if (scope.type === 'category')
     return { type: 'category', categoryId: scope.categoryId }
-  if (scope.type === 'family')
-    return { type: 'family', familyId: scope.familyId }
   return { type: 'service', serviceId: scope.serviceId }
 }
 
@@ -92,22 +89,19 @@ function addonToValues(addon: ServiceAddon): ServiceAddonFormInput {
 function formatScope(
   scope: ServiceAddonScopeInput,
   categories: ServiceCategory[],
-  families: ServiceFamily[],
   services: Service[],
 ) {
+  if (scope.type === 'all') {
+    return {
+      label: 'همه خدمات',
+      level: 'همه جا',
+    }
+  }
   if (scope.type === 'category') {
     return {
       label:
-        categories.find((item) => item.id === scope.categoryId)?.name ?? 'دسته',
-      level: 'دسته',
-    }
-  }
-  if (scope.type === 'family') {
-    return {
-      label:
-        families.find((item) => item.id === scope.familyId)?.name ??
-        'خانواده خدمت',
-      level: 'خانواده خدمت',
+        categories.find((item) => item.id === scope.categoryId)?.name ?? 'بخش',
+      level: 'بخش',
     }
   }
   return {
@@ -121,7 +115,6 @@ export function ServiceAddonDrawer({
   onOpenChange,
   addon,
   categories,
-  families,
   services,
   nextSortOrder,
   onSuccess,
@@ -152,7 +145,11 @@ export function ServiceAddonDrawer({
   const addScope = (scope: ServiceAddonScopeInput) => {
     const key = scopeKey(scope)
     if (scopeKeys.has(key)) return
-    setValue('scopes', [...scopes, scope], {
+    const nextScopes =
+      scope.type === 'all'
+        ? [scope]
+        : [...scopes.filter((item) => item.type !== 'all'), scope]
+    setValue('scopes', nextScopes, {
       shouldDirty: true,
       shouldValidate: true,
     })
@@ -319,17 +316,25 @@ export function ServiceAddonDrawer({
               <div>
                 <p className="text-sm font-medium">دامنه نمایش</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  حداقل یک دسته، خانواده خدمت یا خدمت را انتخاب کنید.
+                  حداقل یکی از دامنه‌های همه خدمات، بخش یا خدمت را انتخاب کنید.
                 </p>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
+                <Button
+                  type="button"
+                  variant={scopeKeys.has('all') ? 'default' : 'outline'}
+                  className="justify-center"
+                  onClick={() => addScope({ type: 'all' })}
+                >
+                  همه خدمات
+                </Button>
                 <Select
                   onValueChange={(value) =>
                     addScope({ type: 'category', categoryId: value })
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="افزودن دسته" />
+                    <SelectValue placeholder="افزودن بخش" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -339,26 +344,6 @@ export function ServiceAddonDrawer({
                         disabled={scopeKeys.has(`category:${category.id}`)}
                       >
                         {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  onValueChange={(value) =>
-                    addScope({ type: 'family', familyId: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="افزودن خانواده خدمت" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {families.map((family) => (
-                      <SelectItem
-                        key={family.id}
-                        value={family.id}
-                        disabled={scopeKeys.has(`family:${family.id}`)}
-                      >
-                        {family.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -387,12 +372,7 @@ export function ServiceAddonDrawer({
               {scopes.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {scopes.map((scope) => {
-                    const formatted = formatScope(
-                      scope,
-                      categories,
-                      families,
-                      services,
-                    )
+                    const formatted = formatScope(scope, categories, services)
                     return (
                       <span
                         key={scopeKey(scope)}

@@ -23,10 +23,7 @@ import { cn } from '@repo/ui/utils'
 import type { Service } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { ResponsivePicker } from '#/components/responsive-picker'
-import {
-  formatCompactServiceLabel,
-  groupServicesByCatalog,
-} from './service-catalog-groups'
+import { formatCompactServiceLabel } from '#/components/services/service-catalog-groups'
 
 interface ServicePickerProps {
   services: Service[]
@@ -58,6 +55,31 @@ function serviceIconFor(category: Service['category']) {
   }
 }
 
+function groupServicesByCategory(services: Service[]) {
+  const groups = new Map<
+    string,
+    {
+      categoryId: string
+      categoryName: string
+      services: Service[]
+    }
+  >()
+
+  for (const service of services) {
+    const categoryId = service.categoryId || service.category
+    const categoryName = service.categoryName ?? service.category
+    const group = groups.get(categoryId) ?? {
+      categoryId,
+      categoryName,
+      services: [],
+    }
+    group.services.push(service)
+    groups.set(categoryId, group)
+  }
+
+  return [...groups.values()]
+}
+
 export function ServicePicker({
   services,
   value,
@@ -75,7 +97,7 @@ export function ServicePicker({
     () => services.find((service) => service.id === value),
     [services, value],
   )
-  const groups = useMemo(() => groupServicesByCatalog(services), [services])
+  const groups = useMemo(() => groupServicesByCategory(services), [services])
 
   const trigger = (
     <Button
@@ -125,7 +147,7 @@ export function ServicePicker({
                 : 0
             }}
           >
-            <CommandInput placeholder="جستجوی بخش، گروه یا خدمت..." />
+            <CommandInput placeholder="جستجوی بخش یا خدمت..." />
             <CommandList className="max-h-[min(70dvh,24rem,var(--radix-popover-content-available-height))] overscroll-contain overflow-y-auto">
               <CommandEmpty>خدمتی پیدا نشد.</CommandEmpty>
               {groups.map((category) => (
@@ -134,70 +156,51 @@ export function ServicePicker({
                   heading={category.categoryName}
                   className="pb-1 pt-1 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-2"
                 >
-                  {category.families.map((family) => (
-                    <div key={family.familyId} className="mb-1">
-                      <div className="flex items-center gap-1.5 px-2 pb-0.5 pt-1 text-[11px] font-medium text-muted-foreground">
-                        {(() => {
-                          const Icon = serviceIconFor(
-                            family.services[0]?.category ?? 'spa',
-                          )
-                          return (
-                            <Icon
-                              aria-hidden="true"
-                              className="size-3.5 shrink-0 opacity-70"
-                            />
-                          )
-                        })()}
-                        <span className="min-w-0 truncate">
-                          {family.familyName}
+                  {category.services.map((service) => {
+                    const disabledReason = getDisabledReason?.(service)
+                    const statusReason = getStatusReason?.(service)
+                    const Icon = serviceIconFor(service.category)
+                    return (
+                      <CommandItem
+                        key={service.id}
+                        value={`${category.categoryName} ${service.name} ${service.id}`}
+                        disabled={Boolean(disabledReason)}
+                        onSelect={() => {
+                          if (disabledReason) return
+                          onChange(service.id)
+                          setOpen(false)
+                        }}
+                        className="rounded-md py-1.5 pl-8 pr-1.5"
+                      >
+                        <Check
+                          className={cn(
+                            'absolute left-2 top-2 size-4 shrink-0',
+                            value === service.id ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
+                        <Icon
+                          aria-hidden="true"
+                          className="size-3.5 shrink-0 text-muted-foreground"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">
+                            {service.name}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {toPersianDigits(service.duration)} دقیقه
+                            {showPrice
+                              ? ` · ${formatTomans(service.price)}`
+                              : ''}
+                          </span>
                         </span>
-                      </div>
-                      <div className="relative mr-2 space-y-0.5 pr-2 before:absolute before:right-0 before:bottom-1 before:top-1 before:w-px before:bg-muted-foreground/35">
-                        {family.services.map((service) => {
-                          const disabledReason = getDisabledReason?.(service)
-                          const statusReason = getStatusReason?.(service)
-                          return (
-                            <CommandItem
-                              key={service.id}
-                              value={`${category.categoryName} ${family.familyName} ${service.name} ${service.id}`}
-                              disabled={Boolean(disabledReason)}
-                              onSelect={() => {
-                                if (disabledReason) return
-                                onChange(service.id)
-                                setOpen(false)
-                              }}
-                              className="relative rounded-md py-1.5 pl-8 pr-1.5 before:absolute before:right-[-0.5rem] before:top-1/2 before:h-px before:w-1.5 before:bg-muted-foreground/35"
-                            >
-                              <Check
-                                className={cn(
-                                  'absolute left-2 top-2 size-4 shrink-0',
-                                  value === service.id
-                                    ? 'opacity-100'
-                                    : 'opacity-0',
-                                )}
-                              />
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-medium">
-                                  {service.name}
-                                </span>
-                                <span className="block truncate text-xs text-muted-foreground">
-                                  {toPersianDigits(service.duration)} دقیقه
-                                  {showPrice
-                                    ? ` · ${formatTomans(service.price)}`
-                                    : ''}
-                                </span>
-                              </span>
-                              {disabledReason || statusReason ? (
-                                <span className="mt-0.5 shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                                  {disabledReason ?? statusReason}
-                                </span>
-                              ) : null}
-                            </CommandItem>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                        {disabledReason || statusReason ? (
+                          <span className="mt-0.5 shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                            {disabledReason ?? statusReason}
+                          </span>
+                        ) : null}
+                      </CommandItem>
+                    )
+                  })}
                 </CommandGroup>
               ))}
             </CommandList>

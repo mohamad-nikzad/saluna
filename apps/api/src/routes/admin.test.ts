@@ -175,18 +175,13 @@ const platformAdminUserId = '44444444-4444-4444-8444-444444444444'
 const presetTree = [
   {
     name: 'مو',
-    families: [
+    services: [
       {
-        name: 'رنگ',
-        variants: [
-          {
-            name: 'رنگ ریشه',
-            duration: 30,
-            price: 500000,
-            color: 'teal',
-            description: null,
-          },
-        ],
+        name: 'رنگ ریشه',
+        duration: 30,
+        price: 500000,
+        color: 'teal',
+        description: null,
       },
     ],
   },
@@ -194,18 +189,13 @@ const presetTree = [
 const parsedPresetTree = [
   {
     name: 'مو',
-    families: [
+    services: [
       {
-        name: 'رنگ',
-        variants: [
-          {
-            name: 'رنگ ریشه',
-            duration: 30,
-            price: 500000,
-            color: 'rose',
-            description: undefined,
-          },
-        ],
+        name: 'رنگ ریشه',
+        duration: 30,
+        price: 500000,
+        color: 'rose',
+        description: undefined,
       },
     ],
   },
@@ -1055,7 +1045,7 @@ describe('admin runtime data source', () => {
           selection: [
             {
               categoryIndex: 0,
-              families: [{ familyIndex: 0, variantIndices: [0] }],
+              serviceIndices: [0],
             },
           ],
         }),

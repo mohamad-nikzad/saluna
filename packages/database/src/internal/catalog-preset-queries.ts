@@ -1,13 +1,15 @@
 import { and, asc, eq } from 'drizzle-orm'
 
-import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
+import {
+  normalizeCatalogPresetTree,
+  type CatalogPresetTree,
+} from '@repo/salon-core/forms/catalog-preset'
 
 import { getDb } from '../client'
 import {
   catalogPresets,
   presetApplications,
   serviceCategories,
-  serviceFamilies,
   services,
 } from '../schema'
 
@@ -24,11 +26,66 @@ export type CatalogPresetListItem = {
 
 export type ApplyPresetSelection = Array<{
   categoryIndex: number
-  families: Array<{ familyIndex: number; variantIndices: number[] }>
+  serviceIndices: number[]
 }>
 
+type CatalogPresetImportPlan = Array<{
+  name: string
+  services: CatalogPresetTree[number]['services']
+}>
+
+export function buildCatalogPresetImportPlan(
+  tree: CatalogPresetTree,
+  selection: ApplyPresetSelection,
+): CatalogPresetImportPlan {
+  const selectedByCategory = new Map<number, Set<number>>()
+  for (const categorySelection of selection) {
+    const category = tree[categorySelection.categoryIndex]
+    if (!category) continue
+
+    const serviceIndices =
+      selectedByCategory.get(categorySelection.categoryIndex) ??
+      new Set<number>()
+    for (const serviceIndex of categorySelection.serviceIndices) {
+      if (category.services[serviceIndex]) serviceIndices.add(serviceIndex)
+    }
+    if (serviceIndices.size > 0) {
+      selectedByCategory.set(categorySelection.categoryIndex, serviceIndices)
+    }
+  }
+
+  const plan = Array.from(selectedByCategory.entries())
+    .map(([categoryIndex, serviceIndices]) => {
+      const category = tree[categoryIndex]
+      if (!category) return null
+      const selectedServices = category.services.filter((_, serviceIndex) =>
+        serviceIndices.has(serviceIndex),
+      )
+      if (selectedServices.length === 0) return null
+      return { name: category.name, services: selectedServices }
+    })
+    .filter(
+      (category): category is CatalogPresetImportPlan[number] =>
+        category !== null,
+    )
+
+  if (plan.length === 0) throw new Error('catalog preset selection is empty')
+
+  const serviceNames = new Set<string>()
+  for (const category of plan) {
+    for (const service of category.services) {
+      if (serviceNames.has(service.name)) {
+        throw new Error('catalog preset selection contains duplicate services')
+      }
+      serviceNames.add(service.name)
+    }
+  }
+
+  return plan
+}
+
 export async function listActiveCatalogPresets(
-  salonId: string
+  salonId: string,
 ): Promise<CatalogPresetListItem[]> {
   const db = getDb()
   const [presetRows, existingCategoryRows] = await Promise.all([
@@ -46,7 +103,7 @@ export async function listActiveCatalogPresets(
   const existingNames = new Set(existingCategoryRows.map((row) => row.name))
 
   return presetRows.map((row) => {
-    const tree = row.tree as CatalogPresetTree
+    const tree = normalizeCatalogPresetTree(row.tree)
     const collides = tree.some((category) => existingNames.has(category.name))
     return {
       id: row.id,
@@ -72,43 +129,41 @@ export async function applyCatalogPreset(input: {
     .select()
     .from(catalogPresets)
     .where(
-      and(eq(catalogPresets.id, input.presetId), eq(catalogPresets.isActive, true))
+      and(
+        eq(catalogPresets.id, input.presetId),
+        eq(catalogPresets.isActive, true),
+      ),
     )
     .limit(1)
   if (!preset) throw new Error('catalog preset not found or inactive')
 
-  const tree = preset.tree as CatalogPresetTree
+  const tree = normalizeCatalogPresetTree(preset.tree)
+  const plan = buildCatalogPresetImportPlan(tree, input.selection)
 
-  const filtered = input.selection
-    .map((catSel) => {
-      const category = tree[catSel.categoryIndex]
-      if (!category) return null
-      const families = catSel.families
-        .map((famSel) => {
-          const family = category.families[famSel.familyIndex]
-          if (!family) return null
-          const variants = famSel.variantIndices
-            .map((vi) => family.variants[vi])
-            .filter((variant): variant is (typeof family.variants)[number] => Boolean(variant))
-          if (variants.length === 0) return null
-          return { name: family.name, variants }
-        })
-        .filter((family): family is { name: string; variants: (typeof category.families)[number]['variants'] } => family !== null)
-      if (families.length === 0) return null
-      return { name: category.name, families }
-    })
-    .filter((category): category is { name: string; families: Array<{ name: string; variants: CatalogPresetTree[number]['families'][number]['variants'] }> } => category !== null)
-
-  if (filtered.length === 0) throw new Error('catalog preset selection is empty')
-
-  const existingCategoryRows = await db
-    .select({ name: serviceCategories.name })
-    .from(serviceCategories)
-    .where(eq(serviceCategories.salonId, input.salonId))
+  const [existingCategoryRows, existingServiceRows] = await Promise.all([
+    db
+      .select({ name: serviceCategories.name })
+      .from(serviceCategories)
+      .where(eq(serviceCategories.salonId, input.salonId)),
+    db
+      .select({ name: services.name })
+      .from(services)
+      .where(eq(services.salonId, input.salonId)),
+  ])
   const existingNames = new Set(existingCategoryRows.map((row) => row.name))
-  for (const category of filtered) {
+  for (const category of plan) {
     if (existingNames.has(category.name)) {
       throw new Error('catalog preset collides with existing categories')
+    }
+  }
+  const existingServiceNames = new Set(
+    existingServiceRows.map((row) => row.name),
+  )
+  for (const category of plan) {
+    for (const service of category.services) {
+      if (existingServiceNames.has(service.name)) {
+        throw new Error('catalog preset selection contains duplicate services')
+      }
     }
   }
 
@@ -116,41 +171,30 @@ export async function applyCatalogPreset(input: {
   const importedVariantIds: string[] = []
 
   await db.transaction(async (tx) => {
-    for (const category of filtered) {
+    for (const category of plan) {
       const [categoryRow] = await tx
         .insert(serviceCategories)
         .values({ salonId: input.salonId, name: category.name })
         .returning({ id: serviceCategories.id })
       importedCategoryIds.push(categoryRow.id)
 
-      for (const family of category.families) {
-        const [familyRow] = await tx
-          .insert(serviceFamilies)
+      for (const service of category.services) {
+        const [variantRow] = await tx
+          .insert(services)
           .values({
             salonId: input.salonId,
             categoryId: categoryRow.id,
-            name: family.name,
+            familyId: null,
+            name: service.name,
+            duration: service.duration,
+            price: service.price,
+            color: service.color,
+            description: service.description ?? null,
+            kind: 'standard',
+            active: true,
           })
-          .returning({ id: serviceFamilies.id })
-
-        for (const variant of family.variants) {
-          const [variantRow] = await tx
-            .insert(services)
-            .values({
-              salonId: input.salonId,
-              categoryId: categoryRow.id,
-              familyId: familyRow.id,
-              name: variant.name,
-              duration: variant.duration,
-              price: variant.price,
-              color: variant.color,
-              description: variant.description ?? null,
-              kind: 'standard',
-              active: true,
-            })
-            .returning({ id: services.id })
-          importedVariantIds.push(variantRow.id)
-        }
+          .returning({ id: services.id })
+        importedVariantIds.push(variantRow.id)
       }
     }
 

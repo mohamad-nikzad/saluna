@@ -29,18 +29,18 @@ The authenticated salon request context carried by API routes — tenant user, s
 Salon-scoped catalog group for a broad area (`ناخن`, `مو`, `پوست`, `مژه`, `ابرو`, `اسپا`). DB/API: `service_categories`; TS: `ServiceCategory`. Persian UI: `دسته`.
 
 **ServiceFamily**:
-Legacy middle grouping inside a `ServiceCategory`. The target catalog language is `ServiceCategory` → `ServiceVariant`; avoid introducing family-level workflows unless a real salon workflow needs them.
+Legacy storage middle grouping inside a `ServiceCategory`. Manager, admin, and public catalog workflows must use `ServiceCategory` → `ServiceVariant` and must not expose family-level creation, editing, or selection.
 _Avoid_: required service group
 
 **ServiceVariant**:
-The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; call it "service" in ordinary product/admin copy and "service variant" only when distinguishing it from combos or add-ons. Persian UI: `خدمت`.
+The sellable, bookable service (`کاشت با پودر`, `کاشت دست و پا`). Represented by the `Service` type and `services` table; new service rows use `familyId = null` and `kind = standard`. Call it "service" in ordinary product/admin copy and "service variant" only when distinguishing it from legacy combos or add-ons. Persian UI: `خدمت`.
 _Avoid_: package, bundle, group, type, subtype, item, offering, option
 
 **Standard ServiceVariant**:
 A `ServiceVariant` sold as one standalone salon service.
 
 **Service Package**:
-A sellable bundle composed from multiple staff-assigned package tasks, often across categories, for booking as one offering. Its duration comes from the scheduled tasks; its total price may be calculated from included services or overridden by the manager.
+A sellable bundle composed from multiple staff-assigned package tasks, often across categories, for manager-side booking as one offering. Its duration comes from the scheduled tasks; its total price may be calculated from included services or overridden by the manager. Package scheduling creates a `service_package_bookings` header, normal `appointments` rows for each task, and `service_package_tasks` links. Public booking remains service-only.
 _Avoid_: combo service, service group
 
 **PackageComponent**:
@@ -48,6 +48,7 @@ A staff-assigned unit of work inside a `Service Package`, based on an included s
 _Avoid_: combo component
 
 Package tasks may have gaps or run in parallel across different staff, but they must respect staff and client scheduling conflicts.
+Package scheduling is same-day in v1: the manager picks one date, then assigns staff and start/end times per task. Add-ons are not supported on package bookings.
 
 **ServiceAddon**:
 An optional salon-defined extra selected alongside a `ServiceVariant` at booking.
@@ -55,11 +56,11 @@ An optional salon-defined extra selected alongside a `ServiceVariant` at booking
 ### Catalog Presets
 
 **CatalogPreset**:
-A ready-made service catalog assembly that a manager imports during onboarding to skip building the catalog by hand. It is built from preset categories and preset services but keeps its own curated defaults. UI copy: `قالب خدمات`. Not sellable, not tenant-scoped — defined by the product, picked by the salon.
+A ready-made service catalog assembly that a manager imports during onboarding to skip building the catalog by hand. It is built from flat preset categories and preset services but keeps its own curated defaults. Presets import categories and standard services only; they do not import families or packages. UI copy: `قالب خدمات`. Not sellable, not tenant-scoped — defined by the product, picked by the salon.
 _Avoid_: package, bundle, template service, service group
 
 **PresetCategory / PresetFamily / PresetVariant**:
-Reusable product-maintained library items that map to salon catalog records when a `CatalogPreset` is applied. `PresetFamily` is legacy; the target preset language is `PresetCategory` and preset service.
+Reusable product-maintained library items that map to salon catalog records when a `CatalogPreset` is applied. `PresetFamily` is legacy input compatibility only; the target preset language is `PresetCategory` and preset service.
 
 **Preset Catalog**:
 The product-maintained collection of preset categories, preset services, and assembled `CatalogPreset`s that platform staff uses to curate starter service catalogs.
@@ -164,10 +165,10 @@ _Avoid_: ticket type, department
 
 ## Naming rules
 
-- Prefer `category` and `service` in new product/admin catalog language; treat `family` as legacy unless a workflow explicitly needs a middle grouping.
+- Prefer `category` and `service` in new product/admin catalog language; treat `family` as legacy storage/history only.
 - Keep `services`, `serviceId`, `staff_services.service_id`, and `appointments.service_id` for the bookable variant level.
-- Use `categoryId`, `categoryName`, `familyId`, `familyName` on service read models.
+- Use `familyId` and `familyName` on service read models only to preserve legacy/historical rows; new workflows should create services directly under `categoryId`.
 - Use `bookedServiceName`, `bookedServiceDuration`, `bookedServicePrice` for appointment snapshot fields.
 - Use `Service Package` for sellable bundles, especially when included services span categories.
-- Treat existing combo tables and fields as legacy implementation names until renamed.
+- Treat existing combo tables and fields as migration/history names only; new workflows should use `Service Package`, package components, and package tasks.
 - Require explicit staff capability on the `Service Package`; do not infer it from components.

@@ -41,15 +41,12 @@ import {
   createService,
   createServiceAddon,
   createServiceCategory,
-  createServiceFamily,
   getAllServiceAddons,
   getAllServiceCategories,
-  getAllServiceFamilies,
   getAllServices,
   updateService,
   updateServiceAddon,
   updateServiceCategory,
-  updateServiceFamily,
 } from '@repo/database/services'
 import {
   applyCatalogPreset,
@@ -88,8 +85,6 @@ import {
   serviceCategoryCreateSchema,
   serviceCategoryUpdateSchema,
   serviceCreateSchema,
-  serviceFamilyCreateSchema,
-  serviceFamilyUpdateSchema,
   serviceUpdateSchema,
 } from '@repo/salon-core/forms/service'
 import type { Service } from '@repo/salon-core/types'
@@ -192,12 +187,6 @@ const setupCategoryCreateBodySchema = serviceCategoryCreateSchema.and(
   setupMutationMetaSchema,
 )
 const setupCategoryUpdateBodySchema = serviceCategoryUpdateSchema.and(
-  setupMutationMetaSchema,
-)
-const setupFamilyCreateBodySchema = serviceFamilyCreateSchema.and(
-  setupMutationMetaSchema,
-)
-const setupFamilyUpdateBodySchema = serviceFamilyUpdateSchema.and(
   setupMutationMetaSchema,
 )
 const setupServiceCreateBodySchema = serviceCreateSchema.and(
@@ -832,15 +821,13 @@ export const adminRoute = new Hono<AppEnv>()
         c.var.platformAdmin.role,
       )
       if (lifecycleError) return lifecycleError
-      const [categories, families, services, addons, presets] =
-        await Promise.all([
-          getAllServiceCategories(id, true),
-          getAllServiceFamilies(id, true),
-          getAllServices(id, true),
-          getAllServiceAddons(id, true),
-          listActiveCatalogPresets(id),
-        ])
-      return ok(c, { categories, families, services, addons, presets })
+      const [categories, services, addons, presets] = await Promise.all([
+        getAllServiceCategories(id, true),
+        getAllServices(id, true),
+        getAllServiceAddons(id, true),
+        listActiveCatalogPresets(id),
+      ])
+      return ok(c, { categories, services, addons, presets })
     },
   )
   .post(
@@ -965,86 +952,6 @@ export const adminRoute = new Hono<AppEnv>()
     },
   )
   .post(
-    '/salons/:id/setup/catalog/families',
-    requirePlatformAdmin('manage_salons'),
-    zValidator('param', idParamSchema),
-    zValidator('json', setupFamilyCreateBodySchema),
-    async (c) => {
-      const { id } = c.req.valid('param')
-      const body = c.req.valid('json')
-      const lifecycleError = await requireSetupSalon(
-        c,
-        id,
-        body.override,
-        c.var.platformAdmin.role,
-      )
-      if (lifecycleError) return lifecycleError
-      try {
-        const family = await createServiceFamily({
-          salonId: id,
-          categoryId: body.categoryId,
-          name: body.name,
-          active: body.active,
-        })
-        await writeAudit({
-          actorUserId: c.var.platformAdmin.userId,
-          actorPlatformRole: c.var.platformAdmin.role,
-          action: setupAction(
-            'salon.setup.catalog_family.create',
-            body.override,
-          ),
-          targetType: 'service_family',
-          targetId: family.id,
-          salonId: id,
-          metadata: { fields: ['categoryId', 'name', 'active'] },
-          request: auditMeta(c),
-        })
-        return created(c, { family })
-      } catch (err) {
-        const mapped = setupCatalogError(c, err)
-        if (mapped) return mapped
-        throw err
-      }
-    },
-  )
-  .patch(
-    '/salons/:id/setup/catalog/families/:entityId',
-    requirePlatformAdmin('manage_salons'),
-    zValidator('param', setupCatalogEntityParamSchema),
-    zValidator('json', setupFamilyUpdateBodySchema),
-    async (c) => {
-      const { id, entityId } = c.req.valid('param')
-      const body = c.req.valid('json')
-      const lifecycleError = await requireSetupSalon(
-        c,
-        id,
-        body.override,
-        c.var.platformAdmin.role,
-      )
-      if (lifecycleError) return lifecycleError
-      const { override, ...patch } = body
-      try {
-        const family = await updateServiceFamily(entityId, id, patch)
-        if (!family) return error(c, 'گروه خدمات یافت نشد', 404)
-        await writeAudit({
-          actorUserId: c.var.platformAdmin.userId,
-          actorPlatformRole: c.var.platformAdmin.role,
-          action: setupAction('salon.setup.catalog_family.update', override),
-          targetType: 'service_family',
-          targetId: entityId,
-          salonId: id,
-          metadata: { fields: Object.keys(patch) },
-          request: auditMeta(c),
-        })
-        return ok(c, { family })
-      } catch (err) {
-        const mapped = setupCatalogError(c, err)
-        if (mapped) return mapped
-        throw err
-      }
-    },
-  )
-  .post(
     '/salons/:id/setup/catalog/services',
     requirePlatformAdmin('manage_salons'),
     zValidator('param', idParamSchema),
@@ -1064,13 +971,11 @@ export const adminRoute = new Hono<AppEnv>()
           salonId: id,
           name: body.name,
           categoryId: body.categoryId,
-          familyId: body.familyId ?? null,
           duration: body.duration,
           price: body.price,
           color: body.color,
           active: body.active,
           description: body.description,
-          kind: body.kind,
         })
         await writeAudit({
           actorUserId: c.var.platformAdmin.userId,
@@ -1086,13 +991,11 @@ export const adminRoute = new Hono<AppEnv>()
             fields: [
               'name',
               'categoryId',
-              'familyId',
               'duration',
               'price',
               'color',
               'active',
               'description',
-              'kind',
             ],
           },
           request: auditMeta(c),
@@ -1122,7 +1025,6 @@ export const adminRoute = new Hono<AppEnv>()
       if (lifecycleError) return lifecycleError
       const { override, ...input } = body
       const patch: Partial<Service> = { ...input }
-      if (input.familyId !== undefined) patch.familyId = input.familyId ?? null
       try {
         const service = await updateService(entityId, id, patch)
         if (!service) return error(c, 'خدمت یافت نشد', 404)

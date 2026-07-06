@@ -60,8 +60,6 @@ import {
   adminSetupClientImportSourceSchema,
   adminSetupCategoryCreateBodySchema,
   adminSetupCategoryUpdateBodySchema,
-  adminSetupFamilyCreateBodySchema,
-  adminSetupFamilyUpdateBodySchema,
   adminSetupServiceCreateBodySchema,
   adminSetupServiceUpdateBodySchema,
   adminStatusUpdateBodySchema,
@@ -579,20 +577,6 @@ export const updateAdminSetupCategoryRoute = setupCatalogMutationRoute({
   summary: 'Update a Setup Salon service category',
   params: setupCatalogEntityParamSchema,
   body: adminSetupCategoryUpdateBodySchema,
-})
-export const createAdminSetupFamilyRoute = setupCatalogMutationRoute({
-  method: 'post',
-  path: '/salons/{id}/setup/catalog/families',
-  summary: 'Create a Setup Salon service family',
-  params: idParamSchema,
-  body: adminSetupFamilyCreateBodySchema,
-})
-export const updateAdminSetupFamilyRoute = setupCatalogMutationRoute({
-  method: 'patch',
-  path: '/salons/{id}/setup/catalog/families/{entityId}',
-  summary: 'Update a Setup Salon service family',
-  params: setupCatalogEntityParamSchema,
-  body: adminSetupFamilyUpdateBodySchema,
 })
 export const createAdminSetupServiceRoute = setupCatalogMutationRoute({
   method: 'post',

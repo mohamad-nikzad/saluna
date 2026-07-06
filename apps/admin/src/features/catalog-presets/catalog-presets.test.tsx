@@ -78,11 +78,8 @@ describe('catalog presets feature', () => {
           tree: [
             {
               name: 'Hair',
-              families: [
-                {
-                  name: 'Cut',
-                  variants: [{ name: 'Basic cut', duration: 30, price: 10 }],
-                },
+              services: [
+                { name: 'Basic cut', duration: 30, price: 10, color: 'rose' },
               ],
             },
           ],
@@ -96,7 +93,6 @@ describe('catalog presets feature', () => {
     expect(await screen.findByText('Starter services')).toBeTruthy()
     expect(screen.getByText('starter-services')).toBeTruthy()
     expect(screen.getByText('1 دسته')).toBeTruthy()
-    expect(screen.getByText('1 گروه داخلی')).toBeTruthy()
     expect(screen.getByText('1 خدمت')).toBeTruthy()
     expect(generated.listPresets).toHaveBeenCalledWith({
       query: { page: 1, pageSize: 20, search: undefined },
@@ -122,9 +118,6 @@ describe('catalog presets feature', () => {
     fireEvent.change(screen.getByLabelText('دسته'), {
       target: { value: 'Hair' },
     })
-    fireEvent.change(screen.getByLabelText('گروه داخلی'), {
-      target: { value: 'Color' },
-    })
     fireEvent.change(screen.getByLabelText('خدمت'), {
       target: { value: 'Root color' },
     })
@@ -141,18 +134,12 @@ describe('catalog presets feature', () => {
         tree: [
           {
             name: 'Hair',
-            families: [
+            services: [
               {
-                name: 'Color',
-                variants: [
-                  {
-                    name: 'Root color',
-                    duration: 30,
-                    price: 0,
-                    color: 'teal',
-                    description: null,
-                  },
-                ],
+                name: 'Root color',
+                duration: 30,
+                price: 0,
+                color: 'teal',
               },
             ],
           },
@@ -175,23 +162,18 @@ describe('catalog presets feature', () => {
           tree: [
             {
               name: 'Hair',
-              families: [
+              services: [
                 {
-                  name: 'Cut',
-                  variants: [
-                    {
-                      name: 'Basic cut',
-                      duration: 30,
-                      price: 10,
-                      color: 'rose',
-                    },
-                    {
-                      name: 'Layered cut',
-                      duration: 45,
-                      price: 20,
-                      color: 'teal',
-                    },
-                  ],
+                  name: 'Basic cut',
+                  duration: 30,
+                  price: 10,
+                  color: 'rose',
+                },
+                {
+                  name: 'Layered cut',
+                  duration: 45,
+                  price: 20,
+                  color: 'teal',
                 },
               ],
             },
@@ -232,23 +214,18 @@ describe('catalog presets feature', () => {
           tree: [
             {
               name: 'Hair',
-              families: [
+              services: [
                 {
-                  name: 'Cut',
-                  variants: [
-                    {
-                      name: 'Basic cut',
-                      duration: 30,
-                      price: 10,
-                      color: 'rose',
-                    },
-                    {
-                      name: 'Layered cut',
-                      duration: 45,
-                      price: 20,
-                      color: 'teal',
-                    },
-                  ],
+                  name: 'Basic cut',
+                  duration: 30,
+                  price: 10,
+                  color: 'rose',
+                },
+                {
+                  name: 'Layered cut',
+                  duration: 45,
+                  price: 20,
+                  color: 'teal',
                 },
               ],
             },

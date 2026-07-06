@@ -38,7 +38,7 @@ import {
   servicePublicVisibility,
 } from '../schema'
 import { getAppointmentsByDateRange } from './appointment-queries'
-import { getAllServices, getServiceById } from './service-queries'
+import { getAllServices } from './service-queries'
 import {
   toSalonPresenceView,
   type SalonPresenceView,
@@ -72,6 +72,34 @@ export type PublicSalonLookupResult =
 
 export function isPublicSalonStatus(status: string | null): boolean {
   return status === 'active'
+}
+
+export function isPublicBookableService(
+  service: Pick<Service, 'active' | 'kind'>,
+): boolean {
+  return service.active && service.kind !== 'combo'
+}
+
+export function filterPublicBookableServices(
+  services: Service[],
+  visibilityRows: Array<{ serviceId: string; visible: boolean }>,
+): Service[] {
+  const byServiceId = new Map(visibilityRows.map((row) => [row.serviceId, row]))
+
+  return services
+    .filter((service) => {
+      if (!isPublicBookableService(service)) return false
+      const row = byServiceId.get(service.id)
+      return row ? row.visible : true
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'fa'))
+}
+
+function findPublicBookableService(
+  services: Service[],
+  serviceId: string,
+): Service | undefined {
+  return services.find((service) => service.id === serviceId)
 }
 
 /**
@@ -124,14 +152,8 @@ export async function getPublicSalon(
     .select()
     .from(servicePublicVisibility)
     .where(eq(servicePublicVisibility.salonId, salonRow.id))
-  const byServiceId = new Map(visibilityRows.map((row) => [row.serviceId, row]))
 
-  const visible = services
-    .filter((service) => {
-      const row = byServiceId.get(service.id)
-      return row ? row.visible : true
-    })
-    .sort((a, b) => a.name.localeCompare(b.name, 'fa'))
+  const visible = filterPublicBookableServices(services, visibilityRows)
 
   return {
     ok: true,
@@ -210,15 +232,18 @@ export async function getPublicAvailability(
   }
   const salonId = salonLookup.view.salon.id
 
-  const [service, businessHours, allStaff] = await Promise.all([
-    getServiceById(params.serviceId, salonId),
+  const service = findPublicBookableService(
+    salonLookup.view.services,
+    params.serviceId,
+  )
+  if (!service) {
+    return { ok: false, status: 404, error: 'خدمت یافت نشد' }
+  }
+
+  const [businessHours, allStaff] = await Promise.all([
     getBusinessSettings(salonId),
     getAllStaff(salonId),
   ])
-
-  if (!service || !service.active) {
-    return { ok: false, status: 404, error: 'خدمت یافت نشد' }
-  }
 
   const activeStaff = allStaff.filter((member) => member.role === 'staff')
   const eligibleStaff = eligibleStaffForService(activeStaff, service.id)
@@ -414,8 +439,11 @@ export async function createAppointmentRequest(
     return { ok: false, status: 400, error: 'تاریخ خارج از بازه مجاز است' }
   }
 
-  const service = await getServiceById(input.serviceId, salonId)
-  if (!service || !service.active) {
+  const service = findPublicBookableService(
+    salonLookup.view.services,
+    input.serviceId,
+  )
+  if (!service) {
     return { ok: false, status: 404, error: 'خدمت یافت نشد' }
   }
 

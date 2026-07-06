@@ -24,6 +24,17 @@ export {
   validateServiceAddonDeltas,
   CatalogReferenceError,
 } from './internal/service-queries'
+export { createServicePackageBooking } from './internal/service-package-booking-queries'
+export {
+  createServicePackage,
+  getAllServicePackages,
+  getServicePackageById,
+  normalizeServicePackageName,
+  replaceServicePackageComponents,
+  resolveServicePackagePrice,
+  updateServicePackage,
+  validatePackageComponentReplacement,
+} from './internal/service-package-queries'
 export type {
   ServiceAddonScopeInput,
   CatalogReferenceErrorReason,

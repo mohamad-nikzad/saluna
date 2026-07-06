@@ -20,11 +20,14 @@ import {
   getApiV1AppointmentsQueryKey,
   patchApiV1AppointmentsByIdMutation,
   postApiV1AppointmentsByIdCompleteClientMutation,
+  postApiV1ServicePackagesByIdBookingsMutation,
   postApiV1AppointmentsMutation,
 } from '@repo/api-client/query'
 import type {
   AppointmentWithDetails as GeneratedAppointmentWithDetails,
   PatchApiV1AppointmentsByIdResponse,
+  ServicePackageBooking,
+  ServicePackageBookingCreateRequest,
 } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
@@ -114,6 +117,28 @@ export function useCreateAppointmentMutation() {
     },
     meta: {
       errorMessage: 'ثبت نوبت انجام نشد',
+      invalidatesQuery: appointmentsRangeInvalidationKeys(),
+    },
+  })
+}
+
+export function useCreateServicePackageBookingMutation() {
+  const generated = postApiV1ServicePackagesByIdBookingsMutation()
+
+  return useMutation<
+    ServicePackageBooking,
+    unknown,
+    { packageId: string; values: ServicePackageBookingCreateRequest }
+  >({
+    mutationFn: async ({ packageId, values }, mutationContext) => {
+      const response = await generated.mutationFn!(
+        { path: { id: packageId }, body: values },
+        mutationContext,
+      )
+      return response.booking
+    },
+    meta: {
+      errorMessage: 'ثبت پکیج انجام نشد',
       invalidatesQuery: appointmentsRangeInvalidationKeys(),
     },
   })

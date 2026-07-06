@@ -22,10 +22,9 @@ function robotsSitemapIntegration() {
     hooks: {
       /** @param {{ dir: URL }} params */
       'astro:build:done': async ({ dir }) => {
-        const site = (process.env.PUBLIC_APP_URL ?? 'http://localhost:3001').replace(
-          /\/$/,
-          '',
-        )
+        const site = (
+          process.env.PUBLIC_APP_URL ?? 'http://localhost:3001'
+        ).replace(/\/$/, '')
         const robots = `User-agent: *
 Allow: /
 
@@ -107,6 +106,9 @@ export default defineConfig({
     },
   },
   vite: {
+    server: {
+      strictPort: true,
+    },
     resolve: {
       dedupe: ['react', 'react-dom'],
     },

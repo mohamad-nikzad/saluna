@@ -493,15 +493,6 @@ export function useServiceColumns() {
         ),
       },
       {
-        accessorKey: 'kind',
-        header: 'قالب',
-        cell: ({ row }) => (
-          <Badge variant="outline">
-            {formatServiceKind(row.original.kind)}
-          </Badge>
-        ),
-      },
-      {
         accessorKey: 'duration',
         header: 'مدت',
         cell: ({ row }) => `${number(row.original.duration)} دقیقه`,
@@ -531,11 +522,6 @@ export function normalizeStatus(value: unknown): AdminSalonStatus {
   if (value === 'setup' || value === 'suspended' || value === 'archived')
     return value
   return 'active'
-}
-
-function formatServiceKind(value: unknown) {
-  if (value === 'combo') return 'پکیج'
-  return 'خدمت'
 }
 
 export function truthy(value: unknown): boolean {

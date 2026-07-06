@@ -9,17 +9,17 @@ cp .env.example .env.local   # then edit secrets as needed
 pnpm install
 pnpm db:prepare              # start Postgres + apply migrations
 pnpm db:seed                 # optional demo data
-pnpm dev                     # PWA + public web + API
+pnpm dev                     # PWA + public web + platform admin + API
 ```
 
 ### Individual apps (fixed ports)
 
-| App | Command | Port |
-|-----|---------|------|
-| Manager PWA | `pnpm dev:pwa` | 3000 |
-| Public web (Astro) | `pnpm dev:web` | 3001 |
-| API (Hono) | `pnpm dev:api` | 3002 |
-| Platform admin | `pnpm dev:admin` | 3003 |
+| App                      | Command          | Port       |
+| ------------------------ | ---------------- | ---------- |
+| Manager PWA + API        | `pnpm dev:pwa`   | 3000, 3002 |
+| Public web (Astro) + API | `pnpm dev:web`   | 3001, 3002 |
+| API (Hono)               | `pnpm dev:api`   | 3002       |
+| Platform admin + API     | `pnpm dev:admin` | 3003, 3002 |
 
 ### Stacks
 

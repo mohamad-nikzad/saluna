@@ -665,6 +665,119 @@ export const serviceComboComponents = pgTable(
   ],
 )
 
+export const servicePackages = pgTable(
+  'service_packages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => serviceCategories.id, {
+      onDelete: 'set null',
+    }),
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color'),
+    active: boolean('active').notNull().default(true),
+    priceOverride: integer('price_override'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    sourceLegacyServiceId: uuid('source_legacy_service_id').references(
+      () => services.id,
+      { onDelete: 'set null' },
+    ),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_packages_source_legacy_service_id_unique').on(
+      t.sourceLegacyServiceId,
+    ),
+    index('service_packages_salon_id_active_idx').on(t.salonId, t.active),
+    index('service_packages_salon_id_category_id_idx').on(
+      t.salonId,
+      t.categoryId,
+    ),
+    index('service_packages_salon_id_sort_idx').on(
+      t.salonId,
+      t.sortOrder,
+      t.name,
+    ),
+  ],
+)
+
+export const servicePackageComponents = pgTable(
+  'service_package_components',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    packageId: uuid('package_id')
+      .notNull()
+      .references(() => servicePackages.id, { onDelete: 'cascade' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'restrict' }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_package_components_package_service_unique').on(
+      t.packageId,
+      t.serviceId,
+    ),
+    index('service_package_components_salon_id_package_idx').on(
+      t.salonId,
+      t.packageId,
+    ),
+    index('service_package_components_salon_id_service_idx').on(
+      t.salonId,
+      t.serviceId,
+    ),
+  ],
+)
+
+export const serviceCatalogMigrationIssues = pgTable(
+  'service_catalog_migration_issues',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    issueType: text('issue_type').notNull(),
+    legacyServiceId: uuid('legacy_service_id').references(() => services.id, {
+      onDelete: 'set null',
+    }),
+    details: jsonb('details')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    resolved: boolean('resolved').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_catalog_migration_issues_legacy_type_unique').on(
+      t.legacyServiceId,
+      t.issueType,
+    ),
+    index('service_catalog_migration_issues_salon_id_resolved_idx').on(
+      t.salonId,
+      t.resolved,
+    ),
+  ],
+)
+
 export const serviceAddons = pgTable(
   'service_addons',
   {
@@ -781,6 +894,39 @@ export const serviceAddonServiceScopes = pgTable(
     ),
     index('service_addon_service_scopes_salon_id_scope_idx').on(
       t.salonId,
+      t.scopeId,
+    ),
+  ],
+)
+
+export const serviceAddonScopes = pgTable(
+  'service_addon_scopes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    addonId: uuid('addon_id')
+      .notNull()
+      .references(() => serviceAddons.id, { onDelete: 'cascade' }),
+    scopeType: text('scope_type')
+      .notNull()
+      .$type<'all' | 'category' | 'service'>(),
+    scopeId: uuid('scope_id'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_addon_scopes_addon_type_scope_unique').on(
+      t.addonId,
+      t.scopeType,
+      t.scopeId,
+    ),
+    index('service_addon_scopes_salon_id_addon_idx').on(t.salonId, t.addonId),
+    index('service_addon_scopes_salon_id_scope_idx').on(
+      t.salonId,
+      t.scopeType,
       t.scopeId,
     ),
   ],
@@ -940,6 +1086,107 @@ export const appointments = pgTable(
     ),
     index('appointments_staff_id_date_idx').on(t.staffId, t.date),
     index('appointments_client_id_date_idx').on(t.clientId, t.date),
+  ],
+)
+
+export const servicePackageBookings = pgTable(
+  'service_package_bookings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'restrict' }),
+    packageId: uuid('package_id')
+      .notNull()
+      .references(() => servicePackages.id, { onDelete: 'restrict' }),
+    clientId: uuid('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'restrict' }),
+    leadStaffId: uuid('lead_staff_id').notNull(),
+    date: text('date').notNull(),
+    bookedPackageName: text('booked_package_name').notNull(),
+    bookedPackagePrice: integer('booked_package_price').notNull(),
+    status: text('status')
+      .notNull()
+      .$type<
+        'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
+      >(),
+    notes: text('notes'),
+    createdByUserId: uuid('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('service_package_bookings_salon_id_date_idx').on(t.salonId, t.date),
+    index('service_package_bookings_salon_id_client_id_date_idx').on(
+      t.salonId,
+      t.clientId,
+      t.date,
+    ),
+    index('service_package_bookings_salon_id_package_id_idx').on(
+      t.salonId,
+      t.packageId,
+    ),
+    index('service_package_bookings_salon_id_lead_staff_id_date_idx').on(
+      t.salonId,
+      t.leadStaffId,
+      t.date,
+    ),
+  ],
+)
+
+export const servicePackageTasks = pgTable(
+  'service_package_tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    packageBookingId: uuid('package_booking_id')
+      .notNull()
+      .references(() => servicePackageBookings.id, { onDelete: 'cascade' }),
+    packageComponentId: uuid('package_component_id')
+      .notNull()
+      .references(() => servicePackageComponents.id, { onDelete: 'restrict' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'restrict' }),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'restrict' }),
+    staffId: uuid('staff_id').notNull(),
+    startTime: text('start_time').notNull(),
+    endTime: text('end_time').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_package_tasks_appointment_id_unique').on(
+      t.appointmentId,
+    ),
+    index('service_package_tasks_salon_id_booking_idx').on(
+      t.salonId,
+      t.packageBookingId,
+    ),
+    index('service_package_tasks_salon_id_staff_id_idx').on(
+      t.salonId,
+      t.staffId,
+    ),
+    index('service_package_tasks_salon_id_service_id_idx').on(
+      t.salonId,
+      t.serviceId,
+    ),
   ],
 )
 

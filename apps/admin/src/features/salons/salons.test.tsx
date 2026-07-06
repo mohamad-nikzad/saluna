@@ -248,7 +248,6 @@ describe('salons feature', () => {
     generated.mutateSetupStaff.mockReset()
     generated.getSetupCatalog.mockResolvedValue({
       categories: [],
-      families: [],
       services: [],
       addons: [],
       presets: [],
@@ -573,14 +572,13 @@ describe('salons feature', () => {
     })
     generated.getSetupCatalog.mockResolvedValue({
       categories: [],
-      families: [],
       services: [],
       addons: [],
       presets: [
         {
           id: '22222222-2222-4222-8222-222222222222',
           name: 'قالب مو',
-          tree: [{ families: [{ variants: [{ name: 'رنگ مو' }] }] }],
+          tree: [{ services: [{ name: 'رنگ مو' }] }],
         },
       ],
     })
@@ -619,7 +617,7 @@ describe('salons feature', () => {
         selection: [
           {
             categoryIndex: 0,
-            families: [{ familyIndex: 0, variantIndices: [0] }],
+            serviceIndices: [0],
           },
         ],
       },
@@ -653,7 +651,6 @@ describe('salons feature', () => {
     })
     generated.getSetupCatalog.mockResolvedValue({
       categories: [],
-      families: [],
       services: [
         {
           id: '66666666-6666-4666-8666-666666666666',
@@ -1013,9 +1010,7 @@ describe('salons feature', () => {
         {
           id: 'service-1',
           name: 'Cut service',
-          kind: 'standard',
           categoryName: 'Hair',
-          familyName: 'Internal cut group',
           duration: 45,
           price: 500000,
           active: true,
@@ -1023,9 +1018,7 @@ describe('salons feature', () => {
         {
           id: 'service-2',
           name: 'Bridal package',
-          kind: 'combo',
           categoryName: 'Makeup',
-          familyName: 'Internal package group',
           duration: 120,
           price: 2500000,
           active: true,
@@ -1050,7 +1043,6 @@ describe('salons feature', () => {
     })
     expect(await screen.findByText('Cut service')).toBeTruthy()
     expect(screen.getByText('Bridal package')).toBeTruthy()
-    expect(screen.getByText('پکیج')).toBeTruthy()
     expect(screen.queryByText('Internal cut group')).toBeNull()
     expect(screen.queryByText(/Add Service/)).toBeNull()
   })

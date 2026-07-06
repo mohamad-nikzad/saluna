@@ -13,7 +13,10 @@ import type {
   AppointmentWithDetails,
   BusinessHours,
   CalendarView,
+  ServicePackage,
 } from '@repo/salon-core/types'
+import { getApiV1ServicePackages } from '@repo/api-client/sdk'
+import { getApiV1ServicePackagesQueryKey } from '@repo/api-client/query'
 
 import { useAuth } from '#/lib/auth'
 import { businessSettingsQueryOptions } from '#/lib/settings-queries'
@@ -108,7 +111,6 @@ function CalendarPage() {
     start: string
     end: string
   } | null>(null)
-
   const fallbackRange = useMemo(() => defaultRange(navDate), [navDate])
   const { start: startDate, end: endDate } = range ?? fallbackRange
 
@@ -119,6 +121,17 @@ function CalendarPage() {
 
   const staffQuery = useQuery(staffListQueryOptions())
   const servicesQuery = useQuery(servicesListQueryOptions())
+  const packagesQuery = useQuery({
+    queryKey: getApiV1ServicePackagesQueryKey(),
+    enabled: isManager,
+    queryFn: async ({ signal }) => {
+      const { data } = await getApiV1ServicePackages({
+        signal,
+        throwOnError: true,
+      })
+      return data.packages
+    },
+  })
 
   const clientsQuery = useQuery({
     ...clientsListQueryOptions(),
@@ -133,6 +146,10 @@ function CalendarPage() {
   )
   const staff = staffQuery.data ?? []
   const services = servicesQuery.data ?? []
+  const servicePackages: ServicePackage[] =
+    (packagesQuery.data as unknown as ServicePackage[] | undefined)?.filter(
+      (pkg) => pkg.active && pkg.components.length > 0,
+    ) ?? []
   const clients = clientsQuery.data ?? []
   const businessHours: BusinessHours = useMemo(() => {
     const s = businessQuery.data
@@ -227,7 +244,6 @@ function CalendarPage() {
 
   const hasActiveFilters =
     selectedStaffIds.length > 0 || selectedServiceIds.length > 0
-
   const activeFilterLabel = useMemo(() => {
     const parts: string[] = []
     const selected = staff.filter((member) =>
@@ -402,6 +418,12 @@ function CalendarPage() {
     [appointmentFlow.actions, queryClient, upsertAppointmentInCache],
   )
 
+  const handlePackageBooked = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: appointmentsRangeInvalidationKeys()[0],
+    })
+  }, [queryClient])
+
   const handleOpenAvailability = useCallback(() => {
     if (!isManager) return
     appointmentFlow.actions.setAvailabilityOpen(true)
@@ -460,12 +482,14 @@ function CalendarPage() {
     void appointmentsQuery.refetch()
     void staffQuery.refetch()
     void servicesQuery.refetch()
+    void packagesQuery.refetch()
     void businessQuery.refetch()
     if (isManager) void clientsQuery.refetch()
   }, [
     appointmentsQuery,
     staffQuery,
     servicesQuery,
+    packagesQuery,
     businessQuery,
     clientsQuery,
     isManager,
@@ -670,9 +694,11 @@ function CalendarPage() {
         flow={appointmentFlow}
         staff={staff}
         services={services}
+        packages={servicePackages}
         clients={clients}
         availabilityInitialDate={format(navDate, 'yyyy-MM-dd')}
         onAppointmentCreated={handleAppointmentCreated}
+        onPackageBooked={handlePackageBooked}
         onDetailChange={handleDetailChange}
         onClientsChanged={() => {
           void queryClient.invalidateQueries({

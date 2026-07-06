@@ -1,7 +1,6 @@
 import { z } from '@hono/zod-openapi'
 import { applyCatalogPresetBodySchema } from '@repo/salon-core/forms/catalog-preset'
 import {
-  comboComponentsUpdateSchema,
   serviceAddonCreateSchema,
   serviceAddonUpdateSchema,
   serviceCategoryCreateSchema,
@@ -9,6 +8,10 @@ import {
   serviceCreateSchema,
   serviceFamilyCreateSchema,
   serviceFamilyUpdateSchema,
+  servicePackageComponentsUpdateSchema,
+  servicePackageBookingCreateSchema,
+  servicePackageCreateSchema,
+  servicePackageUpdateSchema,
   serviceUpdateSchema,
 } from '@repo/salon-core/forms/service'
 
@@ -39,18 +42,17 @@ const isoDateTimeSchema = z.string().datetime().or(z.string())
 
 export const includeInactiveQuerySchema = z
   .object({
-    all: z.string().optional().openapi({
-      param: { name: 'all', in: 'query' },
-      example: '1',
-      description:
-        'When set to "1" and the caller is a manager, inactive catalog rows are included',
-    }),
+    all: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'all', in: 'query' },
+        example: '1',
+        description:
+          'When set to "1" and the caller is a manager, inactive catalog rows are included',
+      }),
   })
   .openapi('IncludeInactiveQuery')
-
-export const serviceKindSchema = z
-  .enum(['standard', 'combo'])
-  .openapi('ServiceKind')
 
 export const legacyServiceCategoryKeySchema = z
   .enum(['hair', 'nails', 'skincare', 'spa'])
@@ -63,14 +65,11 @@ export const serviceSchema = z
     category: legacyServiceCategoryKeySchema,
     categoryId: z.string(),
     categoryName: z.string().nullable().optional(),
-    familyId: z.string().nullable(),
-    familyName: z.string().nullable().optional(),
     duration: z.number().int(),
     price: z.number(),
     color: z.string(),
     active: z.boolean(),
     description: z.string().nullable().optional(),
-    kind: serviceKindSchema.optional(),
   })
   .passthrough()
   .openapi('Service')
@@ -102,23 +101,18 @@ export const serviceFamilySchema = z
 export const serviceAddonScopeSchema = z
   .discriminatedUnion('type', [
     z.object({
+      type: z.literal('all'),
+    }),
+    z.object({
       type: z.literal('category'),
       categoryId: z.string(),
       categoryName: z.string(),
       active: z.boolean(),
     }),
     z.object({
-      type: z.literal('family'),
-      familyId: z.string(),
-      familyName: z.string(),
-      categoryId: z.string(),
-      active: z.boolean(),
-    }),
-    z.object({
       type: z.literal('service'),
       serviceId: z.string(),
       serviceName: z.string(),
-      familyId: z.string().nullable(),
       active: z.boolean(),
     }),
   ])
@@ -142,42 +136,115 @@ export const serviceAddonSchema = z
   .passthrough()
   .openapi('ServiceAddon')
 
-export const comboComponentSchema = z
+export const servicePackageComponentSchema = z
   .object({
     id: z.string(),
     salonId: z.string(),
-    comboServiceId: z.string(),
-    componentServiceId: z.string(),
+    packageId: z.string(),
+    serviceId: z.string(),
     sortOrder: z.number().int(),
     service: serviceSchema,
     createdAt: isoDateTimeSchema,
     updatedAt: isoDateTimeSchema,
   })
   .passthrough()
-  .openapi('ComboComponent')
+  .openapi('ServicePackageComponent')
 
-export const comboComponentsSummarySchema = z
+export const servicePackageSchema = z
   .object({
-    comboServiceId: z.string(),
-    components: z.array(comboComponentSchema),
+    id: z.string(),
+    salonId: z.string(),
+    categoryId: z.string().nullable(),
+    categoryName: z.string().nullable().optional(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+    active: z.boolean(),
+    priceOverride: z.number().nullable(),
+    sortOrder: z.number().int(),
+    components: z.array(servicePackageComponentSchema),
     totalDuration: z.number().int(),
-    totalPrice: z.number(),
+    componentPriceTotal: z.number(),
+    resolvedPrice: z.number(),
+    createdAt: isoDateTimeSchema,
+    updatedAt: isoDateTimeSchema,
   })
-  .openapi('ComboComponentsSummary')
+  .passthrough()
+  .openapi('ServicePackage')
+
+const servicePackageBookingTaskAppointmentSchema = z
+  .object({
+    id: z.string(),
+    clientId: z.string(),
+    staffId: z.string(),
+    serviceId: z.string(),
+    bookedServiceName: z.string(),
+    bookedServiceDuration: z.number().int(),
+    bookedServicePrice: z.number(),
+    bookedTotalDuration: z.number().int(),
+    bookedTotalPrice: z.number(),
+    bookedAddonCount: z.number().int(),
+    date: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    status: z.string(),
+    notes: z.string().nullable().optional(),
+    createdAt: isoDateTimeSchema,
+    updatedAt: isoDateTimeSchema,
+  })
+  .passthrough()
+  .openapi('ServicePackageTaskAppointment')
+
+export const servicePackageBookingTaskSchema = z
+  .object({
+    id: z.string(),
+    salonId: z.string(),
+    packageBookingId: z.string(),
+    packageComponentId: z.string(),
+    serviceId: z.string(),
+    appointmentId: z.string(),
+    staffId: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    sortOrder: z.number().int(),
+    appointment: servicePackageBookingTaskAppointmentSchema.optional(),
+    createdAt: isoDateTimeSchema,
+    updatedAt: isoDateTimeSchema,
+  })
+  .passthrough()
+  .openapi('ServicePackageBookingTask')
+
+export const servicePackageBookingSchema = z
+  .object({
+    id: z.string(),
+    salonId: z.string(),
+    packageId: z.string(),
+    clientId: z.string(),
+    leadStaffId: z.string(),
+    date: z.string(),
+    bookedPackageName: z.string(),
+    bookedPackagePrice: z.number(),
+    status: z.string(),
+    notes: z.string().nullable().optional(),
+    createdByUserId: z.string().nullable().optional(),
+    tasks: z.array(servicePackageBookingTaskSchema),
+    createdAt: isoDateTimeSchema,
+    updatedAt: isoDateTimeSchema,
+  })
+  .passthrough()
+  .openapi('ServicePackageBooking')
 
 export const serviceCreateBodySchema = bodyFromCoreSchema(
   'ServiceCreateRequest',
   {
     name: z.string().openapi({ example: 'رنگ مو' }),
     categoryId: z.string().openapi({ example: 'cat-1' }),
-    familyId: z.string().nullable().optional(),
     category: legacyServiceCategoryKeySchema.optional(),
     duration: z.number().int().openapi({ example: 90 }),
     price: z.number().openapi({ example: 450000 }),
     color: z.string().optional(),
     active: z.boolean().optional(),
     description: z.string().optional(),
-    kind: serviceKindSchema.optional(),
     id: z.string().optional(),
   },
   serviceCreateSchema,
@@ -188,13 +255,11 @@ export const serviceUpdateBodySchema = bodyFromCoreSchema(
   {
     name: z.string().optional(),
     categoryId: z.string().optional(),
-    familyId: z.string().nullable().optional(),
     duration: z.number().int().optional(),
     price: z.number().optional(),
     color: z.string().optional(),
     active: z.boolean().optional(),
     description: z.string().optional(),
-    kind: serviceKindSchema.optional(),
   },
   serviceUpdateSchema,
 )
@@ -242,12 +307,11 @@ export const serviceFamilyUpdateBodySchema = bodyFromCoreSchema(
 const serviceAddonScopeInputOpenApiSchema = z
   .discriminatedUnion('type', [
     z.object({
-      type: z.literal('category'),
-      categoryId: z.string(),
+      type: z.literal('all'),
     }),
     z.object({
-      type: z.literal('family'),
-      familyId: z.string(),
+      type: z.literal('category'),
+      categoryId: z.string(),
     }),
     z.object({
       type: z.literal('service'),
@@ -287,14 +351,75 @@ export const serviceAddonUpdateBodySchema = bodyFromCoreSchema(
   serviceAddonUpdateSchema,
 )
 
-export const comboComponentsUpdateBodySchema = bodyFromCoreSchema(
-  'ComboComponentsUpdateRequest',
+export const servicePackageCreateBodySchema = bodyFromCoreSchema(
+  'ServicePackageCreateRequest',
   {
-    componentServiceIds: z.array(z.string()).openapi({
-      example: ['svc-1', 'svc-2'],
+    name: z.string().openapi({ example: 'پکیج عروس' }),
+    categoryId: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+    active: z.boolean().optional(),
+    priceOverride: z.number().nullable().optional(),
+    sortOrder: z.number().int().optional(),
+    id: z.string().optional(),
+  },
+  servicePackageCreateSchema,
+)
+
+export const servicePackageUpdateBodySchema = bodyFromCoreSchema(
+  'ServicePackageUpdateRequest',
+  {
+    name: z.string().optional(),
+    categoryId: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+    active: z.boolean().optional(),
+    priceOverride: z.number().nullable().optional(),
+    sortOrder: z.number().int().optional(),
+  },
+  servicePackageUpdateSchema,
+)
+
+export const servicePackageComponentsUpdateBodySchema = bodyFromCoreSchema(
+  'ServicePackageComponentsUpdateRequest',
+  {
+    serviceIds: z
+      .array(z.string())
+      .optional()
+      .openapi({
+        example: ['svc-1', 'svc-2'],
+      }),
+  },
+  servicePackageComponentsUpdateSchema,
+)
+
+const servicePackageBookingTaskInputOpenApiSchema = z
+  .object({
+    packageComponentId: z.string(),
+    staffId: z.string(),
+    startTime: z.string().openapi({ example: '10:00' }),
+    endTime: z.string().openapi({ example: '11:00' }),
+  })
+  .openapi('ServicePackageBookingTaskInput')
+
+export const servicePackageBookingCreateBodySchema = bodyFromCoreSchema(
+  'ServicePackageBookingCreateRequest',
+  {
+    clientId: z.string().openapi({ example: 'client-1' }),
+    date: z.string().openapi({ example: '2026-07-02' }),
+    notes: z.string().optional(),
+    tasks: z.array(servicePackageBookingTaskInputOpenApiSchema).openapi({
+      example: [
+        {
+          packageComponentId: 'component-1',
+          staffId: 'staff-1',
+          startTime: '10:00',
+          endTime: '11:00',
+        },
+      ],
     }),
   },
-  comboComponentsUpdateSchema,
+  servicePackageBookingCreateSchema,
 )
 
 export const servicesListResponseSchema = z
@@ -345,40 +470,45 @@ export const serviceAddonResponseSchema = z
   })
   .openapi('ServiceAddonResponse')
 
-export const comboComponentsResponseSchema = z
+export const servicePackagesListResponseSchema = z
   .object({
-    combo: comboComponentsSummarySchema,
+    packages: z.array(servicePackageSchema),
   })
-  .openapi('ComboComponentsResponse')
+  .openapi('ServicePackagesListResponse')
+
+export const servicePackageResponseSchema = z
+  .object({
+    package: servicePackageSchema,
+  })
+  .openapi('ServicePackageResponse')
+
+export const servicePackageBookingResponseSchema = z
+  .object({
+    booking: servicePackageBookingSchema,
+  })
+  .openapi('ServicePackageBookingResponse')
 
 export const importStarterTemplatesResponseSchema = z
   .object({
     categories: z.array(serviceCategorySchema),
-    families: z.array(serviceFamilySchema),
     services: z.array(serviceSchema),
   })
   .openapi('ImportStarterTemplatesResponse')
 
 export const catalogPresetTreeSchema = z
   .array(
-    z
-      .object({
-        name: z.string(),
-        families: z.array(
-          z.object({
-            name: z.string(),
-            variants: z.array(
-              z.object({
-                name: z.string(),
-                duration: z.number().int(),
-                price: z.number(),
-                color: z.string(),
-                description: z.string().optional(),
-              }),
-            ),
-          }),
-        ),
-      }),
+    z.object({
+      name: z.string(),
+      services: z.array(
+        z.object({
+          name: z.string(),
+          duration: z.number().int(),
+          price: z.number(),
+          color: z.string(),
+          description: z.string().optional(),
+        }),
+      ),
+    }),
   )
   .openapi('CatalogPresetTree')
 
@@ -408,16 +538,7 @@ export const applyCatalogPresetBodySchemaOpenApi = bodyFromCoreSchema(
       .array(
         z.object({
           categoryIndex: z.number().int().nonnegative(),
-          families: z
-            .array(
-              z.object({
-                familyIndex: z.number().int().nonnegative(),
-                variantIndices: z
-                  .array(z.number().int().nonnegative())
-                  .min(1),
-              }),
-            )
-            .min(1),
+          serviceIndices: z.array(z.number().int().nonnegative()).min(1),
         }),
       )
       .min(1),

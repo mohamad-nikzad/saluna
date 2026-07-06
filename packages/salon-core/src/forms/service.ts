@@ -9,9 +9,11 @@ import { SERVICE_CATEGORIES, STAFF_COLORS } from '../types'
 import { formMessages } from './messages'
 import {
   durationMinutesSchema,
+  gregorianDateSchema,
   nonNegativeIntegerSchema,
   nonNegativeMoneySchema,
   requiredTextSchema,
+  timeOfDaySchema,
 } from './primitives'
 
 export const catalogEntityIdSchema = z
@@ -70,14 +72,12 @@ export const calendarColorIdSchema = z
 export const serviceFormSchema = z.object({
   name: requiredTextSchema,
   categoryId: serviceCategoryIdSchema,
-  familyId: optionalCatalogEntityIdSchema,
   category: serviceCategorySchema.default('hair'),
   duration: durationMinutesSchema,
   price: nonNegativeMoneySchema,
   color: calendarColorIdSchema.default(STAFF_COLORS[0]),
   active: z.boolean().default(true),
   description: z.string().trim().optional(),
-  kind: z.enum(['standard', 'combo']).default('standard'),
 })
 
 export const serviceCreateSchema = serviceFormSchema.extend({
@@ -87,13 +87,11 @@ export const serviceCreateSchema = serviceFormSchema.extend({
 export const serviceUpdateSchema = z.object({
   name: requiredTextSchema.optional(),
   categoryId: serviceCategoryIdSchema.optional(),
-  familyId: nullableCatalogEntityIdSchema,
   duration: durationMinutesSchema.optional(),
   price: nonNegativeMoneySchema.optional(),
   color: calendarColorIdSchema.optional(),
   active: z.boolean().optional(),
   description: z.string().trim().optional(),
-  kind: z.enum(['standard', 'combo']).optional(),
 })
 
 export const serviceCategoryFormSchema = z.object({
@@ -130,14 +128,56 @@ export const comboComponentsUpdateSchema = z.object({
   componentServiceIds: z.array(catalogEntityIdSchema).default([]),
 })
 
+export const servicePackageCreateSchema = z.object({
+  name: requiredTextSchema,
+  categoryId: optionalCatalogEntityIdSchema,
+  description: z.string().trim().optional().nullable(),
+  color: z.string().trim().optional().nullable(),
+  active: z.boolean().default(true),
+  priceOverride: nonNegativeMoneySchema.optional().nullable(),
+  sortOrder: nonNegativeIntegerSchema.default(0),
+  id: z.string().optional(),
+})
+
+export const servicePackageUpdateSchema = z.object({
+  name: requiredTextSchema.optional(),
+  categoryId: nullableCatalogEntityIdSchema,
+  description: z.string().trim().optional().nullable(),
+  color: z.string().trim().optional().nullable(),
+  active: z.boolean().optional(),
+  priceOverride: nonNegativeMoneySchema.optional().nullable(),
+  sortOrder: nonNegativeIntegerSchema.optional(),
+})
+
+export const servicePackageComponentsUpdateSchema = z.object({
+  serviceIds: z.array(catalogEntityIdSchema).default([]),
+})
+
+const servicePackageBookingTaskSchema = z
+  .object({
+    packageComponentId: catalogEntityIdSchema,
+    staffId: catalogEntityIdSchema,
+    startTime: timeOfDaySchema,
+    endTime: timeOfDaySchema,
+  })
+  .strict()
+
+export const servicePackageBookingCreateSchema = z
+  .object({
+    clientId: catalogEntityIdSchema,
+    date: gregorianDateSchema,
+    notes: z.string().trim().optional(),
+    tasks: z.array(servicePackageBookingTaskSchema).min(1),
+  })
+  .strict()
+
 export const serviceAddonScopeInputSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('all'),
+  }),
   z.object({
     type: z.literal('category'),
     categoryId: catalogEntityIdSchema,
-  }),
-  z.object({
-    type: z.literal('family'),
-    familyId: catalogEntityIdSchema,
   }),
   z.object({
     type: z.literal('service'),
@@ -230,6 +270,30 @@ export type ComboComponentsUpdateInput = z.input<
 >
 export type ComboComponentsUpdatePayload = z.output<
   typeof comboComponentsUpdateSchema
+>
+export type ServicePackageCreateInput = z.input<
+  typeof servicePackageCreateSchema
+>
+export type ServicePackageCreatePayload = z.output<
+  typeof servicePackageCreateSchema
+>
+export type ServicePackageUpdateInput = z.input<
+  typeof servicePackageUpdateSchema
+>
+export type ServicePackageUpdatePayload = z.output<
+  typeof servicePackageUpdateSchema
+>
+export type ServicePackageComponentsUpdateInput = z.input<
+  typeof servicePackageComponentsUpdateSchema
+>
+export type ServicePackageComponentsUpdatePayload = z.output<
+  typeof servicePackageComponentsUpdateSchema
+>
+export type ServicePackageBookingCreateInput = z.input<
+  typeof servicePackageBookingCreateSchema
+>
+export type ServicePackageBookingCreatePayload = z.output<
+  typeof servicePackageBookingCreateSchema
 >
 export type ServiceAddonScopeInput = z.input<
   typeof serviceAddonScopeInputSchema

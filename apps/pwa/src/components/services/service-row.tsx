@@ -1,4 +1,4 @@
-import { Banknote, Clock3, PackageCheck, Pencil } from 'lucide-react'
+import { Banknote, Clock3, Pencil } from 'lucide-react'
 
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
@@ -24,12 +24,6 @@ export function ServiceRow({
           {!service.active && (
             <Badge variant="secondary" className="text-[10px]">
               غیرفعال
-            </Badge>
-          )}
-          {service.kind === 'combo' && (
-            <Badge variant="outline" className="gap-1 text-[10px]">
-              <PackageCheck className="h-3 w-3" />
-              پکیج
             </Badge>
           )}
         </div>

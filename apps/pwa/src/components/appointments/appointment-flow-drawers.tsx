@@ -2,6 +2,7 @@ import type {
   AppointmentWithDetails,
   Client,
   Service,
+  ServicePackage,
   User,
 } from '@repo/salon-core/types'
 
@@ -18,9 +19,11 @@ type AppointmentFlowDrawersProps = {
   flow: AppointmentFlow
   staff: User[]
   services: Service[]
+  packages?: ServicePackage[]
   clients: Client[]
   availabilityInitialDate: string
   onAppointmentCreated: (appointment: AppointmentWithDetails) => void
+  onPackageBooked?: () => void
   onDetailChange: (change: AppointmentDetailChange) => void
   onClientsChanged?: () => void
   detailReadOnly?: boolean
@@ -32,9 +35,11 @@ export function AppointmentFlowDrawers({
   flow,
   staff,
   services,
+  packages = [],
   clients,
   availabilityInitialDate,
   onAppointmentCreated,
+  onPackageBooked,
   onDetailChange,
   onClientsChanged,
   detailReadOnly,
@@ -80,10 +85,12 @@ export function AppointmentFlowDrawers({
             initialStaffId={createIntent.staffId}
             initialServiceId={createIntent.serviceId}
             initialClientId={createIntent.clientId}
+            packages={packages}
             staff={staff}
             services={services}
             clients={clients}
             onSuccess={onAppointmentCreated}
+            onPackageBooked={onPackageBooked}
             onClientsChanged={onClientsChanged}
           />
         </>

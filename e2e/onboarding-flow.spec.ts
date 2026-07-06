@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { signupNewSalon as completeSignup } from './helpers/auth'
 
 /**
  * Onboarding redesign (Phase 7/8) coverage.
@@ -29,30 +30,7 @@ function freshSalon() {
 /** Sign up a new manager + salon and land on the onboarding welcome step. */
 async function signupNewSalon(page: Page) {
   const salon = freshSalon()
-  await page.context().clearCookies()
-  await page.goto('/signup', { waitUntil: 'domcontentloaded' })
-  await page.locator('#salonName').waitFor({ state: 'visible' })
-
-  const nameBox = page.locator('#salonName')
-  await nameBox.click()
-  await nameBox.pressSequentially(salon.salonLabel, { delay: 15 })
-  await expect(nameBox).toHaveValue(salon.salonLabel)
-  // Slug is auto-derived from the salon name; the slug field is hidden until "تغییر".
-  await page.locator('#managerName').fill(salon.managerName)
-  await page.locator('#managerPhone').fill(salon.phone)
-  await page.locator('#password').fill(salon.password)
-  await page.locator('#confirmPassword').fill(salon.password)
-
-  const signupPost = page.waitForResponse(
-    (r) =>
-      /\/api\/(v\d+\/)?auth\/signup/.test(r.url()) &&
-      r.request().method() === 'POST',
-  )
-  await page.getByRole('button', { name: 'ساخت سالن' }).click()
-  const res = await signupPost
-  expect(res.ok(), await res.text()).toBeTruthy()
-
-  await expect(page).toHaveURL(/\/onboarding\/welcome/)
+  await completeSignup(page, salon)
   return salon
 }
 
@@ -79,7 +57,7 @@ test.describe('Onboarding redesign', () => {
       const waitSave = page.waitForResponse(
         (r) =>
           /\/api\/(v\d+\/)?settings\/business/.test(r.url()) &&
-          ['PATCH', 'PUT', 'POST'].includes(r.request().method())
+          ['PATCH', 'PUT', 'POST'].includes(r.request().method()),
       )
       await page.getByRole('button', { name: 'ادامه' }).click()
       const res = await waitSave
@@ -89,7 +67,9 @@ test.describe('Onboarding redesign', () => {
 
     await test.step('Services: apply a catalog preset via continue', async () => {
       await page.getByText('لاین مژه و ابرو').click()
-      await expect(page.getByText(/خدمت انتخاب شده/)).toBeVisible({ timeout: 20_000 })
+      await expect(page.getByText(/خدمت انتخاب شده/)).toBeVisible({
+        timeout: 20_000,
+      })
 
       const waitApply = page.waitForResponse(
         (r) =>
@@ -104,7 +84,9 @@ test.describe('Onboarding redesign', () => {
 
     await test.step('Staff: choose manager-only path', async () => {
       const waitSetManager = page.waitForResponse(
-        (r) => /\/api\/(v\d+\/)?onboarding/.test(r.url()) && r.request().method() === 'PATCH',
+        (r) =>
+          /\/api\/(v\d+\/)?onboarding/.test(r.url()) &&
+          r.request().method() === 'PATCH',
       )
       await page.getByRole('button', { name: 'ادامه' }).click()
       const res = await waitSetManager
@@ -164,7 +146,9 @@ test.describe('Onboarding redesign', () => {
       // Reaching `/onboarding/staff` requires `servicesAdded`; deep-linking
       // there must redirect back to the services step.
       await page.goto('/onboarding/staff', { waitUntil: 'domcontentloaded' })
-      await expect(page).toHaveURL(/\/onboarding\/services/, { timeout: 30_000 })
+      await expect(page).toHaveURL(/\/onboarding\/services/, {
+        timeout: 30_000,
+      })
     })
   })
 })
