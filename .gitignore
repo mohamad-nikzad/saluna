@@ -44,3 +44,7 @@ playwright/.cache/
 deploy/releases/
 .codex/
 saluna-icons/
+
+# Android release signing secrets
+android/signing/
+android/twa/local.properties

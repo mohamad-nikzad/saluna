@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ir.saluna.manager",
+      "sha256_cert_fingerprints": [
+        "CD:97:01:3B:D3:65:07:EC:86:F0:29:96:AC:53:9D:F7:C5:B3:96:3F:8A:31:2C:27:D5:D0:B3:A4:64:13:51:B6"
+      ]
+    }
+  }
+]
