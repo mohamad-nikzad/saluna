@@ -12,10 +12,8 @@ const getApiV1Services = vi.fn()
 vi.mock('@repo/api-client/sdk', () => ({
   getApiV1Services: (...args: unknown[]) => getApiV1Services(...args),
   getApiV1ServiceCategories: vi.fn(),
-  getApiV1ServiceFamilies: vi.fn(),
   getApiV1ServiceAddons: vi.fn(),
   getApiV1ServicesByIdAddons: vi.fn(),
-  getApiV1ServicesByIdComboComponents: vi.fn(),
   getApiV1CatalogPresets: vi.fn(),
 }))
 
@@ -30,7 +28,12 @@ describe('services-queries', () => {
 
   it('selects services from the generated list response', async () => {
     getApiV1Services.mockResolvedValue({
-      data: { services: [{ id: 'svc-1', name: 'رنگ مو' }] },
+      data: {
+        services: [
+          { id: 'svc-1', name: 'رنگ مو', kind: 'standard' },
+          { id: 'combo-1', name: 'پکیج قدیمی', kind: 'combo' },
+        ],
+      },
     })
 
     const queryClient = new QueryClient({
@@ -39,6 +42,6 @@ describe('services-queries', () => {
 
     const data = await queryClient.fetchQuery(servicesListQueryOptions())
 
-    expect(data).toEqual([{ id: 'svc-1', name: 'رنگ مو' }])
+    expect(data).toEqual([{ id: 'svc-1', name: 'رنگ مو', kind: 'standard' }])
   })
 })

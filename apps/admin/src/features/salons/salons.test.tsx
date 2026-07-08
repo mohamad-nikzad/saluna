@@ -191,12 +191,6 @@ vi.mock('@repo/api-client/query', () => ({
   patchApiV1AdminSalonsByIdSetupCatalogCategoriesByEntityIdMutation: () => ({
     mutationFn: generated.mutateSetupCatalog,
   }),
-  postApiV1AdminSalonsByIdSetupCatalogFamiliesMutation: () => ({
-    mutationFn: generated.mutateSetupCatalog,
-  }),
-  patchApiV1AdminSalonsByIdSetupCatalogFamiliesByEntityIdMutation: () => ({
-    mutationFn: generated.mutateSetupCatalog,
-  }),
   postApiV1AdminSalonsByIdSetupCatalogServicesMutation: () => ({
     mutationFn: generated.mutateSetupCatalog,
   }),
@@ -1017,7 +1011,7 @@ describe('salons feature', () => {
         },
         {
           id: 'service-2',
-          name: 'Bridal package',
+          name: 'Bridal makeup',
           categoryName: 'Makeup',
           duration: 120,
           price: 2500000,
@@ -1042,7 +1036,7 @@ describe('salons feature', () => {
       expect(generated.getServices).toHaveBeenCalled()
     })
     expect(await screen.findByText('Cut service')).toBeTruthy()
-    expect(screen.getByText('Bridal package')).toBeTruthy()
+    expect(screen.getByText('Bridal makeup')).toBeTruthy()
     expect(screen.queryByText('Internal cut group')).toBeNull()
     expect(screen.queryByText(/Add Service/)).toBeNull()
   })

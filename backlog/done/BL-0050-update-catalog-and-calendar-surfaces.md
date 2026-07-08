@@ -1,7 +1,7 @@
 ---
 id: BL-0050
 title: Update catalog and calendar surfaces for the new model
-status: ready
+status: done
 type: feature
 priority: high
 size: large
@@ -19,13 +19,13 @@ Update PWA and admin surfaces so managers and platform staff use the new catalog
 
 ## Acceptance Criteria
 
-- [ ] PWA Services page shows categories and ServiceVariants only for normal services.
-- [ ] Family controls and combo service controls are removed from manager and setup catalog UI.
-- [ ] Add-on UI supports available everywhere, category, and service scopes.
-- [ ] Packages have a separate manager/admin setup section for definitions, components, price behavior, and staff capabilities.
-- [ ] Calendar/appointment flow includes a manager-only package scheduling path.
-- [ ] Scheduled package task Appointments appear correctly on calendar, today, staff, and appointment detail views.
-- [ ] PWA/admin tests cover service catalog rendering, add-on scope saving, staff package capability, package scheduling, and no family/combo controls.
+- [x] PWA Services page shows categories and ServiceVariants only for normal services.
+- [x] Family controls and combo service controls are removed from manager and setup catalog UI.
+- [x] Add-on UI supports available everywhere, category, and service scopes.
+- [x] Packages have a separate manager/admin setup section for definitions, components, price behavior, and staff capabilities.
+- [x] Calendar/appointment flow includes a manager-only package scheduling path.
+- [x] Scheduled package task Appointments appear correctly on calendar, today, staff, and appointment detail views.
+- [x] PWA/admin tests cover service catalog rendering, add-on scope saving, staff package capability, package scheduling, and no family/combo controls.
 
 ## Blocked by
 
@@ -39,3 +39,4 @@ Update PWA and admin surfaces so managers and platform staff use the new catalog
 - Type: AFK.
 - Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
 - Partial implementation note: PWA Services and Calendar have category/service, add-on, package definition, and package scheduling paths. Keep this open for final admin/PWA surface audit, staff package capability UX coverage, and regression tests proving no family/combo controls remain.
+- Completion note: final surface audit removed stale family/combo references, added manager package staff capability editing, constrained package booking to assigned staff, and added setup catalog add-on scope controls for all/category/service.

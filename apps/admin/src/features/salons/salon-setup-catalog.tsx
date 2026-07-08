@@ -40,6 +40,7 @@ type Service = Row & {
   color?: string
 }
 type AddonScope =
+  | { type: 'all' }
   | { type: 'category'; categoryId: string }
   | { type: 'service'; serviceId: string }
 type Addon = Row & {
@@ -275,6 +276,8 @@ export function SalonSetupCatalog({
 
         <CatalogSection title="افزودنی‌ها" count={addons.length}>
           <AddonForm
+            categories={categories}
+            services={services}
             onSubmit={(form) =>
               createAddon.mutate({
                 path: { id: salonId },
@@ -287,11 +290,17 @@ export function SalonSetupCatalog({
               key={row.id}
               label={`${row.name} · +${row.durationDelta} دقیقه · +${row.priceDelta.toLocaleString('fa-IR')}`}
               active={row.active}
-              extra={<AddonFields row={row} />}
+              extra={
+                <AddonFields
+                  row={row}
+                  categories={categories}
+                  services={services}
+                />
+              }
               onSubmit={(form) =>
                 updateAddon.mutate({
                   path: { id: salonId, entityId: row.id },
-                  body: addonBody(form, overrideMode, false, row.scopes),
+                  body: addonBody(form, overrideMode),
                 })
               }
               hideName
@@ -475,36 +484,100 @@ function serviceBody(form: FormData, overrideMode: boolean, isCreate = false) {
   }
 }
 
-function AddonFields({ row }: { row?: Addon }) {
+function AddonFields({
+  row,
+  categories,
+  services,
+}: {
+  row?: Addon
+  categories: Row[]
+  services: Service[]
+}) {
+  const defaults = addonScopeDefaults(row?.scopes)
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      <Field
-        label="نام افزودنی"
-        name="name"
-        defaultValue={row?.name}
-        required
-      />
-      <Field
-        label="افزایش قیمت"
-        name="priceDelta"
-        type="number"
-        min={0}
-        defaultValue={row?.priceDelta ?? 0}
-        required
-      />
-      <Field
-        label="افزایش زمان"
-        name="durationDelta"
-        type="number"
-        min={0}
-        defaultValue={row?.durationDelta ?? 0}
-        required
-      />
-    </div>
+    <>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field
+          label="نام افزودنی"
+          name="name"
+          defaultValue={row?.name}
+          required
+        />
+        <Field
+          label="افزایش قیمت"
+          name="priceDelta"
+          type="number"
+          min={0}
+          defaultValue={row?.priceDelta ?? 0}
+          required
+        />
+        <Field
+          label="افزایش زمان"
+          name="durationDelta"
+          type="number"
+          min={0}
+          defaultValue={row?.durationDelta ?? 0}
+          required
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium">دامنه افزودنی</span>
+          <Select name="scopeType" defaultValue={defaults.type}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">همه خدمات</SelectItem>
+              <SelectItem value="category">یک دسته</SelectItem>
+              <SelectItem value="service">یک خدمت</SelectItem>
+            </SelectContent>
+          </Select>
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium">دسته/خدمت</span>
+          <Select name="scopeId" defaultValue={defaults.id}>
+            <SelectTrigger>
+              <SelectValue placeholder="برای همه خدمات لازم نیست" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.length > 0 ? (
+                <>
+                  {categories.map((category) => (
+                    <SelectItem
+                      key={`category-${category.id}`}
+                      value={`category:${category.id}`}
+                    >
+                      دسته: {category.name}
+                    </SelectItem>
+                  ))}
+                </>
+              ) : null}
+              {services.map((service) => (
+                <SelectItem
+                  key={`service-${service.id}`}
+                  value={`service:${service.id}`}
+                >
+                  خدمت: {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+      </div>
+    </>
   )
 }
 
-function AddonForm({ onSubmit }: { onSubmit: (form: FormData) => void }) {
+function AddonForm({
+  categories,
+  services,
+  onSubmit,
+}: {
+  categories: Row[]
+  services: Service[]
+  onSubmit: (form: FormData) => void
+}) {
   return (
     <form
       className="space-y-3 rounded-xl border border-dashed p-4"
@@ -513,7 +586,7 @@ function AddonForm({ onSubmit }: { onSubmit: (form: FormData) => void }) {
         onSubmit(new FormData(event.currentTarget))
       }}
     >
-      <AddonFields />
+      <AddonFields categories={categories} services={services} />
       <Button type="submit" variant="outline">
         <Plus /> افزودن افزودنی
       </Button>
@@ -521,21 +594,39 @@ function AddonForm({ onSubmit }: { onSubmit: (form: FormData) => void }) {
   )
 }
 
-function addonBody(
-  form: FormData,
-  overrideMode: boolean,
-  isCreate = false,
-  scopes: AddonScope[] = [],
-) {
+function addonBody(form: FormData, overrideMode: boolean, isCreate = false) {
   return {
     name: string(form, 'name'),
     priceDelta: number(form, 'priceDelta'),
     durationDelta: number(form, 'durationDelta'),
     active: isCreate || form.get('active') !== null,
     sortOrder: 0,
-    scopes,
+    scopes: addonScopesFromForm(form),
     ...mutationMeta(overrideMode),
   }
+}
+
+function addonScopeDefaults(scopes: AddonScope[] = []) {
+  const scope = scopes.find((item) => item.type !== 'all') ?? scopes[0]
+  if (!scope || scope.type === 'all') return { type: 'all', id: '' }
+  if (scope.type === 'category') {
+    return { type: 'category', id: `category:${scope.categoryId}` }
+  }
+  return { type: 'service', id: `service:${scope.serviceId}` }
+}
+
+function addonScopesFromForm(form: FormData): AddonScope[] {
+  const scopeType = string(form, 'scopeType')
+  if (scopeType === 'all') return [{ type: 'all' }]
+
+  const [kind, id] = string(form, 'scopeId').split(':')
+  if (scopeType === 'category' && kind === 'category' && id) {
+    return [{ type: 'category', categoryId: id }]
+  }
+  if (scopeType === 'service' && kind === 'service' && id) {
+    return [{ type: 'service', serviceId: id }]
+  }
+  return [{ type: 'all' }]
 }
 
 function presetServiceCount(category: Preset['tree'][number]) {

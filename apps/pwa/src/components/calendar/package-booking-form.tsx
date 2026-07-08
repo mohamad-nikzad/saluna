@@ -44,7 +44,12 @@ type PackageBookingFormProps = {
 }
 
 function firstActivePackage(packages: ServicePackage[]) {
-  return packages.find((item) => item.active && item.components.length > 0)
+  return packages.find(
+    (item) =>
+      item.active &&
+      item.components.length > 0 &&
+      (item.staffIds?.length ?? 0) > 0,
+  )
 }
 
 function buildTasks(pkg: ServicePackage | undefined, startTime: string) {
@@ -74,7 +79,13 @@ export function PackageBookingForm({
   onClientsChanged,
 }: PackageBookingFormProps) {
   const activePackages = useMemo(
-    () => packages.filter((item) => item.active && item.components.length > 0),
+    () =>
+      packages.filter(
+        (item) =>
+          item.active &&
+          item.components.length > 0 &&
+          (item.staffIds?.length ?? 0) > 0,
+      ),
     [packages],
   )
   const [packageId, setPackageId] = useState('')
@@ -99,6 +110,10 @@ export function PackageBookingForm({
       ),
     [selectedPackage],
   )
+  const packageStaff = useMemo(() => {
+    const allowed = new Set(selectedPackage?.staffIds ?? [])
+    return staff.filter((member) => allowed.has(member.id))
+  }, [selectedPackage, staff])
 
   useEffect(() => {
     if (!active) return
@@ -217,11 +232,11 @@ export function PackageBookingForm({
             <JalaliDatePicker value={date} onChange={setDate} />
           </Field>
 
-          {staff.length > 0 ? (
+          {packageStaff.length > 0 ? (
             <Field>
               <FieldLabel>انتخاب سریع پرسنل</FieldLabel>
               <StaffPicker
-                staff={staff}
+                staff={packageStaff}
                 value=""
                 onChange={fillTaskStaff}
                 placeholder="برای همه خدمات یک پرسنل بگذارید"
@@ -260,7 +275,7 @@ export function PackageBookingForm({
                     <Field>
                       <FieldLabel>پرسنل</FieldLabel>
                       <StaffPicker
-                        staff={staff}
+                        staff={packageStaff}
                         value={task.staffId}
                         onChange={(staffId) =>
                           updateTask(task.packageComponentId, { staffId })

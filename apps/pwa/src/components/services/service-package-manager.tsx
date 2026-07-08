@@ -19,10 +19,12 @@ import {
   servicePackagesListQueryOptions,
   useSaveServicePackageComponentsMutation,
   useSaveServicePackageMutation,
+  useSaveServicePackageStaffMutation,
 } from '#/lib/services-queries'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { Card, CardTitle } from '@repo/ui/card'
+import { Checkbox } from '@repo/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
 import { Input } from '@repo/ui/input'
 import {
@@ -44,6 +46,7 @@ import type {
   Service,
   ServiceCategory,
   ServicePackage,
+  User,
 } from '@repo/salon-core/types'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
@@ -52,6 +55,7 @@ import { ServicePicker } from './service-picker'
 interface ServicePackageManagerProps {
   services: Service[]
   categories: ServiceCategory[]
+  staff: User[]
   onChanged: () => void
 }
 
@@ -96,6 +100,7 @@ function packageComponentsDirty(initialIds: string[], currentIds: string[]) {
 export function ServicePackageManager({
   services,
   categories,
+  staff,
   onChanged,
 }: ServicePackageManagerProps) {
   const packagesQuery = useQuery(servicePackagesListQueryOptions())
@@ -245,6 +250,7 @@ export function ServicePackageManager({
         pkg={selectedPackage}
         services={services}
         categories={categories}
+        staff={staff}
         nextSortOrder={nextSortOrder}
         onSuccess={() => {
           setDrawerOpen(false)
@@ -262,6 +268,7 @@ function ServicePackageDrawer({
   pkg,
   services,
   categories,
+  staff,
   nextSortOrder,
   onSuccess,
 }: {
@@ -270,12 +277,15 @@ function ServicePackageDrawer({
   pkg: ServicePackage | null
   services: Service[]
   categories: ServiceCategory[]
+  staff: User[]
   nextSortOrder: number
   onSuccess: () => void
 }) {
   const isEditing = Boolean(pkg)
   const [componentIds, setComponentIds] = useState<string[]>([])
   const [initialComponentIds, setInitialComponentIds] = useState<string[]>([])
+  const [staffIds, setStaffIds] = useState<string[]>([])
+  const [initialStaffIds, setInitialStaffIds] = useState<string[]>([])
 
   const {
     register,
@@ -291,6 +301,7 @@ function ServicePackageDrawer({
   const nameValue = useWatch({ control, name: 'name' })
   const savePackage = useSaveServicePackageMutation(pkg?.id)
   const saveComponents = useSaveServicePackageComponentsMutation(pkg?.id)
+  const saveStaff = useSaveServicePackageStaffMutation(pkg?.id)
 
   useEffect(() => {
     if (!open) return
@@ -299,6 +310,9 @@ function ServicePackageDrawer({
       pkg?.components.map((component) => component.serviceId) ?? []
     setComponentIds(nextComponentIds)
     setInitialComponentIds(nextComponentIds)
+    const nextStaffIds = pkg?.staffIds ?? []
+    setStaffIds(nextStaffIds)
+    setInitialStaffIds(nextStaffIds)
   }, [nextSortOrder, open, pkg, reset])
 
   const selectedComponents = componentIds
@@ -315,8 +329,21 @@ function ServicePackageDrawer({
     initialComponentIds,
     componentIds,
   )
+  const staffDirty = packageComponentsDirty(initialStaffIds, staffIds)
   const saving =
-    isSubmitting || savePackage.isPending || saveComponents.isPending
+    isSubmitting ||
+    savePackage.isPending ||
+    saveComponents.isPending ||
+    saveStaff.isPending
+
+  const toggleStaff = (staffId: string, checked: boolean) => {
+    setStaffIds((current) => {
+      if (checked) {
+        return current.includes(staffId) ? current : [...current, staffId]
+      }
+      return current.filter((id) => id !== staffId)
+    })
+  }
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -328,6 +355,12 @@ function ServicePackageDrawer({
           serviceIds: componentIds,
         })
       }
+      if (staffDirty || !pkg) {
+        await saveStaff.mutateAsync({
+          packageId,
+          staffIds,
+        })
+      }
       onSuccess()
     } catch {
       // Toast handled by mutation cache.
@@ -335,7 +368,7 @@ function ServicePackageDrawer({
   })
 
   const { requestClose, confirmDialog } = useDismissGuard({
-    isDirty: (isDirty || componentsDirty) && !saving,
+    isDirty: (isDirty || componentsDirty || staffDirty) && !saving,
     onClose: () => onOpenChange(false),
   })
 
@@ -572,6 +605,44 @@ function ServicePackageDrawer({
                   <Plus className="h-4 w-4" />
                   هنوز خدمتی به پکیج اضافه نشده است.
                 </div>
+              )}
+            </div>
+
+            <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">پرسنل مجاز</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    فقط این پرسنل می‌توانند برای پکیج نوبت بگیرند.
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-[10px]">
+                  {toPersianDigits(staffIds.length)} نفر
+                </Badge>
+              </div>
+              {staff.length > 0 ? (
+                <div className="space-y-1.5">
+                  {staff.map((member) => (
+                    <label
+                      key={member.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-md border border-border/50 bg-background px-2 py-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={staffIds.includes(member.id)}
+                        onCheckedChange={(checked) =>
+                          toggleStaff(member.id, checked === true)
+                        }
+                      />
+                      <span className="min-w-0 flex-1 truncate">
+                        {member.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-md border border-dashed border-border/70 bg-background px-3 py-3 text-xs text-muted-foreground">
+                  هنوز پرسنلی ثبت نشده است.
+                </p>
               )}
             </div>
           </FieldGroup>

@@ -8,12 +8,14 @@ import type {
   ServicePackageComponentsUpdatePayload,
   ServicePackageCreateInput,
   ServicePackageCreatePayload,
+  ServicePackageStaffUpdatePayload,
   ServicePackageUpdateInput,
 } from '@repo/salon-core/forms/service'
 import {
   serviceFormSchema,
   servicePackageComponentsUpdateSchema,
   servicePackageCreateSchema,
+  servicePackageStaffUpdateSchema,
   servicePackageUpdateSchema,
 } from '@repo/salon-core/forms/service'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -49,6 +51,7 @@ import {
   postApiV1ServicesImportStarterTemplatesMutation,
   postApiV1ServicesMutation,
   putApiV1ServicePackagesByIdComponentsMutation,
+  putApiV1ServicePackagesByIdStaffMutation,
 } from '@repo/api-client/query'
 import type {
   CatalogPresetListItem as GeneratedCatalogPresetListItem,
@@ -437,6 +440,34 @@ export function useSaveServicePackageComponentsMutation(packageId?: string) {
     },
     meta: {
       errorMessage: 'ذخیره اجزای پکیج انجام نشد',
+      invalidatesQuery: servicePackageInvalidationKeys(packageId),
+    },
+  })
+}
+
+export function useSaveServicePackageStaffMutation(packageId?: string) {
+  const generated = putApiV1ServicePackagesByIdStaffMutation()
+
+  return useMutation<
+    ServicePackage,
+    unknown,
+    ServicePackageStaffUpdatePayload & { packageId?: string }
+  >({
+    mutationFn: async (values, mutationContext) => {
+      const targetPackageId = values.packageId ?? packageId
+      if (!targetPackageId) throw new Error('پکیج را انتخاب کنید')
+      const body = servicePackageStaffUpdateSchema.parse(values)
+      const response = await generated.mutationFn!(
+        {
+          path: { id: targetPackageId },
+          body,
+        },
+        mutationContext,
+      )
+      return mapServicePackage(response.package)
+    },
+    meta: {
+      errorMessage: 'ذخیره پرسنل مجاز پکیج انجام نشد',
       invalidatesQuery: servicePackageInvalidationKeys(packageId),
     },
   })

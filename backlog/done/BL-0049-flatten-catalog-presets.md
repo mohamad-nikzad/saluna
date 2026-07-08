@@ -1,7 +1,7 @@
 ---
 id: BL-0049
 title: Flatten CatalogPresets to categories and services
-status: ready
+status: done
 type: feature
 priority: high
 size: medium
@@ -19,12 +19,12 @@ Update CatalogPreset definitions and import behavior so starter catalogs create 
 
 ## Acceptance Criteria
 
-- [ ] CatalogPreset read models expose preset categories and preset services without requiring PresetFamily in new client flows.
-- [ ] Applying a CatalogPreset creates categories and ServiceVariants only.
-- [ ] Preset import does not create Service Packages.
-- [ ] Starter service templates no longer create combo services for new salons.
-- [ ] Setup Salon catalog preset application remains idempotent and duplicate-safe.
-- [ ] Tests cover preset listing, preset apply, duplicate protection, and absence of family/combo/package imports.
+- [x] CatalogPreset read models expose preset categories and preset services without requiring PresetFamily in new client flows.
+- [x] Applying a CatalogPreset creates categories and ServiceVariants only.
+- [x] Preset import does not create Service Packages.
+- [x] Starter service templates no longer create combo services for new salons.
+- [x] Setup Salon catalog preset application remains idempotent and duplicate-safe.
+- [x] Tests cover preset listing, preset apply, duplicate protection, and absence of family/combo/package imports.
 
 ## Blocked by
 
@@ -36,3 +36,4 @@ Update CatalogPreset definitions and import behavior so starter catalogs create 
 - Type: AFK.
 - Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
 - Partial implementation note: read/import code normalizes presets to categories and services and applies categories plus ServiceVariants only. The seed source still uses the legacy `families`/`variants` shape before normalization, so keep this open until seeds are stored/authored in the flat target shape and absence of family/combo/package imports is covered end to end.
+- Completion note: preset seed source now uses the flat `categories[].services[]` target shape directly, exports seeds for regression tests, and includes absence checks for legacy `families`/`variants`, duplicate service names, and package-like services.

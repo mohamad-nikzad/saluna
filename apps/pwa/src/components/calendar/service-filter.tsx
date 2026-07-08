@@ -31,7 +31,6 @@ export function ServiceFilter({
         searchText: [
           service.name,
           service.categoryName,
-          service.familyName,
           service.active ? 'فعال' : 'غیرفعال',
         ]
           .filter(Boolean)

@@ -10,6 +10,7 @@ import { ServiceCatalogManager } from '#/components/services/service-catalog-man
 import { ServicePackageManager } from '#/components/services/service-package-manager'
 import { useAuth } from '#/lib/auth'
 import { serviceCatalogQueryOptions } from '#/lib/services-queries'
+import { staffListQueryOptions } from '#/lib/staff-queries'
 
 export const Route = createFileRoute('/_authed/services')({
   beforeLoad: ({ context }) => {
@@ -60,8 +61,13 @@ function ServicesPage() {
     ...serviceCatalogQueryOptions(),
     enabled: user?.role === 'manager',
   })
+  const staffQuery = useQuery({
+    ...staffListQueryOptions(),
+    enabled: user?.role === 'manager',
+  })
   const categories = catalogQuery.data?.categories ?? []
   const services = catalogQuery.data?.services ?? []
+  const staff = staffQuery.data ?? []
 
   const refreshCatalog = () => {
     void queryClient.invalidateQueries({
@@ -99,6 +105,7 @@ function ServicesPage() {
         <ServicePackageManager
           services={services}
           categories={categories}
+          staff={staff}
           onChanged={refreshCatalog}
         />
         <ServiceCatalogManager

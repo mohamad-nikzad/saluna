@@ -19,12 +19,12 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 ## Acceptance Criteria
 
-- [ ] Drizzle migration metadata is regenerated and committed with schema changes.
-- [ ] OpenAPI contract and HeyAPI client are regenerated and committed.
-- [ ] `CONTEXT.md` marks ServiceFamily/combo as legacy storage only and Service Package scheduling as manager-only implemented scope.
-- [ ] A new ADR supersedes the previous decision to defer Service Package scheduling and records the manager-only same-day package scope.
-- [ ] Seeds and starter catalog data match the category/service target model.
-- [ ] Verification passes: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test`.
+- [x] Drizzle migration metadata is regenerated and committed with schema changes.
+- [x] OpenAPI contract and HeyAPI client are regenerated and committed.
+- [x] `CONTEXT.md` marks ServiceFamily/combo as legacy storage only and Service Package scheduling as manager-only implemented scope.
+- [x] A new ADR supersedes the previous decision to defer Service Package scheduling and records the manager-only same-day package scope.
+- [x] Seeds and starter catalog data match the category/service target model.
+- [x] Verification passes: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test`.
 - [ ] Targeted PWA/admin visual checks cover services, staff capabilities, appointment calendar, and setup catalog.
 
 ## Blocked by
@@ -36,11 +36,12 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 - [BL-0046 Add Service Package setup and staff capabilities](../done/BL-0046-add-service-package-setup.md)
 - [BL-0047 Add manager-only package scheduling](../done/BL-0047-add-manager-package-scheduling.md)
 - [BL-0048 Keep public booking service-only](../done/BL-0048-keep-public-booking-service-only.md)
-- [BL-0049 Flatten CatalogPresets to categories and services](BL-0049-flatten-catalog-presets.md)
-- [BL-0050 Update catalog and calendar surfaces for the new model](BL-0050-update-catalog-and-calendar-surfaces.md)
+- [BL-0049 Flatten CatalogPresets to categories and services](../done/BL-0049-flatten-catalog-presets.md)
+- [BL-0050 Update catalog and calendar surfaces for the new model](../done/BL-0050-update-catalog-and-calendar-surfaces.md)
 
 ## Notes
 
 - Type: AFK.
 - Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
 - Partial implementation note: OpenAPI/client artifacts, `CONTEXT.md`, and the manager package scheduling ADR appear to exist, but this item remains open until seeds are fully flat and the listed full verification commands plus targeted visual checks are run and recorded.
+- Verification note: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test` pass after the flat seed and UI cutover cleanup. Targeted authenticated PWA/admin visual checks remain open.
