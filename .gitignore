@@ -48,3 +48,5 @@ saluna-icons/
 # Android release signing secrets
 android/signing/
 android/twa/local.properties
+android/twa/.gradle/
+android/twa/**/build/

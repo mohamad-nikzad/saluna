@@ -1,0 +1,70 @@
+{
+  "packageId": "ir.saluna.manager",
+  "host": "app.saluna.ir",
+  "name": "سالونا",
+  "launcherName": "سالونا",
+  "display": "standalone",
+  "themeColor": "#6B3A4A",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#F8EFF0",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://app.saluna.ir/icons/icon-512x512.png?v=0.10.0-5934158",
+  "maskableIconUrl": "https://app.saluna.ir/icons/icon-maskable-512x512.png?v=0.10.0-5934158",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/Users/mohamad/Projects/saluna/android/signing/saluna-manager-release.jks",
+    "alias": "saluna-manager"
+  },
+  "appVersionName": "0.10.0",
+  "appVersionCode": 10,
+  "shortcuts": [
+    {
+      "name": "تقویم",
+      "shortName": "تقویم",
+      "url": "https://app.saluna.ir/calendar",
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+    },
+    {
+      "name": "مشتریان",
+      "shortName": "مشتریان",
+      "url": "https://app.saluna.ir/clients",
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+    },
+    {
+      "name": "امروز",
+      "shortName": "امروز",
+      "url": "https://app.saluna.ir/today",
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://app.saluna.ir/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://app.saluna.ir/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "appVersion": "0.10.0"
+}
