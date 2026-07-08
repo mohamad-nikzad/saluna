@@ -32,10 +32,10 @@ Ship one coordinated cutover that keeps existing appointments, appointment reque
 
 ## Child Implementation Slices
 
-1. [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](BL-0042-migrate-legacy-combos-and-addon-scopes.md).
+1. [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](../done/BL-0042-migrate-legacy-combos-and-addon-scopes.md).
    Type: AFK. Blocked by: none.
 
-2. [BL-0043 Replace service catalog API contracts](BL-0043-replace-service-catalog-api-contracts.md).
+2. [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md).
    Type: AFK. Blocked by: BL-0042.
 
 3. [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md).

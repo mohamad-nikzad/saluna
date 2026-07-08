@@ -149,12 +149,27 @@ describe('service catalog package migration SQL', () => {
     ),
     'utf8',
   )
+  const staffPackageCapabilityMigrationSql = readFileSync(
+    fileURLToPath(
+      new URL(
+        '../migrations/0017_staff_package_capabilities.sql',
+        import.meta.url,
+      ),
+    ),
+    'utf8',
+  )
 
   it('migrates complete legacy combos without deleting historical service references', () => {
     expect(migrationSql).toContain('INSERT INTO "service_packages"')
     expect(migrationSql).toContain('"source_legacy_service_id"')
     expect(migrationSql).toContain('INSERT INTO "service_package_components"')
-    expect(migrationSql).not.toContain('staff_package_capabilities')
+    expect(staffPackageCapabilityMigrationSql).toContain(
+      'CREATE TABLE "staff_package_capabilities"',
+    )
+    expect(staffPackageCapabilityMigrationSql).toContain(
+      'packages."source_legacy_service_id" = staff_services."service_id"',
+    )
+    expect(staffPackageCapabilityMigrationSql).toContain('unrestricted_staff')
     expect(migrationSql).toContain(
       'UPDATE "services"\nSET "active" = false\nWHERE "kind" = \'combo\'',
     )

@@ -103,6 +103,7 @@ export interface ServicePackage {
   priceOverride: number | null
   sortOrder: number
   components: ServicePackageComponent[]
+  staffIds?: string[]
   totalDuration: number
   componentPriceTotal: number
   resolvedPrice: number

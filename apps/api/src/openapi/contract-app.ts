@@ -22,6 +22,7 @@ import {
   listServiceAddonsRoute,
   updateServiceAddonRoute,
 } from './routes/service-addons'
+import { getServiceCatalogRoute } from './routes/service-catalog'
 import {
   createServicePackageRoute,
   createServicePackageBookingRoute,
@@ -396,6 +397,10 @@ const updateServiceStub: RouteHandler<typeof updateServiceRoute> = (c) =>
 const getServiceAddonsStub: RouteHandler<typeof getServiceAddonsRoute> = (c) =>
   c.json({ addons: [] }, 200)
 
+const getServiceCatalogStub: RouteHandler<typeof getServiceCatalogRoute> = (
+  c,
+) => c.json({ categories: [], services: [], addons: [], packages: [] }, 200)
+
 const listServiceCategoriesStub: RouteHandler<
   typeof listServiceCategoriesRoute
 > = (c) => c.json({ categories: [] }, 200)
@@ -575,7 +580,10 @@ const updateAdminSetupSalonPresenceStub: RouteHandler<
 const getAdminSetupCatalogStub: RouteHandler<
   typeof getAdminSetupCatalogRoute
 > = (c) =>
-  c.json({ categories: [], services: [], addons: [], presets: [] }, 200)
+  c.json(
+    { categories: [], services: [], addons: [], packages: [], presets: [] },
+    200,
+  )
 
 const setupCatalogMutationStub = (c: any) => c.json({}, 200)
 
@@ -1315,6 +1323,10 @@ export const contractApp = new OpenAPIHono()
       .openapi(listServiceAddonsRoute, listServiceAddonsStub)
       .openapi(createServiceAddonRoute, createServiceAddonStub)
       .openapi(updateServiceAddonRoute, updateServiceAddonStub),
+  )
+  .route(
+    '/api/v1/service-catalog',
+    new OpenAPIHono().openapi(getServiceCatalogRoute, getServiceCatalogStub),
   )
   .route(
     '/api/v1/service-packages',

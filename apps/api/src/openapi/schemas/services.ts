@@ -163,6 +163,7 @@ export const servicePackageSchema = z
     priceOverride: z.number().nullable(),
     sortOrder: z.number().int(),
     components: z.array(servicePackageComponentSchema),
+    staffIds: z.array(z.string()).optional(),
     totalDuration: z.number().int(),
     componentPriceTotal: z.number(),
     resolvedPrice: z.number(),
@@ -475,6 +476,15 @@ export const servicePackagesListResponseSchema = z
     packages: z.array(servicePackageSchema),
   })
   .openapi('ServicePackagesListResponse')
+
+export const serviceCatalogResponseSchema = z
+  .object({
+    categories: z.array(serviceCategorySchema),
+    services: z.array(serviceSchema),
+    addons: z.array(serviceAddonSchema),
+    packages: z.array(servicePackageSchema),
+  })
+  .openapi('ServiceCatalogResponse')
 
 export const servicePackageResponseSchema = z
   .object({

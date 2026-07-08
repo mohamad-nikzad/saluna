@@ -11,7 +11,7 @@ updated: 2026-06-24
 
 ## Parent
 
-[BL-0031 Assisted Salon Setup and handoff](BL-0031-assisted-salon-setup-and-handoff.md)
+[BL-0031 Assisted Salon Setup and handoff](../inbox/BL-0031-assisted-salon-setup-and-handoff.md)
 
 ## What to build
 

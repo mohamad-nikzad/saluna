@@ -986,6 +986,34 @@ export const staffServices = pgTable(
   ],
 )
 
+export const staffPackageCapabilities = pgTable(
+  'staff_package_capabilities',
+  {
+    staffId: uuid('staff_id').notNull(),
+    packageId: uuid('package_id')
+      .notNull()
+      .references(() => servicePackages.id, { onDelete: 'cascade' }),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.staffId, t.packageId] }),
+    index('staff_package_capabilities_package_id_idx').on(t.packageId),
+    index('staff_package_capabilities_salon_id_staff_id_idx').on(
+      t.salonId,
+      t.staffId,
+    ),
+    index('staff_package_capabilities_salon_id_package_id_idx').on(
+      t.salonId,
+      t.packageId,
+    ),
+  ],
+)
+
 export const clients = pgTable(
   'clients',
   {

@@ -28,7 +28,7 @@ Update CatalogPreset definitions and import behavior so starter catalogs create 
 
 ## Blocked by
 
-- [BL-0043 Replace service catalog API contracts](BL-0043-replace-service-catalog-api-contracts.md)
+- [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md)
 - [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md)
 
 ## Notes

@@ -34,5 +34,5 @@ Clear `react-hook-form` errors (`root`, `phone`, `password`) and related local e
 ## Notes
 
 - Reported in production-like flow on 2026-06-21.
-- Related: [BL-0004 Login and register with OTP](../ready/BL-0004-login-and-register-with-otp.md).
+- Related: [BL-0004 Login and register with OTP](BL-0004-login-and-register-with-otp.md).
 - Fixed by clearing `clearErrors()`, `otpError`, and `recoveryError` in a `useEffect` on `mode` change in `apps/pwa/src/routes/auth.tsx`.

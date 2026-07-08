@@ -443,6 +443,7 @@ export const adminSetupCatalogResponseSchema = z
     categories: z.array(anyRecordSchema),
     services: z.array(anyRecordSchema),
     addons: z.array(anyRecordSchema),
+    packages: z.array(anyRecordSchema),
     presets: z.array(anyRecordSchema),
   })
   .openapi('AdminSetupCatalogResponse')

@@ -28,8 +28,8 @@ Add manager/admin setup flows for defining Service Packages, choosing included S
 
 ## Blocked by
 
-- [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](BL-0042-migrate-legacy-combos-and-addon-scopes.md)
-- [BL-0043 Replace service catalog API contracts](BL-0043-replace-service-catalog-api-contracts.md)
+- [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](../done/BL-0042-migrate-legacy-combos-and-addon-scopes.md)
+- [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md)
 
 ## Notes
 

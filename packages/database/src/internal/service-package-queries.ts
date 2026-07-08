@@ -10,6 +10,7 @@ import {
   serviceFamilies,
   servicePackageComponents,
   servicePackages,
+  staffPackageCapabilities,
   services,
 } from '../schema'
 import { isClientProvidedEntityId } from './client-queries'
@@ -219,10 +220,9 @@ async function rowsToPackages(
   rows: Awaited<ReturnType<typeof getPackageRows>>,
   salonId: string,
 ): Promise<ServicePackage[]> {
-  const componentMap = await getPackageComponents(
-    rows.map((row) => row.package.id),
-    salonId,
-  )
+  const packageIds = rows.map((row) => row.package.id)
+  const componentMap = await getPackageComponents(packageIds, salonId)
+  const staffIdsByPackage = await getPackageStaffIds(packageIds, salonId)
   return rows.map((row) => {
     const components = componentMap.get(row.package.id) ?? []
     const totalDuration = components.reduce(
@@ -245,6 +245,7 @@ async function rowsToPackages(
       priceOverride: row.package.priceOverride,
       sortOrder: row.package.sortOrder,
       components,
+      staffIds: staffIdsByPackage.get(row.package.id) ?? [],
       totalDuration,
       componentPriceTotal,
       resolvedPrice: resolveServicePackagePrice({
@@ -255,6 +256,38 @@ async function rowsToPackages(
       updatedAt: row.package.updatedAt,
     }
   })
+}
+
+async function getPackageStaffIds(
+  packageIds: string[],
+  salonId: string,
+): Promise<Map<string, string[]>> {
+  const staffIdsByPackage = new Map<string, string[]>()
+  for (const packageId of packageIds) staffIdsByPackage.set(packageId, [])
+  if (packageIds.length === 0) return staffIdsByPackage
+
+  const db = getDb()
+  const rows = await db
+    .select({
+      packageId: staffPackageCapabilities.packageId,
+      staffId: staffPackageCapabilities.staffId,
+    })
+    .from(staffPackageCapabilities)
+    .where(
+      and(
+        eq(staffPackageCapabilities.salonId, salonId),
+        inArray(staffPackageCapabilities.packageId, packageIds),
+      ),
+    )
+    .orderBy(
+      asc(staffPackageCapabilities.packageId),
+      asc(staffPackageCapabilities.staffId),
+    )
+
+  for (const row of rows) {
+    staffIdsByPackage.get(row.packageId)?.push(row.staffId)
+  }
+  return staffIdsByPackage
 }
 
 export async function getAllServicePackages(

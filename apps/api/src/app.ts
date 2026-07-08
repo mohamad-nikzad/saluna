@@ -14,6 +14,7 @@ import { clients } from './routes/clients'
 import { catalogPresets } from './routes/catalog-presets'
 import { serviceCategories } from './routes/service-categories'
 import { serviceAddons } from './routes/service-addons'
+import { serviceCatalog } from './routes/service-catalog'
 import { servicePackages } from './routes/service-packages'
 import { services } from './routes/services'
 import { staff } from './routes/staff'
@@ -87,6 +88,7 @@ const app = new Hono<AppEnv>()
   .route('/api/v1/catalog-presets', catalogPresets)
   .route('/api/v1/service-categories', serviceCategories)
   .route('/api/v1/service-addons', serviceAddons)
+  .route('/api/v1/service-catalog', serviceCatalog)
   .route('/api/v1/service-packages', servicePackages)
   .route('/api/v1/services', services)
   .route('/api/v1/staff', staff)

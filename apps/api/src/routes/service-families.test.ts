@@ -10,6 +10,10 @@ vi.mock('@repo/database/members', () => ({
 
 vi.mock('@repo/database/services', () => ({
   getAllServiceFamilies: vi.fn(),
+  getAllServiceCategories: vi.fn(),
+  getAllServices: vi.fn(),
+  getAllServiceAddons: vi.fn(),
+  getAllServicePackages: vi.fn(),
   createServiceFamily: vi.fn(),
   updateServiceFamily: vi.fn(),
 }))

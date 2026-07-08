@@ -43,6 +43,7 @@ import {
   createServiceCategory,
   getAllServiceAddons,
   getAllServiceCategories,
+  getAllServicePackages,
   getAllServices,
   updateService,
   updateServiceAddon,
@@ -821,13 +822,15 @@ export const adminRoute = new Hono<AppEnv>()
         c.var.platformAdmin.role,
       )
       if (lifecycleError) return lifecycleError
-      const [categories, services, addons, presets] = await Promise.all([
-        getAllServiceCategories(id, true),
-        getAllServices(id, true),
-        getAllServiceAddons(id, true),
-        listActiveCatalogPresets(id),
-      ])
-      return ok(c, { categories, services, addons, presets })
+      const [categories, services, addons, packages, presets] =
+        await Promise.all([
+          getAllServiceCategories(id, true),
+          getAllServices(id, true),
+          getAllServiceAddons(id, true),
+          getAllServicePackages(id, true),
+          listActiveCatalogPresets(id),
+        ])
+      return ok(c, { categories, services, addons, packages, presets })
     },
   )
   .post(

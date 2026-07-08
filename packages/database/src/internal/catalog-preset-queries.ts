@@ -184,13 +184,11 @@ export async function applyCatalogPreset(input: {
           .values({
             salonId: input.salonId,
             categoryId: categoryRow.id,
-            familyId: null,
             name: service.name,
             duration: service.duration,
             price: service.price,
             color: service.color,
             description: service.description ?? null,
-            kind: 'standard',
             active: true,
           })
           .returning({ id: services.id })

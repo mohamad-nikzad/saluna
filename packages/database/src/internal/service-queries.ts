@@ -58,14 +58,11 @@ export {
 export type ServiceAddonScopeInput =
   | { type: 'all' }
   | { type: 'category'; categoryId: string }
-  /** Legacy input accepted during the catalog cutover; stored as service scopes. */
-  | { type: 'family'; familyId: string }
   | { type: 'service'; serviceId: string }
 
-type StoredServiceAddonScopeInput = Exclude<
-  ServiceAddonScopeInput,
-  { type: 'family' }
->
+type LegacyServiceAddonScopeInput =
+  | ServiceAddonScopeInput
+  | { type: 'family'; familyId: string }
 
 type CreateServiceAddonInput = {
   id?: string
@@ -114,7 +111,7 @@ export function validateServiceAddonDeltas(input: {
 }
 
 export function normalizeServiceAddonScopes(
-  scopes: ServiceAddonScopeInput[],
+  scopes: LegacyServiceAddonScopeInput[],
   catalog: {
     families: Array<{ id: string; categoryId: string }>
     services: Array<{ id: string; categoryId: string; familyId: string | null }>
@@ -336,10 +333,8 @@ export async function createService(
     id?: string
     salonId: string
     categoryId?: string | null
-    familyId?: string | null
     active?: boolean
     description?: string | null
-    kind?: Service['kind']
   },
 ): Promise<Service> {
   const db = getDb()
@@ -352,13 +347,11 @@ export async function createService(
     salonId: input.salonId,
     name: input.name,
     categoryId,
-    familyId: null,
     duration: input.duration,
     price: input.price,
     color: input.color,
     active: input.active ?? true,
     description: input.description ?? null,
-    kind: 'standard',
   }
   if (isClientProvidedEntityId(input.id)) {
     values.id = input.id
@@ -374,7 +367,18 @@ export async function createService(
 export async function updateService(
   id: string,
   salonId: string,
-  data: Partial<Omit<Service, 'id'>>,
+  data: Partial<
+    Pick<
+      Service,
+      | 'name'
+      | 'categoryId'
+      | 'duration'
+      | 'price'
+      | 'color'
+      | 'active'
+      | 'description'
+    >
+  >,
 ): Promise<Service | undefined> {
   const db = getDb()
   const existing = await getServiceById(id, salonId)
@@ -570,18 +574,14 @@ async function normalizeAndValidateAddonScopes(
 ): Promise<ServiceAddonScopeInput[]> {
   if (scopes.length === 0 || scopes.some((scope) => scope.type === 'all'))
     return [{ type: 'all' }]
+  if (scopes.some((scope) => !['category', 'service'].includes(scope.type))) {
+    throw new Error('service add-on scope not found')
+  }
   const categoryIds = [
     ...new Set(
       scopes
         .filter((scope) => scope.type === 'category')
         .map((scope) => scope.categoryId),
-    ),
-  ]
-  const familyIds = [
-    ...new Set(
-      scopes
-        .filter((scope) => scope.type === 'family')
-        .map((scope) => scope.familyId),
     ),
   ]
   const serviceIds = [
@@ -607,25 +607,6 @@ async function normalizeAndValidateAddonScopes(
           )
   if (categoryRows.length !== categoryIds.length) {
     throw new Error('service add-on category scope not found')
-  }
-
-  const familyRows =
-    familyIds.length === 0
-      ? []
-      : await db
-          .select({
-            id: serviceFamilies.id,
-            categoryId: serviceFamilies.categoryId,
-          })
-          .from(serviceFamilies)
-          .where(
-            and(
-              eq(serviceFamilies.salonId, salonId),
-              inArray(serviceFamilies.id, familyIds),
-            ),
-          )
-  if (familyRows.length !== familyIds.length) {
-    throw new Error('service add-on family scope not found')
   }
 
   const serviceRows =
@@ -670,36 +651,11 @@ async function normalizeAndValidateAddonScopes(
               inArray(serviceFamilies.id, serviceFamilyIds),
             ),
           )
-  const familyServiceRows =
-    familyIds.length === 0
-      ? []
-      : await db
-          .select({
-            id: services.id,
-            categoryId: services.categoryId,
-            familyId: services.familyId,
-          })
-          .from(services)
-          .where(
-            and(
-              eq(services.salonId, salonId),
-              inArray(services.familyId, familyIds),
-            ),
-          )
-
   return normalizeServiceAddonScopes(scopes, {
     families: [
-      ...familyRows,
-      ...serviceFamilyRows.filter(
-        (row) => !familyRows.some((family) => family.id === row.id),
-      ),
+      ...serviceFamilyRows,
     ],
-    services: [
-      ...serviceRows,
-      ...familyServiceRows.filter(
-        (row) => !serviceRows.some((service) => service.id === row.id),
-      ),
-    ],
+    services: serviceRows,
   })
 }
 
@@ -743,12 +699,9 @@ async function replaceAddonScopes(
         ),
       )
 
-    const storedScopes = scopes.filter(
-      (scope): scope is StoredServiceAddonScopeInput => scope.type !== 'family',
-    )
-    if (storedScopes.length > 0) {
+    if (scopes.length > 0) {
       await tx.insert(serviceAddonScopes).values(
-        storedScopes.map((scope) => ({
+        scopes.map((scope) => ({
           salonId,
           addonId,
           scopeType: scope.type,

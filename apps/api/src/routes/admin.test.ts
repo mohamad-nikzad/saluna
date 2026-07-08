@@ -95,6 +95,7 @@ vi.mock('@repo/database/services', () => ({
   getAllServiceAddons: vi.fn(),
   getAllServiceCategories: vi.fn(),
   getAllServiceFamilies: vi.fn(),
+  getAllServicePackages: vi.fn(),
   getAllServices: vi.fn(),
   updateService: vi.fn(),
   updateServiceAddon: vi.fn(),
@@ -152,6 +153,7 @@ import {
   getAllServiceAddons,
   getAllServiceCategories,
   getAllServiceFamilies,
+  getAllServicePackages,
   getAllServices,
   updateService,
 } from '@repo/database/services'
@@ -1024,6 +1026,7 @@ describe('admin runtime data source', () => {
     vi.mocked(getAllServiceFamilies).mockResolvedValue([])
     vi.mocked(getAllServices).mockResolvedValue([])
     vi.mocked(getAllServiceAddons).mockResolvedValue([])
+    vi.mocked(getAllServicePackages).mockResolvedValue([])
     vi.mocked(applyCatalogPreset).mockResolvedValue({
       importedCategoryIds: ['category-1'],
       importedVariantIds: ['service-1'],

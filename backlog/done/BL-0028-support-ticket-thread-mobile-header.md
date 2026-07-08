@@ -41,4 +41,4 @@ Treat the thread screen as a three-part layout: fixed header, flex-shrink messag
 
 - Reported on production-like Android flow on 2026-06-21.
 - Fixed in `apps/pwa/src/components/support/support-ticket-thread.tsx`: removed `scrollFocusedInputIntoView` on composer focus, added `useKeyboardInset`, and `overscroll-contain` on the message list.
-- Related: [BL-0023 Support ticket system](../ready/BL-0023-support-ticket-system.md).
+- Related: [BL-0023 Support ticket system](BL-0023-support-ticket-system.md).

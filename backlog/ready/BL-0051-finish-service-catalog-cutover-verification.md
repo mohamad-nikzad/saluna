@@ -29,8 +29,8 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 ## Blocked by
 
-- [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](BL-0042-migrate-legacy-combos-and-addon-scopes.md)
-- [BL-0043 Replace service catalog API contracts](BL-0043-replace-service-catalog-api-contracts.md)
+- [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](../done/BL-0042-migrate-legacy-combos-and-addon-scopes.md)
+- [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md)
 - [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md)
 - [BL-0045 Rebuild add-on scope management](BL-0045-rebuild-addon-scope-management.md)
 - [BL-0046 Add Service Package setup and staff capabilities](BL-0046-add-service-package-setup.md)

@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/services', () => ({
   getAllServices: vi.fn(),
+  getAllServiceCategories: vi.fn(),
+  getAllServiceAddons: vi.fn(),
+  getAllServicePackages: vi.fn(),
   createService: vi.fn(),
   getServiceById: vi.fn(),
   updateService: vi.fn(),

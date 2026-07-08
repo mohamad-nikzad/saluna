@@ -8,6 +8,8 @@ vi.mock('@repo/database/services', () => ({
   createServiceFamily: vi.fn(),
   updateServiceFamily: vi.fn(),
   getAllServiceAddons: vi.fn(),
+  getAllServicePackages: vi.fn(),
+  getAllServices: vi.fn(),
   createServiceAddon: vi.fn(),
   updateServiceAddon: vi.fn(),
 }))

@@ -120,6 +120,13 @@
       "when": 1782979010637,
       "tag": "0016_familiar_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1783499884664,
+      "tag": "0017_staff_package_capabilities",
+      "breakpoints": true
     }
   ]
 }

@@ -58,4 +58,4 @@ Give PWA and admin **independent session cookies** while keeping one Better Auth
 - Root cause identified 2026-06-22: one Better Auth instance, one session cookie, two SPAs with different authorization models (`requireTenant` vs `requirePlatformAdmin`).
 - Key files: `packages/auth/src/server.ts`, `apps/api/src/middleware/auth.ts`, `apps/api/src/routes/auth.ts`, `apps/pwa/src/lib/api-client.ts`, `apps/admin/src/features/admin-login-page.tsx`.
 - Env vars already exist: `PWA_ORIGIN`, `ADMIN_ORIGIN` (see `.env.example`).
-- Related: [BL-0015 Admin panel](../inbox/BL-0015-admin-panel.md) — acceptance criterion "Admin access is separated from salon tenant access" is partially addressed by RBAC today; this item completes session isolation at the browser layer.
+- Related: [BL-0015 Admin panel](BL-0015-admin-panel.md) — acceptance criterion "Admin access is separated from salon tenant access" is partially addressed by RBAC today; this item completes session isolation at the browser layer.

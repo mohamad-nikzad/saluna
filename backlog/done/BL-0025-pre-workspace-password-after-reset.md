@@ -43,5 +43,5 @@ Detect when the authenticated user already has a password (for example after pas
 - Reported on production app on 2026-06-21.
 - API returns `PASSWORD_ALREADY_SET` from `POST /signup/account` when `auth.api.setPassword` is called for a user who already has a password (`apps/api/src/routes/auth.ts`).
 - Pre-workspace routing likely sends `needs_workspace` users to `/signup` (`apps/pwa/src/routes/signup.tsx`).
-- Related: [BL-0005 Forgot password flow](../ready/BL-0005-forgot-password-flow.md), [BL-0004 Login and register with OTP](../ready/BL-0004-login-and-register-with-otp.md).
+- Related: [BL-0005 Forgot password flow](BL-0005-forgot-password-flow.md), [BL-0004 Login and register with OTP](BL-0004-login-and-register-with-otp.md).
 - Fixed by exposing `hasPassword` on `/auth/me` for `needs_workspace` users, skipping `setPassword` when a credential password already exists, and adapting the signup account step UI/schema to collect manager name only when `hasPassword` is true.

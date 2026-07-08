@@ -8,12 +8,15 @@ vi.mock('@repo/database/services', () => ({
   createServiceFamily: vi.fn(),
   updateServiceFamily: vi.fn(),
   getAllServiceAddons: vi.fn(),
+  getAllServicePackages: vi.fn(),
+  getAllServices: vi.fn(),
   createServiceAddon: vi.fn(),
   updateServiceAddon: vi.fn(),
 }))
 
 vi.mock('@repo/database/clients', () => ({
-  isClientProvidedEntityId: (id: string | undefined) => typeof id === 'string' && id.length > 0,
+  isClientProvidedEntityId: (id: string | undefined) =>
+    typeof id === 'string' && id.length > 0,
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -53,8 +56,19 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('service-categories router', () => {
@@ -64,23 +78,41 @@ describe('service-categories router', () => {
   })
 
   it('returns active-only list for staff even with all=1', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     vi.mocked(db.getAllServiceCategories).mockResolvedValue([] as never)
-    const res = await app.request('/api/v1/service-categories?all=1', { headers: authHeaders })
+    const res = await app.request('/api/v1/service-categories?all=1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(db.getAllServiceCategories).toHaveBeenCalledWith('s1', false)
   })
 
   it('includes inactive for manager with all=1', async () => {
-    vi.mocked(db.getAllServiceCategories).mockResolvedValue([{ id: 'c1' }] as never)
-    const res = await app.request('/api/v1/service-categories?all=1', { headers: authHeaders })
+    vi.mocked(db.getAllServiceCategories).mockResolvedValue([
+      { id: 'c1' },
+    ] as never)
+    const res = await app.request('/api/v1/service-categories?all=1', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ categories: [{ id: 'c1' }] })
     expect(db.getAllServiceCategories).toHaveBeenCalledWith('s1', true)
   })
 
   it('returns 403 for staff on POST', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
     const res = await app.request('/api/v1/service-categories', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -99,7 +131,10 @@ describe('service-categories router', () => {
   })
 
   it('returns 200 on successful create', async () => {
-    vi.mocked(db.createServiceCategory).mockResolvedValue({ id: 'c1', name: 'Hair' } as never)
+    vi.mocked(db.createServiceCategory).mockResolvedValue({
+      id: 'c1',
+      name: 'Hair',
+    } as never)
     const res = await app.request('/api/v1/service-categories', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -110,7 +145,9 @@ describe('service-categories router', () => {
   })
 
   it('returns 409 on duplicate name', async () => {
-    vi.mocked(db.createServiceCategory).mockRejectedValue(new Error('duplicate key value'))
+    vi.mocked(db.createServiceCategory).mockRejectedValue(
+      new Error('duplicate key value'),
+    )
     const res = await app.request('/api/v1/service-categories', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
