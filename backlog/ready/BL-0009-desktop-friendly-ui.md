@@ -6,7 +6,7 @@ type: improvement
 priority: medium
 size: large
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -27,3 +27,4 @@ Audit the main manager workflows on desktop and improve the worst layout issues 
 ## Notes
 
 - Original note: "Desktop friendy UI".
+- Partial implementation note: many manager screens now include responsive desktop classes and denser desktop layouts, but there is no completed desktop audit record for navigation, appointments, clients, services, and settings. Keep open until the audit is done and the worst remaining desktop issues are fixed.

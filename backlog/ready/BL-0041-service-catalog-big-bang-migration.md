@@ -6,7 +6,7 @@ type: feature
 priority: high
 size: large
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -38,19 +38,19 @@ Ship one coordinated cutover that keeps existing appointments, appointment reque
 2. [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md).
    Type: AFK. Blocked by: BL-0042.
 
-3. [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md).
+3. [BL-0044 Simplify ServiceVariant create and update flows](../done/BL-0044-simplify-servicevariant-flows.md).
    Type: AFK. Blocked by: BL-0043.
 
-4. [BL-0045 Rebuild add-on scope management](BL-0045-rebuild-addon-scope-management.md).
+4. [BL-0045 Rebuild add-on scope management](../done/BL-0045-rebuild-addon-scope-management.md).
    Type: AFK. Blocked by: BL-0042 and BL-0043.
 
-5. [BL-0046 Add Service Package setup and staff capabilities](BL-0046-add-service-package-setup.md).
+5. [BL-0046 Add Service Package setup and staff capabilities](../done/BL-0046-add-service-package-setup.md).
    Type: AFK. Blocked by: BL-0042 and BL-0043.
 
-6. [BL-0047 Add manager-only package scheduling](BL-0047-add-manager-package-scheduling.md).
+6. [BL-0047 Add manager-only package scheduling](../done/BL-0047-add-manager-package-scheduling.md).
    Type: AFK. Blocked by: BL-0046.
 
-7. [BL-0048 Keep public booking service-only](BL-0048-keep-public-booking-service-only.md).
+7. [BL-0048 Keep public booking service-only](../done/BL-0048-keep-public-booking-service-only.md).
    Type: AFK. Blocked by: BL-0043, BL-0044, and BL-0045.
 
 8. [BL-0049 Flatten CatalogPresets to categories and services](BL-0049-flatten-catalog-presets.md).
@@ -67,3 +67,4 @@ Ship one coordinated cutover that keeps existing appointments, appointment reque
 - Source plan: `SERVICE_CATALOG_MIGRATION_PLAN.md`.
 - This item is the parent tracker. Child backlog items BL-0042 through BL-0051 were created from the implementation slices.
 - A GitHub issue was created by mistake and closed because Saluna tracks implementation tasks locally.
+- Partial implementation note: the core cutover is mostly implemented. BL-0042 through BL-0048 are done, while BL-0049, BL-0050, and BL-0051 remain open for preset cleanup, final surface polish, and full verification.

@@ -6,7 +6,7 @@ type: feature
 priority: high
 size: medium
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -28,3 +28,4 @@ Require OTP verification before creating or confirming an `AppointmentRequest` f
 
 - Original note: "Request appointment via OTP".
 - Related: BL-0008 SMS support.
+- Partial implementation note: auth OTP and SMS delivery exist, including resend/throttle behavior for auth flows, but the public AppointmentRequest route still creates a request immediately after public submit rate limiting. This remains open until public booking has its own OTP request/verify gate before request creation or confirmation.

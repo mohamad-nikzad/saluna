@@ -6,7 +6,7 @@ type: chore
 priority: high
 size: medium
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-08
 ---
 
 ## Parent
@@ -31,11 +31,11 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 - [BL-0042 Migrate legacy combos and add-on scopes into package-ready storage](../done/BL-0042-migrate-legacy-combos-and-addon-scopes.md)
 - [BL-0043 Replace service catalog API contracts](../done/BL-0043-replace-service-catalog-api-contracts.md)
-- [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md)
-- [BL-0045 Rebuild add-on scope management](BL-0045-rebuild-addon-scope-management.md)
-- [BL-0046 Add Service Package setup and staff capabilities](BL-0046-add-service-package-setup.md)
-- [BL-0047 Add manager-only package scheduling](BL-0047-add-manager-package-scheduling.md)
-- [BL-0048 Keep public booking service-only](BL-0048-keep-public-booking-service-only.md)
+- [BL-0044 Simplify ServiceVariant create and update flows](../done/BL-0044-simplify-servicevariant-flows.md)
+- [BL-0045 Rebuild add-on scope management](../done/BL-0045-rebuild-addon-scope-management.md)
+- [BL-0046 Add Service Package setup and staff capabilities](../done/BL-0046-add-service-package-setup.md)
+- [BL-0047 Add manager-only package scheduling](../done/BL-0047-add-manager-package-scheduling.md)
+- [BL-0048 Keep public booking service-only](../done/BL-0048-keep-public-booking-service-only.md)
 - [BL-0049 Flatten CatalogPresets to categories and services](BL-0049-flatten-catalog-presets.md)
 - [BL-0050 Update catalog and calendar surfaces for the new model](BL-0050-update-catalog-and-calendar-surfaces.md)
 
@@ -43,3 +43,4 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 - Type: AFK.
 - Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Partial implementation note: OpenAPI/client artifacts, `CONTEXT.md`, and the manager package scheduling ADR appear to exist, but this item remains open until seeds are fully flat and the listed full verification commands plus targeted visual checks are run and recorded.

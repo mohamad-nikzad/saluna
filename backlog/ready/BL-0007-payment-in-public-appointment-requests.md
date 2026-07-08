@@ -6,7 +6,7 @@ type: feature
 priority: medium
 size: large
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -27,3 +27,4 @@ Support a single payment step for public `AppointmentRequest` flows, scoped to o
 ## Notes
 
 - Original note: "Payment in public bookings".
+- Partial implementation note: `salon_public_settings.deposit_policy`, `appointment_requests.payment_status`, and `appointment_requests.deposit_amount` exist as schema/API placeholders. No checkout provider, payment confirmation, or public payment step is implemented yet.

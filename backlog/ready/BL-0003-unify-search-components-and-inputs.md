@@ -6,7 +6,7 @@ type: improvement
 priority: high
 size: small
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -27,3 +27,4 @@ Create or standardize one shared input/search pattern using the existing design 
 ## Notes
 
 - Original note: "unify search components and inputs, use shadcn group input".
+- Partial implementation note: the app has several working search inputs and command inputs, but they are still implemented ad hoc across services, clients, calendar filters, public-page settings, and admin tables. This remains open until one shared search/input pattern replaces the highest-traffic duplicates.

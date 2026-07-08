@@ -1,12 +1,12 @@
 ---
 id: BL-0008
 title: Add SMS support
-status: ready
+status: done
 type: feature
 priority: high
 size: medium
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-07-08
 ---
 
 ## Problem
@@ -19,12 +19,13 @@ Add one SMS provider behind a small messaging abstraction that can send OTP mess
 
 ## Acceptance Criteria
 
-- [ ] SMS provider configuration is environment-based.
-- [ ] Server can send a basic SMS message.
-- [ ] Delivery errors are handled and logged without leaking secrets.
-- [ ] OTP-related flows can call the SMS sender.
+- [x] SMS provider configuration is environment-based.
+- [x] Server can send a basic SMS message.
+- [x] Delivery errors are handled and logged without leaking secrets.
+- [x] OTP-related flows can call the SMS sender.
 
 ## Notes
 
 - Original note: "add SMS support".
 - Related: BL-0004, BL-0006.
+- Implemented with the SMS.ir delivery layer, environment-backed provider config, OTP send helpers, notification SMS dispatch, and focused SMS/auth OTP tests.

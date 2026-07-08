@@ -6,7 +6,7 @@ type: feature
 priority: high
 size: large
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-08
 ---
 
 ## Parent
@@ -29,12 +29,13 @@ Update PWA and admin surfaces so managers and platform staff use the new catalog
 
 ## Blocked by
 
-- [BL-0044 Simplify ServiceVariant create and update flows](BL-0044-simplify-servicevariant-flows.md)
-- [BL-0045 Rebuild add-on scope management](BL-0045-rebuild-addon-scope-management.md)
-- [BL-0046 Add Service Package setup and staff capabilities](BL-0046-add-service-package-setup.md)
-- [BL-0047 Add manager-only package scheduling](BL-0047-add-manager-package-scheduling.md)
+- [BL-0044 Simplify ServiceVariant create and update flows](../done/BL-0044-simplify-servicevariant-flows.md)
+- [BL-0045 Rebuild add-on scope management](../done/BL-0045-rebuild-addon-scope-management.md)
+- [BL-0046 Add Service Package setup and staff capabilities](../done/BL-0046-add-service-package-setup.md)
+- [BL-0047 Add manager-only package scheduling](../done/BL-0047-add-manager-package-scheduling.md)
 
 ## Notes
 
 - Type: AFK.
 - Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Partial implementation note: PWA Services and Calendar have category/service, add-on, package definition, and package scheduling paths. Keep this open for final admin/PWA surface audit, staff package capability UX coverage, and regression tests proving no family/combo controls remain.
