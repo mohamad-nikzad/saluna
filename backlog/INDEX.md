@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-08 (BL-0049 and BL-0050 done; BL-0051 verification note updated)
+Last organized: 2026-07-08 (BL-0051 done after targeted visual verification)
 
 ## Now
 
@@ -13,7 +13,6 @@ No active backlog items.
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
 - [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
-- [BL-0051 Finish service catalog cutover verification](ready/BL-0051-finish-service-catalog-cutover-verification.md)
 
 ## Inbox
 
@@ -33,6 +32,7 @@ No active backlog items.
 ## Done
 
 - [BL-0040 Add audited Platform Owner Override](done/BL-0040-add-audited-platform-owner-override.md)
+- [BL-0051 Finish service catalog cutover verification](done/BL-0051-finish-service-catalog-cutover-verification.md)
 - [BL-0050 Update catalog and calendar surfaces for the new model](done/BL-0050-update-catalog-and-calendar-surfaces.md)
 - [BL-0049 Flatten CatalogPresets to categories and services](done/BL-0049-flatten-catalog-presets.md)
 - [BL-0048 Keep public booking service-only](done/BL-0048-keep-public-booking-service-only.md)
