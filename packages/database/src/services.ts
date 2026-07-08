@@ -31,9 +31,11 @@ export {
   getServicePackageById,
   normalizeServicePackageName,
   replaceServicePackageComponents,
+  replaceServicePackageStaffCapabilities,
   resolveServicePackagePrice,
   updateServicePackage,
   validatePackageComponentReplacement,
+  validatePackageStaffReplacement,
 } from './internal/service-package-queries'
 export type {
   ServiceAddonScopeInput,

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, ne } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull, ne, or } from 'drizzle-orm'
 import type {
   Service,
   ServicePackage,
@@ -11,6 +11,9 @@ import {
   servicePackageComponents,
   servicePackages,
   staffPackageCapabilities,
+  member,
+  salonMember,
+  staffProfiles,
   services,
 } from '../schema'
 import { isClientProvidedEntityId } from './client-queries'
@@ -68,6 +71,21 @@ export function validatePackageComponentReplacement(input: {
   }
   if (foundServices.some((row) => (row.kind ?? 'standard') !== 'standard')) {
     throw new Error('service package cannot contain legacy combo services')
+  }
+}
+
+export function validatePackageStaffReplacement(input: {
+  staffIds: string[]
+  foundStaffIds: string[]
+}) {
+  const { staffIds, foundStaffIds } = input
+  if (new Set(staffIds).size !== staffIds.length) {
+    throw new Error(
+      'service package staff capabilities cannot contain duplicates',
+    )
+  }
+  if (new Set(foundStaffIds).size !== staffIds.length) {
+    throw new Error('service package staff capability staff not found')
   }
 }
 
@@ -427,6 +445,81 @@ export async function replaceServicePackageComponents(
           packageId,
           serviceId,
           sortOrder: index,
+        })),
+      )
+    }
+  })
+
+  const updated = await getServicePackageById(packageId, salonId)
+  if (!updated) throw new Error('service package not found')
+  return updated
+}
+
+export async function replaceServicePackageStaffCapabilities(
+  packageId: string,
+  salonId: string,
+  staffIds: string[],
+): Promise<ServicePackage> {
+  const existing = await getServicePackageById(packageId, salonId)
+  if (!existing) throw new Error('service package not found')
+
+  const db = getDb()
+  const memberRows =
+    staffIds.length === 0
+      ? []
+      : await db
+          .select({ id: member.userId })
+          .from(member)
+          .leftJoin(
+            salonMember,
+            and(
+              eq(salonMember.userId, member.userId),
+              eq(salonMember.organizationId, salonId),
+            ),
+          )
+          .where(
+            and(
+              eq(member.organizationId, salonId),
+              inArray(member.userId, staffIds),
+              or(isNull(salonMember.active), eq(salonMember.active, true)),
+            ),
+          )
+  const profileRows =
+    staffIds.length === 0
+      ? []
+      : await db
+          .select({ id: staffProfiles.id })
+          .from(staffProfiles)
+          .where(
+            and(
+              eq(staffProfiles.salonId, salonId),
+              inArray(staffProfiles.id, staffIds),
+              eq(staffProfiles.active, true),
+              isNull(staffProfiles.userId),
+            ),
+          )
+
+  validatePackageStaffReplacement({
+    staffIds,
+    foundStaffIds: [...memberRows, ...profileRows].map((row) => row.id),
+  })
+
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(staffPackageCapabilities)
+      .where(
+        and(
+          eq(staffPackageCapabilities.salonId, salonId),
+          eq(staffPackageCapabilities.packageId, packageId),
+        ),
+      )
+
+    if (staffIds.length > 0) {
+      await tx.insert(staffPackageCapabilities).values(
+        staffIds.map((staffId) => ({
+          salonId,
+          packageId,
+          staffId,
         })),
       )
     }

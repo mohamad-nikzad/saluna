@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-08 (BL-0042, BL-0043, BL-0044, and BL-0045 done)
+Last organized: 2026-07-08 (BL-0042, BL-0043, BL-0044, BL-0045, and BL-0046 done)
 
 ## Now
 
@@ -14,7 +14,6 @@ No active backlog items.
 - [BL-0008 Add SMS support](ready/BL-0008-add-sms-support.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
 - [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
-- [BL-0046 Add Service Package setup and staff capabilities](ready/BL-0046-add-service-package-setup.md)
 - [BL-0047 Add manager-only package scheduling](ready/BL-0047-add-manager-package-scheduling.md)
 - [BL-0048 Keep public booking service-only](ready/BL-0048-keep-public-booking-service-only.md)
 - [BL-0049 Flatten CatalogPresets to categories and services](ready/BL-0049-flatten-catalog-presets.md)
@@ -39,6 +38,7 @@ No active backlog items.
 ## Done
 
 - [BL-0040 Add audited Platform Owner Override](done/BL-0040-add-audited-platform-owner-override.md)
+- [BL-0046 Add Service Package setup and staff capabilities](done/BL-0046-add-service-package-setup.md)
 - [BL-0045 Rebuild add-on scope management](done/BL-0045-rebuild-addon-scope-management.md)
 - [BL-0044 Simplify ServiceVariant create and update flows](done/BL-0044-simplify-servicevariant-flows.md)
 - [BL-0043 Replace service catalog API contracts](done/BL-0043-replace-service-catalog-api-contracts.md)

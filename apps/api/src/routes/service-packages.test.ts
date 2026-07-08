@@ -7,6 +7,7 @@ vi.mock('@repo/database/services', () => ({
   createServicePackage: vi.fn(),
   updateServicePackage: vi.fn(),
   replaceServicePackageComponents: vi.fn(),
+  replaceServicePackageStaffCapabilities: vi.fn(),
   getAllServiceCategories: vi.fn(),
   createServiceCategory: vi.fn(),
   updateServiceCategory: vi.fn(),
@@ -265,6 +266,62 @@ describe('service-packages router', () => {
       's1',
       ['svc-2', 'svc-1'],
     )
+  })
+
+  it('staff is 403 on package staff capabilities update', async () => {
+    vi.mocked(getMemberForUser).mockResolvedValue({
+      userId: 'u2',
+      organizationId: 's1',
+      role: 'member',
+      name: 'Staff',
+      username: '09120000001',
+    } as never)
+
+    const res = await app.request('/api/v1/service-packages/pkg-1/staff', {
+      method: 'PUT',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staffIds: ['staff-1'] }),
+    })
+
+    expect(res.status).toBe(403)
+    expect(db.replaceServicePackageStaffCapabilities).not.toHaveBeenCalled()
+  })
+
+  it('replaces explicit staff package capabilities', async () => {
+    vi.mocked(db.replaceServicePackageStaffCapabilities).mockResolvedValue({
+      ...packageResponse,
+      staffIds: ['staff-2', 'staff-1'],
+    } as never)
+
+    const res = await app.request('/api/v1/service-packages/pkg-1/staff', {
+      method: 'PUT',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staffIds: ['staff-2', 'staff-1'] }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      package: { ...packageResponse, staffIds: ['staff-2', 'staff-1'] },
+    })
+    expect(db.replaceServicePackageStaffCapabilities).toHaveBeenCalledWith(
+      'pkg-1',
+      's1',
+      ['staff-2', 'staff-1'],
+    )
+  })
+
+  it('maps duplicate package staff capabilities to 400', async () => {
+    vi.mocked(db.replaceServicePackageStaffCapabilities).mockRejectedValue(
+      new Error('service package staff capabilities cannot contain duplicates'),
+    )
+
+    const res = await app.request('/api/v1/service-packages/pkg-1/staff', {
+      method: 'PUT',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staffIds: ['staff-1', 'staff-1'] }),
+    })
+
+    expect(res.status).toBe(400)
   })
 
   it('manager schedules a package booking', async () => {

@@ -11,6 +11,7 @@ import {
   servicePackageComponentsUpdateSchema,
   servicePackageBookingCreateSchema,
   servicePackageCreateSchema,
+  servicePackageStaffUpdateSchema,
   servicePackageUpdateSchema,
   serviceUpdateSchema,
 } from '@repo/salon-core/forms/service'
@@ -392,6 +393,19 @@ export const servicePackageComponentsUpdateBodySchema = bodyFromCoreSchema(
       }),
   },
   servicePackageComponentsUpdateSchema,
+)
+
+export const servicePackageStaffUpdateBodySchema = bodyFromCoreSchema(
+  'ServicePackageStaffUpdateRequest',
+  {
+    staffIds: z
+      .array(z.string())
+      .optional()
+      .openapi({
+        example: ['staff-1', 'staff-2'],
+      }),
+  },
+  servicePackageStaffUpdateSchema,
 )
 
 const servicePackageBookingTaskInputOpenApiSchema = z

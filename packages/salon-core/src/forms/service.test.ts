@@ -5,6 +5,7 @@ import {
   serviceAddonScopeInputSchema,
   serviceFormSchema,
   servicePackageBookingCreateSchema,
+  servicePackageStaffUpdateSchema,
   serviceUpdateSchema,
 } from './service'
 
@@ -221,5 +222,14 @@ describe('servicePackageBookingCreateSchema', () => {
         ],
       }).success,
     ).toBe(false)
+  })
+})
+
+describe('servicePackageStaffUpdateSchema', () => {
+  it('accepts staff capability replacement payloads', () => {
+    expect(
+      servicePackageStaffUpdateSchema.parse({ staffIds: ['staff-2'] }),
+    ).toEqual({ staffIds: ['staff-2'] })
+    expect(servicePackageStaffUpdateSchema.parse({})).toEqual({ staffIds: [] })
   })
 })

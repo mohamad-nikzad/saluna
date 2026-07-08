@@ -1123,6 +1123,10 @@ export type ServicePackageComponentsUpdateRequest = {
     serviceIds?: Array<string>;
 };
 
+export type ServicePackageStaffUpdateRequest = {
+    staffIds?: Array<string>;
+};
+
 export type CatalogPresetsListResponse = {
     presets: Array<CatalogPresetListItem>;
 };
@@ -5067,6 +5071,45 @@ export type PutApiV1ServicePackagesByIdComponentsResponses = {
 };
 
 export type PutApiV1ServicePackagesByIdComponentsResponse = PutApiV1ServicePackagesByIdComponentsResponses[keyof PutApiV1ServicePackagesByIdComponentsResponses];
+
+export type PutApiV1ServicePackagesByIdStaffData = {
+    body: ServicePackageStaffUpdateRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/service-packages/{id}/staff';
+};
+
+export type PutApiV1ServicePackagesByIdStaffErrors = {
+    /**
+     * Invalid request body or parameters
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_services permission
+     */
+    403: ApiError;
+    /**
+     * Service package not found
+     */
+    404: ApiError;
+};
+
+export type PutApiV1ServicePackagesByIdStaffError = PutApiV1ServicePackagesByIdStaffErrors[keyof PutApiV1ServicePackagesByIdStaffErrors];
+
+export type PutApiV1ServicePackagesByIdStaffResponses = {
+    /**
+     * Updated package staff capabilities
+     */
+    200: ServicePackageResponse;
+};
+
+export type PutApiV1ServicePackagesByIdStaffResponse = PutApiV1ServicePackagesByIdStaffResponses[keyof PutApiV1ServicePackagesByIdStaffResponses];
 
 export type GetApiV1CatalogPresetsData = {
     body?: never;

@@ -1,12 +1,12 @@
 ---
 id: BL-0046
 title: Add Service Package setup and staff capabilities
-status: ready
+status: done
 type: feature
 priority: high
 size: large
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-08
 ---
 
 ## Parent
@@ -19,12 +19,12 @@ Add manager/admin setup flows for defining Service Packages, choosing included S
 
 ## Acceptance Criteria
 
-- [ ] Managers can list, create, update, activate/archive, and sort Service Package definitions.
-- [ ] Managers can replace a package's included ServiceVariant components in a deterministic order.
-- [ ] Managers can set package pricing with an override or fallback to the sum of included ServiceVariant prices.
-- [ ] Managers can assign explicit staff package capabilities separately from normal staff service capabilities.
-- [ ] Package setup routes enforce tenant permissions.
-- [ ] Tests cover package definition, component validation, duplicate prevention, price behavior, and staff package capability reads/writes.
+- [x] Managers can list, create, update, activate/archive, and sort Service Package definitions.
+- [x] Managers can replace a package's included ServiceVariant components in a deterministic order.
+- [x] Managers can set package pricing with an override or fallback to the sum of included ServiceVariant prices.
+- [x] Managers can assign explicit staff package capabilities separately from normal staff service capabilities.
+- [x] Package setup routes enforce tenant permissions.
+- [x] Tests cover package definition, component validation, duplicate prevention, price behavior, and staff package capability reads/writes.
 
 ## Blocked by
 

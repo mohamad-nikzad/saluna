@@ -29,6 +29,7 @@ import {
   getServicePackageRoute,
   listServicePackagesRoute,
   updateServicePackageComponentsRoute,
+  updateServicePackageStaffRoute,
   updateServicePackageRoute,
 } from './routes/service-packages'
 import {
@@ -331,6 +332,7 @@ const stubServicePackage = {
   priceOverride: null,
   sortOrder: 0,
   components: [],
+  staffIds: [],
   totalDuration: 0,
   componentPriceTotal: 0,
   resolvedPrice: 0,
@@ -447,6 +449,10 @@ const updateServicePackageStub: RouteHandler<
 
 const updateServicePackageComponentsStub: RouteHandler<
   typeof updateServicePackageComponentsRoute
+> = (c) => c.json({ package: stubServicePackage }, 200)
+
+const updateServicePackageStaffStub: RouteHandler<
+  typeof updateServicePackageStaffRoute
 > = (c) => c.json({ package: stubServicePackage }, 200)
 
 const listCatalogPresetsStub: RouteHandler<typeof listCatalogPresetsRoute> = (
@@ -1342,7 +1348,8 @@ export const contractApp = new OpenAPIHono()
       .openapi(
         updateServicePackageComponentsRoute,
         updateServicePackageComponentsStub,
-      ),
+      )
+      .openapi(updateServicePackageStaffRoute, updateServicePackageStaffStub),
   )
   .route(
     '/api/v1/catalog-presets',

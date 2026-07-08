@@ -8,6 +8,7 @@ import {
   getAllServicePackages,
   getServicePackageById,
   replaceServicePackageComponents,
+  replaceServicePackageStaffCapabilities,
   updateServicePackage,
 } from '@repo/database/services'
 import { isClientProvidedEntityId } from '@repo/database/clients'
@@ -15,6 +16,7 @@ import {
   servicePackageComponentsUpdateSchema,
   servicePackageBookingCreateSchema,
   servicePackageCreateSchema,
+  servicePackageStaffUpdateSchema,
   servicePackageUpdateSchema,
 } from '@repo/salon-core/forms/service'
 import type { AppEnv } from '../factory'
@@ -46,6 +48,16 @@ const packageErrorMap = [
   [
     'service package components must be active services',
     'همه خدمات داخل پکیج باید فعال باشند',
+    400,
+  ],
+  [
+    'service package staff capabilities cannot contain duplicates',
+    'هر پرسنل فقط یک بار می‌تواند برای پکیج انتخاب شود',
+    400,
+  ],
+  [
+    'service package staff capability staff not found',
+    'یکی از پرسنل انتخاب‌شده پیدا نشد',
     400,
   ],
   [
@@ -266,6 +278,29 @@ export const servicePackages = new Hono<AppEnv>()
           id,
           salonId,
           serviceIds,
+        )
+        return ok(c, { package: servicePackage })
+      } catch (err) {
+        const mapped = packageErrorResponse(c, err)
+        if (mapped) return mapped
+        throw err
+      }
+    },
+  )
+  .put(
+    '/:id/staff',
+    requireTenant('manage_services'),
+    zValidator('param', idParamSchema),
+    zValidator('json', servicePackageStaffUpdateSchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const { staffIds } = c.req.valid('json')
+      try {
+        const servicePackage = await replaceServicePackageStaffCapabilities(
+          id,
+          salonId,
+          staffIds,
         )
         return ok(c, { package: servicePackage })
       } catch (err) {

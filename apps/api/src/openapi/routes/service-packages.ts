@@ -11,6 +11,7 @@ import {
   servicePackageBookingResponseSchema,
   servicePackageResponseSchema,
   servicePackageCreateBodySchema,
+  servicePackageStaffUpdateBodySchema,
   servicePackagesListResponseSchema,
   servicePackageUpdateBodySchema,
 } from '../schemas/services'
@@ -187,6 +188,37 @@ export const updateServicePackageComponentsRoute = createRoute({
   responses: {
     200: {
       description: 'Updated package components',
+      content: {
+        'application/json': { schema: servicePackageResponseSchema },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+  },
+})
+
+export const updateServicePackageStaffRoute = createRoute({
+  method: 'put',
+  path: '/{id}/staff',
+  tags: ['Service packages'],
+  summary: 'Replace service package staff capabilities',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: servicePackageStaffUpdateBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated package staff capabilities',
       content: {
         'application/json': { schema: servicePackageResponseSchema },
       },

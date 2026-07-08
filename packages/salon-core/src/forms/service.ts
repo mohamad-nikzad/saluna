@@ -153,6 +153,10 @@ export const servicePackageComponentsUpdateSchema = z.object({
   serviceIds: z.array(catalogEntityIdSchema).default([]),
 })
 
+export const servicePackageStaffUpdateSchema = z.object({
+  staffIds: z.array(catalogEntityIdSchema).default([]),
+})
+
 const servicePackageBookingTaskSchema = z
   .object({
     packageComponentId: catalogEntityIdSchema,
@@ -288,6 +292,12 @@ export type ServicePackageComponentsUpdateInput = z.input<
 >
 export type ServicePackageComponentsUpdatePayload = z.output<
   typeof servicePackageComponentsUpdateSchema
+>
+export type ServicePackageStaffUpdateInput = z.input<
+  typeof servicePackageStaffUpdateSchema
+>
+export type ServicePackageStaffUpdatePayload = z.output<
+  typeof servicePackageStaffUpdateSchema
 >
 export type ServicePackageBookingCreateInput = z.input<
   typeof servicePackageBookingCreateSchema

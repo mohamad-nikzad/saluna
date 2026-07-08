@@ -4329,6 +4329,21 @@
           }
         }
       },
+      "ServicePackageStaffUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "staffIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "staff-1",
+              "staff-2"
+            ]
+          }
+        }
+      },
       "CatalogPresetsListResponse": {
         "type": "object",
         "properties": {
@@ -14307,6 +14322,96 @@
         "responses": {
           "200": {
             "description": "Updated package components",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicePackageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_services permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Service package not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/service-packages/{id}/staff": {
+      "put": {
+        "tags": [
+          "Service packages"
+        ],
+        "summary": "Replace service package staff capabilities",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicePackageStaffUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated package staff capabilities",
             "content": {
               "application/json": {
                 "schema": {
