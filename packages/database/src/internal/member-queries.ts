@@ -62,6 +62,56 @@ export async function getMemberForUser(
   }
 }
 
+/**
+ * Manager/owner membership for tenant auth. Staff must use Staff Profile Access
+ * instead; this keeps manager/owner single-salon resolution unchanged.
+ */
+export async function getManagerMemberForUser(
+  userId: string,
+): Promise<MemberContext | undefined> {
+  const db = getDb()
+  const rows = await db
+    .select({
+      userId: member.userId,
+      organizationId: member.organizationId,
+      role: member.role,
+      salonStatus: salonProfile.status,
+      name: user.name,
+      displayName: salonMember.displayName,
+      phoneNumber: user.phoneNumber,
+      username: user.username,
+    })
+    .from(member)
+    .innerJoin(user, eq(member.userId, user.id))
+    .leftJoin(
+      salonProfile,
+      eq(salonProfile.organizationId, member.organizationId),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, member.userId),
+        eq(salonMember.organizationId, member.organizationId),
+      ),
+    )
+    .where(
+      and(
+        eq(member.userId, userId),
+        inArray(member.role, MANAGER_ROLES),
+        or(isNull(salonMember.active), eq(salonMember.active, true)),
+      ),
+    )
+    .limit(1)
+  const row = rows[0]
+  if (!row) return undefined
+  return {
+    ...row,
+    name: row.displayName?.trim() || row.name,
+    salonStatus: row.salonStatus ?? undefined,
+    username: row.phoneNumber ?? row.username ?? '',
+  }
+}
+
 const MANAGER_ROLES = ['owner', 'admin']
 
 /**

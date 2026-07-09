@@ -6,6 +6,8 @@ export type TenantUser = {
   role: UserRole
   name: string
   phone: string
+  /** Linked Staff Profile for staff role; set from active Staff Profile Access. */
+  staffProfileId?: string
 }
 
 export type TenantPermission =
