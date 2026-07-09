@@ -26,15 +26,17 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Create manager Staff Invites.
 
-- [ ] Staff can see pending invites for their verified phone after login.
-- [ ] Staff cannot see or accept invites for a different phone.
-- [ ] Staff can explicitly accept one invite and gain Staff Profile Access to that salon.
-- [ ] Staff can explicitly decline one invite and gain no access.
-- [ ] Accepting a new invite preserves existing Staff Profile Access in other salons.
-- [ ] One staff identity cannot have more than one active Staff Profile Access in the same salon.
-- [ ] One Staff Profile cannot have more than one active accepted identity.
-- [ ] Accepted and declined invite history is retained for support visibility.
+- [x] Staff can see pending invites for their verified phone after login.
+- [x] Staff cannot see or accept invites for a different phone.
+- [x] Staff can explicitly accept one invite and gain Staff Profile Access to that salon.
+- [x] Staff can explicitly decline one invite and gain no access.
+- [x] Accepting a new invite preserves existing Staff Profile Access in other salons.
+- [x] One staff identity cannot have more than one active Staff Profile Access in the same salon.
+- [x] One Staff Profile cannot have more than one active accepted identity.
+- [x] Accepted and declined invite history is retained for support visibility.
 
+
+> Closed by Sandcastle: Staff list/accept/decline phone-bound invites; accept creates Staff Profile Access and preserves other salon access; history retained
 ## Authorize staff through Staff Profile Access
 
 **What to build:** Staff authorization uses Staff Profile Access instead of a single claimed Staff Profile. Tenant-scoped staff API behavior resolves the active staff profile for the salon and keeps staff appointment access limited to that Staff Profile.
