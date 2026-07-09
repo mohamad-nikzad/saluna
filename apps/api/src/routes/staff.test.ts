@@ -122,7 +122,12 @@ describe('staff router', () => {
   it('200 on POST create Staff Invite with name and phone only', async () => {
     vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
       status: 'created',
-      profile: { id: 'profile-1', name: 'Ali', phone: '09121234567' },
+      profile: {
+        id: 'profile-1',
+        name: 'Ali',
+        phone: '09121234567',
+        userId: null,
+      },
       invite: { id: 'invite-1', status: 'pending' },
       inviteToken: 'token',
     } as never)
@@ -154,29 +159,8 @@ describe('staff router', () => {
       phone: '09121234567',
       invitedByUserId: 'u1',
     })
-  })
-
-  it('200 on POST create', async () => {
-    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
-      status: 'created',
-      profile: { id: 'profile-1' },
-      invite: { id: 'invite-1' },
-      inviteToken: 'token',
-    } as never)
-    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
-      id: 'profile-1',
-      name: 'Ali',
-      inviteStatus: 'pending',
-    } as never)
-    const res = await app.request('/api/v1/staff', {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify(validCreate),
-    })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({
-      user: { id: 'profile-1', name: 'Ali', inviteStatus: 'pending' },
-    })
+    // Pending invites must not mint manager-controlled credentials.
+    expect(db.updateStaffPassword).not.toHaveBeenCalled()
   })
 
   it('409 on duplicate pending invite', async () => {
@@ -231,7 +215,7 @@ describe('staff router', () => {
     })
   })
 
-  it('rejects password updates for pending invited Staff Profiles', async () => {
+  it('404 when password update target has no tenant membership', async () => {
     vi.mocked(db.getUserById).mockResolvedValue({
       id: 'profile-1',
       salonId: 's1',
@@ -252,37 +236,6 @@ describe('staff router', () => {
       'profile-1',
       'newsecret123',
     )
-  })
-
-  it('pending Staff Invite create path does not create tenant membership credentials', async () => {
-    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
-      status: 'created',
-      profile: {
-        id: 'profile-1',
-        name: 'Ali',
-        phone: '09121234567',
-        userId: null,
-      },
-      invite: { id: 'invite-1', status: 'pending' },
-      inviteToken: 'token',
-    } as never)
-    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
-      id: 'profile-1',
-      name: 'Ali',
-      phone: '09121234567',
-      inviteStatus: 'pending',
-      role: 'staff',
-    } as never)
-    const res = await app.request('/api/v1/staff', {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Ali', phone: '09121234567' }),
-    })
-    expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.user.inviteStatus).toBe('pending')
-    expect(db.createManagerStaffInvite).toHaveBeenCalledTimes(1)
-    expect(db.updateStaffPassword).not.toHaveBeenCalled()
   })
 
   it('200 on GET includes pending inviteStatus for invited staff', async () => {

@@ -29,11 +29,9 @@ type ExistingProfile = {
   userId: string | null
   phone: string
   active: boolean
-  accessDetachedAt: Date | null
 }
 
 export function evaluateManagerStaffInvite(input: {
-  phone: string
   existingProfile: ExistingProfile | null
   pendingInvite: { id: string; staffProfileId: string } | null
   legacyMemberWithPhone: boolean
@@ -144,7 +142,6 @@ export async function createManagerStaffInvite(
     const legacyMemberWithPhone = legacyActive[0] != null
 
     const decision = evaluateManagerStaffInvite({
-      phone: input.phone,
       existingProfile,
       pendingInvite,
       legacyMemberWithPhone,

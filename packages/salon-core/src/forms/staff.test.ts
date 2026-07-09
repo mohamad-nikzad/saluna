@@ -148,7 +148,7 @@ describe('staffScheduleSchema', () => {
 })
 
 describe('staffCreateRequestSchema', () => {
-  it('accepts name and phone only and ignores password fields', () => {
+  it('accepts name and phone only (extra password field is ignored)', () => {
     const result = staffCreateRequestSchema.parse({
       name: 'Ali',
       phone: '09121234567',

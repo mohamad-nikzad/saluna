@@ -37,7 +37,22 @@ const validationErrorResponse = {
 } as const
 
 const duplicatePhoneResponse = {
-  description: 'Phone number already registered or invite conflict',
+  description: 'Phone number already registered',
+  content: {
+    'application/json': {
+      schema: apiErrorSchema.openapi({
+        example: {
+          error: 'این شماره موبایل قبلاً ثبت شده است',
+          code: 'duplicate-phone',
+        },
+      }),
+    },
+  },
+} as const
+
+const inviteConflictResponse = {
+  description:
+    'Staff Invite conflict for this phone in the salon (pending invite, inactive profile, or duplicate active profile)',
   content: {
     'application/json': {
       schema: apiErrorSchema.openapi({
@@ -89,7 +104,7 @@ export const createStaffRoute = createRoute({
     400: validationErrorResponse,
     401: unauthorizedResponse,
     403: forbiddenResponse,
-    409: duplicatePhoneResponse,
+    409: inviteConflictResponse,
   },
 })
 

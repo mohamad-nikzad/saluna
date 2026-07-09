@@ -10,14 +10,16 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** None — can start immediately.
 
-- [ ] Manager can create a Staff Invite with only staff name and phone.
-- [ ] Creating the invite creates or uses one salon-owned Staff Profile for that salon.
-- [ ] Pending invited staff appear in the manager staff list with a clear pending state.
-- [ ] Pending invited staff can have schedule and ServiceVariant capabilities configured.
-- [ ] Pending invites grant no staff tenant access, appointment access, notification fanout, or API access.
-- [ ] Managers cannot invite inactive Staff Profiles until they reactivate them.
-- [ ] The same salon cannot create duplicate pending invites or duplicate active Staff Profiles for the same intended staff phone.
+- [x] Manager can create a Staff Invite with only staff name and phone.
+- [x] Creating the invite creates or uses one salon-owned Staff Profile for that salon.
+- [x] Pending invited staff appear in the manager staff list with a clear pending state.
+- [x] Pending invited staff can have schedule and ServiceVariant capabilities configured.
+- [x] Pending invites grant no staff tenant access, appointment access, notification fanout, or API access.
+- [x] Managers cannot invite inactive Staff Profiles until they reactivate them.
+- [x] The same salon cannot create duplicate pending invites or duplicate active Staff Profiles for the same intended staff phone.
 
+
+> Closed by Sandcastle: Manager Staff Invite create path: name+phone → Staff Profile + pending invite; list pending; schedule/services config; no login access; inactive/duplicate guards
 ## Accept and decline phone-bound Staff Invites
 
 **What to build:** Staff register or log in themselves, verify the invited phone through OTP, and see pending invites for that phone. They can explicitly accept or decline each invite. Acceptance creates Staff Profile Access for that salon without removing access to any other salon.

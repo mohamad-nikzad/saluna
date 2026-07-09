@@ -7,14 +7,12 @@ const baseProfile = {
   userId: null as string | null,
   phone: '09121234567',
   active: true,
-  accessDetachedAt: null as Date | null,
 }
 
 describe('evaluateManagerStaffInvite', () => {
   it('creates a new Staff Profile when the salon has no match for the phone', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: null,
         pendingInvite: null,
         legacyMemberWithPhone: false,
@@ -22,10 +20,9 @@ describe('evaluateManagerStaffInvite', () => {
     ).toEqual({ status: 'create_profile' })
   })
 
-  it('reuses an active unclaimed Staff Profile without a pending invite', () => {
+  it('reuses an active Staff Profile with no accepted access and no pending invite', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: baseProfile,
         pendingInvite: null,
         legacyMemberWithPhone: false,
@@ -36,7 +33,6 @@ describe('evaluateManagerStaffInvite', () => {
   it('rejects inviting an inactive Staff Profile', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: { ...baseProfile, active: false },
         pendingInvite: null,
         legacyMemberWithPhone: false,
@@ -47,7 +43,6 @@ describe('evaluateManagerStaffInvite', () => {
   it('rejects a duplicate pending Staff Invite for the same phone', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: baseProfile,
         pendingInvite: { id: 'invite-1', staffProfileId: 'profile-1' },
         legacyMemberWithPhone: false,
@@ -58,7 +53,6 @@ describe('evaluateManagerStaffInvite', () => {
   it('rejects when an active Staff Profile already has accepted access', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: { ...baseProfile, userId: 'user-1' },
         pendingInvite: null,
         legacyMemberWithPhone: false,
@@ -69,7 +63,6 @@ describe('evaluateManagerStaffInvite', () => {
   it('rejects when a legacy salon member already uses the phone', () => {
     expect(
       evaluateManagerStaffInvite({
-        phone: '09121234567',
         existingProfile: null,
         pendingInvite: null,
         legacyMemberWithPhone: true,

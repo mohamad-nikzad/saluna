@@ -4083,7 +4083,7 @@ export type PostApiV1StaffErrors = {
      */
     403: ApiError;
     /**
-     * Phone number already registered
+     * Staff Invite conflict for this phone in the salon (pending invite, inactive profile, or duplicate active profile)
      */
     409: ApiError & unknown;
 };

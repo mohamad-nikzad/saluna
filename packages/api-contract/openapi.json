@@ -12299,7 +12299,7 @@
             }
           },
           "409": {
-            "description": "Phone number already registered",
+            "description": "Staff Invite conflict for this phone in the salon (pending invite, inactive profile, or duplicate active profile)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12309,8 +12309,8 @@
                     },
                     {
                       "example": {
-                        "error": "این شماره موبایل قبلاً ثبت شده است",
-                        "code": "duplicate-phone"
+                        "error": "برای این شماره قبلاً دعوت در انتظار وجود دارد",
+                        "code": "duplicate_pending_invite"
                       }
                     }
                   ]
