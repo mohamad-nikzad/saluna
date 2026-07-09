@@ -42,8 +42,6 @@ export {
   declineStaffInvite,
   evaluateStaffInviteAcceptance,
   evaluateStaffInviteDecline,
-  getStaffInviteById,
-  listActiveStaffProfileAccessesForUser,
   listPendingStaffInvitesForUser,
   type AcceptStaffInviteResult,
   type DeclineStaffInviteResult,

@@ -36,6 +36,7 @@ import {
   getStaffProfileForUser,
   getUserWithServiceIds,
   listPendingStaffInvitesForUser,
+  type StaffInviteAcceptanceRejectionReason,
 } from '@repo/database/staff'
 import { getMemberForUser } from '@repo/database/members'
 import { mapRole } from '@repo/auth/permissions'
@@ -54,15 +55,8 @@ const verifyPasswordResetOtpSchema = z.object({
 const staffClaimPasswordSchema = z.object({ password: newPasswordSchema })
 const staffInviteIdParamSchema = z.object({ inviteId: z.string().uuid() })
 
-const acceptInviteRejectionMessage: Record<
-  | 'phone_mismatch'
-  | 'phone_unverified'
-  | 'invite_not_pending'
-  | 'invite_expired'
-  | 'inactive_profile'
-  | 'duplicate_salon_access'
-  | 'profile_already_accepted'
-  | 'invite_not_found',
+const staffInviteRejectionMessage: Record<
+  StaffInviteAcceptanceRejectionReason,
   string
 > = {
   phone_mismatch: 'این دعوت متعلق به شماره دیگری است',
@@ -75,29 +69,8 @@ const acceptInviteRejectionMessage: Record<
   invite_not_found: 'دعوت یافت نشد',
 }
 
-const declineInviteRejectionMessage: Record<
-  | 'phone_mismatch'
-  | 'phone_unverified'
-  | 'invite_not_pending'
-  | 'invite_not_found',
-  string
-> = {
-  phone_mismatch: 'این دعوت متعلق به شماره دیگری است',
-  phone_unverified: 'ابتدا شماره موبایل خود را تایید کنید',
-  invite_not_pending: 'این دعوت دیگر در انتظار پذیرش نیست',
-  invite_not_found: 'دعوت یافت نشد',
-}
-
-function acceptInviteStatus(
-  reason: keyof typeof acceptInviteRejectionMessage,
-): 403 | 404 | 409 {
-  if (reason === 'phone_mismatch' || reason === 'phone_unverified') return 403
-  if (reason === 'invite_not_found') return 404
-  return 409
-}
-
-function declineInviteStatus(
-  reason: keyof typeof declineInviteRejectionMessage,
+function staffInviteRejectionStatus(
+  reason: StaffInviteAcceptanceRejectionReason,
 ): 403 | 404 | 409 {
   if (reason === 'phone_mismatch' || reason === 'phone_unverified') return 403
   if (reason === 'invite_not_found') return 404
@@ -433,8 +406,8 @@ export const authRoute = new Hono<AppEnv>()
       if (result.status === 'rejected') {
         return error(
           c,
-          acceptInviteRejectionMessage[result.reason],
-          acceptInviteStatus(result.reason),
+          staffInviteRejectionMessage[result.reason],
+          staffInviteRejectionStatus(result.reason),
           result.reason,
         )
       }
@@ -471,8 +444,8 @@ export const authRoute = new Hono<AppEnv>()
       if (result.status === 'rejected') {
         return error(
           c,
-          declineInviteRejectionMessage[result.reason],
-          declineInviteStatus(result.reason),
+          staffInviteRejectionMessage[result.reason],
+          staffInviteRejectionStatus(result.reason),
           result.reason,
         )
       }

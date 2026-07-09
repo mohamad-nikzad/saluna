@@ -1,6 +1,6 @@
 /**
- * Pure decision helpers for Staff Invite Acceptance and Decline, plus the
- * transactional list/accept/decline operations that create Staff Profile Access.
+ * Staff Invite Acceptance and Decline: pure decision helpers plus transactional
+ * list/accept/decline that create Staff Profile Access.
  */
 
 import { and, eq, gt, isNull } from 'drizzle-orm'
@@ -54,6 +54,10 @@ type ProfileSnapshot = {
   active: boolean
 }
 
+type DbTx = Parameters<
+  Parameters<ReturnType<typeof getDb>['transaction']>[0]
+>[0]
+
 function phoneMatchesInvite(
   identity: IdentitySnapshot,
   invitePhone: string,
@@ -61,6 +65,31 @@ function phoneMatchesInvite(
   return (
     identity.phoneNumber === invitePhone || identity.username === invitePhone
   )
+}
+
+/** Shared phone/pending gate for accept and decline. */
+function evaluateInvitePhoneGate(
+  identity: IdentitySnapshot,
+  invite: InviteSnapshot | null,
+):
+  | { status: 'ok'; invite: InviteSnapshot }
+  | {
+      status: 'rejected'
+      reason: StaffInviteDeclineRejectionReason
+    } {
+  if (!invite) {
+    return { status: 'rejected', reason: 'invite_not_found' }
+  }
+  if (!identity.verified) {
+    return { status: 'rejected', reason: 'phone_unverified' }
+  }
+  if (!phoneMatchesInvite(identity, invite.phone)) {
+    return { status: 'rejected', reason: 'phone_mismatch' }
+  }
+  if (invite.status !== 'pending') {
+    return { status: 'rejected', reason: 'invite_not_pending' }
+  }
+  return { status: 'ok', invite }
 }
 
 export function evaluateStaffInviteAcceptance(input: {
@@ -73,22 +102,14 @@ export function evaluateStaffInviteAcceptance(input: {
 }):
   | { status: 'accept' }
   | { status: 'rejected'; reason: StaffInviteAcceptanceRejectionReason } {
-  if (!input.invite) {
-    return { status: 'rejected', reason: 'invite_not_found' }
-  }
-  if (!input.identity.verified) {
-    return { status: 'rejected', reason: 'phone_unverified' }
-  }
-  if (!phoneMatchesInvite(input.identity, input.invite.phone)) {
-    return { status: 'rejected', reason: 'phone_mismatch' }
-  }
-  if (input.invite.status !== 'pending') {
-    return { status: 'rejected', reason: 'invite_not_pending' }
-  }
-  if (input.invite.expiresAt.getTime() <= input.now.getTime()) {
+  const gate = evaluateInvitePhoneGate(input.identity, input.invite)
+  if (gate.status === 'rejected') return gate
+
+  const { invite } = gate
+  if (invite.expiresAt.getTime() <= input.now.getTime()) {
     return { status: 'rejected', reason: 'invite_expired' }
   }
-  if (!input.profile || input.profile.id !== input.invite.staffProfileId) {
+  if (!input.profile || input.profile.id !== invite.staffProfileId) {
     return { status: 'rejected', reason: 'invite_not_found' }
   }
   if (!input.profile.active) {
@@ -110,22 +131,11 @@ export function evaluateStaffInviteAcceptance(input: {
 export function evaluateStaffInviteDecline(input: {
   identity: IdentitySnapshot
   invite: InviteSnapshot | null
-  now: Date
 }):
   | { status: 'decline' }
   | { status: 'rejected'; reason: StaffInviteDeclineRejectionReason } {
-  if (!input.invite) {
-    return { status: 'rejected', reason: 'invite_not_found' }
-  }
-  if (!input.identity.verified) {
-    return { status: 'rejected', reason: 'phone_unverified' }
-  }
-  if (!phoneMatchesInvite(input.identity, input.invite.phone)) {
-    return { status: 'rejected', reason: 'phone_mismatch' }
-  }
-  if (input.invite.status !== 'pending') {
-    return { status: 'rejected', reason: 'invite_not_pending' }
-  }
+  const gate = evaluateInvitePhoneGate(input.identity, input.invite)
+  if (gate.status === 'rejected') return gate
   return { status: 'decline' }
 }
 
@@ -161,10 +171,7 @@ async function loadVerifiedIdentity(userId: string) {
   }
 }
 
-/**
- * Pending Staff Invites for the session identity's verified phone only.
- * Wrong-phone invites are never returned.
- */
+/** Pending Staff Invites for the session identity's verified phone only. */
 export async function listPendingStaffInvitesForUser(
   userId: string,
   now: Date = new Date(),
@@ -174,7 +181,7 @@ export async function listPendingStaffInvitesForUser(
   const phone = identity.phoneNumber ?? identity.username
   if (!phone) return []
 
-  const rows = await getDb()
+  return getDb()
     .select({
       id: staffInvites.id,
       salonId: staffInvites.salonId,
@@ -198,8 +205,6 @@ export async function listPendingStaffInvitesForUser(
         gt(staffInvites.expiresAt, now),
       ),
     )
-
-  return rows
 }
 
 export type AcceptStaffInviteResult =
@@ -214,6 +219,45 @@ export type AcceptStaffInviteResult =
       reason: StaffInviteAcceptanceRejectionReason
     }
 
+async function lockIdentityAndInvite(
+  tx: DbTx,
+  userId: string,
+  inviteId: string,
+): Promise<{
+  identity: IdentitySnapshot | null
+  invite: typeof staffInvites.$inferSelect | null
+}> {
+  const identityRows = await tx
+    .select({
+      userId: user.id,
+      phoneNumber: user.phoneNumber,
+      username: user.username,
+      verified: user.phoneNumberVerified,
+    })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+    .for('update')
+  const identityRow = identityRows[0]
+  const identity: IdentitySnapshot | null = identityRow
+    ? {
+        userId: identityRow.userId,
+        phoneNumber: identityRow.phoneNumber,
+        username: identityRow.username,
+        verified: identityRow.verified,
+      }
+    : null
+
+  const inviteRows = await tx
+    .select()
+    .from(staffInvites)
+    .where(eq(staffInvites.id, inviteId))
+    .limit(1)
+    .for('update')
+
+  return { identity, invite: inviteRows[0] ?? null }
+}
+
 export async function acceptStaffInvite(input: {
   userId: string
   inviteId: string
@@ -223,35 +267,14 @@ export async function acceptStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const identityRows = await tx
-      .select({
-        userId: user.id,
-        phoneNumber: user.phoneNumber,
-        username: user.username,
-        verified: user.phoneNumberVerified,
-      })
-      .from(user)
-      .where(eq(user.id, input.userId))
-      .limit(1)
-      .for('update')
-    const identityRow = identityRows[0]
-    if (!identityRow) {
+    const { identity, invite } = await lockIdentityAndInvite(
+      tx,
+      input.userId,
+      input.inviteId,
+    )
+    if (!identity) {
       return { status: 'rejected', reason: 'invite_not_found' }
     }
-    const identity: IdentitySnapshot = {
-      userId: identityRow.userId,
-      phoneNumber: identityRow.phoneNumber,
-      username: identityRow.username,
-      verified: identityRow.verified,
-    }
-
-    const inviteRows = await tx
-      .select()
-      .from(staffInvites)
-      .where(eq(staffInvites.id, input.inviteId))
-      .limit(1)
-      .for('update')
-    const invite = inviteRows[0] ?? null
 
     const profileRows = invite
       ? await tx
@@ -352,6 +375,8 @@ export async function acceptStaffInvite(input: {
       return { status: 'rejected', reason: 'invite_not_pending' }
     }
 
+    // Compatibility: keep staff_profiles.userId linked for one-salon claim paths
+    // until Authorize-via-Staff-Profile-Access lands.
     if (profile.userId !== input.userId) {
       await tx
         .update(staffProfiles)
@@ -434,37 +459,16 @@ export async function declineStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const identityRows = await tx
-      .select({
-        userId: user.id,
-        phoneNumber: user.phoneNumber,
-        username: user.username,
-        verified: user.phoneNumberVerified,
-      })
-      .from(user)
-      .where(eq(user.id, input.userId))
-      .limit(1)
-      .for('update')
-    const identityRow = identityRows[0]
-    if (!identityRow) {
+    const { identity, invite } = await lockIdentityAndInvite(
+      tx,
+      input.userId,
+      input.inviteId,
+    )
+    if (!identity) {
       return { status: 'rejected', reason: 'invite_not_found' }
     }
-    const identity: IdentitySnapshot = {
-      userId: identityRow.userId,
-      phoneNumber: identityRow.phoneNumber,
-      username: identityRow.username,
-      verified: identityRow.verified,
-    }
 
-    const inviteRows = await tx
-      .select()
-      .from(staffInvites)
-      .where(eq(staffInvites.id, input.inviteId))
-      .limit(1)
-      .for('update')
-    const invite = inviteRows[0] ?? null
-
-    const decision = evaluateStaffInviteDecline({ identity, invite, now })
+    const decision = evaluateStaffInviteDecline({ identity, invite })
     if (decision.status === 'rejected') return decision
     if (!invite) return { status: 'rejected', reason: 'invite_not_found' }
 
@@ -485,25 +489,4 @@ export async function declineStaffInvite(input: {
 
     return { status: 'declined', invite: updatedInvite }
   })
-}
-
-export async function getStaffInviteById(inviteId: string) {
-  const rows = await getDb()
-    .select()
-    .from(staffInvites)
-    .where(eq(staffInvites.id, inviteId))
-    .limit(1)
-  return rows[0] ?? null
-}
-
-export async function listActiveStaffProfileAccessesForUser(userId: string) {
-  return getDb()
-    .select()
-    .from(staffProfileAccesses)
-    .where(
-      and(
-        eq(staffProfileAccesses.userId, userId),
-        isNull(staffProfileAccesses.revokedAt),
-      ),
-    )
 }

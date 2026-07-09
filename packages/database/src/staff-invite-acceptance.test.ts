@@ -158,7 +158,6 @@ describe('evaluateStaffInviteDecline', () => {
       evaluateStaffInviteDecline({
         identity,
         invite,
-        now,
       }),
     ).toEqual({ status: 'decline' })
   })
@@ -168,7 +167,6 @@ describe('evaluateStaffInviteDecline', () => {
       evaluateStaffInviteDecline({
         identity: { ...identity, phoneNumber: '09129876543', username: '09129876543' },
         invite,
-        now,
       }),
     ).toEqual({ status: 'rejected', reason: 'phone_mismatch' })
   })
@@ -178,7 +176,6 @@ describe('evaluateStaffInviteDecline', () => {
       evaluateStaffInviteDecline({
         identity,
         invite: { ...invite, status: 'accepted' },
-        now,
       }),
     ).toEqual({ status: 'rejected', reason: 'invite_not_pending' })
   })
