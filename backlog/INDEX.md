@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-08 (BL-0051 done after targeted visual verification)
+Last organized: 2026-07-09 (BL-0016 shaped into a ready multi-salon staff invite spec)
 
 ## Now
 
@@ -12,6 +12,7 @@ No active backlog items.
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
+- [BL-0016 Staff can join multiple salons through invites](ready/BL-0016-staff-can-join-multiple-salons.md)
 - [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
 
 ## Inbox
@@ -21,7 +22,6 @@ No active backlog items.
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
 - [BL-0014 Payment plans and feature gates](inbox/BL-0014-payment-plans-and-feature-gates.md)
-- [BL-0016 Staff can join multiple salons](inbox/BL-0016-staff-can-join-multiple-salons.md)
 - [BL-0017 Accounting features](inbox/BL-0017-accounting-features.md)
 - [BL-0018 Customer-facing Telegram and Bale bot](inbox/BL-0018-customer-facing-telegram-and-bale-bot.md)
 - [BL-0019 Staff and salon income cuts](inbox/BL-0019-staff-and-salon-income-cuts.md)
