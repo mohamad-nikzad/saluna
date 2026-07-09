@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
 import {
   getAllStaff,
   getBusinessSettings,
   countManagers,
+  createManagerStaffInvite,
   deactivateStaffMember,
   getStaffBookingAvailabilityForSlot,
   getStaffSchedules,
@@ -16,11 +16,7 @@ import {
   updateStaffPassword,
   validateActiveServiceIds,
 } from '@repo/database/staff'
-import { auth } from '@repo/auth/server'
-import { getDb } from '@repo/database/client'
 import { isDuplicatePhoneError } from '@repo/database/clients'
-import { salonMember, user } from '@repo/database/schema'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { validateAppointmentWindow } from '@repo/salon-core/appointment-time'
 import {
@@ -30,11 +26,9 @@ import {
   staffServiceIdsSchema,
   staffUpdateSchema,
 } from '@repo/salon-core/forms/staff'
-import { formMessages } from '@repo/salon-core/forms/messages'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
-import { brand } from '@repo/brand'
 import { error, ok } from '../lib/responses'
 
 const idParamSchema = z.object({ id: z.string().min(1) })
@@ -45,16 +39,15 @@ const bookingAvailabilityQuerySchema = z.object({
   endTime: z.string().optional(),
 })
 
-function isBetterAuthBadRequest(
-  err: unknown,
-): err is { body?: { message?: string; code?: string } } {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    ('statusCode' in err || 'status' in err) &&
-    ((err as { statusCode?: unknown }).statusCode === 400 ||
-      (err as { status?: unknown }).status === 'BAD_REQUEST')
-  )
+const inviteRejectionMessage: Record<
+  'inactive_profile' | 'duplicate_pending_invite' | 'duplicate_active_profile',
+  string
+> = {
+  inactive_profile:
+    'این پروفایل پرسنل غیرفعال است. ابتدا آن را فعال کنید و بعد دعوت بفرستید.',
+  duplicate_pending_invite: 'برای این شماره قبلاً دعوت در انتظار وجود دارد',
+  duplicate_active_profile:
+    'برای این شماره قبلاً پروفایل پرسنل فعال در این سالن وجود دارد',
 }
 
 export const staff = new Hono<AppEnv>()
@@ -68,68 +61,27 @@ export const staff = new Hono<AppEnv>()
     requireTenant('manage_settings'),
     zValidator('json', staffCreateRequestSchema),
     async (c) => {
-      const { salonId } = c.var.tenant
-      const { password, name, phone } = c.req.valid('json')
-
-      const existingStaff = await getAllStaff(salonId)
-      const colorIndex = existingStaff.length % STAFF_COLORS.length
-      const color = normalizeCalendarColorId(STAFF_COLORS[colorIndex])
-
-      let newUserId: string
-      try {
-        const signUpRes = await auth.api.signUpEmail({
-          body: {
-            email: `${phone}@${brand.emailLocalDomain}`,
-            password,
-            name,
-            username: phone,
-          },
-        })
-        newUserId = signUpRes.user.id
-        await getDb()
-          .update(user)
-          .set({
-            phoneNumber: phone,
-            phoneNumberVerified: true,
-            displayUsername: phone,
-            updatedAt: new Date(),
-          })
-          .where(eq(user.id, newUserId))
-      } catch (err) {
-        if (isDuplicatePhoneError(err)) {
-          return error(c, 'این شماره موبایل قبلاً ثبت شده است', 409)
-        }
-        if (isBetterAuthBadRequest(err)) {
-          const code = err.body?.code
-          const message =
-            code === 'PASSWORD_TOO_SHORT'
-              ? formMessages.passwordTooShort
-              : (err.body?.message ?? 'اطلاعات پرسنل معتبر نیست')
-          return error(
-            c,
-            message,
-            400,
-            typeof code === 'string' ? code : undefined,
-          )
-        }
-        throw err
+      const { salonId, userId } = c.var.tenant
+      const { name, phone, role } = c.req.valid('json')
+      if (role !== 'staff') {
+        return error(c, 'دعوت پرسنل فقط برای نقش پرسنل مجاز است', 400)
       }
 
-      await auth.api.addMember({
-        body: { userId: newUserId, role: 'member', organizationId: salonId },
+      const result = await createManagerStaffInvite({
+        salonId,
+        name,
+        phone,
+        invitedByUserId: userId,
       })
+      if (result.status === 'rejected') {
+        return error(c, inviteRejectionMessage[result.reason], 409, result.reason)
+      }
 
-      const db = getDb()
-      await db.insert(salonMember).values({
-        userId: newUserId,
-        organizationId: salonId,
-        displayName: name,
-        color,
-        active: true,
-      })
-
-      const newUser = await getUserById(newUserId)
-      return ok(c, { user: newUser })
+      const staffMember = await getUserWithServiceIds(result.profile.id, salonId)
+      if (!staffMember) {
+        return error(c, 'دعوت ایجاد شد اما پروفایل بازخوانی نشد', 500)
+      }
+      return ok(c, { user: staffMember })
     },
   )
   .patch(

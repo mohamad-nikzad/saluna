@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, Scissors } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@repo/ui/avatar'
+import { Badge } from '@repo/ui/badge'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { User } from '@repo/salon-core/types'
 import { StaffListRowMenu } from '#/components/staff/staff-list-row-menu'
@@ -57,9 +58,16 @@ export function StaffListCard({
               style={{ backgroundColor: staffAccentVar(member.color) }}
               aria-hidden
             />
+            {member.inviteStatus === 'pending' ? (
+              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                در انتظار دعوت
+              </Badge>
+            ) : null}
           </div>
           <p className="mt-0.5 text-[11.5px] text-muted-foreground">
-            {staffRoleLabel(member.role)}
+            {member.inviteStatus === 'pending'
+              ? 'دعوت شده — هنوز ورود ندارد'
+              : staffRoleLabel(member.role)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <StaffRosterChip icon={Scissors}>

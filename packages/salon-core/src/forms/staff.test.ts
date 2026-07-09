@@ -16,56 +16,25 @@ describe('staffCreateSchema', () => {
     const result = staffCreateSchema.parse({
       name: '  نرگس کاظمی  ',
       phone: '۰۹۱۲۳۴۵۶۷۸۹',
-      password: 'secret12',
-      confirmPassword: 'secret12',
     })
     expect(result.name).toBe('نرگس کاظمی')
     expect(result.phone).toBe('09123456789')
     expect(result.role).toBe('staff')
   })
 
-  it('accepts manager role', () => {
+  it('accepts manager role in the payload shape', () => {
     const result = staffCreateSchema.parse({
       name: 'م',
       phone: '09123456789',
-      password: 'secret12',
-      confirmPassword: 'secret12',
       role: 'manager',
     })
     expect(result.role).toBe('manager')
-  })
-
-  it('rejects short password', () => {
-    const result = staffCreateSchema.safeParse({
-      name: 'x',
-      phone: '09123456789',
-      password: '123',
-      confirmPassword: '123',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rejects non-Latin password characters', () => {
-    const result = staffCreateSchema.safeParse({
-      name: 'x',
-      phone: '09123456789',
-      password: 'secret۱۲۳',
-      confirmPassword: 'secret۱۲۳',
-    })
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        formMessages.passwordLatinOnly,
-      )
-    }
   })
 
   it('rejects invalid phone', () => {
     const result = staffCreateSchema.safeParse({
       name: 'x',
       phone: '12',
-      password: 'secret12',
-      confirmPassword: 'secret12',
     })
     expect(result.success).toBe(false)
   })
@@ -74,30 +43,41 @@ describe('staffCreateSchema', () => {
     const result = staffCreateSchema.safeParse({
       name: '   ',
       phone: '09123456789',
-      password: 'secret12',
-      confirmPassword: 'secret12',
     })
     expect(result.success).toBe(false)
   })
 
-  it('rejects mismatched password confirmation', () => {
-    const result = staffCreateSchema.safeParse({
-      name: 'x',
+  it('matches the API request schema', () => {
+    const result = staffCreateRequestSchema.parse({
+      name: 'نرگس',
       phone: '09123456789',
-      password: 'secret12',
-      confirmPassword: 'secret13',
+    })
+    expect(result).toEqual({
+      name: 'نرگس',
+      phone: '09123456789',
+      role: 'staff',
+    })
+  })
+})
+
+describe('staffPasswordRequestSchema', () => {
+  it('rejects short password', () => {
+    const result = staffPasswordRequestSchema.safeParse({
+      password: '123',
     })
     expect(result.success).toBe(false)
   })
 
-  it('omits confirm password from payload', () => {
-    const result = staffCreateSchema.parse({
-      name: 'x',
-      phone: '09123456789',
-      password: 'secret12',
-      confirmPassword: 'secret12',
+  it('rejects non-Latin password characters', () => {
+    const result = staffPasswordRequestSchema.safeParse({
+      password: 'secret۱۲۳',
     })
-    expect(result).not.toHaveProperty('confirmPassword')
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        formMessages.passwordLatinOnly,
+      )
+    }
   })
 })
 

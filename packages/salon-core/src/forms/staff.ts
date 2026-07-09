@@ -18,11 +18,10 @@ import {
 export const staffRoleSchema = z.enum(['staff', 'manager'])
 export type StaffRole = z.infer<typeof staffRoleSchema>
 
-/** API / data-client payload — confirm-password is form-only UX. */
+/** API / data-client payload — invite creates a Staff Profile + pending Staff Invite. */
 export const staffCreateRequestSchema = z.object({
   name: requiredTextSchema,
   phone: phoneSchema,
-  password: newPasswordSchema,
   role: staffRoleSchema.default('staff'),
 })
 
@@ -31,19 +30,6 @@ export type StaffCreateRequestPayload = z.output<
 >
 
 export const staffCreateSchema = staffCreateRequestSchema
-  .extend({
-    confirmPassword: z.string({ error: formMessages.required }),
-  })
-  .superRefine((value, ctx) => {
-    if (value.password !== value.confirmPassword) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['confirmPassword'],
-        message: formMessages.passwordMismatch,
-      })
-    }
-  })
-  .transform(({ confirmPassword: _confirmPassword, ...payload }) => payload)
 
 export type StaffCreateFormInput = z.input<typeof staffCreateSchema>
 /** Parsed form output — same shape as {@link StaffCreateRequestPayload}. */

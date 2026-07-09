@@ -2,6 +2,8 @@ import type { CalendarColorId } from './calendar-colors'
 
 export type UserRole = 'manager' | 'staff'
 
+export type StaffInviteListStatus = 'pending'
+
 export interface User {
   id: string
   salonId: string
@@ -20,6 +22,11 @@ export interface User {
    * When a non-empty array, only those services apply.
    */
   serviceIds?: string[] | null
+  /**
+   * Present for salon-owned Staff Profiles that still have a pending Staff Invite
+   * and no login access yet.
+   */
+  inviteStatus?: StaffInviteListStatus | null
   /** Manager-only: minimum setup (services + staff) is still incomplete. */
   needsOnboarding?: boolean
   /** Manager-only: finished the one-time onboarding flow. */

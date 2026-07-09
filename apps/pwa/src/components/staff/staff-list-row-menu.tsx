@@ -63,7 +63,7 @@ export function StaffListRowMenu({
           ویرایش پروفایل
         </DropdownMenuItem>
 
-        {!isSelf ? (
+        {!isSelf && member.inviteStatus !== 'pending' ? (
           <DropdownMenuItem
             className="gap-2"
             onSelect={() => {

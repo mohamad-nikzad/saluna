@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   uuid,
@@ -394,6 +395,57 @@ export const staffProfiles = pgTable(
     uniqueIndex('staff_profiles_user_id_unique').on(t.userId),
     index('staff_profiles_phone_active_idx').on(t.phone, t.active),
     index('staff_profiles_salon_id_active_idx').on(t.salonId, t.active),
+  ],
+)
+
+export type StaffInviteStatus =
+  | 'pending'
+  | 'accepted'
+  | 'declined'
+  | 'revoked'
+  | 'expired'
+
+/**
+ * Phone-bound, salon-scoped invitation tied to a salon-owned Staff Profile.
+ * Pending invites grant no login, tenant, appointment, or notification access.
+ */
+export const staffInvites = pgTable(
+  'staff_invites',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    staffProfileId: uuid('staff_profile_id')
+      .notNull()
+      .references(() => staffProfiles.id, { onDelete: 'cascade' }),
+    phone: text('phone').notNull(),
+    status: text('status').notNull().$type<StaffInviteStatus>().default('pending'),
+    tokenHash: text('token_hash').notNull(),
+    invitedByUserId: uuid('invited_by_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'restrict' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    declinedAt: timestamp('declined_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    lastDeliveredAt: timestamp('last_delivered_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('staff_invites_token_hash_unique').on(t.tokenHash),
+    index('staff_invites_salon_id_status_idx').on(t.salonId, t.status),
+    index('staff_invites_phone_status_idx').on(t.phone, t.status),
+    index('staff_invites_staff_profile_id_idx').on(t.staffProfileId),
+    uniqueIndex('staff_invites_salon_phone_pending_unique')
+      .on(t.salonId, t.phone)
+      .where(sql`${t.status} = 'pending'`),
   ],
 )
 

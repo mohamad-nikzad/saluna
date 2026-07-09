@@ -26,3 +26,14 @@ export {
   getClaimedStaffAccessForPhone,
   listSetupStaffProfiles,
 } from './setup-staff'
+export {
+  createManagerStaffInvite,
+  evaluateManagerStaffInvite,
+  getPendingStaffInviteForProfile,
+  listPendingStaffInvitesForSalon,
+  STAFF_INVITE_TTL_MS,
+  type CreateManagerStaffInviteInput,
+  type CreateManagerStaffInviteResult,
+  type ManagerStaffInviteDecision,
+  type ManagerStaffInviteRejectionReason,
+} from './staff-invites'

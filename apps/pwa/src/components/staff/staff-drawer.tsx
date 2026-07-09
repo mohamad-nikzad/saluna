@@ -41,7 +41,6 @@ import {
   useCreateStaffMutation,
   useUpdateStaffMutation,
 } from '#/lib/staff-queries'
-import { PasswordInput } from '#/components/password-input'
 import { cn } from '@repo/ui/utils'
 
 interface StaffDrawerProps {
@@ -59,8 +58,6 @@ function emptyValues(roleLocked?: 'staff' | 'manager'): StaffFormValues {
     name: '',
     nickname: '',
     phone: '',
-    password: '',
-    confirmPassword: '',
     role: roleLocked ?? 'staff',
     color: STAFF_COLORS[0],
   }
@@ -74,8 +71,6 @@ function valuesForStaff(
     name: staff.fullName ?? staff.name,
     nickname: staff.nickname ?? '',
     phone: staff.phone,
-    password: '',
-    confirmPassword: '',
     role: roleLocked ?? staff.role,
     color: normalizeCalendarColorId(staff.color),
   }
@@ -111,8 +106,6 @@ export function StaffDrawer({
 
   const nameValue = watch('name')
   const phoneValue = watch('phone')
-  const passwordValue = watch('password')
-  const confirmPasswordValue = watch('confirmPassword')
   const colorValue = normalizeCalendarColorId(watch('color'))
 
   const { requestClose, confirmDialog } = useDismissGuard({
@@ -157,11 +150,11 @@ export function StaffDrawer({
     <FormSheet open={open} onOpenChange={handleOpenChange}>
       <FormSheetContent onRequestClose={() => requestClose(false)}>
         <FormSheetHeader>
-          <FormSheetTitle>{staff ? 'ویرایش عضو' : 'پرسنل جدید'}</FormSheetTitle>
+          <FormSheetTitle>{staff ? 'ویرایش عضو' : 'دعوت پرسنل'}</FormSheetTitle>
           <FormSheetDescription>
             {staff
-              ? 'اطلاعات نمایش، ورود و نقش عضو را به‌روزرسانی کنید'
-              : 'عضو جدیدی به تیم سالن اضافه کنید'}
+              ? 'اطلاعات نمایش و نقش عضو را به‌روزرسانی کنید'
+              : 'با نام و شماره موبایل دعوت بفرستید؛ پرسنل بعداً خودش وارد می‌شود'}
           </FormSheetDescription>
         </FormSheetHeader>
 
@@ -181,20 +174,22 @@ export function StaffDrawer({
               {errors.name && <FieldError>{errors.name.message}</FieldError>}
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="staff-nickname">نام نمایشی</FieldLabel>
-              <Input
-                id="staff-nickname"
-                placeholder="مثال: سارا رنگ"
-                {...register('nickname')}
-              />
-              <p className="text-xs text-muted-foreground">
-                در تقویم و انتخاب پرسنل از این نام کوتاه استفاده می‌شود.
-              </p>
-              {errors.nickname && (
-                <FieldError>{errors.nickname.message}</FieldError>
-              )}
-            </Field>
+            {staff ? (
+              <Field>
+                <FieldLabel htmlFor="staff-nickname">نام نمایشی</FieldLabel>
+                <Input
+                  id="staff-nickname"
+                  placeholder="مثال: سارا رنگ"
+                  {...register('nickname')}
+                />
+                <p className="text-xs text-muted-foreground">
+                  در تقویم و انتخاب پرسنل از این نام کوتاه استفاده می‌شود.
+                </p>
+                {errors.nickname && (
+                  <FieldError>{errors.nickname.message}</FieldError>
+                )}
+              </Field>
+            ) : null}
 
             <Field>
               <FieldLabel htmlFor="staff-phone">شماره موبایل</FieldLabel>
@@ -219,129 +214,100 @@ export function StaffDrawer({
               {errors.phone && <FieldError>{errors.phone.message}</FieldError>}
             </Field>
 
-            {!staff ? (
+            {staff ? (
               <>
-                <Field>
-                  <FieldLabel htmlFor="staff-password">رمز عبور</FieldLabel>
-                  <PasswordInput
-                    id="staff-password"
-                    placeholder="رمز ورود به سیستم"
-                    {...register('password')}
-                  />
-                  {errors.password && (
-                    <FieldError>{errors.password.message}</FieldError>
-                  )}
-                </Field>
+                {roleLocked ? (
+                  <Field>
+                    <FieldLabel>نقش</FieldLabel>
+                    <Input
+                      value={roleLocked === 'staff' ? 'پرسنل' : 'مدیر'}
+                      disabled
+                    />
+                  </Field>
+                ) : (
+                  <Field>
+                    <FieldLabel>نقش</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="role"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={(v) => field.onChange(v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="staff">پرسنل</SelectItem>
+                            <SelectItem value="manager">مدیر</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </Field>
+                )}
 
                 <Field>
-                  <FieldLabel htmlFor="staff-confirm-password">
-                    تکرار رمز عبور
-                  </FieldLabel>
-                  <PasswordInput
-                    id="staff-confirm-password"
-                    placeholder="تکرار رمز ورود"
-                    {...register('confirmPassword')}
+                  <FieldLabel>رنگ تقویم</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="color"
+                    render={({ field }) => (
+                      <div className="flex flex-wrap gap-2">
+                        {STAFF_COLORS.map((color) => {
+                          const normalized = normalizeCalendarColorId(color)
+                          const selected = colorValue === normalized
+                          const colorVar = staffAccentVar(color)
+                          return (
+                            <button
+                              key={color}
+                              type="button"
+                              aria-pressed={selected}
+                              onClick={() => field.onChange(normalized)}
+                              className={cn(
+                                'flex h-10 items-center gap-2 rounded-full border px-2.5 text-xs font-medium transition-colors',
+                                selected
+                                  ? 'border-foreground bg-muted'
+                                  : 'border-border bg-background',
+                              )}
+                            >
+                              <span
+                                className="size-5 rounded-full"
+                                style={{ backgroundColor: colorVar }}
+                              />
+                              {selected ? (
+                                <Badge variant="secondary">فعال</Badge>
+                              ) : null}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   />
-                  {errors.confirmPassword && (
-                    <FieldError>{errors.confirmPassword.message}</FieldError>
+                  {errors.color && (
+                    <FieldError>{errors.color.message}</FieldError>
                   )}
                 </Field>
               </>
             ) : null}
-
-            {roleLocked ? (
-              <Field>
-                <FieldLabel>نقش</FieldLabel>
-                <Input
-                  value={roleLocked === 'staff' ? 'پرسنل' : 'مدیر'}
-                  disabled
-                />
-              </Field>
-            ) : (
-              <Field>
-                <FieldLabel>نقش</FieldLabel>
-                <Controller
-                  control={control}
-                  name="role"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(v) => field.onChange(v)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="staff">پرسنل</SelectItem>
-                        <SelectItem value="manager">مدیر</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </Field>
-            )}
-
-            <Field>
-              <FieldLabel>رنگ تقویم</FieldLabel>
-              <Controller
-                control={control}
-                name="color"
-                render={({ field }) => (
-                  <div className="flex flex-wrap gap-2">
-                    {STAFF_COLORS.map((color) => {
-                      const normalized = normalizeCalendarColorId(color)
-                      const selected = colorValue === normalized
-                      const colorVar = staffAccentVar(color)
-                      return (
-                        <button
-                          key={color}
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => field.onChange(normalized)}
-                          className={cn(
-                            'flex h-10 items-center gap-2 rounded-full border px-2.5 text-xs font-medium transition-colors',
-                            selected
-                              ? 'border-foreground bg-muted'
-                              : 'border-border bg-background',
-                          )}
-                        >
-                          <span
-                            className="size-5 rounded-full"
-                            style={{ backgroundColor: colorVar }}
-                          />
-                          {selected ? (
-                            <Badge variant="secondary">فعال</Badge>
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              />
-              {errors.color && <FieldError>{errors.color.message}</FieldError>}
-            </Field>
           </FieldGroup>
         </form>
 
         <FormSheetFooter>
           <Button
             onClick={onSubmit}
-            disabled={
-              isSubmitting ||
-              !nameValue ||
-              !phoneValue ||
-              (!staff && (!passwordValue || !confirmPasswordValue))
-            }
+            disabled={isSubmitting || !nameValue || !phoneValue}
             className="touch-manipulation"
           >
             {isSubmitting && <Spinner className="ms-2" />}
             {isSubmitting
               ? staff
                 ? 'در حال ذخیره…'
-                : 'در حال افزودن…'
+                : 'در حال دعوت…'
               : staff
                 ? 'ذخیره تغییرات'
-                : 'افزودن پرسنل'}
+                : 'ارسال دعوت'}
           </Button>
           <Button
             type="button"

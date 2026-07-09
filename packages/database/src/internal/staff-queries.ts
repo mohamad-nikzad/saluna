@@ -16,6 +16,7 @@ import {
   account,
   member,
   salonMember,
+  staffInvites,
   staffProfiles,
   staffSchedules,
   staffServices,
@@ -55,25 +56,46 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
     )
     .orderBy(asc(user.name))
   const legacyRows = joined.map(rowToUser)
-  const preparedRows: User[] = (
+  const preparedProfiles = (
     await db
       .select()
       .from(staffProfiles)
       .where(eq(staffProfiles.salonId, salonId))
       .orderBy(asc(staffProfiles.name))
+  ).filter((row) => row.active && row.userId === null)
+
+  const pendingInviteProfileIds = new Set(
+    preparedProfiles.length === 0
+      ? []
+      : (
+          await db
+            .select({ staffProfileId: staffInvites.staffProfileId })
+            .from(staffInvites)
+            .where(
+              and(
+                eq(staffInvites.salonId, salonId),
+                eq(staffInvites.status, 'pending'),
+                inArray(
+                  staffInvites.staffProfileId,
+                  preparedProfiles.map((row) => row.id),
+                ),
+              ),
+            )
+        ).map((row) => row.staffProfileId),
   )
-    .filter((row) => row.active && row.userId === null)
-    .map((row) => ({
-      id: row.id,
-      salonId: row.salonId,
-      name: row.name,
-      fullName: row.name,
-      nickname: null,
-      phone: row.phone,
-      role: 'staff' as const,
-      color: row.color,
-      createdAt: row.createdAt,
-    }))
+
+  const preparedRows: User[] = preparedProfiles.map((row) => ({
+    id: row.id,
+    salonId: row.salonId,
+    name: row.name,
+    fullName: row.name,
+    nickname: null,
+    phone: row.phone,
+    role: 'staff' as const,
+    color: row.color,
+    createdAt: row.createdAt,
+    inviteStatus: pendingInviteProfileIds.has(row.id) ? ('pending' as const) : null,
+  }))
   const rows = [...legacyRows, ...preparedRows].sort((a, b) =>
     a.name.localeCompare(b.name, 'fa'),
   )

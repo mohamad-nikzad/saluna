@@ -48,6 +48,7 @@ export const staffUserSchema = z
     phone: z.string(),
     createdAt: isoDateTimeSchema,
     serviceIds: z.array(z.string()).nullable().optional(),
+    inviteStatus: z.enum(['pending']).nullable().optional(),
   })
   .passthrough()
   .openapi('StaffUser')
@@ -57,7 +58,6 @@ export const staffCreateBodySchema = bodyFromCoreSchema(
   {
     name: z.string().openapi({ example: 'نرگس کاظمی' }),
     phone: z.string().openapi({ example: '09121234567' }),
-    password: z.string().openapi({ example: 'securepass1' }),
     role: staffRoleSchema.optional().openapi({ example: 'staff' }),
   },
   staffCreateRequestSchema,

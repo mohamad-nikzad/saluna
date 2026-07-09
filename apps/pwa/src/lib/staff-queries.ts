@@ -108,7 +108,6 @@ function toCreateBody(values: StaffCreateFormInput): StaffCreateRequestPayload {
   return {
     name: values.name,
     phone: values.phone,
-    password: values.password,
     role: values.role ?? 'staff',
   }
 }

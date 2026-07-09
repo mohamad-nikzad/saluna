@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/staff', () => ({
   getAllStaff: vi.fn(),
+  createManagerStaffInvite: vi.fn(),
   deactivateStaffMember: vi.fn(),
   getUserById: vi.fn(),
   getUserWithServiceIds: vi.fn(),
@@ -19,8 +20,6 @@ vi.mock('@repo/auth/server', () => ({
   auth: {
     api: {
       getSession: vi.fn(),
-      signUpEmail: vi.fn(),
-      addMember: vi.fn(),
     },
   },
 }))
@@ -28,14 +27,6 @@ vi.mock('@repo/auth/server', () => ({
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
 }))
-
-vi.mock('@repo/database/client', () => {
-  const stub = {
-    insert: () => ({ values: async () => undefined }),
-    update: () => ({ set: () => ({ where: async () => undefined }) }),
-  }
-  return { getDb: () => stub }
-})
 
 import * as db from '@repo/database/staff'
 import { auth as authServer } from '@repo/auth/server'
@@ -63,8 +54,6 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 const validCreate = {
   name: 'Ali',
   phone: '09121234567',
-  password: 'secret123',
-  confirmPassword: 'secret123',
   role: 'staff',
 }
 
@@ -121,43 +110,63 @@ describe('staff router', () => {
     expect(res.status).toBe(403)
   })
 
-  it('400 on invalid create (short password)', async () => {
+  it('400 on invalid create (missing phone)', async () => {
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...validCreate, password: '123' }),
+      body: JSON.stringify({ name: 'Ali' }),
     })
     expect(res.status).toBe(400)
   })
 
-  it('200 on POST create without confirmPassword in body', async () => {
-    vi.mocked(db.getAllStaff).mockResolvedValue([] as never)
-    vi.mocked(authServer.api.signUpEmail).mockResolvedValue({
-      user: { id: 'u3' },
+  it('200 on POST create Staff Invite with name and phone only', async () => {
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'created',
+      profile: { id: 'profile-1', name: 'Ali', phone: '09121234567' },
+      invite: { id: 'invite-1', status: 'pending' },
+      inviteToken: 'token',
     } as never)
-    vi.mocked(authServer.api.addMember).mockResolvedValue({} as never)
-    vi.mocked(db.getUserById).mockResolvedValue({
-      id: 'u3',
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
+      id: 'profile-1',
       name: 'Ali',
+      phone: '09121234567',
+      inviteStatus: 'pending',
+      role: 'staff',
     } as never)
-    const { confirmPassword: _confirmPassword, ...apiPayload } = validCreate
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiPayload),
+      body: JSON.stringify({ name: 'Ali', phone: '09121234567' }),
     })
     expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      user: {
+        id: 'profile-1',
+        name: 'Ali',
+        phone: '09121234567',
+        inviteStatus: 'pending',
+        role: 'staff',
+      },
+    })
+    expect(db.createManagerStaffInvite).toHaveBeenCalledWith({
+      salonId: 's1',
+      name: 'Ali',
+      phone: '09121234567',
+      invitedByUserId: 'u1',
+    })
   })
 
   it('200 on POST create', async () => {
-    vi.mocked(db.getAllStaff).mockResolvedValue([] as never)
-    vi.mocked(authServer.api.signUpEmail).mockResolvedValue({
-      user: { id: 'u3' },
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'created',
+      profile: { id: 'profile-1' },
+      invite: { id: 'invite-1' },
+      inviteToken: 'token',
     } as never)
-    vi.mocked(authServer.api.addMember).mockResolvedValue({} as never)
-    vi.mocked(db.getUserById).mockResolvedValue({
-      id: 'u3',
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
+      id: 'profile-1',
       name: 'Ali',
+      inviteStatus: 'pending',
     } as never)
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
@@ -165,14 +174,16 @@ describe('staff router', () => {
       body: JSON.stringify(validCreate),
     })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ user: { id: 'u3', name: 'Ali' } })
+    expect(await res.json()).toEqual({
+      user: { id: 'profile-1', name: 'Ali', inviteStatus: 'pending' },
+    })
   })
 
-  it('409 on duplicate phone', async () => {
-    vi.mocked(db.getAllStaff).mockResolvedValue([] as never)
-    vi.mocked(authServer.api.signUpEmail).mockRejectedValue(
-      new Error('unique violation'),
-    )
+  it('409 on duplicate pending invite', async () => {
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'duplicate_pending_invite',
+    } as never)
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -180,27 +191,108 @@ describe('staff router', () => {
     })
     expect(res.status).toBe(409)
     expect(await res.json()).toEqual({
-      error: 'این شماره موبایل قبلاً ثبت شده است',
+      error: 'برای این شماره قبلاً دعوت در انتظار وجود دارد',
+      code: 'duplicate_pending_invite',
     })
   })
 
-  it('400 when Better Auth rejects create input', async () => {
-    vi.mocked(db.getAllStaff).mockResolvedValue([] as never)
-    vi.mocked(authServer.api.signUpEmail).mockRejectedValue({
-      status: 'BAD_REQUEST',
-      statusCode: 400,
-      body: { message: 'Password too short', code: 'PASSWORD_TOO_SHORT' },
-    })
+  it('409 when inviting an inactive Staff Profile', async () => {
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'inactive_profile',
+    } as never)
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(validCreate),
     })
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(409)
     expect(await res.json()).toEqual({
-      error: 'رمز عبور باید حداقل ۸ کاراکتر باشد',
-      code: 'PASSWORD_TOO_SHORT',
+      error:
+        'این پروفایل پرسنل غیرفعال است. ابتدا آن را فعال کنید و بعد دعوت بفرستید.',
+      code: 'inactive_profile',
     })
+  })
+
+  it('200 on GET includes pending inviteStatus for invited staff', async () => {
+    vi.mocked(db.getAllStaff).mockResolvedValue([
+      {
+        id: 'profile-1',
+        name: 'Ali',
+        inviteStatus: 'pending',
+        role: 'staff',
+      },
+    ] as never)
+    const res = await app.request('/api/v1/staff', { headers: authHeaders })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      staff: [
+        {
+          id: 'profile-1',
+          name: 'Ali',
+          inviteStatus: 'pending',
+          role: 'staff',
+        },
+      ],
+    })
+  })
+
+  it('allows schedule config for pending invited Staff Profile', async () => {
+    vi.mocked(db.getUserById).mockResolvedValue({
+      id: 'profile-1',
+      salonId: 's1',
+      role: 'staff',
+      inviteStatus: 'pending',
+    } as never)
+    vi.mocked(db.setStaffSchedules).mockResolvedValue([
+      { dayOfWeek: 0, active: true },
+    ] as never)
+    const res = await app.request('/api/v1/staff/profile-1/schedule', {
+      method: 'PUT',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schedule: [
+          {
+            dayOfWeek: 0,
+            active: true,
+            workingStart: '09:00',
+            workingEnd: '17:00',
+          },
+        ],
+      }),
+    })
+    expect(res.status).toBe(200)
+    expect(db.setStaffSchedules).toHaveBeenCalledWith(
+      's1',
+      'profile-1',
+      expect.any(Array),
+    )
+  })
+
+  it('allows ServiceVariant capability config for pending invited Staff Profile', async () => {
+    vi.mocked(db.getUserById).mockResolvedValue({
+      id: 'profile-1',
+      salonId: 's1',
+      role: 'staff',
+      inviteStatus: 'pending',
+    } as never)
+    vi.mocked(db.validateActiveServiceIds).mockResolvedValue(true as never)
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
+      id: 'profile-1',
+      serviceIds: ['svc-1'],
+      inviteStatus: 'pending',
+    } as never)
+    const res = await app.request('/api/v1/staff/profile-1/services', {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serviceIds: ['svc-1'] }),
+    })
+    expect(res.status).toBe(200)
+    expect(db.setStaffServiceIds).toHaveBeenCalledWith(
+      'profile-1',
+      ['svc-1'],
+      's1',
+    )
   })
 
   it('400 on booking-availability missing params', async () => {

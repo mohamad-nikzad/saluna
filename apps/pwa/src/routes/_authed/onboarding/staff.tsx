@@ -12,7 +12,6 @@ import { displayPhone } from '@repo/salon-core/phone'
 import { staffCreateSchema } from '@repo/salon-core/forms/staff'
 import type { StaffCreateFormInput } from '@repo/salon-core/forms/staff'
 
-import { PasswordInput } from '#/components/password-input'
 import { useAuth } from '#/lib/auth'
 import { getMutationErrorMessage } from '#/lib/query-client'
 import {
@@ -49,21 +48,13 @@ function StaffScreen() {
     defaultValues: {
       name: '',
       phone: '',
-      password: '',
-      confirmPassword: '',
       role: 'staff',
     },
   })
 
   const name = watch('name')
   const phone = watch('phone')
-  const password = watch('password')
-  const confirmPassword = watch('confirmPassword')
-  const hasStaffDraft =
-    name.trim().length > 0 ||
-    phone.trim().length > 0 ||
-    password.length > 0 ||
-    confirmPassword.length > 0
+  const hasStaffDraft = name.trim().length > 0 || phone.trim().length > 0
 
   const createStaff = useCreateStaffMutation({ skipToast: true })
 
@@ -172,38 +163,6 @@ function StaffScreen() {
               />
             </div>
             {errors.phone && <FieldError>{errors.phone.message}</FieldError>}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="onboarding-staff-password">
-              رمز عبور پرسنل
-            </FieldLabel>
-            <PasswordInput
-              id="onboarding-staff-password"
-              placeholder="حداقل ۸ کاراکتر"
-              disabled={pending}
-              className="h-11"
-              {...register('password')}
-            />
-            {errors.password && (
-              <FieldError>{errors.password.message}</FieldError>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="onboarding-staff-confirm-password">
-              تکرار رمز عبور
-            </FieldLabel>
-            <PasswordInput
-              id="onboarding-staff-confirm-password"
-              placeholder="تکرار رمز ورود"
-              disabled={pending}
-              className="h-11"
-              {...register('confirmPassword')}
-            />
-            {errors.confirmPassword && (
-              <FieldError>{errors.confirmPassword.message}</FieldError>
-            )}
           </Field>
         </div>
 

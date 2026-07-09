@@ -71,7 +71,9 @@ export const createStaffRoute = createRoute({
   method: 'post',
   path: '/',
   tags: ['Staff'],
-  summary: 'Create staff member',
+  summary: 'Create Staff Invite',
+  description:
+    'Creates a salon-owned Staff Profile and a pending Staff Invite from name and phone only. Pending invites grant no login access.',
   security: tenantSecurity,
   request: {
     body: {
@@ -81,7 +83,7 @@ export const createStaffRoute = createRoute({
   },
   responses: {
     200: {
-      description: 'Created staff user',
+      description: 'Created Staff Profile with pending Staff Invite',
       content: { 'application/json': { schema: staffCreateResponseSchema } },
     },
     400: validationErrorResponse,

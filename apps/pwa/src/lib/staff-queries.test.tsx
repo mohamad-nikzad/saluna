@@ -64,8 +64,6 @@ describe('staff-queries', () => {
     const created = await result.current.mutateAsync({
       name: 'Neda',
       phone: '09120000000',
-      password: 'securepass1',
-      confirmPassword: 'securepass1',
       role: 'staff',
     })
 
