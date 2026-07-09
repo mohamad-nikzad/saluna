@@ -37,3 +37,17 @@ export {
   type ManagerStaffInviteDecision,
   type ManagerStaffInviteRejectionReason,
 } from './staff-invites'
+export {
+  acceptStaffInvite,
+  declineStaffInvite,
+  evaluateStaffInviteAcceptance,
+  evaluateStaffInviteDecline,
+  getStaffInviteById,
+  listActiveStaffProfileAccessesForUser,
+  listPendingStaffInvitesForUser,
+  type AcceptStaffInviteResult,
+  type DeclineStaffInviteResult,
+  type PendingStaffInviteView,
+  type StaffInviteAcceptanceRejectionReason,
+  type StaffInviteDeclineRejectionReason,
+} from './staff-invite-acceptance'

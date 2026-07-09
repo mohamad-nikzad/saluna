@@ -30,9 +30,12 @@ import {
 import { phoneSchema } from '@repo/salon-core/forms/primitives'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import {
+  acceptStaffInvite,
   claimStaffProfile,
+  declineStaffInvite,
   getStaffProfileForUser,
   getUserWithServiceIds,
+  listPendingStaffInvitesForUser,
 } from '@repo/database/staff'
 import { getMemberForUser } from '@repo/database/members'
 import { mapRole } from '@repo/auth/permissions'
@@ -49,6 +52,57 @@ const verifyPasswordResetOtpSchema = z.object({
   otp: z.string().length(6),
 })
 const staffClaimPasswordSchema = z.object({ password: newPasswordSchema })
+const staffInviteIdParamSchema = z.object({ inviteId: z.string().uuid() })
+
+const acceptInviteRejectionMessage: Record<
+  | 'phone_mismatch'
+  | 'phone_unverified'
+  | 'invite_not_pending'
+  | 'invite_expired'
+  | 'inactive_profile'
+  | 'duplicate_salon_access'
+  | 'profile_already_accepted'
+  | 'invite_not_found',
+  string
+> = {
+  phone_mismatch: 'این دعوت متعلق به شماره دیگری است',
+  phone_unverified: 'ابتدا شماره موبایل خود را تایید کنید',
+  invite_not_pending: 'این دعوت دیگر در انتظار پذیرش نیست',
+  invite_expired: 'مهلت این دعوت به پایان رسیده است',
+  inactive_profile: 'پروفایل پرسنل این دعوت غیرفعال است',
+  duplicate_salon_access: 'شما از قبل به این سالن دسترسی دارید',
+  profile_already_accepted: 'این پروفایل پرسنل قبلاً به حساب دیگری متصل شده است',
+  invite_not_found: 'دعوت یافت نشد',
+}
+
+const declineInviteRejectionMessage: Record<
+  | 'phone_mismatch'
+  | 'phone_unverified'
+  | 'invite_not_pending'
+  | 'invite_not_found',
+  string
+> = {
+  phone_mismatch: 'این دعوت متعلق به شماره دیگری است',
+  phone_unverified: 'ابتدا شماره موبایل خود را تایید کنید',
+  invite_not_pending: 'این دعوت دیگر در انتظار پذیرش نیست',
+  invite_not_found: 'دعوت یافت نشد',
+}
+
+function acceptInviteStatus(
+  reason: keyof typeof acceptInviteRejectionMessage,
+): 403 | 404 | 409 {
+  if (reason === 'phone_mismatch' || reason === 'phone_unverified') return 403
+  if (reason === 'invite_not_found') return 404
+  return 409
+}
+
+function declineInviteStatus(
+  reason: keyof typeof declineInviteRejectionMessage,
+): 403 | 404 | 409 {
+  if (reason === 'phone_mismatch' || reason === 'phone_unverified') return 403
+  if (reason === 'invite_not_found') return 404
+  return 409
+}
 
 function phoneToEmail(phone: string): string {
   return `${phone}@${brand.emailLocalDomain}`
@@ -344,6 +398,92 @@ export const authRoute = new Hono<AppEnv>()
         throw err
       }
       return ok(c, { success: true })
+    },
+  )
+  .get('/staff-invites', async (c) => {
+    const sessionUser = await getSessionUser(c)
+    if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+    const invites = await listPendingStaffInvitesForUser(sessionUser.id)
+    return ok(c, {
+      invites: invites.map((invite) => ({
+        id: invite.id,
+        salonId: invite.salonId,
+        salonName: invite.salonName,
+        staffProfileId: invite.staffProfileId,
+        staffName: invite.staffName,
+        phone: invite.phone,
+        expiresAt: invite.expiresAt.toISOString(),
+        createdAt: invite.createdAt.toISOString(),
+      })),
+    })
+  })
+  .post(
+    '/staff-invites/:inviteId/accept',
+    zValidator('param', staffInviteIdParamSchema),
+    async (c) => {
+      const sessionUser = await getSessionUser(c)
+      if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+      const { inviteId } = c.req.valid('param')
+      const result = await acceptStaffInvite({
+        userId: sessionUser.id,
+        inviteId,
+      })
+      if (result.status === 'rejected') {
+        return error(
+          c,
+          acceptInviteRejectionMessage[result.reason],
+          acceptInviteStatus(result.reason),
+          result.reason,
+        )
+      }
+
+      return ok(c, {
+        access: {
+          id: result.access.id,
+          salonId: result.access.salonId,
+          staffProfileId: result.access.staffProfileId,
+          userId: result.access.userId,
+          acceptedAt: result.access.acceptedAt.toISOString(),
+        },
+        invite: {
+          id: result.invite.id,
+          status: result.invite.status,
+          acceptedAt: result.invite.acceptedAt?.toISOString() ?? null,
+        },
+        preservedAccessSalonIds: result.preservedAccessSalonIds,
+      })
+    },
+  )
+  .post(
+    '/staff-invites/:inviteId/decline',
+    zValidator('param', staffInviteIdParamSchema),
+    async (c) => {
+      const sessionUser = await getSessionUser(c)
+      if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+      const { inviteId } = c.req.valid('param')
+      const result = await declineStaffInvite({
+        userId: sessionUser.id,
+        inviteId,
+      })
+      if (result.status === 'rejected') {
+        return error(
+          c,
+          declineInviteRejectionMessage[result.reason],
+          declineInviteStatus(result.reason),
+          result.reason,
+        )
+      }
+
+      return ok(c, {
+        invite: {
+          id: result.invite.id,
+          status: result.invite.status,
+          declinedAt: result.invite.declinedAt?.toISOString() ?? null,
+        },
+      })
     },
   )
   .post('/reset-password', async (c) => {

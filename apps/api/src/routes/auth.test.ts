@@ -35,9 +35,12 @@ vi.mock('@repo/database/onboarding', () => ({
 }))
 
 vi.mock('@repo/database/staff', () => ({
+  acceptStaffInvite: vi.fn(),
   claimStaffProfile: vi.fn(),
+  declineStaffInvite: vi.fn(),
   getStaffProfileForUser: vi.fn(),
   getUserWithServiceIds: vi.fn(),
+  listPendingStaffInvitesForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/client', () => {
@@ -79,9 +82,12 @@ import { getDb } from '@repo/database/client'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
 import { getMemberForUser } from '@repo/database/members'
 import {
+  acceptStaffInvite,
   claimStaffProfile,
+  declineStaffInvite,
   getStaffProfileForUser,
   getUserWithServiceIds,
+  listPendingStaffInvitesForUser,
 } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -131,6 +137,7 @@ beforeEach(() => {
   ).__setSelectRows([])
   vi.mocked(claimStaffProfile).mockResolvedValue({ status: 'none' })
   vi.mocked(getStaffProfileForUser).mockResolvedValue(undefined as never)
+  vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([])
 })
 
 describe('auth signup route', () => {
@@ -869,5 +876,179 @@ describe('OTP signup continuation routes', () => {
       user: { id: 'u1', name: 'Ali', phone: '09121234567' },
       redirectTo: '/onboarding',
     })
+  })
+})
+
+describe('Staff Invite accept and decline', () => {
+  const inviteId = '11111111-1111-4111-8111-111111111111'
+  const pendingInvite = {
+    id: inviteId,
+    salonId: 'salon-b',
+    salonName: 'Salon B',
+    staffProfileId: 'profile-b',
+    staffName: 'Sara',
+    phone: '09121234567',
+    expiresAt: new Date('2026-07-20T12:00:00Z'),
+    createdAt: new Date('2026-07-09T12:00:00Z'),
+  }
+
+  it('lists pending Staff Invites for the verified session phone', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([pendingInvite])
+
+    const res = await app.request('/api/v1/auth/staff-invites')
+
+    expect(res.status).toBe(200)
+    expect(listPendingStaffInvitesForUser).toHaveBeenCalledWith('u1')
+    expect(await res.json()).toEqual({
+      invites: [
+        {
+          id: inviteId,
+          salonId: 'salon-b',
+          salonName: 'Salon B',
+          staffProfileId: 'profile-b',
+          staffName: 'Sara',
+          phone: '09121234567',
+          expiresAt: '2026-07-20T12:00:00.000Z',
+          createdAt: '2026-07-09T12:00:00.000Z',
+        },
+      ],
+    })
+  })
+
+  it('requires login to list pending Staff Invites', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue(null)
+
+    const res = await app.request('/api/v1/auth/staff-invites')
+
+    expect(res.status).toBe(401)
+    expect(listPendingStaffInvitesForUser).not.toHaveBeenCalled()
+  })
+
+  it('accepts a Staff Invite and returns Staff Profile Access', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(acceptStaffInvite).mockResolvedValue({
+      status: 'accepted',
+      access: {
+        id: 'access-1',
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+        userId: 'u1',
+        staffInviteId: inviteId,
+        acceptedAt: new Date('2026-07-09T12:00:00Z'),
+        revokedAt: null,
+        createdAt: new Date('2026-07-09T12:00:00Z'),
+        updatedAt: new Date('2026-07-09T12:00:00Z'),
+      },
+      invite: {
+        id: inviteId,
+        status: 'accepted',
+        acceptedAt: new Date('2026-07-09T12:00:00Z'),
+        declinedAt: null,
+      } as never,
+      preservedAccessSalonIds: ['salon-a'],
+    })
+
+    const res = await app.request(
+      `/api/v1/auth/staff-invites/${inviteId}/accept`,
+      {
+        method: 'POST',
+        headers: jsonHeaders(),
+      },
+    )
+
+    expect(res.status).toBe(200)
+    expect(acceptStaffInvite).toHaveBeenCalledWith({
+      userId: 'u1',
+      inviteId,
+    })
+    expect(await res.json()).toMatchObject({
+      access: {
+        id: 'access-1',
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+      },
+      invite: { id: inviteId, status: 'accepted' },
+      preservedAccessSalonIds: ['salon-a'],
+    })
+  })
+
+  it('rejects accepting a Staff Invite for a different phone', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(acceptStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'phone_mismatch',
+    })
+
+    const res = await app.request(
+      `/api/v1/auth/staff-invites/${inviteId}/accept`,
+      {
+        method: 'POST',
+        headers: jsonHeaders(),
+      },
+    )
+
+    expect(res.status).toBe(403)
+    expect(await res.json()).toMatchObject({ code: 'phone_mismatch' })
+  })
+
+  it('declines a Staff Invite without creating Staff Profile Access', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(declineStaffInvite).mockResolvedValue({
+      status: 'declined',
+      invite: {
+        id: inviteId,
+        status: 'declined',
+        declinedAt: new Date('2026-07-09T12:00:00Z'),
+        acceptedAt: null,
+      } as never,
+    })
+
+    const res = await app.request(
+      `/api/v1/auth/staff-invites/${inviteId}/decline`,
+      {
+        method: 'POST',
+        headers: jsonHeaders(),
+      },
+    )
+
+    expect(res.status).toBe(200)
+    expect(declineStaffInvite).toHaveBeenCalledWith({
+      userId: 'u1',
+      inviteId,
+    })
+    expect(acceptStaffInvite).not.toHaveBeenCalled()
+    expect(await res.json()).toMatchObject({
+      invite: { id: inviteId, status: 'declined' },
+    })
+  })
+
+  it('rejects declining a Staff Invite for a different phone', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(declineStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'phone_mismatch',
+    })
+
+    const res = await app.request(
+      `/api/v1/auth/staff-invites/${inviteId}/decline`,
+      {
+        method: 'POST',
+        headers: jsonHeaders(),
+      },
+    )
+
+    expect(res.status).toBe(403)
+    expect(await res.json()).toMatchObject({ code: 'phone_mismatch' })
   })
 })

@@ -392,9 +392,14 @@ export const staffProfiles = pgTable(
   },
   (t) => [
     uniqueIndex('staff_profiles_salon_id_phone_unique').on(t.salonId, t.phone),
-    uniqueIndex('staff_profiles_user_id_unique').on(t.userId),
+    // One accepted identity per salon Staff Profile; one identity may hold
+    // Staff Profile Access across many salons (see staff_profile_accesses).
+    uniqueIndex('staff_profiles_salon_id_user_id_unique')
+      .on(t.salonId, t.userId)
+      .where(sql`${t.userId} is not null`),
     index('staff_profiles_phone_active_idx').on(t.phone, t.active),
     index('staff_profiles_salon_id_active_idx').on(t.salonId, t.active),
+    index('staff_profiles_user_id_idx').on(t.userId),
   ],
 )
 
@@ -446,6 +451,48 @@ export const staffInvites = pgTable(
     uniqueIndex('staff_invites_salon_phone_pending_unique')
       .on(t.salonId, t.phone)
       .where(sql`${t.status} = 'pending'`),
+  ],
+)
+
+/**
+ * Active permission link between a verified staff identity and a salon-owned
+ * Staff Profile. One identity may hold many active accesses across salons;
+ * one Staff Profile may have at most one active accepted identity.
+ */
+export const staffProfileAccesses = pgTable(
+  'staff_profile_accesses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    staffProfileId: uuid('staff_profile_id')
+      .notNull()
+      .references(() => staffProfiles.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    staffInviteId: uuid('staff_invite_id').references(() => staffInvites.id, {
+      onDelete: 'set null',
+    }),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('staff_profile_accesses_user_salon_active_unique')
+      .on(t.userId, t.salonId)
+      .where(sql`${t.revokedAt} is null`),
+    uniqueIndex('staff_profile_accesses_profile_active_unique')
+      .on(t.staffProfileId)
+      .where(sql`${t.revokedAt} is null`),
+    index('staff_profile_accesses_user_id_idx').on(t.userId),
+    index('staff_profile_accesses_salon_id_idx').on(t.salonId),
   ],
 )
 
