@@ -43,14 +43,16 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Accept and decline phone-bound Staff Invites.
 
-- [ ] Staff tenant access is granted only through active Staff Profile Access.
-- [ ] Revoked, declined, expired, and pending invites do not authorize tenant requests.
-- [ ] Staff appointment reads return only appointments for the linked Staff Profile in the requested salon.
-- [ ] Staff appointment status changes apply only to appointments for the linked Staff Profile in the requested salon.
-- [ ] Existing one-salon staff login continues to work.
-- [ ] Existing manager and owner single-salon behavior remains unchanged.
-- [ ] API and domain tests cover wrong-salon, pending-invite, and revoked-access rejection.
+- [x] Staff tenant access is granted only through active Staff Profile Access.
+- [x] Revoked, declined, expired, and pending invites do not authorize tenant requests.
+- [x] Staff appointment reads return only appointments for the linked Staff Profile in the requested salon.
+- [x] Staff appointment status changes apply only to appointments for the linked Staff Profile in the requested salon.
+- [x] Existing one-salon staff login continues to work.
+- [x] Existing manager and owner single-salon behavior remains unchanged.
+- [x] API and domain tests cover wrong-salon, pending-invite, and revoked-access rejection.
 
+
+> Closed by Sandcastle: Staff tenant auth via Staff Profile Access + salon header; appointment scoping to linked profile; wrong-salon/pending/revoked rejection tests
 ## Add staff salon picker and active salon context
 
 **What to build:** Staff with multiple accepted salons choose the salon they are entering after login. The PWA remembers the selected salon, sends that active salon context on tenant API calls, and exposes an in-app salon switcher.
