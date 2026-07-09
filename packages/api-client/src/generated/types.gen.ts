@@ -746,6 +746,7 @@ export type StaffUser = {
     phone: string;
     createdAt: string | string;
     serviceIds?: Array<string> | null;
+    inviteStatus?: 'pending' | null;
     [key: string]: unknown;
 };
 
@@ -758,7 +759,6 @@ export type StaffCreateResponse = {
 export type StaffCreateRequest = {
     name: string;
     phone: string;
-    password: string;
     role?: StaffRole & unknown;
 };
 
@@ -4092,7 +4092,7 @@ export type PostApiV1StaffError = PostApiV1StaffErrors[keyof PostApiV1StaffError
 
 export type PostApiV1StaffResponses = {
     /**
-     * Created staff user
+     * Created Staff Profile with pending Staff Invite
      */
     200: StaffCreateResponse;
 };

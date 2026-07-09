@@ -494,7 +494,9 @@ export const postApiV1ClientsByIdFollowUps = <ThrowOnError extends boolean = fal
 export const getApiV1Staff = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1StaffData, ThrowOnError>): RequestResult<GetApiV1StaffResponses, GetApiV1StaffErrors, ThrowOnError> => (options?.client ?? client).get<GetApiV1StaffResponses, GetApiV1StaffErrors, ThrowOnError>({ url: '/api/v1/staff', ...options });
 
 /**
- * Create staff member
+ * Create Staff Invite
+ *
+ * Creates a salon-owned Staff Profile and a pending Staff Invite from name and phone only. Pending invites grant no login access.
  */
 export const postApiV1Staff = <ThrowOnError extends boolean = false>(options: Options<PostApiV1StaffData, ThrowOnError>): RequestResult<PostApiV1StaffResponses, PostApiV1StaffErrors, ThrowOnError> => (options.client ?? client).post<PostApiV1StaffResponses, PostApiV1StaffErrors, ThrowOnError>({
     url: '/api/v1/staff',

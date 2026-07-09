@@ -37,13 +37,13 @@ const validationErrorResponse = {
 } as const
 
 const duplicatePhoneResponse = {
-  description: 'Phone number already registered',
+  description: 'Phone number already registered or invite conflict',
   content: {
     'application/json': {
       schema: apiErrorSchema.openapi({
         example: {
-          error: 'این شماره موبایل قبلاً ثبت شده است',
-          code: 'duplicate-phone',
+          error: 'برای این شماره قبلاً دعوت در انتظار وجود دارد',
+          code: 'duplicate_pending_invite',
         },
       }),
     },

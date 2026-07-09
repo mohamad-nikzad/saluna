@@ -148,7 +148,7 @@ describe('staffScheduleSchema', () => {
 })
 
 describe('staffCreateRequestSchema', () => {
-  it('accepts API payloads without confirm password', () => {
+  it('accepts name and phone only and ignores password fields', () => {
     const result = staffCreateRequestSchema.parse({
       name: 'Ali',
       phone: '09121234567',
@@ -158,7 +158,6 @@ describe('staffCreateRequestSchema', () => {
     expect(result).toEqual({
       name: 'Ali',
       phone: '09121234567',
-      password: 'secret123',
       role: 'staff',
     })
   })

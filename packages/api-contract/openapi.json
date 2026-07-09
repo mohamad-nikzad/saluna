@@ -2830,6 +2830,14 @@
             "items": {
               "type": "string"
             }
+          },
+          "inviteStatus": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "pending",
+              null
+            ]
           }
         },
         "required": [
@@ -2874,10 +2882,6 @@
             "type": "string",
             "example": "09121234567"
           },
-          "password": {
-            "type": "string",
-            "example": "securepass1"
-          },
           "role": {
             "allOf": [
               {
@@ -2891,8 +2895,7 @@
         },
         "required": [
           "name",
-          "phone",
-          "password"
+          "phone"
         ]
       },
       "StaffBookingAvailabilityResponse": {
@@ -12234,7 +12237,8 @@
         "tags": [
           "Staff"
         ],
-        "summary": "Create staff member",
+        "summary": "Create Staff Invite",
+        "description": "Creates a salon-owned Staff Profile and a pending Staff Invite from name and phone only. Pending invites grant no login access.",
         "security": [
           {
             "bearerAuth": []
@@ -12255,7 +12259,7 @@
         },
         "responses": {
           "200": {
-            "description": "Created staff user",
+            "description": "Created Staff Profile with pending Staff Invite",
             "content": {
               "application/json": {
                 "schema": {

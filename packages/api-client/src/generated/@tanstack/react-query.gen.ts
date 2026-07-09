@@ -1407,7 +1407,9 @@ export const getApiV1StaffOptions = (options?: Options<GetApiV1StaffData>) => qu
 });
 
 /**
- * Create staff member
+ * Create Staff Invite
+ *
+ * Creates a salon-owned Staff Profile and a pending Staff Invite from name and phone only. Pending invites grant no login access.
  */
 export const postApiV1StaffMutation = (options?: Partial<Options<PostApiV1StaffData>>): UseMutationOptions<PostApiV1StaffResponse, PostApiV1StaffError, Options<PostApiV1StaffData>> => {
     const mutationOptions: UseMutationOptions<PostApiV1StaffResponse, PostApiV1StaffError, Options<PostApiV1StaffData>> = {

@@ -214,6 +214,77 @@ describe('staff router', () => {
     })
   })
 
+  it('409 on duplicate active Staff Profile for the same phone', async () => {
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'duplicate_active_profile',
+    } as never)
+    const res = await app.request('/api/v1/staff', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify(validCreate),
+    })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'برای این شماره قبلاً پروفایل پرسنل فعال در این سالن وجود دارد',
+      code: 'duplicate_active_profile',
+    })
+  })
+
+  it('rejects password updates for pending invited Staff Profiles', async () => {
+    vi.mocked(db.getUserById).mockResolvedValue({
+      id: 'profile-1',
+      salonId: 's1',
+      role: 'staff',
+      inviteStatus: 'pending',
+    } as never)
+    vi.mocked(db.updateStaffPassword).mockResolvedValue(false as never)
+    const res = await app.request('/api/v1/staff/profile-1/password', {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        password: 'newsecret123',
+      }),
+    })
+    expect(res.status).toBe(404)
+    expect(db.updateStaffPassword).toHaveBeenCalledWith(
+      's1',
+      'profile-1',
+      'newsecret123',
+    )
+  })
+
+  it('pending Staff Invite create path does not create tenant membership credentials', async () => {
+    vi.mocked(db.createManagerStaffInvite).mockResolvedValue({
+      status: 'created',
+      profile: {
+        id: 'profile-1',
+        name: 'Ali',
+        phone: '09121234567',
+        userId: null,
+      },
+      invite: { id: 'invite-1', status: 'pending' },
+      inviteToken: 'token',
+    } as never)
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
+      id: 'profile-1',
+      name: 'Ali',
+      phone: '09121234567',
+      inviteStatus: 'pending',
+      role: 'staff',
+    } as never)
+    const res = await app.request('/api/v1/staff', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Ali', phone: '09121234567' }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.user.inviteStatus).toBe('pending')
+    expect(db.createManagerStaffInvite).toHaveBeenCalledTimes(1)
+    expect(db.updateStaffPassword).not.toHaveBeenCalled()
+  })
+
   it('200 on GET includes pending inviteStatus for invited staff', async () => {
     vi.mocked(db.getAllStaff).mockResolvedValue([
       {
