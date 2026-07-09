@@ -6,12 +6,16 @@
 import { and, eq, gt, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
+  appointmentRequests,
+  appointments,
   member,
   organization,
   salonMember,
   staffInvites,
   staffProfileAccesses,
   staffProfiles,
+  staffSchedules,
+  staffServices,
   user,
 } from './schema'
 
@@ -375,8 +379,8 @@ export async function acceptStaffInvite(input: {
       return { status: 'rejected', reason: 'invite_not_pending' }
     }
 
-    // Compatibility: keep staff_profiles.userId linked for one-salon claim paths
-    // until Authorize-via-Staff-Profile-Access lands.
+    // Keep staff_profiles.userId linked for claim-path compatibility and
+    // migrate operational refs onto the verified identity (same as claim).
     if (profile.userId !== input.userId) {
       await tx
         .update(staffProfiles)
@@ -430,6 +434,45 @@ export async function acceptStaffInvite(input: {
           active: profile.active,
         },
       })
+
+    await Promise.all([
+      tx
+        .update(staffSchedules)
+        .set({ staffId: input.userId, updatedAt: now })
+        .where(
+          and(
+            eq(staffSchedules.salonId, invite.salonId),
+            eq(staffSchedules.staffId, profile.id),
+          ),
+        ),
+      tx
+        .update(staffServices)
+        .set({ staffUserId: input.userId })
+        .where(
+          and(
+            eq(staffServices.salonId, invite.salonId),
+            eq(staffServices.staffUserId, profile.id),
+          ),
+        ),
+      tx
+        .update(appointments)
+        .set({ staffId: input.userId, updatedAt: now })
+        .where(
+          and(
+            eq(appointments.salonId, invite.salonId),
+            eq(appointments.staffId, profile.id),
+          ),
+        ),
+      tx
+        .update(appointmentRequests)
+        .set({ staffId: input.userId, updatedAt: now })
+        .where(
+          and(
+            eq(appointmentRequests.salonId, invite.salonId),
+            eq(appointmentRequests.staffId, profile.id),
+          ),
+        ),
+    ])
 
     return {
       status: 'accepted',

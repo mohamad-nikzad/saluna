@@ -4,39 +4,77 @@ import {
   hasPlatformPermission,
   type PlatformPermission,
 } from '@repo/auth/platform'
-import { hasTenantPermission, type TenantPermission } from '@repo/auth/tenant'
+import {
+  hasTenantPermission,
+  SALON_CONTEXT_HEADER,
+  type TenantPermission,
+} from '@repo/auth/tenant'
 import {
   bootstrapPlatformOwnerIfNeeded,
   getPlatformAdminForUser,
   getUserPhoneForPlatformBootstrap,
 } from '@repo/database/admin'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 import { factory } from '../factory'
 import { getEnv } from '../env'
 import { error } from '../lib/responses'
+
+function requestedSalonIdFromHeaders(headers: Headers): string | null {
+  const raw = headers.get(SALON_CONTEXT_HEADER)?.trim()
+  return raw ? raw : null
+}
 
 export function requireTenant(permission?: TenantPermission) {
   return factory.createMiddleware(async (c, next) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers })
     if (!session?.user) return error(c, 'دسترسی غیرمجاز', 401)
 
-    const member = await getMemberForUser(session.user.id)
-    if (!member) return error(c, 'دسترسی غیرمجاز', 403)
-    if (member.salonStatus && member.salonStatus !== 'active') {
+    const manager = await getManagerMemberForUser(session.user.id)
+    if (manager) {
+      if (manager.salonStatus && manager.salonStatus !== 'active') {
+        return error(c, 'دسترسی سالن غیرفعال است', 403)
+      }
+
+      const role = mapRole(manager.role)
+      if (permission && !hasTenantPermission(role, permission)) {
+        return error(c, 'دسترسی غیرمجاز', 403)
+      }
+
+      c.set('tenant', {
+        userId: manager.userId,
+        salonId: manager.organizationId,
+        role,
+        name: manager.name,
+        phone: manager.username,
+      })
+      await next()
+      return
+    }
+
+    const staff = await resolveStaffTenantContext({
+      userId: session.user.id,
+      requestedSalonId: requestedSalonIdFromHeaders(c.req.raw.headers),
+    })
+    if (staff.status === 'rejected') {
+      return error(c, 'دسترسی غیرمجاز', 403)
+    }
+    if (staff.salonStatus && staff.salonStatus !== 'active') {
       return error(c, 'دسترسی سالن غیرفعال است', 403)
     }
 
-    const role = mapRole(member.role)
+    const role = 'staff' as const
     if (permission && !hasTenantPermission(role, permission)) {
       return error(c, 'دسترسی غیرمجاز', 403)
     }
 
     c.set('tenant', {
-      userId: member.userId,
-      salonId: member.organizationId,
+      userId: staff.userId,
+      salonId: staff.salonId,
       role,
-      name: member.name,
-      phone: member.username,
+      name: staff.name,
+      phone: staff.phone,
+      staffProfileId: staff.staffProfileId,
     })
     await next()
   })

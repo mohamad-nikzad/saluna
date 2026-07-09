@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
   getAllStaff: vi.fn(),
   createManagerStaffInvite: vi.fn(),
   deactivateStaffMember: vi.fn(),
@@ -26,11 +27,13 @@ vi.mock('@repo/auth/server', () => ({
 
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as db from '@repo/database/staff'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -72,6 +75,13 @@ beforeEach(() => {
     name: 'Manager',
     username: '09120000000',
   } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('staff router', () => {
@@ -81,12 +91,15 @@ describe('staff router', () => {
   })
 
   it('200 on GET / for any authed user', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(db.getAllStaff).mockResolvedValue([{ id: 'u2' }] as never)
     const res = await app.request('/api/v1/staff', { headers: authHeaders })
@@ -95,12 +108,15 @@ describe('staff router', () => {
   })
 
   it('staff is 403 on POST', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     const res = await app.request('/api/v1/staff', {
       method: 'POST',
@@ -417,12 +433,15 @@ describe('staff router', () => {
   })
 
   it('staff is 403 on booking-availability', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     const res = await app.request(
       '/api/v1/staff/booking-availability?date=2026-05-18&startTime=10:00&endTime=10:30',

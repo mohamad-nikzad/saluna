@@ -36,7 +36,7 @@ function countAppointmentsByStatus(appointments: AppointmentWithDetails[]): Toda
 export async function getTodayData(
   salonId: string,
   date = salonTodayYmd(),
-  staffIdFilter?: string
+  staffIdFilter?: string | readonly string[],
 ): Promise<TodayData> {
   const useLiveClock = date === salonTodayYmd()
 

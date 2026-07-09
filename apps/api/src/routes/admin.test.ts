@@ -47,6 +47,7 @@ vi.mock('@repo/database/admin', () => ({
 
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/salon-handoff', () => ({
@@ -66,6 +67,7 @@ vi.mock('@repo/database/salon-profile', () => ({
 }))
 
 vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
   createSetupStaffProfile: vi.fn(),
   getClaimedStaffAccessForPhone: vi.fn(),
   listSetupStaffProfiles: vi.fn(),

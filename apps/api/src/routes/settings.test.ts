@@ -9,13 +9,19 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as db from '@repo/database/settings'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -39,6 +45,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
   vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
 })
 
 describe('settings router', () => {
@@ -48,7 +55,16 @@ describe('settings router', () => {
   })
 
   it('returns business settings to any tenant role', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
     vi.mocked(db.getBusinessSettings).mockResolvedValue({ workingStart: '09:00' } as never)
     const res = await app.request('/api/v1/settings/business', { headers: authHeaders })
     expect(res.status).toBe(200)
@@ -56,7 +72,16 @@ describe('settings router', () => {
   })
 
   it('403 on PATCH for staff', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u2', organizationId: 's1', role: 'member', name: 'Staff', username: '09120000001' } as never)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
     const res = await app.request('/api/v1/settings/business', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },

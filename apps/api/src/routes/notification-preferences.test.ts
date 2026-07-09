@@ -38,13 +38,19 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as notif from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -71,12 +77,15 @@ beforeEach(() => {
         ? { user: { id: 'u1' } }
         : null) as never,
   )
-  vi.mocked(getMemberForUser).mockResolvedValue({
+  vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+  vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+    status: 'ok',
     userId: 'u1',
-    organizationId: 's1',
-    role: 'member',
+    salonId: 's1',
+    staffProfileId: 'profile-u1',
     name: 'Staff',
-    username: '09120000000',
+    phone: '09120000000',
+    salonStatus: 'active',
   } as never)
 })
 

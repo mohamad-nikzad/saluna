@@ -65,14 +65,20 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as notif from '@repo/notifications'
 import * as messagingDb from '@repo/database/messaging'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -98,6 +104,13 @@ beforeEach(() => {
     name: 'Manager',
     username: '09120000000',
   } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
   vi.mocked(messagingDb.checkMessagingLinkRateLimit).mockResolvedValue({
     allowed: true,
   })
@@ -113,12 +126,15 @@ describe('messaging router', () => {
   })
 
   it('403 for staff without manage_settings', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09121111111',
+      phone: '09121111111',
+      salonStatus: 'active',
     } as never)
     const res = await app.request('/api/v1/messaging/accounts', {
       headers: authHeaders,

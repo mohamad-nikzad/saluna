@@ -157,11 +157,23 @@ export function addonLineValues(input: {
   }))
 }
 
+function staffIdCondition(staffIdFilter?: string | readonly string[]) {
+  if (staffIdFilter == null) return undefined
+  if (typeof staffIdFilter === 'string') {
+    return eq(appointments.staffId, staffIdFilter)
+  }
+  if (staffIdFilter.length === 0) return undefined
+  if (staffIdFilter.length === 1) {
+    return eq(appointments.staffId, staffIdFilter[0]!)
+  }
+  return inArray(appointments.staffId, [...staffIdFilter])
+}
+
 export async function getAppointmentsByDateRange(
   salonId: string,
   startDate: string,
   endDate: string,
-  staffIdFilter?: string
+  staffIdFilter?: string | readonly string[],
 ): Promise<Appointment[]> {
   const db = getDb()
   const conditions = [
@@ -169,8 +181,9 @@ export async function getAppointmentsByDateRange(
     gte(appointments.date, startDate),
     lte(appointments.date, endDate),
   ]
-  if (staffIdFilter) {
-    conditions.push(eq(appointments.staffId, staffIdFilter))
+  const staffCondition = staffIdCondition(staffIdFilter)
+  if (staffCondition) {
+    conditions.push(staffCondition)
   }
   const rows = await db
     .select()
@@ -186,7 +199,7 @@ export async function getAppointmentsWithDetailsByDateRange(
   salonId: string,
   startDate: string,
   endDate: string,
-  staffIdFilter?: string
+  staffIdFilter?: string | readonly string[],
 ): Promise<AppointmentWithDetails[]> {
   const db = getDb()
   const conditions = [
@@ -194,8 +207,9 @@ export async function getAppointmentsWithDetailsByDateRange(
     gte(appointments.date, startDate),
     lte(appointments.date, endDate),
   ]
-  if (staffIdFilter) {
-    conditions.push(eq(appointments.staffId, staffIdFilter))
+  const staffCondition = staffIdCondition(staffIdFilter)
+  if (staffCondition) {
+    conditions.push(staffCondition)
   }
 
   const rows = await db

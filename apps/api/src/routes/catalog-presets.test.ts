@@ -9,8 +9,13 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import {
@@ -18,7 +23,8 @@ import {
   listActiveCatalogPresets,
 } from '@repo/database/catalog-presets'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -37,6 +43,13 @@ beforeEach(() => {
         : null) as never,
   )
   vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 'salon-1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
     userId: 'u1',
     organizationId: 'salon-1',
     role: 'owner',

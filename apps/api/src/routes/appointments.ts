@@ -34,7 +34,11 @@ import {
   isWebPushConfigured,
   sendWebPushToUser,
 } from '@repo/notifications'
-import { isManagerRole } from '@repo/auth/tenant'
+import {
+  isManagerRole,
+  staffAppointmentStaffIds,
+  staffOwnsAppointment,
+} from '@repo/auth/tenant'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
@@ -78,14 +82,14 @@ export const appointments = new Hono<AppEnv>()
     requireTenant(),
     zValidator('query', listQuerySchema),
     async (c) => {
-      const { salonId, userId, role } = c.var.tenant
+      const tenant = c.var.tenant
       const { startDate, endDate } = c.req.valid('query')
       if (!startDate || !endDate) {
         return error(c, 'تاریخ شروع و پایان الزامی است', 400)
       }
-      const staffFilter = role === 'staff' ? userId : undefined
+      const staffFilter = staffAppointmentStaffIds(tenant)
       const list = await getAppointmentsWithDetailsByDateRange(
-        salonId,
+        tenant.salonId,
         startDate,
         endDate,
         staffFilter,
@@ -241,11 +245,14 @@ export const appointments = new Hono<AppEnv>()
     requireTenant(),
     zValidator('param', idParamSchema),
     async (c) => {
-      const { salonId, userId, role } = c.var.tenant
+      const tenant = c.var.tenant
       const { id } = c.req.valid('param')
-      const appointment = await getAppointmentWithDetailsById(id, salonId)
+      const appointment = await getAppointmentWithDetailsById(id, tenant.salonId)
       if (!appointment) return error(c, 'نوبت یافت نشد', 404)
-      if (role === 'staff' && appointment.staffId !== userId) {
+      if (
+        tenant.role === 'staff' &&
+        !staffOwnsAppointment(appointment.staffId, tenant)
+      ) {
         return error(c, 'دسترسی غیرمجاز', 403)
       }
       return ok(c, { appointment })
@@ -257,7 +264,8 @@ export const appointments = new Hono<AppEnv>()
     zValidator('param', idParamSchema),
     zValidator('json', appointmentUpdateSchema),
     async (c) => {
-      const { salonId, userId, role } = c.var.tenant
+      const tenant = c.var.tenant
+      const { salonId, role } = tenant
       const { id } = c.req.valid('param')
       const body = c.req.valid('json')
       const { status, placeholderClient } = body
@@ -274,7 +282,7 @@ export const appointments = new Hono<AppEnv>()
       if (!isManagerRole(role)) {
         const staffCanPatchOwnStatus =
           role === 'staff' &&
-          existing.staffId === userId &&
+          staffOwnsAppointment(existing.staffId, tenant) &&
           isStatusOnlyPatch &&
           STAFF_STATUS_UPDATES.has(status as Appointment['status'])
         if (!staffCanPatchOwnStatus) {

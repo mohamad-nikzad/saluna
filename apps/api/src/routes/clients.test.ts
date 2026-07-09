@@ -21,13 +21,19 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as db from '@repo/database/clients'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 import { MAX_BULK_CLIENTS } from '@repo/salon-core/forms/limits'
 
 process.env.NODE_ENV = 'test'
@@ -50,11 +56,10 @@ function authHeaders() {
 }
 
 beforeEach(() => {
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
   vi.clearAllMocks()
   vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
   vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
 })
 
 describe('clients router', () => {

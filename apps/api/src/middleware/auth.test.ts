@@ -16,8 +16,13 @@ vi.mock('@repo/auth/server', () => {
   return { auth, adminAuth }
 })
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/admin', () => ({
@@ -31,7 +36,8 @@ process.env.DATABASE_URL = 'postgres://stub'
 process.env.PLATFORM_ADMIN_BOOTSTRAP_PHONES = '09121111111'
 
 const { adminAuth, auth } = await import('@repo/auth/server')
-const { getMemberForUser } = await import('@repo/database/members')
+const { getManagerMemberForUser, getMemberForUser } = await import('@repo/database/members')
+const { resolveStaffTenantContext } = await import('@repo/database/staff')
 const {
   getPlatformAdminForUser,
   bootstrapPlatformOwnerIfNeeded,
@@ -165,7 +171,7 @@ describe('requirePlatformAdmin', () => {
 
 describe('requireTenant', () => {
   it('rejects Setup Salons even if a membership is present', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue({
       userId: 'u1',
       organizationId: 's1',
       role: 'owner',
@@ -180,7 +186,7 @@ describe('requireTenant', () => {
   })
 
   it('rejects suspended salons even when the user has membership', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue({
       userId: 'u1',
       organizationId: 's1',
       role: 'owner',
@@ -195,11 +201,86 @@ describe('requireTenant', () => {
   })
 
   it('resolves only the PWA cookie namespace', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'no_access',
+    } as never)
 
     await appWithTenant().request('/tenant')
 
     expect(auth.api.getSession).toHaveBeenCalledOnce()
     expect(adminAuth.api.getSession).not.toHaveBeenCalled()
+  })
+
+  it('grants staff tenant access from active Staff Profile Access', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 'salon-b',
+      staffProfileId: 'profile-b',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+
+    const res = await appWithTenant().request('/tenant', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-b' },
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      userId: 'u2',
+      salonId: 'salon-b',
+      role: 'staff',
+      name: 'Staff',
+      phone: '09120000001',
+      staffProfileId: 'profile-b',
+    })
+    expect(resolveStaffTenantContext).toHaveBeenCalledWith({
+      userId: 'u1',
+      requestedSalonId: 'salon-b',
+    })
+  })
+
+  it('rejects staff tenant requests for a wrong salon', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'wrong_salon',
+    } as never)
+
+    const res = await appWithTenant().request('/tenant', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-other' },
+    })
+
+    expect(res.status).toBe(403)
+  })
+
+  it('rejects staff with only a pending invite (no Staff Profile Access)', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'no_access',
+    } as never)
+
+    const res = await appWithTenant().request('/tenant')
+
+    expect(res.status).toBe(403)
+  })
+
+  it('rejects staff after Staff Profile Access is revoked', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'no_access',
+    } as never)
+
+    const res = await appWithTenant().request('/tenant', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-a' },
+    })
+
+    expect(res.status).toBe(403)
   })
 })

@@ -75,4 +75,15 @@ describe('evaluateStaffTenantAccess', () => {
       }),
     ).toEqual({ status: 'rejected', reason: 'salon_required' })
   })
+
+  it('treats pending, declined, expired, and revoked invites as no access (empty activeAccesses)', () => {
+    // listActiveStaffProfileAccessesForUser only returns non-revoked access rows;
+    // pending/declined/expired invites never produce activeAccesses entries.
+    expect(
+      evaluateStaffTenantAccess({
+        requestedSalonId: 'salon-a',
+        activeAccesses: [],
+      }),
+    ).toEqual({ status: 'rejected', reason: 'no_access' })
+  })
 })

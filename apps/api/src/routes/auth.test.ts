@@ -28,6 +28,7 @@ vi.mock('@repo/auth/server', () => {
 
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/onboarding', () => ({
@@ -35,6 +36,7 @@ vi.mock('@repo/database/onboarding', () => ({
 }))
 
 vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
   acceptStaffInvite: vi.fn(),
   claimStaffProfile: vi.fn(),
   declineStaffInvite: vi.fn(),
@@ -80,7 +82,8 @@ vi.mock('@repo/database/client', () => {
 import { adminAuth, auth as authServer } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 import {
   acceptStaffInvite,
   claimStaffProfile,

@@ -11,13 +11,19 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as db from '@repo/database/services'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -36,6 +42,13 @@ beforeEach(() => {
         : null) as never,
   )
   vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
     userId: 'u1',
     organizationId: 's1',
     role: 'owner',
@@ -75,12 +88,15 @@ describe('service-catalog router', () => {
   })
 
   it('keeps staff on active service catalog data without package exposure', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(db.getAllServiceCategories).mockResolvedValue([] as never)
     vi.mocked(db.getAllServices).mockResolvedValue([] as never)

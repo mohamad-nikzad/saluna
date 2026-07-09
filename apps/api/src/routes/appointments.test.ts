@@ -59,14 +59,20 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 import * as appts from '@repo/database/appointments'
 import * as clientsDb from '@repo/database/clients'
 import { auth as authServer } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -103,6 +109,13 @@ beforeEach(() => {
     name: 'Manager',
     username: '09120000000',
   } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('appointments router', () => {
@@ -122,12 +135,15 @@ describe('appointments router', () => {
   })
 
   it('GET / scopes to staff when role=staff', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: { id: 'u2' },
@@ -144,7 +160,7 @@ describe('appointments router', () => {
       's1',
       '2026-01-01',
       '2026-01-02',
-      'u2',
+      ['u2', 'profile-u2'],
     )
   })
 
@@ -166,12 +182,15 @@ describe('appointments router', () => {
   })
 
   it('POST / returns 403 for staff role', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
@@ -286,12 +305,15 @@ describe('appointments router', () => {
   })
 
   it('GET /:id 403 for staff viewing other staff appointment', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
@@ -303,13 +325,79 @@ describe('appointments router', () => {
     expect(res.status).toBe(403)
   })
 
-  it('PATCH /:id 403 for staff doing non-status patch', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+  it('GET /:id allows staff when appointment staffId is the linked Staff Profile', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
+      id: 'a1',
+      staffId: 'profile-u2',
+    } as never)
+    const res = await app.request('/api/v1/appointments/a1', {
+      headers: authHeaders,
+    })
+    expect(res.status).toBe(200)
+  })
+
+  it('rejects staff tenant appointment list for a wrong salon context', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'wrong_salon',
+    } as never)
+    const res = await app.request(
+      '/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02',
+      { headers: { ...authHeaders, 'X-Saluna-Salon-Id': 'salon-other' } },
+    )
+    expect(res.status).toBe(403)
+    expect(appts.getAppointmentsWithDetailsByDateRange).not.toHaveBeenCalled()
+  })
+
+  it('rejects pending-invite staff with no Staff Profile Access on appointments', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'no_access',
+    } as never)
+    const res = await app.request(
+      '/api/v1/appointments?startDate=2026-01-01&endDate=2026-01-02',
+      { headers: authHeaders },
+    )
+    expect(res.status).toBe(403)
+  })
+
+  it('rejects revoked Staff Profile Access on appointment status changes', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+      reason: 'no_access',
+    } as never)
+    const res = await app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ status: 'completed' }),
+    })
+    expect(res.status).toBe(403)
+    expect(appts.getAppointmentById).not.toHaveBeenCalled()
+  })
+
+  it('PATCH /:id 403 for staff doing non-status patch', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
@@ -329,12 +417,15 @@ describe('appointments router', () => {
   })
 
   it('PATCH /:id allows staff status-only update on own appointment', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
@@ -400,12 +491,15 @@ describe('appointments router', () => {
   })
 
   it('DELETE /:id returns 403 for staff', async () => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId: 'u2',
-      organizationId: 's1',
-      role: 'member',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
       name: 'Staff',
-      username: '09120000001',
+      phone: '09120000001',
+      salonStatus: 'active',
     } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       method: 'DELETE',

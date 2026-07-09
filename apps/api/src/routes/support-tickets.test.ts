@@ -6,8 +6,13 @@ vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
 }))
 
+vi.mock('@repo/database/staff', () => ({
+  resolveStaffTenantContext: vi.fn(),
+}))
+
 vi.mock('@repo/database/members', () => ({
   getMemberForUser: vi.fn(),
+  getManagerMemberForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/support-tickets', () => ({
@@ -20,7 +25,8 @@ vi.mock('@repo/database/support-tickets', () => ({
 }))
 
 import { auth } from '@repo/auth/server'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import { resolveStaffTenantContext } from '@repo/database/staff'
 import * as supportDb from '@repo/database/support-tickets'
 import { supportTicketsRoute } from './support-tickets'
 
@@ -45,6 +51,13 @@ beforeEach(() => {
         : null) as never,
   )
   vi.mocked(getMemberForUser).mockResolvedValue({
+    userId,
+    organizationId: salonId,
+    role: 'owner',
+    name: 'Salon Display Name',
+    username: '09120000000',
+  })
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
     userId,
     organizationId: salonId,
     role: 'owner',
@@ -102,13 +115,16 @@ describe('manager support ticket routes', () => {
     ],
     ['POST', `/api/v1/support-tickets/${ticketId}/read`, undefined],
   ])('rejects staff: %s %s', async (method, path, body) => {
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
       userId,
-      organizationId: salonId,
-      role: 'member',
+      salonId,
+      staffProfileId: 'profile-staff',
       name: 'Staff',
-      username: '09120000000',
-    })
+      phone: '09120000000',
+      salonStatus: 'active',
+    } as never)
     expect(
       (
         await app.request(path, {
