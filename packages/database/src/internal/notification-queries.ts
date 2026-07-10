@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { getDb } from '../client'
 import {
   notificationDeliveries,
@@ -69,6 +69,13 @@ export type CreateNotificationInput = {
 export type ListNotificationsInput = {
   salonId: string
   userId: string
+  unreadOnly?: boolean
+}
+
+export type ListNotificationsAcrossSalonsInput = {
+  userId: string
+  /** Active Staff Profile Access salon ids — current selection must not filter these. */
+  salonIds: string[]
   unreadOnly?: boolean
 }
 
@@ -151,6 +158,34 @@ export async function listNotificationsForUser(
   return rows.map(rowToNotification)
 }
 
+/**
+ * List notifications for a staff identity across every accepted salon.
+ * Current salon selection must not suppress other accepted salons.
+ */
+export async function listNotificationsForUserAcrossSalons(
+  input: ListNotificationsAcrossSalonsInput,
+): Promise<AppNotification[]> {
+  if (input.salonIds.length === 0) return []
+
+  const db = getDb()
+  const conditions = [
+    eq(notifications.userId, input.userId),
+    inArray(notifications.salonId, input.salonIds),
+  ]
+  if (input.unreadOnly) {
+    conditions.push(isNull(notifications.readAt))
+  }
+
+  const rows = await db
+    .select()
+    .from(notifications)
+    .where(and(...conditions))
+    .orderBy(desc(notifications.createdAt))
+    .limit(100)
+
+  return rows.map(rowToNotification)
+}
+
 export async function markNotificationRead(
   salonId: string,
   userId: string,
@@ -172,6 +207,33 @@ export async function markNotificationRead(
   return row ? rowToNotification(row) : undefined
 }
 
+/**
+ * Mark a notification read when it belongs to the user in any of the allowed
+ * (accepted) salon ids — used so staff salon selection does not block read.
+ */
+export async function markNotificationReadAcrossSalons(
+  userId: string,
+  notificationId: string,
+  salonIds: string[],
+): Promise<AppNotification | undefined> {
+  if (salonIds.length === 0) return undefined
+
+  const db = getDb()
+  const [row] = await db
+    .update(notifications)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId),
+        inArray(notifications.salonId, salonIds),
+      ),
+    )
+    .returning()
+
+  return row ? rowToNotification(row) : undefined
+}
+
 export async function markAllNotificationsRead(
   salonId: string,
   userId: string,
@@ -184,6 +246,28 @@ export async function markAllNotificationsRead(
       and(
         eq(notifications.salonId, salonId),
         eq(notifications.userId, userId),
+        isNull(notifications.readAt),
+      ),
+    )
+    .returning({ id: notifications.id })
+
+  return rows.length
+}
+
+export async function markAllNotificationsReadAcrossSalons(
+  userId: string,
+  salonIds: string[],
+): Promise<number> {
+  if (salonIds.length === 0) return 0
+
+  const db = getDb()
+  const rows = await db
+    .update(notifications)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        inArray(notifications.salonId, salonIds),
         isNull(notifications.readAt),
       ),
     )

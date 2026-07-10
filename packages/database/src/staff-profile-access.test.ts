@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateStaffTenantAccess } from './staff-profile-access'
+import {
+  evaluateStaffNotificationRecipient,
+  evaluateStaffTenantAccess,
+} from './staff-profile-access'
 
 const accessA = {
   salonId: 'salon-a',
@@ -85,5 +88,80 @@ describe('evaluateStaffTenantAccess', () => {
         activeAccesses: [],
       }),
     ).toEqual({ status: 'rejected', reason: 'no_access' })
+  })
+})
+
+describe('evaluateStaffNotificationRecipient', () => {
+  const candidateA = {
+    userId: 'user-1',
+    salonId: 'salon-a',
+    staffProfileId: 'profile-a',
+    profileActive: true,
+  }
+  const candidateB = {
+    userId: 'user-1',
+    salonId: 'salon-b',
+    staffProfileId: 'profile-b',
+    profileActive: true,
+  }
+
+  it('resolves the recipient from active Staff Profile Access by user id', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-a',
+        staffId: 'user-1',
+        candidates: [candidateA, candidateB],
+      }),
+    ).toEqual({ userId: 'user-1', staffProfileId: 'profile-a' })
+  })
+
+  it('resolves the recipient from active Staff Profile Access by profile id', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-b',
+        staffId: 'profile-b',
+        candidates: [candidateA, candidateB],
+      }),
+    ).toEqual({ userId: 'user-1', staffProfileId: 'profile-b' })
+  })
+
+  it('fans out per salon: same identity matches only the salon of the event', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-b',
+        staffId: 'user-1',
+        candidates: [candidateA, candidateB],
+      }),
+    ).toEqual({ userId: 'user-1', staffProfileId: 'profile-b' })
+  })
+
+  it('excludes revoked, pending, declined, and expired access (empty candidates)', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-a',
+        staffId: 'user-1',
+        candidates: [],
+      }),
+    ).toBeNull()
+  })
+
+  it('excludes inactive Staff Profiles', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-a',
+        staffId: 'user-1',
+        candidates: [{ ...candidateA, profileActive: false }],
+      }),
+    ).toBeNull()
+  })
+
+  it('excludes candidates for a different salon', () => {
+    expect(
+      evaluateStaffNotificationRecipient({
+        salonId: 'salon-c',
+        staffId: 'user-1',
+        candidates: [candidateA, candidateB],
+      }),
+    ).toBeNull()
   })
 })
