@@ -7,6 +7,8 @@ vi.mock('@repo/database/staff', () => ({
   deactivateStaffMember: vi.fn(),
   getUserById: vi.fn(),
   getUserWithServiceIds: vi.fn(),
+  reactivateStaffProfile: vi.fn(),
+  revokeStaffProfileAccess: vi.fn(),
   setStaffServiceIds: vi.fn(),
   setStaffSchedules: vi.fn(),
   getStaffSchedules: vi.fn(),
@@ -15,6 +17,7 @@ vi.mock('@repo/database/staff', () => ({
   updateStaffMember: vi.fn(),
   updateStaffPassword: vi.fn(),
   validateActiveServiceIds: vi.fn(),
+  countManagers: vi.fn(),
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -596,5 +599,116 @@ describe('staff router', () => {
     })
     expect(res.status).toBe(200)
     expect(db.validateActiveServiceIds).not.toHaveBeenCalled()
+  })
+
+  it('200 on POST /:id/access/revoke revokes Staff Profile Access only', async () => {
+    vi.mocked(db.revokeStaffProfileAccess).mockResolvedValue({
+      status: 'revoked',
+      access: {
+        id: 'access-1',
+        salonId: 's1',
+        staffProfileId: 'profile-u2',
+        userId: 'u2',
+        staffInviteId: null,
+        acceptedAt: new Date('2026-07-01T00:00:00Z'),
+        revokedAt: new Date('2026-07-11T00:00:00Z'),
+        createdAt: new Date('2026-07-01T00:00:00Z'),
+        updatedAt: new Date('2026-07-11T00:00:00Z'),
+      },
+      profile: {
+        id: 'profile-u2',
+        salonId: 's1',
+        userId: null,
+        name: 'Sara',
+        phone: '09121234567',
+        color: 'rose',
+        active: true,
+        claimedAt: new Date('2026-07-01T00:00:00Z'),
+        accessDetachedAt: new Date('2026-07-11T00:00:00Z'),
+        createdAt: new Date('2026-06-01T00:00:00Z'),
+        updatedAt: new Date('2026-07-11T00:00:00Z'),
+      },
+      profileDeactivated: false,
+    })
+
+    const res = await app.request('/api/v1/staff/u2/access/revoke', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.revokeStaffProfileAccess).toHaveBeenCalledWith({
+      salonId: 's1',
+      targetId: 'u2',
+    })
+    expect(db.deactivateStaffMember).not.toHaveBeenCalled()
+    expect(await res.json()).toMatchObject({
+      success: true,
+      access: {
+        id: 'access-1',
+        staffProfileId: 'profile-u2',
+        revokedAt: '2026-07-11T00:00:00.000Z',
+      },
+      profile: { id: 'profile-u2', active: true, userId: null },
+    })
+  })
+
+  it('409 on POST /:id/access/revoke when access already revoked', async () => {
+    vi.mocked(db.revokeStaffProfileAccess).mockResolvedValue({
+      status: 'rejected',
+      reason: 'already_revoked',
+    })
+
+    const res = await app.request('/api/v1/staff/u2/access/revoke', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({ code: 'already_revoked' })
+  })
+
+  it('400 on POST /:id/access/revoke for current user', async () => {
+    const res = await app.request('/api/v1/staff/u1/access/revoke', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(400)
+    expect(db.revokeStaffProfileAccess).not.toHaveBeenCalled()
+  })
+
+  it('200 on POST /:id/reactivate does not restore access', async () => {
+    vi.mocked(db.reactivateStaffProfile).mockResolvedValue({
+      status: 'reactivated',
+      profile: {
+        id: 'profile-u2',
+        salonId: 's1',
+        userId: null,
+        name: 'Sara',
+        phone: '09121234567',
+        color: 'rose',
+        active: true,
+        claimedAt: null,
+        accessDetachedAt: new Date('2026-07-11T00:00:00Z'),
+        createdAt: new Date('2026-06-01T00:00:00Z'),
+        updatedAt: new Date('2026-07-11T12:00:00Z'),
+      },
+    })
+
+    const res = await app.request('/api/v1/staff/profile-u2/reactivate', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.reactivateStaffProfile).toHaveBeenCalledWith({
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+    })
+    expect(await res.json()).toMatchObject({
+      success: true,
+      profile: { id: 'profile-u2', active: true, userId: null },
+    })
   })
 })

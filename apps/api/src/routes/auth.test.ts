@@ -42,6 +42,7 @@ vi.mock('@repo/database/staff', () => ({
   declineStaffInvite: vi.fn(),
   getStaffProfileForUser: vi.fn(),
   getUserWithServiceIds: vi.fn(),
+  leaveStaffProfileAccess: vi.fn(),
   listPendingStaffInvitesForUser: vi.fn(),
 }))
 
@@ -90,6 +91,7 @@ import {
   declineStaffInvite,
   getStaffProfileForUser,
   getUserWithServiceIds,
+  leaveStaffProfileAccess,
   listPendingStaffInvitesForUser,
 } from '@repo/database/staff'
 
@@ -1053,5 +1055,92 @@ describe('Staff Invite accept and decline', () => {
 
     expect(res.status).toBe(403)
     expect(await res.json()).toMatchObject({ code: 'phone_mismatch' })
+  })
+
+  it('lets staff leave a salon and revoke only their Staff Profile Access', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(leaveStaffProfileAccess).mockResolvedValue({
+      status: 'revoked',
+      access: {
+        id: 'access-1',
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+        userId: 'u1',
+        staffInviteId: inviteId,
+        acceptedAt: new Date('2026-07-09T12:00:00Z'),
+        revokedAt: new Date('2026-07-11T12:00:00Z'),
+        createdAt: new Date('2026-07-09T12:00:00Z'),
+        updatedAt: new Date('2026-07-11T12:00:00Z'),
+      },
+      profile: {
+        id: 'profile-b',
+        salonId: 'salon-b',
+        userId: null,
+        name: 'Sara',
+        phone: '09121234567',
+        color: 'rose',
+        active: true,
+        claimedAt: new Date('2026-07-09T12:00:00Z'),
+        accessDetachedAt: new Date('2026-07-11T12:00:00Z'),
+        createdAt: new Date('2026-07-01T00:00:00Z'),
+        updatedAt: new Date('2026-07-11T12:00:00Z'),
+      },
+      profileDeactivated: false,
+    })
+
+    const res = await app.request('/api/v1/auth/staff-access/leave', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonId: 'salon-b' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(leaveStaffProfileAccess).toHaveBeenCalledWith({
+      userId: 'u1',
+      salonId: 'salon-b',
+    })
+    expect(await res.json()).toMatchObject({
+      success: true,
+      access: {
+        id: 'access-1',
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+      },
+      profile: { id: 'profile-b', active: true },
+    })
+  })
+
+  it('rejects leaving a salon without active Staff Profile Access', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(leaveStaffProfileAccess).mockResolvedValue({
+      status: 'rejected',
+      reason: 'access_not_found',
+    })
+
+    const res = await app.request('/api/v1/auth/staff-access/leave', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonId: 'salon-b' }),
+    })
+
+    expect(res.status).toBe(404)
+    expect(await res.json()).toMatchObject({ code: 'access_not_found' })
+  })
+
+  it('requires login to leave a salon', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue(null)
+
+    const res = await app.request('/api/v1/auth/staff-access/leave', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonId: 'salon-b' }),
+    })
+
+    expect(res.status).toBe(401)
+    expect(leaveStaffProfileAccess).not.toHaveBeenCalled()
   })
 })

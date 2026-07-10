@@ -73,15 +73,17 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Authorize staff through Staff Profile Access.
 
-- [ ] Manager can revoke a staff member's Staff Profile Access for their salon.
-- [ ] Staff can leave a salon and revoke only their own Staff Profile Access.
-- [ ] Revocation prevents future tenant access for that salon.
-- [ ] Revocation does not delete or deactivate the Staff Profile.
-- [ ] Revocation does not remove schedule, ServiceVariant capabilities, appointments, or history.
-- [ ] Future appointments remain assigned to the Staff Profile after access is revoked.
-- [ ] Deactivating a Staff Profile revokes access for that salon.
-- [ ] Reactivating a Staff Profile does not automatically restore old access.
+- [x] Manager can revoke a staff member's Staff Profile Access for their salon.
+- [x] Staff can leave a salon and revoke only their own Staff Profile Access.
+- [x] Revocation prevents future tenant access for that salon.
+- [x] Revocation does not delete or deactivate the Staff Profile.
+- [x] Revocation does not remove schedule, ServiceVariant capabilities, appointments, or history.
+- [x] Future appointments remain assigned to the Staff Profile after access is revoked.
+- [x] Deactivating a Staff Profile revokes access for that salon.
+- [x] Reactivating a Staff Profile does not automatically restore old access.
 
+
+> Closed: Manager revoke + staff leave remove Staff Profile Access only; deactivate revokes access; reactivate does not restore; schedule/capabilities/appointments stay on the Staff Profile
 ## Handle invite lifecycle and invite links
 
 **What to build:** Managers can cancel and resend pending invites. Invites expire. Invite links route staff into login or registration but never grant access by themselves. SMS delivery remains a future hook rather than a real integration.

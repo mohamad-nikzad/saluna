@@ -35,7 +35,9 @@ import {
   declineStaffInvite,
   getStaffProfileForUser,
   getUserWithServiceIds,
+  leaveStaffProfileAccess,
   listPendingStaffInvitesForUser,
+  type StaffAccessRevocationRejectionReason,
   type StaffInviteAcceptanceRejectionReason,
 } from '@repo/database/staff'
 import { getMemberForUser } from '@repo/database/members'
@@ -54,6 +56,7 @@ const verifyPasswordResetOtpSchema = z.object({
 })
 const staffClaimPasswordSchema = z.object({ password: newPasswordSchema })
 const staffInviteIdParamSchema = z.object({ inviteId: z.string().uuid() })
+const staffLeaveSalonSchema = z.object({ salonId: z.string().min(1) })
 
 const staffInviteRejectionMessage: Record<
   StaffInviteAcceptanceRejectionReason,
@@ -67,6 +70,16 @@ const staffInviteRejectionMessage: Record<
   duplicate_salon_access: 'شما از قبل به این سالن دسترسی دارید',
   profile_already_accepted: 'این پروفایل پرسنل قبلاً به حساب دیگری متصل شده است',
   invite_not_found: 'دعوت یافت نشد',
+}
+
+const staffLeaveRejectionMessage: Record<
+  StaffAccessRevocationRejectionReason,
+  string
+> = {
+  access_not_found: 'دسترسی فعالی به این سالن ندارید',
+  already_revoked: 'دسترسی شما به این سالن قبلاً لغو شده است',
+  profile_not_found: 'پروفایل پرسنل یافت نشد',
+  wrong_salon: 'این سالن برای شما معتبر نیست',
 }
 
 function staffInviteRejectionStatus(
@@ -455,6 +468,46 @@ export const authRoute = new Hono<AppEnv>()
           id: result.invite.id,
           status: result.invite.status,
           declinedAt: result.invite.declinedAt?.toISOString() ?? null,
+        },
+      })
+    },
+  )
+  .post(
+    '/staff-access/leave',
+    zValidator('json', staffLeaveSalonSchema),
+    async (c) => {
+      const sessionUser = await getSessionUser(c)
+      if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+      const { salonId } = c.req.valid('json')
+      const result = await leaveStaffProfileAccess({
+        userId: sessionUser.id,
+        salonId,
+      })
+      if (result.status === 'rejected') {
+        const status =
+          result.reason === 'already_revoked' ? 409 : 404
+        return error(
+          c,
+          staffLeaveRejectionMessage[result.reason],
+          status,
+          result.reason,
+        )
+      }
+
+      return ok(c, {
+        success: true,
+        access: result.access
+          ? {
+              id: result.access.id,
+              salonId: result.access.salonId,
+              staffProfileId: result.access.staffProfileId,
+              revokedAt: result.access.revokedAt?.toISOString() ?? null,
+            }
+          : null,
+        profile: {
+          id: result.profile.id,
+          active: result.profile.active,
         },
       })
     },

@@ -10,11 +10,14 @@ import {
   getStaffSchedules,
   getUserById,
   getUserWithServiceIds,
+  reactivateStaffProfile,
+  revokeStaffProfileAccess,
   setStaffSchedules,
   setStaffServiceIds,
   updateStaffMember,
   updateStaffPassword,
   validateActiveServiceIds,
+  type StaffAccessRevocationRejectionReason,
 } from '@repo/database/staff'
 import { isDuplicatePhoneError } from '@repo/database/clients'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -48,6 +51,23 @@ const inviteRejectionMessage: Record<
   duplicate_pending_invite: 'برای این شماره قبلاً دعوت در انتظار وجود دارد',
   duplicate_active_profile:
     'برای این شماره قبلاً پروفایل پرسنل فعال در این سالن وجود دارد',
+}
+
+const accessRevocationMessage: Record<
+  StaffAccessRevocationRejectionReason,
+  string
+> = {
+  access_not_found: 'دسترسی پرسنل برای این سالن یافت نشد',
+  already_revoked: 'دسترسی این پرسنل قبلاً لغو شده است',
+  profile_not_found: 'پروفایل پرسنل یافت نشد',
+  wrong_salon: 'این پروفایل متعلق به این سالن نیست',
+}
+
+function accessRevocationStatus(
+  reason: StaffAccessRevocationRejectionReason,
+): 404 | 409 {
+  if (reason === 'already_revoked') return 409
+  return 404
 }
 
 export const staff = new Hono<AppEnv>()
@@ -139,6 +159,81 @@ export const staff = new Hono<AppEnv>()
       const updated = await updateStaffPassword(salonId, id, password)
       if (!updated) return error(c, 'کاربر یافت نشد', 404)
       return ok(c, { success: true })
+    },
+  )
+  .post(
+    '/:id/access/revoke',
+    requireTenant('manage_settings'),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { salonId, userId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      if (id === userId) {
+        return error(c, 'دسترسی حساب فعلی خودتان را نمی‌توانید لغو کنید.', 400)
+      }
+
+      const result = await revokeStaffProfileAccess({
+        salonId,
+        targetId: id,
+      })
+      if (result.status === 'rejected') {
+        return error(
+          c,
+          accessRevocationMessage[result.reason],
+          accessRevocationStatus(result.reason),
+          result.reason,
+        )
+      }
+
+      return ok(c, {
+        success: true,
+        access: result.access
+          ? {
+              id: result.access.id,
+              salonId: result.access.salonId,
+              staffProfileId: result.access.staffProfileId,
+              userId: result.access.userId,
+              revokedAt: result.access.revokedAt?.toISOString() ?? null,
+            }
+          : null,
+        profile: {
+          id: result.profile.id,
+          active: result.profile.active,
+          userId: result.profile.userId,
+        },
+      })
+    },
+  )
+  .post(
+    '/:id/reactivate',
+    requireTenant('manage_settings'),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const result = await reactivateStaffProfile({
+        salonId,
+        staffProfileId: id,
+      })
+      if (result.status === 'rejected') {
+        const message =
+          result.reason === 'already_active'
+            ? 'این پروفایل پرسنل از قبل فعال است'
+            : result.reason === 'wrong_salon'
+              ? 'این پروفایل متعلق به این سالن نیست'
+              : 'پروفایل پرسنل یافت نشد'
+        const status = result.reason === 'already_active' ? 409 : 404
+        return error(c, message, status, result.reason)
+      }
+
+      return ok(c, {
+        success: true,
+        profile: {
+          id: result.profile.id,
+          active: result.profile.active,
+          userId: result.profile.userId,
+        },
+      })
     },
   )
   .delete(

@@ -22,6 +22,7 @@ import {
   staffServices,
   user,
 } from '../schema'
+import { deactivateStaffProfileWithAccessRevocation } from '../staff-access-revocation'
 import { rowToStaffSchedule, rowToUser, staffUserSelect } from './row-mappers'
 import { getUserById } from './user-queries'
 import { getBusinessSettings } from './settings-queries'
@@ -211,6 +212,14 @@ export async function deactivateStaffMember(
   salonId: string,
   staffUserId: string,
 ): Promise<boolean> {
+  const result = await deactivateStaffProfileWithAccessRevocation({
+    salonId,
+    targetId: staffUserId,
+  })
+  if (result.status === 'revoked') return true
+
+  // Legacy manager/owner members without a Staff Profile: soft-deactivate
+  // salon_member only (no Staff Profile Access to revoke).
   const db = getDb()
   const rows = await db
     .select({ userId: member.userId })
@@ -222,28 +231,17 @@ export async function deactivateStaffMember(
 
   if (!rows[0]) return false
 
-  await db.transaction(async (tx) => {
-    await tx
-      .insert(salonMember)
-      .values({
-        userId: staffUserId,
-        organizationId: salonId,
-        active: false,
-      })
-      .onConflictDoUpdate({
-        target: [salonMember.userId, salonMember.organizationId],
-        set: { active: false },
-      })
-
-    await tx
-      .delete(staffServices)
-      .where(
-        and(
-          eq(staffServices.salonId, salonId),
-          eq(staffServices.staffUserId, staffUserId),
-        ),
-      )
-  })
+  await db
+    .insert(salonMember)
+    .values({
+      userId: staffUserId,
+      organizationId: salonId,
+      active: false,
+    })
+    .onConflictDoUpdate({
+      target: [salonMember.userId, salonMember.organizationId],
+      set: { active: false },
+    })
 
   return true
 }

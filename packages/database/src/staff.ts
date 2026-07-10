@@ -58,3 +58,14 @@ export {
   type StaffTenantAccessDecision,
   type StaffTenantAccessRejectionReason,
 } from './staff-profile-access'
+export {
+  deactivateStaffProfileWithAccessRevocation,
+  evaluateStaffAccessRevocation,
+  leaveStaffProfileAccess,
+  reactivateStaffProfile,
+  revokeStaffProfileAccess,
+  type ReactivateStaffProfileResult,
+  type RevokeStaffProfileAccessResult,
+  type StaffAccessRevocationMode,
+  type StaffAccessRevocationRejectionReason,
+} from './staff-access-revocation'
