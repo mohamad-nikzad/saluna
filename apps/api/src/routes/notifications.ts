@@ -35,6 +35,19 @@ async function acceptedSalonIdsForStaff(userId: string): Promise<string[]> {
     .map((access) => access.salonId)
 }
 
+/** Staff → accepted-salon scope; otherwise current-salon path. */
+async function forStaffAcrossSalonsOrCurrent<T>(
+  role: string,
+  userId: string,
+  across: (salonIds: string[]) => Promise<T>,
+  current: () => Promise<T>,
+): Promise<T> {
+  if (role === 'staff') {
+    return across(await acceptedSalonIdsForStaff(userId))
+  }
+  return current()
+}
+
 export const notifications = new Hono<AppEnv>()
   .use(requireTenant())
   .get('/', zValidator('query', listQuerySchema), async (c) => {
@@ -42,34 +55,32 @@ export const notifications = new Hono<AppEnv>()
     const { unreadOnly } = c.req.valid('query')
     const unread = unreadOnly === 'true'
 
-    if (role === 'staff') {
-      const salonIds = await acceptedSalonIdsForStaff(userId)
-      const list = await listNotificationsForUserAcrossSalons({
-        userId,
-        salonIds,
-        unreadOnly: unread,
-      })
-      return ok(c, { notifications: list })
-    }
-
-    const list = await listNotificationsForUser({
-      salonId,
+    const list = await forStaffAcrossSalonsOrCurrent(
+      role,
       userId,
-      unreadOnly: unread,
-    })
+      (salonIds) =>
+        listNotificationsForUserAcrossSalons({
+          userId,
+          salonIds,
+          unreadOnly: unread,
+        }),
+      () =>
+        listNotificationsForUser({
+          salonId,
+          userId,
+          unreadOnly: unread,
+        }),
+    )
     return ok(c, { notifications: list })
   })
   .post('/read-all', async (c) => {
     const { salonId, userId, role } = c.var.tenant
-    if (role === 'staff') {
-      const salonIds = await acceptedSalonIdsForStaff(userId)
-      const updatedCount = await markAllNotificationsReadAcrossSalons(
-        userId,
-        salonIds,
-      )
-      return ok(c, { success: true, updatedCount })
-    }
-    const updatedCount = await markAllNotificationsRead(salonId, userId)
+    const updatedCount = await forStaffAcrossSalonsOrCurrent(
+      role,
+      userId,
+      (salonIds) => markAllNotificationsReadAcrossSalons(userId, salonIds),
+      () => markAllNotificationsRead(salonId, userId),
+    )
     return ok(c, { success: true, updatedCount })
   })
   .post('/test', async (c) => {
@@ -100,17 +111,12 @@ export const notifications = new Hono<AppEnv>()
   .post('/:id/read', zValidator('param', idParamSchema), async (c) => {
     const { salonId, userId, role } = c.var.tenant
     const { id } = c.req.valid('param')
-    if (role === 'staff') {
-      const salonIds = await acceptedSalonIdsForStaff(userId)
-      const notification = await markNotificationReadAcrossSalons(
-        userId,
-        id,
-        salonIds,
-      )
-      if (!notification) return error(c, 'اعلان پیدا نشد', 404)
-      return ok(c, { notification })
-    }
-    const notification = await markNotificationRead(salonId, userId, id)
+    const notification = await forStaffAcrossSalonsOrCurrent(
+      role,
+      userId,
+      (salonIds) => markNotificationReadAcrossSalons(userId, id, salonIds),
+      () => markNotificationRead(salonId, userId, id),
+    )
     if (!notification) return error(c, 'اعلان پیدا نشد', 404)
     return ok(c, { notification })
   })

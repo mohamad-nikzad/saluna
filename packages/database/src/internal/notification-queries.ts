@@ -136,35 +136,12 @@ export async function createNotificationForUser(
   return rowToNotification(row)
 }
 
-export async function listNotificationsForUser(
-  input: ListNotificationsInput,
-): Promise<AppNotification[]> {
-  const db = getDb()
-  const conditions = [
-    eq(notifications.salonId, input.salonId),
-    eq(notifications.userId, input.userId),
-  ]
-  if (input.unreadOnly) {
-    conditions.push(isNull(notifications.readAt))
-  }
-
-  const rows = await db
-    .select()
-    .from(notifications)
-    .where(and(...conditions))
-    .orderBy(desc(notifications.createdAt))
-    .limit(100)
-
-  return rows.map(rowToNotification)
-}
-
-/**
- * List notifications for a staff identity across every accepted salon.
- * Current salon selection must not suppress other accepted salons.
- */
-export async function listNotificationsForUserAcrossSalons(
-  input: ListNotificationsAcrossSalonsInput,
-): Promise<AppNotification[]> {
+/** Shared list/read queries: one salon or many accepted salons (`inArray`). */
+async function listNotificationsForUserInSalons(input: {
+  userId: string
+  salonIds: string[]
+  unreadOnly?: boolean
+}): Promise<AppNotification[]> {
   if (input.salonIds.length === 0) return []
 
   const db = getDb()
@@ -186,32 +163,27 @@ export async function listNotificationsForUserAcrossSalons(
   return rows.map(rowToNotification)
 }
 
-export async function markNotificationRead(
-  salonId: string,
-  userId: string,
-  notificationId: string,
-): Promise<AppNotification | undefined> {
-  const db = getDb()
-  const [row] = await db
-    .update(notifications)
-    .set({ readAt: new Date() })
-    .where(
-      and(
-        eq(notifications.id, notificationId),
-        eq(notifications.salonId, salonId),
-        eq(notifications.userId, userId),
-      ),
-    )
-    .returning()
-
-  return row ? rowToNotification(row) : undefined
+export async function listNotificationsForUser(
+  input: ListNotificationsInput,
+): Promise<AppNotification[]> {
+  return listNotificationsForUserInSalons({
+    userId: input.userId,
+    salonIds: [input.salonId],
+    unreadOnly: input.unreadOnly,
+  })
 }
 
 /**
- * Mark a notification read when it belongs to the user in any of the allowed
- * (accepted) salon ids — used so staff salon selection does not block read.
+ * List notifications for a staff identity across every accepted salon.
+ * Current salon selection must not suppress other accepted salons.
  */
-export async function markNotificationReadAcrossSalons(
+export async function listNotificationsForUserAcrossSalons(
+  input: ListNotificationsAcrossSalonsInput,
+): Promise<AppNotification[]> {
+  return listNotificationsForUserInSalons(input)
+}
+
+async function markNotificationReadInSalons(
   userId: string,
   notificationId: string,
   salonIds: string[],
@@ -234,27 +206,27 @@ export async function markNotificationReadAcrossSalons(
   return row ? rowToNotification(row) : undefined
 }
 
-export async function markAllNotificationsRead(
+export async function markNotificationRead(
   salonId: string,
   userId: string,
-): Promise<number> {
-  const db = getDb()
-  const rows = await db
-    .update(notifications)
-    .set({ readAt: new Date() })
-    .where(
-      and(
-        eq(notifications.salonId, salonId),
-        eq(notifications.userId, userId),
-        isNull(notifications.readAt),
-      ),
-    )
-    .returning({ id: notifications.id })
-
-  return rows.length
+  notificationId: string,
+): Promise<AppNotification | undefined> {
+  return markNotificationReadInSalons(userId, notificationId, [salonId])
 }
 
-export async function markAllNotificationsReadAcrossSalons(
+/**
+ * Mark a notification read when it belongs to the user in any of the allowed
+ * (accepted) salon ids — used so staff salon selection does not block read.
+ */
+export async function markNotificationReadAcrossSalons(
+  userId: string,
+  notificationId: string,
+  salonIds: string[],
+): Promise<AppNotification | undefined> {
+  return markNotificationReadInSalons(userId, notificationId, salonIds)
+}
+
+async function markAllNotificationsReadInSalons(
   userId: string,
   salonIds: string[],
 ): Promise<number> {
@@ -274,6 +246,20 @@ export async function markAllNotificationsReadAcrossSalons(
     .returning({ id: notifications.id })
 
   return rows.length
+}
+
+export async function markAllNotificationsRead(
+  salonId: string,
+  userId: string,
+): Promise<number> {
+  return markAllNotificationsReadInSalons(userId, [salonId])
+}
+
+export async function markAllNotificationsReadAcrossSalons(
+  userId: string,
+  salonIds: string[],
+): Promise<number> {
+  return markAllNotificationsReadInSalons(userId, salonIds)
 }
 
 export async function getNotificationPreferences(
