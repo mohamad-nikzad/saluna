@@ -171,8 +171,8 @@ export const appointments = new Hono<AppEnv>()
 
         if (isWebPushConfigured() && staffNotification) {
           void sendWebPushToUser(staffNotification.userId, {
-            title: 'نوبت جدید برای شما',
-            body: `${intake.client.name} — ${intake.service.name}، ${appointment.date} ساعت ${appointment.startTime}`,
+            title: staffNotification.title,
+            body: staffNotification.body,
             url: `/calendar?date=${appointment.date}&appointmentId=${appointment.id}`,
             tag: `appointment-${appointment.id}`,
           })

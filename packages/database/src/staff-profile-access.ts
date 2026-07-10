@@ -144,11 +144,30 @@ export async function listActiveStaffProfileAccessesForUser(
   for (const row of accessRows) {
     bySalon.set(row.salonId, row)
   }
-  for (const row of claimedProfiles) {
-    if (!bySalon.has(row.salonId)) {
-      bySalon.set(row.salonId, row)
+
+  // Claim-path only when no access row exists yet. Do not re-include a salon
+  // after Staff Profile Access was revoked (same guard as create-path fan-out).
+  const claimOnly = claimedProfiles.filter((row) => !bySalon.has(row.salonId))
+  if (claimOnly.length > 0) {
+    const revokedAccessRows = await db
+      .select({ salonId: staffProfileAccesses.salonId })
+      .from(staffProfileAccesses)
+      .where(
+        and(
+          eq(staffProfileAccesses.userId, userId),
+          isNotNull(staffProfileAccesses.revokedAt),
+        ),
+      )
+    const revokedSalonIds = new Set(
+      revokedAccessRows.map((row) => row.salonId),
+    )
+    for (const row of claimOnly) {
+      if (!revokedSalonIds.has(row.salonId)) {
+        bySalon.set(row.salonId, row)
+      }
     }
   }
+
   return [...bySalon.values()]
 }
 

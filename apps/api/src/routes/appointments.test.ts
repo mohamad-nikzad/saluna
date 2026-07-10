@@ -300,7 +300,10 @@ describe('appointments router', () => {
       id: 'n1',
       userId: 'u2',
       salonId: 's1',
+      title: 'نوبت جدید — سالن آفتاب',
+      body: 'Ali، Cut، 2026-06-01 ساعت 10:00',
     } as never)
+    vi.mocked(notif.isWebPushConfigured).mockReturnValue(true)
 
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
@@ -330,6 +333,12 @@ describe('appointments router', () => {
       },
       clientName: 'Ali',
       serviceName: 'Cut',
+    })
+    expect(notif.sendWebPushToUser).toHaveBeenCalledWith('u2', {
+      title: 'نوبت جدید — سالن آفتاب',
+      body: 'Ali، Cut، 2026-06-01 ساعت 10:00',
+      url: '/calendar?date=2026-06-01&appointmentId=a1',
+      tag: 'appointment-a1',
     })
   })
 

@@ -219,7 +219,7 @@ describe('notifications router', () => {
         profileActive: true,
       },
       {
-        salonId: 'salon-revoked',
+        salonId: 'salon-inactive',
         staffProfileId: 'profile-x',
         profileActive: false,
       },
