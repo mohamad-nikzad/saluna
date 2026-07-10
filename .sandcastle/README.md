@@ -27,11 +27,14 @@ pnpm sandcastle:build
   the host `~/.cursor/plugins/cache` into the sandbox to prevent that.
 - An empty `~/.cursor/mcp.json` is mounted so the agent does not auto-start shadcn MCP
   (MCP + language servers previously OOM-killed the container on ~8GiB Docker Desktop).
+- The cached shadcn plugin manifest is overlaid without its MCP declaration, and
+  Cursor auto-update is disabled inside ephemeral containers.
 - Only one `pnpm sandcastle` at a time (`.sandcastle/sandcastle.lock`). Concurrent runs
   fight over Docker memory and get SIGKILL'd (exit 137).
 - `.sandcastle/corepack-cache` persists the repo's pinned pnpm binary and
-  `.sandcastle/pnpm-store` persists downloaded packages. Each sandbox installs
-  offline first and contacts npm only for cache misses.
+  `.sandcastle/pnpm-store` persists downloaded packages. `.sandcastle/npm-cache`
+  keeps Cursor helper downloads. Each sandbox installs offline first and contacts
+  npm only for cache misses.
 
 ## Run
 

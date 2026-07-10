@@ -20,6 +20,7 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readdirSync,
   unlinkSync,
   writeFileSync,
   writeSync,
@@ -38,11 +39,19 @@ const repoRoot = process.cwd()
 const lockPath = `${repoRoot}/.sandcastle/sandcastle.lock`
 const corepackCachePath = `${repoRoot}/.sandcastle/corepack-cache`
 const cursorAuthPath = `${repoRoot}/.sandcastle/cursor-auth/auth.json`
+const npmCachePath = `${repoRoot}/.sandcastle/npm-cache`
 const pnpmStorePath = `${repoRoot}/.sandcastle/pnpm-store`
+const shadcnCacheRoot = `${HOST_CURSOR_HOME}/plugins/cache/cursor-public/shadcn`
+const shadcnCacheVersion = existsSync(shadcnCacheRoot)
+  ? readdirSync(shadcnCacheRoot).find((version) =>
+      existsSync(`${shadcnCacheRoot}/${version}/.cache-complete`),
+    )
+  : undefined
 
 // Single-instance lock — concurrent sandcastle runs OOM Docker (~7.6GiB).
 mkdirSync(`${repoRoot}/.sandcastle`, { recursive: true })
 mkdirSync(corepackCachePath, { recursive: true })
+mkdirSync(npmCachePath, { recursive: true })
 mkdirSync(pnpmStorePath, { recursive: true })
 let lockFd: number
 try {
@@ -124,6 +133,15 @@ const sandboxProvider = docker({
       hostPath: pnpmStorePath,
       sandboxPath: '.pnpm-store',
     },
+    {
+      hostPath: npmCachePath,
+      sandboxPath: '/home/agent/.npm',
+    },
+    {
+      hostPath: '.sandcastle/cursor-agent-wrapper.sh',
+      sandboxPath: '/home/agent/sandcastle-bin/agent',
+      readonly: true,
+    },
     ...(existsSync(cursorAuthPath)
       ? [
           {
@@ -139,6 +157,15 @@ const sandboxProvider = docker({
       sandboxPath: '/home/agent/.cursor/plugins/cache',
       readonly: true,
     },
+    ...(shadcnCacheVersion
+      ? [
+          {
+            hostPath: '.sandcastle/shadcn-plugin.json',
+            sandboxPath: `/home/agent/.cursor/plugins/cache/cursor-public/shadcn/${shadcnCacheVersion}/.cursor-plugin/plugin.json`,
+            readonly: true,
+          },
+        ]
+      : []),
     // Empty MCP config — prevents auto-starting shadcn MCP inside the sandbox.
     {
       hostPath: '.sandcastle/cursor-home/mcp.json',
@@ -148,6 +175,9 @@ const sandboxProvider = docker({
   ],
   env: {
     AGENT_CLI_CREDENTIAL_STORE: 'file',
+    NPM_CONFIG_PREFER_OFFLINE: 'true',
+    NPM_CONFIG_UPDATE_NOTIFIER: 'false',
+    PATH: '/home/agent/sandcastle-bin:/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
   },
 })
 
