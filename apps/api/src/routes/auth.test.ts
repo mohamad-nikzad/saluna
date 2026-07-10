@@ -407,6 +407,49 @@ describe('auth /me shim', () => {
     })
   })
 
+  it('auto-selects the sole salon when the stored salon header is stale', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phoneNumber: '09120000001',
+        username: '09120000001',
+      },
+    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+    ])
+    vi.mocked(getUserWithServiceIds).mockResolvedValue({
+      id: 'u2',
+      salonId: 'salon-a',
+      name: 'Staff',
+      role: 'staff',
+      color: 'blue',
+      phone: '09120000001',
+      createdAt: new Date('2026-01-01'),
+      serviceIds: null,
+    })
+
+    const res = await app.request('/api/v1/auth/me', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-gone' },
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      status: 'ready',
+      user: {
+        id: 'u2',
+        salonId: 'salon-a',
+        role: 'staff',
+        salonName: 'Salon A',
+      },
+    })
+    expect(getUserWithServiceIds).toHaveBeenCalledWith('u2', 'salon-a')
+  })
+
   it('returns needs_salon_selection for multi-salon staff without a salon header', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {

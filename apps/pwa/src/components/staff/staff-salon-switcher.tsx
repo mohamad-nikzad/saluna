@@ -116,7 +116,7 @@ export function StaffSalonSwitcher({
       <button
         type="button"
         className={cn(
-          'flex min-w-0 items-center gap-1.5 rounded-xl text-start touch-manipulation',
+          'flex min-h-9 min-w-0 items-center gap-1.5 rounded-xl text-start touch-manipulation touch:min-h-11',
           canSwitch && 'active:opacity-80',
           !canSwitch && 'cursor-default',
           className,
@@ -160,7 +160,7 @@ export function StaffSalonSwitcher({
                   key={salon.salonId}
                   type="button"
                   variant={active ? 'secondary' : 'outline'}
-                  className="h-auto justify-start gap-3 rounded-2xl px-4 py-3.5 text-right"
+                  className="justify-start gap-3 rounded-2xl text-right"
                   disabled={switching}
                   onClick={() => void switchTo(salon)}
                 >

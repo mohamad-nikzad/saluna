@@ -300,7 +300,8 @@ async function createWorkspaceSidecars(input: {
  * Staff Profile Access (with optional `X-Saluna-Salon-Id`). OTP-created users
  * can be authenticated before workspace creation, so the route returns
  * `needs_workspace` when no membership exists yet. Multi-salon staff without a
- * valid salon context get `needs_salon_selection`.
+ * valid salon context get `needs_salon_selection`. Sole-salon staff always enter
+ * their only salon (a stale `X-Saluna-Salon-Id` is ignored).
  */
 export const authRoute = new Hono<AppEnv>()
   .get('/me', async (c) => {
@@ -385,18 +386,8 @@ export const authRoute = new Hono<AppEnv>()
       })
     }
 
+    // Sole accepted salon: enter directly even if the persisted header is stale.
     const sole = salonOptions[0]!
-    if (requestedSalonId && requestedSalonId !== sole.salonId) {
-      return ok(c, {
-        status: 'needs_salon_selection',
-        user: {
-          id: sessionUser.id,
-          name: sessionUser.name,
-          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
-        },
-        salons: salonOptions,
-      })
-    }
     const user = await getUserWithServiceIds(sessionUser.id, sole.salonId)
     if (!user) return error(c, 'وارد نشده‌اید', 401)
     return ok(c, {

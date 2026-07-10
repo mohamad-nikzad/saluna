@@ -83,13 +83,12 @@ function SelectSalonPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-auto w-full justify-start gap-3 rounded-2xl border-line-soft px-4 py-4 text-right"
+                size="lg"
+                className="w-full justify-start gap-3 rounded-2xl border-line-soft text-right"
                 onClick={() => void selectSalon(salon)}
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Building2 className="size-5" strokeWidth={1.8} />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-base font-bold text-foreground">
+                <Building2 className="size-5 shrink-0 text-primary" strokeWidth={1.8} />
+                <span className="min-w-0 flex-1 truncate font-bold text-foreground">
                   {salon.salonName}
                 </span>
               </Button>
