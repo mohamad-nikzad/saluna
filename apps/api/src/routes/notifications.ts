@@ -3,9 +3,13 @@ import { z } from 'zod'
 import {
   createNotificationForUser,
   listNotificationsForUser,
+  listNotificationsForUserAcrossSalons,
   markAllNotificationsRead,
+  markAllNotificationsReadAcrossSalons,
   markNotificationRead,
+  markNotificationReadAcrossSalons,
 } from '@repo/notifications'
+import { listActiveStaffProfileAccessesForUser } from '@repo/database/staff'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
@@ -24,21 +28,59 @@ function isNotificationTestRouteEnabled() {
   return environment !== 'production'
 }
 
+async function acceptedSalonIdsForStaff(userId: string): Promise<string[]> {
+  const accesses = await listActiveStaffProfileAccessesForUser(userId)
+  return accesses
+    .filter((access) => access.profileActive)
+    .map((access) => access.salonId)
+}
+
+/** Staff → accepted-salon scope; otherwise current-salon path. */
+async function forStaffAcrossSalonsOrCurrent<T>(
+  role: string,
+  userId: string,
+  across: (salonIds: string[]) => Promise<T>,
+  current: () => Promise<T>,
+): Promise<T> {
+  if (role === 'staff') {
+    return across(await acceptedSalonIdsForStaff(userId))
+  }
+  return current()
+}
+
 export const notifications = new Hono<AppEnv>()
   .use(requireTenant())
   .get('/', zValidator('query', listQuerySchema), async (c) => {
-    const { salonId, userId } = c.var.tenant
+    const { salonId, userId, role } = c.var.tenant
     const { unreadOnly } = c.req.valid('query')
-    const list = await listNotificationsForUser({
-      salonId,
+    const unread = unreadOnly === 'true'
+
+    const list = await forStaffAcrossSalonsOrCurrent(
+      role,
       userId,
-      unreadOnly: unreadOnly === 'true',
-    })
+      (salonIds) =>
+        listNotificationsForUserAcrossSalons({
+          userId,
+          salonIds,
+          unreadOnly: unread,
+        }),
+      () =>
+        listNotificationsForUser({
+          salonId,
+          userId,
+          unreadOnly: unread,
+        }),
+    )
     return ok(c, { notifications: list })
   })
   .post('/read-all', async (c) => {
-    const { salonId, userId } = c.var.tenant
-    const updatedCount = await markAllNotificationsRead(salonId, userId)
+    const { salonId, userId, role } = c.var.tenant
+    const updatedCount = await forStaffAcrossSalonsOrCurrent(
+      role,
+      userId,
+      (salonIds) => markAllNotificationsReadAcrossSalons(userId, salonIds),
+      () => markAllNotificationsRead(salonId, userId),
+    )
     return ok(c, { success: true, updatedCount })
   })
   .post('/test', async (c) => {
@@ -61,14 +103,20 @@ export const notifications = new Hono<AppEnv>()
         source: 'notification_test_route',
         createdAt: now.toISOString(),
         route: '/notifications',
+        salonId,
       },
     })
     return ok(c, { notification })
   })
   .post('/:id/read', zValidator('param', idParamSchema), async (c) => {
-    const { salonId, userId } = c.var.tenant
+    const { salonId, userId, role } = c.var.tenant
     const { id } = c.req.valid('param')
-    const notification = await markNotificationRead(salonId, userId, id)
+    const notification = await forStaffAcrossSalonsOrCurrent(
+      role,
+      userId,
+      (salonIds) => markNotificationReadAcrossSalons(userId, id, salonIds),
+      () => markNotificationRead(salonId, userId, id),
+    )
     if (!notification) return error(c, 'اعلان پیدا نشد', 404)
     return ok(c, { notification })
   })

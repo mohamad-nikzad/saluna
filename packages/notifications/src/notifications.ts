@@ -3,8 +3,11 @@ import {
   dispatchNotification as recordNotificationDelivery,
   getNotificationPreferences,
   listNotificationsForUser,
+  listNotificationsForUserAcrossSalons,
   markAllNotificationsRead,
+  markAllNotificationsReadAcrossSalons,
   markNotificationRead,
+  markNotificationReadAcrossSalons,
   updateNotificationPreferences,
   type AppNotification,
   type CreateNotificationInput,
@@ -246,7 +249,10 @@ export {
 export {
   getNotificationPreferences,
   listNotificationsForUser,
+  listNotificationsForUserAcrossSalons,
   markAllNotificationsRead,
+  markAllNotificationsReadAcrossSalons,
   markNotificationRead,
+  markNotificationReadAcrossSalons,
   updateNotificationPreferences,
 }

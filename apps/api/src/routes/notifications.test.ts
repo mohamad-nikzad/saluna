@@ -2,8 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/notifications', () => ({
   listNotificationsForUser: vi.fn(),
+  listNotificationsForUserAcrossSalons: vi.fn(),
   markAllNotificationsRead: vi.fn(),
+  markAllNotificationsReadAcrossSalons: vi.fn(),
   markNotificationRead: vi.fn(),
+  markNotificationReadAcrossSalons: vi.fn(),
   createNotificationForUser: vi.fn(),
   isWebPushConfigured: vi.fn(() => false),
   getMessagingProvider: vi.fn(),
@@ -41,6 +44,7 @@ vi.mock('@repo/auth/server', () => ({
 
 vi.mock('@repo/database/staff', () => ({
   resolveStaffTenantContext: vi.fn(),
+  listActiveStaffProfileAccessesForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/members', () => ({
@@ -51,7 +55,10 @@ vi.mock('@repo/database/members', () => ({
 import * as notif from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
 import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
-import { resolveStaffTenantContext } from '@repo/database/staff'
+import {
+  listActiveStaffProfileAccessesForUser,
+  resolveStaffTenantContext,
+} from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'postgres://stub'
@@ -184,5 +191,111 @@ describe('notifications router', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ notification: { id: 'nt' } })
     expect(notif.createNotificationForUser).toHaveBeenCalled()
+  })
+
+  it('GET lists staff notifications across all accepted salons, not only current selection', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(null as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'staff-1',
+      salonId: 'salon-a',
+      staffProfileId: 'profile-a',
+      name: 'Staff',
+      phone: '09121111111',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'staff-1' },
+    } as never)
+    vi.mocked(listActiveStaffProfileAccessesForUser).mockResolvedValue([
+      {
+        salonId: 'salon-a',
+        staffProfileId: 'profile-a',
+        profileActive: true,
+      },
+      {
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+        profileActive: true,
+      },
+      {
+        salonId: 'salon-inactive',
+        staffProfileId: 'profile-x',
+        profileActive: false,
+      },
+    ] as never)
+    vi.mocked(notif.listNotificationsForUserAcrossSalons).mockResolvedValue([
+      { id: 'n-a', salonId: 'salon-a' },
+      { id: 'n-b', salonId: 'salon-b' },
+    ] as never)
+
+    const res = await app.request('/api/v1/notifications', {
+      headers: {
+        Authorization: 'Bearer testtoken',
+        'X-Saluna-Salon-Id': 'salon-a',
+      },
+    })
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      notifications: [
+        { id: 'n-a', salonId: 'salon-a' },
+        { id: 'n-b', salonId: 'salon-b' },
+      ],
+    })
+    expect(notif.listNotificationsForUserAcrossSalons).toHaveBeenCalledWith({
+      userId: 'staff-1',
+      salonIds: ['salon-a', 'salon-b'],
+      unreadOnly: false,
+    })
+    expect(notif.listNotificationsForUser).not.toHaveBeenCalled()
+  })
+
+  it('POST /:id/read for staff marks across accepted salons', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(null as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'staff-1',
+      salonId: 'salon-a',
+      staffProfileId: 'profile-a',
+      name: 'Staff',
+      phone: '09121111111',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'staff-1' },
+    } as never)
+    vi.mocked(listActiveStaffProfileAccessesForUser).mockResolvedValue([
+      {
+        salonId: 'salon-a',
+        staffProfileId: 'profile-a',
+        profileActive: true,
+      },
+      {
+        salonId: 'salon-b',
+        staffProfileId: 'profile-b',
+        profileActive: true,
+      },
+    ] as never)
+    vi.mocked(notif.markNotificationReadAcrossSalons).mockResolvedValue({
+      id: 'n-b',
+      salonId: 'salon-b',
+    } as never)
+
+    const res = await app.request('/api/v1/notifications/n-b/read', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer testtoken',
+        'X-Saluna-Salon-Id': 'salon-a',
+      },
+    })
+
+    expect(res.status).toBe(200)
+    expect(notif.markNotificationReadAcrossSalons).toHaveBeenCalledWith(
+      'staff-1',
+      'n-b',
+      ['salon-a', 'salon-b'],
+    )
+    expect(notif.markNotificationRead).not.toHaveBeenCalled()
   })
 })

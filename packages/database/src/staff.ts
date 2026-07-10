@@ -67,11 +67,15 @@ export {
   type StaffInviteDeclineRejectionReason,
 } from './staff-invite-acceptance'
 export {
+  evaluateStaffNotificationRecipient,
   evaluateStaffTenantAccess,
   listActiveStaffProfileAccessesForUser,
+  resolveStaffNotificationRecipient,
   resolveStaffTenantContext,
   type ActiveStaffProfileAccessSnapshot,
   type ResolveStaffTenantContextResult,
+  type StaffNotificationRecipient,
+  type StaffNotificationRecipientCandidate,
   type StaffTenantAccessDecision,
   type StaffTenantAccessRejectionReason,
 } from './staff-profile-access'

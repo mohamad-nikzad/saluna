@@ -24,6 +24,7 @@ vi.mock('@repo/database/clients', () => ({
 
 vi.mock('@repo/notifications', () => ({
   createNotificationForUser: vi.fn(),
+  notifyStaffOfAppointmentCreated: vi.fn(),
   isWebPushConfigured: vi.fn(() => false),
   sendWebPushToUser: vi.fn(),
   getMessagingProvider: vi.fn(),
@@ -70,6 +71,7 @@ vi.mock('@repo/database/members', () => ({
 
 import * as appts from '@repo/database/appointments'
 import * as clientsDb from '@repo/database/clients'
+import * as notif from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
 import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
@@ -116,6 +118,7 @@ beforeEach(() => {
     name: 'Manager',
     username: '09120000000',
   } as never)
+  vi.mocked(notif.notifyStaffOfAppointmentCreated).mockResolvedValue(null as never)
 })
 
 describe('appointments router', () => {
@@ -270,6 +273,72 @@ describe('appointments router', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
       appointment: { id: 'a1', detail: true },
+    })
+  })
+
+  it('POST / notifies assigned staff via active Staff Profile Access with salon context', async () => {
+    vi.mocked(appts.validateCreateAppointmentIntake).mockResolvedValue({
+      ok: true,
+      command: {} as never,
+      client: { id: 'c1', name: 'Ali' },
+      staff: { id: 'u2', name: 'Staff' },
+      service: { id: 'svc1', name: 'Cut' },
+    } as never)
+    vi.mocked(appts.createAppointment).mockResolvedValue({
+      id: 'a1',
+      date: '2026-06-01',
+      startTime: '10:00',
+      clientId: 'c1',
+      staffId: 'u2',
+      serviceId: 'svc1',
+    } as never)
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
+      id: 'a1',
+      detail: true,
+    } as never)
+    vi.mocked(notif.notifyStaffOfAppointmentCreated).mockResolvedValue({
+      id: 'n1',
+      userId: 'u2',
+      salonId: 's1',
+      title: 'نوبت جدید — سالن آفتاب',
+      body: 'Ali، Cut، 2026-06-01 ساعت 10:00',
+    } as never)
+    vi.mocked(notif.isWebPushConfigured).mockReturnValue(true)
+
+    const res = await app.request('/api/v1/appointments', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        clientId: 'c1',
+        staffId: 'u2',
+        serviceId: 'svc1',
+        date: '2026-06-01',
+        startTime: '10:00',
+        durationMinutes: 30,
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(notif.notifyStaffOfAppointmentCreated).toHaveBeenCalledWith({
+      salonId: 's1',
+      staffId: 'u2',
+      actorUserId: 'u1',
+      appointment: {
+        id: 'a1',
+        date: '2026-06-01',
+        startTime: '10:00',
+        clientId: 'c1',
+        staffId: 'u2',
+        serviceId: 'svc1',
+      },
+      clientName: 'Ali',
+      serviceName: 'Cut',
+    })
+    expect(notif.sendWebPushToUser).toHaveBeenCalledWith('u2', {
+      title: 'نوبت جدید — سالن آفتاب',
+      body: 'Ali، Cut، 2026-06-01 ساعت 10:00',
+      url: '/calendar?date=2026-06-01&appointmentId=a1',
+      tag: 'appointment-a1',
     })
   })
 

@@ -107,12 +107,12 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Authorize staff through Staff Profile Access.
 
-- [ ] Notification recipient resolution uses active Staff Profile Access.
-- [ ] Staff receive eligible notifications from all accepted salons.
-- [ ] Staff do not receive notifications for pending, declined, expired, or revoked access.
-- [ ] Notification content or metadata includes salon context.
-- [ ] Current salon selection does not suppress notifications from other accepted salons.
-- [ ] Notification tests cover multi-salon staff fanout and revoked-access exclusion.
+- [x] Notification recipient resolution uses active Staff Profile Access.
+- [x] Staff receive eligible notifications from all accepted salons.
+- [x] Staff do not receive notifications for pending, declined, expired, or revoked access.
+- [x] Notification content or metadata includes salon context.
+- [x] Current salon selection does not suppress notifications from other accepted salons.
+- [x] Notification tests cover multi-salon staff fanout and revoked-access exclusion.
 
 ## Retire claim/transfer language and harden compatibility
 

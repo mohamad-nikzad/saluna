@@ -30,8 +30,8 @@ import {
   completePlaceholderClientSchema,
 } from '@repo/salon-core/forms/appointment'
 import {
-  createNotificationForUser,
   isWebPushConfigured,
+  notifyStaffOfAppointmentCreated,
   sendWebPushToUser,
 } from '@repo/notifications'
 import {
@@ -153,36 +153,26 @@ export const appointments = new Hono<AppEnv>()
 
         const appointment = await createAppointment(intake.command, salonId, userId)
 
-        if (intake.staff.id !== userId) {
-          const route = `/(tabs)/calendar?date=${appointment.date}&appointmentId=${appointment.id}`
-          const title = 'نوبت جدید'
-          const body = `${intake.client.name}، ${intake.service.name}، ${appointment.date} ساعت ${appointment.startTime}`
+        const staffNotification = await notifyStaffOfAppointmentCreated({
+          salonId,
+          staffId: intake.staff.id,
+          actorUserId: userId,
+          appointment: {
+            id: appointment.id,
+            date: appointment.date,
+            startTime: appointment.startTime,
+            clientId: appointment.clientId,
+            staffId: appointment.staffId,
+            serviceId: appointment.serviceId,
+          },
+          clientName: intake.client.name,
+          serviceName: intake.service.name,
+        })
 
-          await createNotificationForUser({
-            salonId,
-            userId: intake.staff.id,
-            type: 'appointment_created',
-            title,
-            body,
-            route,
-            data: {
-              appointmentId: appointment.id,
-              date: appointment.date,
-              route,
-              title,
-              body,
-              clientId: appointment.clientId,
-              staffId: appointment.staffId,
-              serviceId: appointment.serviceId,
-              startTime: appointment.startTime,
-            },
-          })
-        }
-
-        if (isWebPushConfigured() && intake.staff.id !== userId) {
-          void sendWebPushToUser(intake.staff.id, {
-            title: 'نوبت جدید برای شما',
-            body: `${intake.client.name} — ${intake.service.name}، ${appointment.date} ساعت ${appointment.startTime}`,
+        if (isWebPushConfigured() && staffNotification) {
+          void sendWebPushToUser(staffNotification.userId, {
+            title: staffNotification.title,
+            body: staffNotification.body,
             url: `/calendar?date=${appointment.date}&appointmentId=${appointment.id}`,
             tag: `appointment-${appointment.id}`,
           })
