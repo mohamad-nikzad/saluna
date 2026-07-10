@@ -4,13 +4,9 @@ import { Building2 } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import type { StaffSalonOption } from '@repo/api-client/auth'
 
+import { applyActiveSalonSelection } from '#/lib/apply-active-salon'
 import { authQueryKey, useAuth } from '#/lib/auth'
 import type { AuthSession } from '#/lib/auth'
-import {
-  clearPersistedActiveSalonId,
-  setPersistedActiveSalonId,
-} from '#/lib/active-salon'
-import { api } from '#/lib/api-client'
 import { homePathForRole } from '#/lib/navigation'
 
 export const Route = createFileRoute('/select-salon')({
@@ -45,21 +41,10 @@ function SelectSalonPage() {
   const queryClient = useQueryClient()
 
   const selectSalon = async (salon: StaffSalonOption) => {
-    setPersistedActiveSalonId(salon.salonId)
-    const session = await api.auth.me({ salonId: salon.salonId })
-    if (session.status === 'needs_salon_selection') {
-      clearPersistedActiveSalonId()
-      setSession(session)
-      return
-    }
-    if (session.status !== 'ready' && session.status !== undefined) {
-      clearPersistedActiveSalonId()
-      setSession(session)
-      return
-    }
-    setSession(session)
+    const result = await applyActiveSalonSelection(salon.salonId, setSession)
+    if (result.kind !== 'ready') return
     await queryClient.invalidateQueries()
-    await navigate({ to: homePathForRole(session.user.role) })
+    await navigate({ to: homePathForRole(result.session.user.role) })
   }
 
   return (

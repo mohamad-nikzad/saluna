@@ -13,11 +13,8 @@ import {
 import { Spinner } from '@repo/ui/spinner'
 import { cn } from '@repo/ui/utils'
 
-import {
-  clearPersistedActiveSalonId,
-  setPersistedActiveSalonId,
-} from '#/lib/active-salon'
 import { api } from '#/lib/api-client'
+import { applyActiveSalonSelection } from '#/lib/apply-active-salon'
 import { authQueryKey, useAuth } from '#/lib/auth'
 import { homePathForRole } from '#/lib/navigation'
 
@@ -86,26 +83,18 @@ export function StaffSalonSwitcher({
     }
     setSwitching(true)
     try {
-      setPersistedActiveSalonId(salon.salonId)
-      const session = await api.auth.me({ salonId: salon.salonId })
-      if (session.status === 'needs_salon_selection') {
-        clearPersistedActiveSalonId()
-        setSession(session)
+      const result = await applyActiveSalonSelection(salon.salonId, setSession)
+      if (result.kind === 'needs_salon_selection') {
         setOpen(false)
         await navigate({ to: '/select-salon' })
         return
       }
-      if (session.status !== 'ready' && session.status !== undefined) {
-        clearPersistedActiveSalonId()
-        setSession(session)
-        return
-      }
-      setSession(session)
+      if (result.kind !== 'ready') return
       await queryClient.invalidateQueries({
         predicate: (query) => query.queryKey[0] !== authQueryKey[0],
       })
       setOpen(false)
-      await navigate({ to: homePathForRole(session.user.role) })
+      await navigate({ to: homePathForRole(result.session.user.role) })
     } finally {
       setSwitching(false)
     }

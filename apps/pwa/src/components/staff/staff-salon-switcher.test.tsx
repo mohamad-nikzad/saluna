@@ -52,9 +52,8 @@ vi.mock('#/lib/api-client', () => ({
   },
 }))
 
-vi.mock('#/lib/active-salon', () => ({
-  setPersistedActiveSalonId: vi.fn(),
-  clearPersistedActiveSalonId: vi.fn(),
+vi.mock('#/lib/apply-active-salon', () => ({
+  applyActiveSalonSelection: vi.fn(),
 }))
 
 import { StaffSalonSwitcher } from './staff-salon-switcher'
