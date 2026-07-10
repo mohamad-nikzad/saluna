@@ -1143,4 +1143,25 @@ describe('Staff Invite accept and decline', () => {
     expect(res.status).toBe(401)
     expect(leaveStaffProfileAccess).not.toHaveBeenCalled()
   })
+
+  it('rejects accepting an expired Staff Invite', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(acceptStaffInvite).mockResolvedValue({
+      status: 'rejected',
+      reason: 'invite_expired',
+    })
+
+    const res = await app.request(
+      `/api/v1/auth/staff-invites/${inviteId}/accept`,
+      {
+        method: 'POST',
+        headers: jsonHeaders(),
+      },
+    )
+
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({ code: 'invite_expired' })
+  })
 })

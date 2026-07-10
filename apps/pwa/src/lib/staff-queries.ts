@@ -21,11 +21,14 @@ import {
   patchApiV1StaffByIdMutation,
   patchApiV1StaffByIdPasswordMutation,
   patchApiV1StaffByIdServicesMutation,
+  postApiV1StaffByIdInviteCancelMutation,
+  postApiV1StaffByIdInviteResendMutation,
   postApiV1StaffMutation,
   putApiV1StaffByIdScheduleMutation,
 } from '@repo/api-client/query'
 import type {
   BusinessHours as GeneratedBusinessHours,
+  ResendStaffInviteResponse,
   StaffSchedule as GeneratedStaffSchedule,
   StaffUser as GeneratedStaffUser,
 } from '@repo/api-client/types'
@@ -239,6 +242,51 @@ export function useUpdateStaffScheduleMutation(staffId: string) {
       invalidatesQuery: getApiV1StaffByIdScheduleQueryKey({
         path: { id: staffId },
       }),
+    },
+  })
+}
+
+export type ResendStaffInviteResult = Pick<
+  ResendStaffInviteResponse,
+  'inviteToken' | 'invite'
+>
+
+export function useCancelStaffInviteMutation() {
+  const generated = postApiV1StaffByIdInviteCancelMutation()
+
+  return useMutation<void, unknown, string>({
+    mutationFn: async (staffProfileId, mutationContext) => {
+      await generated.mutationFn!(
+        { path: { id: staffProfileId } },
+        mutationContext,
+      )
+    },
+    meta: {
+      errorMessage: 'لغو دعوت انجام نشد',
+      successMessage: 'دعوت لغو شد',
+      invalidatesQuery: getApiV1StaffQueryKey(),
+    },
+  })
+}
+
+export function useResendStaffInviteMutation() {
+  const generated = postApiV1StaffByIdInviteResendMutation()
+
+  return useMutation<ResendStaffInviteResult, unknown, string>({
+    mutationFn: async (staffProfileId, mutationContext) => {
+      const response = await generated.mutationFn!(
+        { path: { id: staffProfileId } },
+        mutationContext,
+      )
+      return {
+        inviteToken: response.inviteToken,
+        invite: response.invite,
+      }
+    },
+    meta: {
+      errorMessage: 'ارسال دوباره دعوت انجام نشد',
+      successMessage: 'دعوت دوباره ارسال شد',
+      invalidatesQuery: getApiV1StaffQueryKey(),
     },
   })
 }

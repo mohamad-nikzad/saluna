@@ -206,3 +206,35 @@ export const staffBookingAvailabilityResponseSchema = z
     staff: z.array(staffBookingAvailabilityRowSchema),
   })
   .openapi('StaffBookingAvailabilityResponse')
+
+export const cancelStaffInviteResponseSchema = z
+  .object({
+    success: z.literal(true),
+    invite: z.object({
+      id: z.string(),
+      status: z.string(),
+      revokedAt: isoDateTimeSchema.nullable(),
+    }),
+    profile: z.object({
+      id: z.string(),
+      name: z.string(),
+      active: z.boolean(),
+    }),
+  })
+  .openapi('CancelStaffInviteResponse')
+
+export const resendStaffInviteResponseSchema = z
+  .object({
+    inviteToken: z.string(),
+    invite: z.object({
+      id: z.string(),
+      status: z.string(),
+      expiresAt: isoDateTimeSchema,
+      lastDeliveredAt: isoDateTimeSchema.nullable(),
+    }),
+    profile: z.object({
+      id: z.string(),
+      name: z.string(),
+    }),
+  })
+  .openapi('ResendStaffInviteResponse')

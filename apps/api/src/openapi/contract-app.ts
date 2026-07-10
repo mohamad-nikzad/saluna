@@ -76,11 +76,13 @@ import {
   updateRetentionRoute,
 } from './routes/retention'
 import {
+  cancelStaffInviteRoute,
   createStaffRoute,
   deleteStaffRoute,
   getStaffBookingAvailabilityRoute,
   getStaffScheduleRoute,
   listStaffRoute,
+  resendStaffInviteRoute,
   updateStaffPasswordRoute,
   updateStaffRoute,
   updateStaffScheduleRoute,
@@ -287,6 +289,46 @@ const updateStaffScheduleStub: RouteHandler<typeof updateStaffScheduleRoute> = (
 const updateStaffServicesStub: RouteHandler<typeof updateStaffServicesRoute> = (
   c,
 ) => c.json({ staff: stubStaffUser }, 200)
+
+const cancelStaffInviteStub: RouteHandler<typeof cancelStaffInviteRoute> = (
+  c,
+) =>
+  c.json(
+    {
+      success: true as const,
+      invite: {
+        id: 'stub',
+        status: 'revoked',
+        revokedAt: new Date().toISOString(),
+      },
+      profile: {
+        id: stubStaffUser.id,
+        name: stubStaffUser.name,
+        active: true,
+      },
+    },
+    200,
+  )
+
+const resendStaffInviteStub: RouteHandler<typeof resendStaffInviteRoute> = (
+  c,
+) =>
+  c.json(
+    {
+      inviteToken: 'stub-token',
+      invite: {
+        id: 'stub',
+        status: 'pending',
+        expiresAt: new Date().toISOString(),
+        lastDeliveredAt: null,
+      },
+      profile: {
+        id: stubStaffUser.id,
+        name: stubStaffUser.name,
+      },
+    },
+    200,
+  )
 
 const stubService = {
   id: 'stub',
@@ -1304,7 +1346,9 @@ export const contractApp = new OpenAPIHono()
       .openapi(deleteStaffRoute, deleteStaffStub)
       .openapi(getStaffScheduleRoute, getStaffScheduleStub)
       .openapi(updateStaffScheduleRoute, updateStaffScheduleStub)
-      .openapi(updateStaffServicesRoute, updateStaffServicesStub),
+      .openapi(updateStaffServicesRoute, updateStaffServicesStub)
+      .openapi(cancelStaffInviteRoute, cancelStaffInviteStub)
+      .openapi(resendStaffInviteRoute, resendStaffInviteStub),
   )
   .route(
     '/api/v1/services',

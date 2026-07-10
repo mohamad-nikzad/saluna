@@ -61,6 +61,29 @@ export type SalonHandoffStatusResponse = {
   requiresPassword: boolean
 }
 
+export type StaffInviteLinkRouting =
+  | { action: 'login' }
+  | { action: 'register' }
+  | { action: 'switch_account' }
+  | { action: 'continue' }
+  | { action: 'unavailable'; reason: 'expired' | 'not_pending' }
+
+export type StaffInviteLinkResponse = {
+  invite: {
+    id: string
+    salonId: string
+    salonName: string
+    staffProfileId: string
+    staffName: string
+    phone: string
+    expiresAt: string
+    status: 'pending' | 'expired' | 'revoked' | 'accepted' | 'declined'
+  }
+  phoneRegistered: boolean
+  phonesMatch: boolean | null
+  routing: StaffInviteLinkRouting
+}
+
 export type PreWorkspaceResponse = {
   user: PreWorkspaceUser
   salon: { id: string; name: string; slug: string }
@@ -164,6 +187,12 @@ export function createAuthApi(client: ApiClient) {
     getSalonHandoff(token: string, opts: { signal?: AbortSignal } = {}) {
       return client.request<SalonHandoffStatusResponse>(
         `${endpoints.salonHandoff}/${encodeURIComponent(token)}`,
+        { signal: opts.signal },
+      )
+    },
+    getStaffInviteLink(token: string, opts: { signal?: AbortSignal } = {}) {
+      return client.request<StaffInviteLinkResponse>(
+        `${endpoints.staffInvites}/${encodeURIComponent(token)}`,
         { signal: opts.signal },
       )
     },
