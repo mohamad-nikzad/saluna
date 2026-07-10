@@ -24,7 +24,6 @@ import {
 } from '../schema'
 import { deactivateStaffProfileWithAccessRevocation } from '../staff-access-revocation'
 import { rowToStaffSchedule, rowToUser, staffUserSelect } from './row-mappers'
-import { getUserById } from './user-queries'
 import { getBusinessSettings } from './settings-queries'
 import { hashCredentialPassword } from '../auth-password'
 
@@ -359,8 +358,29 @@ export async function getUserWithServiceIds(
   salonId: string,
 ): Promise<User | undefined> {
   const db = getDb()
-  const base = await getUserById(id)
-  if (!base || base.salonId !== salonId) return undefined
+  const rows = await db
+    .select(staffUserSelect)
+    .from(user)
+    .innerJoin(
+      member,
+      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, salonId),
+      ),
+    )
+    .where(
+      and(
+        eq(user.id, id),
+        or(isNull(salonMember.active), eq(salonMember.active, true)),
+      ),
+    )
+    .limit(1)
+  const base = rows[0] ? rowToUser(rows[0]) : undefined
+  if (!base) return undefined
   const links = await db
     .select({ serviceId: staffServices.serviceId })
     .from(staffServices)

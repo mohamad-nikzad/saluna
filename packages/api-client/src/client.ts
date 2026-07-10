@@ -2,16 +2,22 @@ import { client } from './generated/client.gen'
 import { ApiError, NetworkError } from './errors'
 
 export type AccessTokenProvider = () => string | null | Promise<string | null>
+export type SalonIdProvider = () => string | null | Promise<string | null>
 
 export type GeneratedApiClientOptions = {
   baseUrl: string
   getAccessToken?: AccessTokenProvider
+  /** Active salon context for tenant-scoped staff requests (X-Saluna-Salon-Id). */
+  getSalonId?: SalonIdProvider
   credentials?: RequestCredentials
 }
+
+const SALON_CONTEXT_HEADER = 'X-Saluna-Salon-Id'
 
 let errorInterceptorId: number | undefined
 let requestInterceptorId: number | undefined
 let accessTokenProvider: AccessTokenProvider | undefined
+let salonIdProvider: SalonIdProvider | undefined
 
 function extractErrorMessage(payload: unknown, status: number): string {
   if (
@@ -49,6 +55,7 @@ export function configureGeneratedApiClient(options: GeneratedApiClientOptions):
   const baseUrl = options.baseUrl.replace(/\/+$/, '')
 
   accessTokenProvider = options.getAccessToken
+  salonIdProvider = options.getSalonId
 
   client.setConfig({
     baseUrl,
@@ -64,18 +71,26 @@ export function configureGeneratedApiClient(options: GeneratedApiClientOptions):
 
   if (requestInterceptorId === undefined) {
     requestInterceptorId = client.interceptors.request.use(async (request) => {
-      if (!accessTokenProvider) {
-        return request
-      }
-
-      const token = await accessTokenProvider()
-      if (!token || request.headers.has('Authorization')) {
-        return request
-      }
-
       const headers = new Headers(request.headers)
-      headers.set('Authorization', `Bearer ${token}`)
-      return new Request(request, { headers })
+      let changed = false
+
+      if (accessTokenProvider && !headers.has('Authorization')) {
+        const token = await accessTokenProvider()
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`)
+          changed = true
+        }
+      }
+
+      if (salonIdProvider && !headers.has(SALON_CONTEXT_HEADER)) {
+        const salonId = await salonIdProvider()
+        if (salonId) {
+          headers.set(SALON_CONTEXT_HEADER, salonId)
+          changed = true
+        }
+      }
+
+      return changed ? new Request(request, { headers }) : request
     })
   }
 

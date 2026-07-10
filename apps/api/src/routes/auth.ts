@@ -37,11 +37,13 @@ import {
   getUserWithServiceIds,
   leaveStaffProfileAccess,
   listPendingStaffInvitesForUser,
+  listStaffSalonOptionsForUser,
   type StaffAccessRevocationRejectionReason,
   type StaffInviteAcceptanceRejectionReason,
 } from '@repo/database/staff'
-import { getMemberForUser } from '@repo/database/members'
+import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
 import { mapRole } from '@repo/auth/permissions'
+import { SALON_CONTEXT_HEADER } from '@repo/auth/tenant'
 import type { AppEnv } from '../factory'
 import { zValidator } from '../lib/validate'
 import { brand } from '@repo/brand'
@@ -152,6 +154,11 @@ function getBetterAuthErrorCode(err: unknown): string | undefined {
 async function getSessionUser(c: Parameters<typeof ok>[0]) {
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
   return session?.user
+}
+
+function requestedSalonIdFromHeaders(headers: Headers): string | null {
+  const raw = headers.get(SALON_CONTEXT_HEADER)?.trim()
+  return raw ? raw : null
 }
 
 async function hasCredentialPassword(userId: string): Promise<boolean> {
@@ -309,34 +316,39 @@ async function createWorkspaceSidecars(input: {
  * Login / logout / get-session are served directly by the mounted Better Auth
  * handler at /api/v1/auth/sign-in/*, /sign-out, /get-session.
  *
- * `/me` first resolves the Better Auth session, then optionally resolves salon
- * membership. OTP-created users can be authenticated before workspace creation,
- * so the route returns `needs_workspace` when no membership exists yet.
+ * `/me` first resolves the Better Auth session, then manager membership or
+ * Staff Profile Access (with optional `X-Saluna-Salon-Id`). OTP-created users
+ * can be authenticated before workspace creation, so the route returns
+ * `needs_workspace` when no membership exists yet. Multi-salon staff without a
+ * valid salon context get `needs_salon_selection`. Sole-salon staff always enter
+ * their only salon (a stale `X-Saluna-Salon-Id` is ignored).
  */
 export const authRoute = new Hono<AppEnv>()
   .get('/me', async (c) => {
     const sessionUser = await getSessionUser(c)
     if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
 
-    const member = await getMemberForUser(sessionUser.id)
-    if (!member) {
-      const userHasPassword = await hasCredentialPassword(sessionUser.id)
+    const manager = await getManagerMemberForUser(sessionUser.id)
+    if (manager) {
+      const role = mapRole(manager.role)
+      const userId = manager.userId
+      const salonId = manager.organizationId
+      const user = await getUserWithServiceIds(userId, salonId)
+      if (!user) return error(c, 'وارد نشده‌اید', 401)
+      const flags = await getManagerOnboardingFlags(salonId)
       return ok(c, {
-        status: 'needs_workspace',
+        status: 'ready',
         user: {
-          id: sessionUser.id,
-          name: sessionUser.name,
-          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
-          hasPassword: userHasPassword,
+          ...user,
+          role,
+          needsOnboarding: flags.needsOnboarding,
+          onboardingCompleted: flags.onboardingCompleted,
         },
       })
     }
 
-    const role = mapRole(member.role)
-    const userId = member.userId
-    const salonId = member.organizationId
-    const claimedProfile = await getStaffProfileForUser(userId)
-    if (claimedProfile && !(await hasCredentialPassword(userId))) {
+    const claimedProfile = await getStaffProfileForUser(sessionUser.id)
+    if (claimedProfile && !(await hasCredentialPassword(sessionUser.id))) {
       return ok(c, {
         status: 'needs_staff_password',
         user: {
@@ -347,22 +359,77 @@ export const authRoute = new Hono<AppEnv>()
         },
       })
     }
-    const user = await getUserWithServiceIds(userId, salonId)
-    if (!user) return error(c, 'وارد نشده‌اید', 401)
 
-    if (user.role === 'manager') {
-      const flags = await getManagerOnboardingFlags(salonId)
+    const salonOptions = await listStaffSalonOptionsForUser(sessionUser.id)
+    if (salonOptions.length === 0) {
+      const member = await getMemberForUser(sessionUser.id)
+      if (!member) {
+        const userHasPassword = await hasCredentialPassword(sessionUser.id)
+        return ok(c, {
+          status: 'needs_workspace',
+          user: {
+            id: sessionUser.id,
+            name: sessionUser.name,
+            phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+            hasPassword: userHasPassword,
+          },
+        })
+      }
+      return error(c, 'دسترسی غیرمجاز', 403)
+    }
+
+    const requestedSalonId = requestedSalonIdFromHeaders(c.req.raw.headers)
+    if (salonOptions.length > 1) {
+      const selected = requestedSalonId
+        ? salonOptions.find((option) => option.salonId === requestedSalonId)
+        : undefined
+      if (!selected) {
+        return ok(c, {
+          status: 'needs_salon_selection',
+          user: {
+            id: sessionUser.id,
+            name: sessionUser.name,
+            phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+          },
+          salons: salonOptions,
+        })
+      }
+      const user = await getUserWithServiceIds(sessionUser.id, selected.salonId)
+      if (!user) return error(c, 'وارد نشده‌اید', 401)
       return ok(c, {
         status: 'ready',
         user: {
           ...user,
-          needsOnboarding: flags.needsOnboarding,
-          onboardingCompleted: flags.onboardingCompleted,
+          role: 'staff' as const,
+          salonName: selected.salonName,
         },
       })
     }
 
-    return ok(c, { status: 'ready', user: { ...user, role } })
+    // Sole accepted salon: enter directly even if the persisted header is stale.
+    const sole = salonOptions[0]!
+    const user = await getUserWithServiceIds(sessionUser.id, sole.salonId)
+    if (!user) return error(c, 'وارد نشده‌اید', 401)
+    return ok(c, {
+      status: 'ready',
+      user: {
+        ...user,
+        role: 'staff' as const,
+        salonName: sole.salonName,
+      },
+    })
+  })
+  .get('/staff-salons', async (c) => {
+    const sessionUser = await getSessionUser(c)
+    if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+
+    const manager = await getManagerMemberForUser(sessionUser.id)
+    if (manager) {
+      return ok(c, { salons: [] as const })
+    }
+
+    const salons = await listStaffSalonOptionsForUser(sessionUser.id)
+    return ok(c, { salons })
   })
   .post('/phone-number/send-otp', guardOtpLogin)
   .post('/phone-number/verify', verifyPhoneAndClaim)

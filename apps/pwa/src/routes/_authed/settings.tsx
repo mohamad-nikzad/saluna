@@ -52,6 +52,8 @@ import { MessagingAccountsSection } from '#/components/settings/messaging-accoun
 import { SupportSettingsRow } from '#/components/support/support-settings-row'
 import { SettingsRow, ToggleRow } from '#/components/settings/settings-rows'
 import { StaffDrawer } from '#/components/staff/staff-drawer'
+import { StaffSalonSwitcher } from '#/components/staff/staff-salon-switcher'
+import { clearPersistedActiveSalonId } from '#/lib/active-salon'
 
 type DashboardMetrics = {
   monthRevenue: number
@@ -212,6 +214,7 @@ function SettingsPage() {
 
   const handleLogout = async () => {
     setLoggingOut(true)
+    clearPersistedActiveSalonId()
     await logout()
     await navigate({ to: '/auth', replace: true })
   }
@@ -292,8 +295,9 @@ function SettingsPage() {
               <div className="mt-0.5 text-xs text-sage-deep" dir="ltr">
                 {displayPhone(user.phone)}
               </div>
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="plum">{isManager ? 'مدیر' : 'پرسنل'}</Badge>
+                {!isManager ? <StaffSalonSwitcher compact /> : null}
               </div>
             </div>
             {isManager ? (

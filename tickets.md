@@ -59,13 +59,16 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Authorize staff through Staff Profile Access.
 
-- [ ] Staff with one accepted salon enter the app without a picker.
-- [ ] Staff with multiple accepted salons see a salon picker after login.
-- [ ] Staff can switch salons inside the app without logging out.
-- [ ] The current salon context is visible in staff-facing screens.
-- [ ] The PWA persists selected salon ID locally and falls back to the picker if it is no longer valid.
-- [ ] Tenant-scoped staff API calls include the selected salon context.
-- [ ] The API verifies the selected salon context against active Staff Profile Access before serving tenant data.
+- [x] Staff with one accepted salon enter the app without a picker.
+- [x] Staff with multiple accepted salons see a salon picker after login.
+- [x] Staff can switch salons inside the app without logging out.
+- [x] The current salon context is visible in staff-facing screens.
+- [x] The PWA persists selected salon ID locally and falls back to the picker if it is no longer valid.
+- [x] Tenant-scoped staff API calls include the selected salon context.
+- [x] The API verifies the selected salon context against active Staff Profile Access before serving tenant data.
+
+
+> Closed: Staff salon picker + persisted active salon; X-Saluna-Salon-Id on tenant calls; in-app switcher; single-salon skip
 
 ## Revoke and leave Staff Profile Access
 

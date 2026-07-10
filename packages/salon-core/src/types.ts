@@ -7,6 +7,8 @@ export type StaffInviteListStatus = 'pending'
 export interface User {
   id: string
   salonId: string
+  /** Display name of the active salon when known (staff multi-salon context). */
+  salonName?: string
   /** Compact salon-facing label. Uses nickname when one exists, otherwise fullName. */
   name: string
   /** Legal/account name used in edit forms and authentication records. */

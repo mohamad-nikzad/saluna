@@ -41,6 +41,7 @@ import {
   buildConcurrencyClusters,
 } from '#/components/calendar/concurrent-appointments-sheet'
 import { CalendarSkeleton } from '#/components/calendar/calendar-skeleton'
+import { StaffSalonSwitcher } from '#/components/staff/staff-salon-switcher'
 import {
   AppointmentFlowDrawers,
   useAppointmentFlow,
@@ -511,6 +512,11 @@ function CalendarPage() {
           onDateChange={setNavDate}
           onToday={handleToday}
         />
+        {!isManager ? (
+          <div className="border-b border-line-soft bg-card px-3 py-2 sm:px-4">
+            <StaffSalonSwitcher compact />
+          </div>
+        ) : null}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-sm font-bold text-foreground">
             تقویم فعلا آماده نمایش نیست
@@ -535,6 +541,11 @@ function CalendarPage() {
         onDateChange={setNavDate}
         onToday={handleToday}
       />
+      {!isManager ? (
+        <div className="border-b border-line-soft bg-card px-3 py-2 sm:px-4">
+          <StaffSalonSwitcher compact />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2 border-b border-border/50 bg-card/90 px-3 py-2 sm:flex-row sm:items-center sm:px-4">
         <div className="flex w-full shrink-0 items-stretch rounded-2xl bg-muted/70 p-0.5 sm:flex-1 sm:shrink">

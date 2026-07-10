@@ -20,6 +20,17 @@ export type MeResponse =
       status: 'needs_staff_password'
       user: PreWorkspaceUser & { salonId: string }
     }
+  | {
+      status: 'needs_salon_selection'
+      user: PreWorkspaceUser
+      salons: StaffSalonOption[]
+    }
+
+export type StaffSalonOption = {
+  salonId: string
+  salonName: string
+  staffProfileId: string
+}
 
 export type LoginResponse = { user: User }
 
@@ -91,29 +102,41 @@ export type PreWorkspaceResponse = {
 }
 
 export function createAuthApi(client: ApiClient) {
-  function me(opts: { signal?: AbortSignal } = {}) {
+  function me(
+    opts: {
+      signal?: AbortSignal
+      salonId?: string | null
+    } = {},
+  ) {
+    const headers: Record<string, string> = {}
+    if (opts.salonId) {
+      headers['X-Saluna-Salon-Id'] = opts.salonId
+    }
     return client.request<MeResponse>(endpoints.auth.me, {
       signal: opts.signal,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     })
   }
 
   return {
     me,
+    listStaffSalons(opts: { signal?: AbortSignal } = {}) {
+      return client.request<{ salons: StaffSalonOption[] }>(
+        endpoints.auth.staffSalons,
+        { signal: opts.signal },
+      )
+    },
     // Better Auth phone sign-in sets the session cookie; we then resolve the
-    // full legacy `User` via the `/me` shim so callers keep the old contract.
-    async login(input: LoginInput): Promise<LoginResponse> {
+    // full legacy session via the `/me` shim (ready, salon picker, etc.).
+    async login(
+      input: LoginInput,
+      opts: { salonId?: string | null } = {},
+    ): Promise<MeResponse> {
       await client.request(endpoints.auth.signInPhoneNumber, {
         method: 'POST',
         body: { phoneNumber: input.phone, password: input.password },
       })
-      const response = await me()
-      if (response.status === 'needs_workspace') {
-        throw new Error('authenticated user has no workspace')
-      }
-      if (response.status === 'needs_staff_password') {
-        throw new Error('staff claim requires password')
-      }
-      return { user: response.user }
+      return me({ salonId: opts.salonId })
     },
     sendPhoneOtp(input: { phone: string }) {
       return client.request<{ message: string }>(endpoints.auth.sendPhoneOtp, {
@@ -231,7 +254,8 @@ export function createAuthApi(client: ApiClient) {
       const response = await me()
       if (
         response.status === 'needs_workspace' ||
-        response.status === 'needs_staff_password'
+        response.status === 'needs_staff_password' ||
+        response.status === 'needs_salon_selection'
       ) {
         throw new Error('signup did not create a workspace')
       }

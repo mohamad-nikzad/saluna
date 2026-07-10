@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SelectSalonRouteImport } from './routes/select-salon'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthedRouteImport } from './routes/_authed'
@@ -49,6 +50,11 @@ import { Route as AuthedClientsIdRouteImport } from './routes/_authed/clients.$i
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SelectSalonRoute = SelectSalonRouteImport.update({
+  id: '/select-salon',
+  path: '/select-salon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
+  '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
+  '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
+  '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/login'
+    | '/select-salon'
     | '/signup'
     | '/calendar'
     | '/clients'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/login'
+    | '/select-salon'
     | '/signup'
     | '/calendar'
     | '/dashboard'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/auth'
     | '/login'
+    | '/select-salon'
     | '/signup'
     | '/_authed/calendar'
     | '/_authed/clients'
@@ -454,6 +466,7 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
+  SelectSalonRoute: typeof SelectSalonRoute
   SignupRoute: typeof SignupRoute
   HandoffTokenRoute: typeof HandoffTokenRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/select-salon': {
+      id: '/select-salon'
+      path: '/select-salon'
+      fullPath: '/select-salon'
+      preLoaderRoute: typeof SelectSalonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -827,6 +847,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
+  SelectSalonRoute: SelectSalonRoute,
   SignupRoute: SignupRoute,
   HandoffTokenRoute: HandoffTokenRoute,
   InviteTokenRoute: InviteTokenRoute,

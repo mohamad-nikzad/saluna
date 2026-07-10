@@ -17,6 +17,7 @@ describe('generated-api-client', () => {
     expect(configureGeneratedApiClient).toHaveBeenCalledWith({
       baseUrl: 'http://test.api',
       credentials: 'include',
+      getSalonId: expect.any(Function),
     })
   })
 })

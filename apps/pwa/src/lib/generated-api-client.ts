@@ -1,10 +1,12 @@
 import { configureGeneratedApiClient } from '@repo/api-client/generated-client'
 
 import { env } from '#/env'
+import { getPersistedActiveSalonId } from '#/lib/active-salon'
 
 configureGeneratedApiClient({
   baseUrl: env.apiBaseUrl,
   credentials: 'include',
+  getSalonId: () => getPersistedActiveSalonId(),
 })
 
 /**
