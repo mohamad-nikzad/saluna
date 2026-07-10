@@ -122,7 +122,7 @@ const sandboxProvider = docker({
     },
     {
       hostPath: pnpmStorePath,
-      sandboxPath: '/home/agent/.local/share/pnpm/store',
+      sandboxPath: '.pnpm-store',
     },
     ...(existsSync(cursorAuthPath)
       ? [
