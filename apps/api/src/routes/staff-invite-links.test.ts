@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@repo/database/staff', () => ({
   resolveStaffInviteByToken: vi.fn(),
   evaluateStaffInviteLinkRouting: vi.fn(),
+  resolveStaffInvitePhonesMatch: vi.fn(),
   maskStaffInvitePhone: (phone: string) =>
     phone.length < 8 ? phone : `${phone.slice(0, 4)}•••${phone.slice(-4)}`,
 }))
@@ -22,6 +23,7 @@ vi.mock('@repo/database/client', () => ({
 import {
   evaluateStaffInviteLinkRouting,
   resolveStaffInviteByToken,
+  resolveStaffInvitePhonesMatch,
 } from '@repo/database/staff'
 import { auth as authServer } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
@@ -46,6 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(authServer.api.getSession).mockResolvedValue(null)
   mockDbSelect([])
+  vi.mocked(resolveStaffInvitePhonesMatch).mockReturnValue(null)
   vi.mocked(evaluateStaffInviteLinkRouting).mockReturnValue({
     action: 'register',
   })
@@ -147,6 +150,7 @@ describe('staff invite links', () => {
         status: 'pending',
       },
     })
+    vi.mocked(resolveStaffInvitePhonesMatch).mockReturnValue(false)
     vi.mocked(evaluateStaffInviteLinkRouting).mockReturnValue({
       action: 'switch_account',
     })
@@ -154,6 +158,12 @@ describe('staff invite links', () => {
     const res = await staffInviteLinksRoute.request(`/${token}`)
 
     expect(res.status).toBe(200)
+    expect(resolveStaffInvitePhonesMatch).toHaveBeenCalledWith({
+      sessionPresent: true,
+      sessionPhone: '09129876543',
+      phoneVerified: true,
+      invitePhone: '09121234567',
+    })
     expect(evaluateStaffInviteLinkRouting).toHaveBeenCalledWith({
       inviteStatus: 'pending',
       sessionPresent: true,
@@ -163,6 +173,64 @@ describe('staff invite links', () => {
     expect(await res.json()).toMatchObject({
       phonesMatch: false,
       routing: { action: 'switch_account' },
+    })
+  })
+
+  it('routes unverified invited-phone sessions to login/OTP, not switch-account', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u-unverified' },
+    } as never)
+    const limit = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          phoneNumber: '09121234567',
+          username: '09121234567',
+          verified: false,
+        },
+      ])
+      .mockResolvedValueOnce([{ id: 'user-existing' }])
+    const where = vi.fn().mockReturnValue({ limit })
+    const from = vi.fn().mockReturnValue({ where })
+    const select = vi.fn().mockReturnValue({ from })
+    vi.mocked(getDb).mockReturnValue({ select } as never)
+
+    vi.mocked(resolveStaffInviteByToken).mockResolvedValue({
+      status: 'ok',
+      invite: {
+        inviteId: 'invite-1',
+        salonId: 'salon-1',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-1',
+        staffName: 'Sara',
+        phone: '09121234567',
+        expiresAt: new Date('2026-07-25T12:00:00Z'),
+        status: 'pending',
+      },
+    })
+    vi.mocked(resolveStaffInvitePhonesMatch).mockReturnValue(null)
+    vi.mocked(evaluateStaffInviteLinkRouting).mockReturnValue({
+      action: 'login',
+    })
+
+    const res = await staffInviteLinksRoute.request(`/${token}`)
+
+    expect(res.status).toBe(200)
+    expect(resolveStaffInvitePhonesMatch).toHaveBeenCalledWith({
+      sessionPresent: true,
+      sessionPhone: '09121234567',
+      phoneVerified: false,
+      invitePhone: '09121234567',
+    })
+    expect(evaluateStaffInviteLinkRouting).toHaveBeenCalledWith({
+      inviteStatus: 'pending',
+      sessionPresent: true,
+      phonesMatch: null,
+      phoneRegistered: true,
+    })
+    expect(await res.json()).toMatchObject({
+      phonesMatch: null,
+      routing: { action: 'login' },
     })
   })
 

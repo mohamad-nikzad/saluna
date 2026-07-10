@@ -8,6 +8,7 @@ import {
   evaluateStaffInviteLinkRouting,
   maskStaffInvitePhone,
   resolveStaffInviteByToken,
+  resolveStaffInvitePhonesMatch,
 } from '@repo/database/staff'
 import { auth } from '@repo/auth/server'
 
@@ -21,7 +22,11 @@ async function loadSessionPhone(c: Parameters<typeof ok>[0]) {
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
   const sessionUserId = session?.user?.id
   if (!sessionUserId) {
-    return { sessionPresent: false as const, sessionPhone: null as string | null }
+    return {
+      sessionPresent: false as const,
+      sessionPhone: null as string | null,
+      phoneVerified: false as const,
+    }
   }
   const rows = await getDb()
     .select({
@@ -33,12 +38,10 @@ async function loadSessionPhone(c: Parameters<typeof ok>[0]) {
     .where(eq(user.id, sessionUserId))
     .limit(1)
   const row = rows[0]
-  if (!row?.verified) {
-    return { sessionPresent: true as const, sessionPhone: null as string | null }
-  }
   return {
     sessionPresent: true as const,
-    sessionPhone: row.phoneNumber ?? row.username,
+    sessionPhone: row?.phoneNumber ?? row?.username ?? null,
+    phoneVerified: Boolean(row?.verified),
   }
 }
 
@@ -66,14 +69,15 @@ export const staffInviteLinksRoute = new Hono<AppEnv>().get(
     }
 
     const invite = resolved.invite
-    const { sessionPresent, sessionPhone } = await loadSessionPhone(c)
+    const { sessionPresent, sessionPhone, phoneVerified } =
+      await loadSessionPhone(c)
     const phoneRegistered = await isPhoneRegistered(invite.phone)
-    const phonesMatch =
-      sessionPresent && sessionPhone != null
-        ? sessionPhone === invite.phone
-        : sessionPresent
-          ? false
-          : null
+    const phonesMatch = resolveStaffInvitePhonesMatch({
+      sessionPresent,
+      sessionPhone,
+      phoneVerified,
+      invitePhone: invite.phone,
+    })
 
     const routing = evaluateStaffInviteLinkRouting({
       inviteStatus: invite.status,

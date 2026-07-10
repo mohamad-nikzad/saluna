@@ -155,12 +155,7 @@ export const staff = new Hono<AppEnv>()
         staffProfileId: id,
       })
       if (result.status === 'rejected') {
-        const status =
-          result.reason === 'invite_not_found'
-            ? 404
-            : result.reason === 'inactive_profile'
-              ? 409
-              : 409
+        const status = result.reason === 'invite_not_found' ? 404 : 409
         return error(
           c,
           inviteLifecycleRejectionMessage[result.reason],

@@ -226,66 +226,47 @@ export type CancelManagerStaffInviteResult =
       reason: CancelManagerStaffInviteRejectionReason
     }
 
-/** Cancel a pending Staff Invite. Keeps the salon-owned Staff Profile. */
-export async function cancelManagerStaffInvite(input: {
-  salonId: string
-  staffProfileId: string
-  now?: Date
-}): Promise<CancelManagerStaffInviteResult> {
-  const db = getDb()
-  const now = input.now ?? new Date()
-
-  return db.transaction(async (tx) => {
-    const profileRows = await tx
-      .select()
-      .from(staffProfiles)
-      .where(
-        and(
-          eq(staffProfiles.id, input.staffProfileId),
-          eq(staffProfiles.salonId, input.salonId),
-        ),
-      )
-      .limit(1)
-      .for('update')
-    const profile = profileRows[0]
-    if (!profile) {
-      return { status: 'rejected', reason: 'invite_not_found' }
+export type CancelManagerStaffInviteDecision =
+  | {
+      status: 'cancel'
+      profile: typeof staffProfiles.$inferSelect
+      inviteId: string
+      /** Patch applied to the pending invite row. Profile is never deleted. */
+      patch: {
+        status: 'revoked'
+        revokedAt: Date
+        updatedAt: Date
+      }
+    }
+  | {
+      status: 'rejected'
+      reason: CancelManagerStaffInviteRejectionReason
     }
 
-    const inviteRows = await tx
-      .select()
-      .from(staffInvites)
-      .where(
-        and(
-          eq(staffInvites.salonId, input.salonId),
-          eq(staffInvites.staffProfileId, input.staffProfileId),
-          eq(staffInvites.status, 'pending'),
-        ),
-      )
-      .limit(1)
-      .for('update')
-    const invite = inviteRows[0]
-    if (!invite) {
-      return { status: 'rejected', reason: 'invite_not_pending' }
-    }
-
-    const [updatedInvite] = await tx
-      .update(staffInvites)
-      .set({
-        status: 'revoked',
-        revokedAt: now,
-        updatedAt: now,
-      })
-      .where(
-        and(eq(staffInvites.id, invite.id), eq(staffInvites.status, 'pending')),
-      )
-      .returning()
-    if (!updatedInvite) {
-      return { status: 'rejected', reason: 'invite_not_pending' }
-    }
-
-    return { status: 'cancelled', invite: updatedInvite, profile }
-  })
+/**
+ * Pure cancel decision: revoke the pending invite, keep the Staff Profile.
+ */
+export function evaluateCancelManagerStaffInvite(input: {
+  profile: typeof staffProfiles.$inferSelect | null
+  pendingInvite: typeof staffInvites.$inferSelect | null
+  now: Date
+}): CancelManagerStaffInviteDecision {
+  if (!input.profile) {
+    return { status: 'rejected', reason: 'invite_not_found' }
+  }
+  if (!input.pendingInvite) {
+    return { status: 'rejected', reason: 'invite_not_pending' }
+  }
+  return {
+    status: 'cancel',
+    profile: input.profile,
+    inviteId: input.pendingInvite.id,
+    patch: {
+      status: 'revoked',
+      revokedAt: input.now,
+      updatedAt: input.now,
+    },
+  }
 }
 
 export type ResendManagerStaffInviteRejectionReason =
@@ -305,6 +286,138 @@ export type ResendManagerStaffInviteResult =
       reason: ResendManagerStaffInviteRejectionReason
     }
 
+export type ResendManagerStaffInviteDecision =
+  | {
+      status: 'resend'
+      profile: typeof staffProfiles.$inferSelect
+      /** Same pending invite row — never a new Staff Profile. */
+      inviteId: string
+      patch: {
+        tokenHash: string
+        expiresAt: Date
+        lastDeliveredAt: Date
+        updatedAt: Date
+      }
+      inviteToken: string
+    }
+  | {
+      status: 'rejected'
+      reason: ResendManagerStaffInviteRejectionReason
+    }
+
+/**
+ * Pure resend decision: refresh token/expiry/delivery on the same pending row.
+ * Does not create another Staff Profile.
+ */
+export function evaluateResendManagerStaffInvite(input: {
+  profile: typeof staffProfiles.$inferSelect | null
+  pendingInvite: typeof staffInvites.$inferSelect | null
+  inviteToken: string
+  now: Date
+}): ResendManagerStaffInviteDecision {
+  if (!input.profile) {
+    return { status: 'rejected', reason: 'invite_not_found' }
+  }
+  if (!input.profile.active) {
+    return { status: 'rejected', reason: 'inactive_profile' }
+  }
+  if (!input.pendingInvite) {
+    return { status: 'rejected', reason: 'invite_not_pending' }
+  }
+  return {
+    status: 'resend',
+    profile: input.profile,
+    inviteId: input.pendingInvite.id,
+    inviteToken: input.inviteToken,
+    patch: {
+      tokenHash: hashInviteToken(input.inviteToken),
+      expiresAt: new Date(input.now.getTime() + STAFF_INVITE_TTL_MS),
+      lastDeliveredAt: input.now,
+      updatedAt: input.now,
+    },
+  }
+}
+
+type StaffInviteTx = Parameters<
+  Parameters<ReturnType<typeof getDb>['transaction']>[0]
+>
+
+async function lockProfileAndPendingInvite(
+  tx: StaffInviteTx,
+  input: { salonId: string; staffProfileId: string },
+) {
+  const profileRows = await tx
+    .select()
+    .from(staffProfiles)
+    .where(
+      and(
+        eq(staffProfiles.id, input.staffProfileId),
+        eq(staffProfiles.salonId, input.salonId),
+      ),
+    )
+    .limit(1)
+    .for('update')
+  const profile = profileRows[0] ?? null
+
+  const inviteRows = await tx
+    .select()
+    .from(staffInvites)
+    .where(
+      and(
+        eq(staffInvites.salonId, input.salonId),
+        eq(staffInvites.staffProfileId, input.staffProfileId),
+        eq(staffInvites.status, 'pending'),
+      ),
+    )
+    .limit(1)
+    .for('update')
+  const pendingInvite = inviteRows[0] ?? null
+
+  return { profile, pendingInvite }
+}
+
+/** Cancel a pending Staff Invite. Keeps the salon-owned Staff Profile. */
+export async function cancelManagerStaffInvite(input: {
+  salonId: string
+  staffProfileId: string
+  now?: Date
+}): Promise<CancelManagerStaffInviteResult> {
+  const db = getDb()
+  const now = input.now ?? new Date()
+
+  return db.transaction(async (tx) => {
+    const { profile, pendingInvite } = await lockProfileAndPendingInvite(tx, input)
+    const decision = evaluateCancelManagerStaffInvite({
+      profile,
+      pendingInvite,
+      now,
+    })
+    if (decision.status === 'rejected') {
+      return decision
+    }
+
+    const [updatedInvite] = await tx
+      .update(staffInvites)
+      .set(decision.patch)
+      .where(
+        and(
+          eq(staffInvites.id, decision.inviteId),
+          eq(staffInvites.status, 'pending'),
+        ),
+      )
+      .returning()
+    if (!updatedInvite) {
+      return { status: 'rejected', reason: 'invite_not_pending' }
+    }
+
+    return {
+      status: 'cancelled',
+      invite: updatedInvite,
+      profile: decision.profile,
+    }
+  })
+}
+
 /**
  * Resend a pending Staff Invite: new token, refreshed expiry and delivery
  * metadata. Does not create another Staff Profile.
@@ -318,53 +431,25 @@ export async function resendManagerStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const profileRows = await tx
-      .select()
-      .from(staffProfiles)
-      .where(
-        and(
-          eq(staffProfiles.id, input.staffProfileId),
-          eq(staffProfiles.salonId, input.salonId),
-        ),
-      )
-      .limit(1)
-      .for('update')
-    const profile = profileRows[0]
-    if (!profile) {
-      return { status: 'rejected', reason: 'invite_not_found' }
-    }
-    if (!profile.active) {
-      return { status: 'rejected', reason: 'inactive_profile' }
+    const { profile, pendingInvite } = await lockProfileAndPendingInvite(tx, input)
+    const decision = evaluateResendManagerStaffInvite({
+      profile,
+      pendingInvite,
+      inviteToken: newInviteToken(),
+      now,
+    })
+    if (decision.status === 'rejected') {
+      return decision
     }
 
-    const inviteRows = await tx
-      .select()
-      .from(staffInvites)
-      .where(
-        and(
-          eq(staffInvites.salonId, input.salonId),
-          eq(staffInvites.staffProfileId, input.staffProfileId),
-          eq(staffInvites.status, 'pending'),
-        ),
-      )
-      .limit(1)
-      .for('update')
-    const invite = inviteRows[0]
-    if (!invite) {
-      return { status: 'rejected', reason: 'invite_not_pending' }
-    }
-
-    const inviteToken = newInviteToken()
     const [updatedInvite] = await tx
       .update(staffInvites)
-      .set({
-        tokenHash: hashInviteToken(inviteToken),
-        expiresAt: new Date(now.getTime() + STAFF_INVITE_TTL_MS),
-        lastDeliveredAt: now,
-        updatedAt: now,
-      })
+      .set(decision.patch)
       .where(
-        and(eq(staffInvites.id, invite.id), eq(staffInvites.status, 'pending')),
+        and(
+          eq(staffInvites.id, decision.inviteId),
+          eq(staffInvites.status, 'pending'),
+        ),
       )
       .returning()
     if (!updatedInvite) {
@@ -374,8 +459,8 @@ export async function resendManagerStaffInvite(input: {
     return {
       status: 'resent',
       invite: updatedInvite,
-      profile,
-      inviteToken,
+      profile: decision.profile,
+      inviteToken: decision.inviteToken,
     }
   })
 }
@@ -534,6 +619,34 @@ export function maskStaffInvitePhone(phone: string) {
 }
 
 /**
+ * Compare session phone to the invite phone for routing.
+ *
+ * - `null` — no session, or session phone is not yet verified (needs OTP)
+ * - `false` — wrong phone (verified mismatch, or unverified different number)
+ * - `true` — verified session phone matches the invite
+ */
+export function resolveStaffInvitePhonesMatch(input: {
+  sessionPresent: boolean
+  sessionPhone: string | null
+  phoneVerified: boolean
+  invitePhone: string
+}): boolean | null {
+  if (!input.sessionPresent) return null
+  if (input.sessionPhone == null) {
+    // Session without a phone still needs verify/login — not switch-account.
+    return null
+  }
+  if (input.sessionPhone !== input.invitePhone) {
+    return false
+  }
+  if (!input.phoneVerified) {
+    // Invited identity, but OTP still required — not a verified match yet.
+    return null
+  }
+  return true
+}
+
+/**
  * Pure routing decision for an invite link given session + phone registration.
  * Invite links never grant access by themselves.
  */
@@ -543,7 +656,7 @@ export function evaluateStaffInviteLinkRouting(input: {
   sessionPresent: boolean
   /**
    * Whether the session identity's verified phone matches the invite phone.
-   * Null when there is no session.
+   * Null when there is no session, or the session phone is not yet verified.
    */
   phonesMatch: boolean | null
   phoneRegistered: boolean
@@ -566,6 +679,11 @@ export function evaluateStaffInviteLinkRouting(input: {
   }
   if (input.phonesMatch === false) {
     return { action: 'switch_account' }
+  }
+  if (input.phonesMatch !== true) {
+    // Logged in but phone not verified yet — continue toward OTP/login,
+    // not switch-account (which is only for the wrong verified identity).
+    return { action: 'login' }
   }
   return { action: 'continue' }
 }
