@@ -21,16 +21,18 @@ import {
   patchApiV1StaffByIdMutation,
   patchApiV1StaffByIdPasswordMutation,
   patchApiV1StaffByIdServicesMutation,
+  postApiV1StaffByIdInviteCancelMutation,
+  postApiV1StaffByIdInviteResendMutation,
   postApiV1StaffMutation,
   putApiV1StaffByIdScheduleMutation,
 } from '@repo/api-client/query'
 import type {
   BusinessHours as GeneratedBusinessHours,
+  ResendStaffInviteResponse,
   StaffSchedule as GeneratedStaffSchedule,
   StaffUser as GeneratedStaffUser,
 } from '@repo/api-client/types'
 
-import { apiClient } from '#/lib/api-client'
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
 export {
@@ -244,23 +246,20 @@ export function useUpdateStaffScheduleMutation(staffId: string) {
   })
 }
 
-export type ResendStaffInviteResult = {
-  inviteToken: string
-  invite: {
-    id: string
-    status: string
-    expiresAt: string
-    lastDeliveredAt: string | null
-  }
-}
+export type ResendStaffInviteResult = Pick<
+  ResendStaffInviteResponse,
+  'inviteToken' | 'invite'
+>
 
 export function useCancelStaffInviteMutation() {
+  const generated = postApiV1StaffByIdInviteCancelMutation()
+
   return useMutation<void, unknown, string>({
-    mutationFn: async (staffProfileId) => {
-      await apiClient.request(`/api/v1/staff/${staffProfileId}/invite/cancel`, {
-        method: 'POST',
-        body: {},
-      })
+    mutationFn: async (staffProfileId, mutationContext) => {
+      await generated.mutationFn!(
+        { path: { id: staffProfileId } },
+        mutationContext,
+      )
     },
     meta: {
       errorMessage: 'لغو دعوت انجام نشد',
@@ -271,15 +270,18 @@ export function useCancelStaffInviteMutation() {
 }
 
 export function useResendStaffInviteMutation() {
+  const generated = postApiV1StaffByIdInviteResendMutation()
+
   return useMutation<ResendStaffInviteResult, unknown, string>({
-    mutationFn: async (staffProfileId) => {
-      return apiClient.request<ResendStaffInviteResult>(
-        `/api/v1/staff/${staffProfileId}/invite/resend`,
-        {
-          method: 'POST',
-          body: {},
-        },
+    mutationFn: async (staffProfileId, mutationContext) => {
+      const response = await generated.mutationFn!(
+        { path: { id: staffProfileId } },
+        mutationContext,
       )
+      return {
+        inviteToken: response.inviteToken,
+        invite: response.invite,
+      }
     },
     meta: {
       errorMessage: 'ارسال دوباره دعوت انجام نشد',

@@ -840,6 +840,34 @@ export type StaffServiceIdsRequest = {
     serviceIds?: Array<string> | null;
 };
 
+export type CancelStaffInviteResponse = {
+    success: true;
+    invite: {
+        id: string;
+        status: string;
+        revokedAt: string | string | unknown;
+    };
+    profile: {
+        id: string;
+        name: string;
+        active: boolean;
+    };
+};
+
+export type ResendStaffInviteResponse = {
+    inviteToken: string;
+    invite: {
+        id: string;
+        status: string;
+        expiresAt: string | string;
+        lastDeliveredAt: string | string | unknown;
+    };
+    profile: {
+        id: string;
+        name: string;
+    };
+};
+
 export type ServicesListResponse = {
     services: Array<Service>;
 };
@@ -4369,6 +4397,84 @@ export type PatchApiV1StaffByIdServicesResponses = {
 };
 
 export type PatchApiV1StaffByIdServicesResponse = PatchApiV1StaffByIdServicesResponses[keyof PatchApiV1StaffByIdServicesResponses];
+
+export type PostApiV1StaffByIdInviteCancelData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/invite/cancel';
+};
+
+export type PostApiV1StaffByIdInviteCancelErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Pending Staff Invite not found for this Staff Profile
+     */
+    404: ApiError & unknown;
+    /**
+     * Staff Invite is not pending, or the Staff Profile is inactive
+     */
+    409: ApiError & unknown;
+};
+
+export type PostApiV1StaffByIdInviteCancelError = PostApiV1StaffByIdInviteCancelErrors[keyof PostApiV1StaffByIdInviteCancelErrors];
+
+export type PostApiV1StaffByIdInviteCancelResponses = {
+    /**
+     * Staff Invite cancelled
+     */
+    200: CancelStaffInviteResponse;
+};
+
+export type PostApiV1StaffByIdInviteCancelResponse = PostApiV1StaffByIdInviteCancelResponses[keyof PostApiV1StaffByIdInviteCancelResponses];
+
+export type PostApiV1StaffByIdInviteResendData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{id}/invite/resend';
+};
+
+export type PostApiV1StaffByIdInviteResendErrors = {
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but missing manage_settings permission
+     */
+    403: ApiError;
+    /**
+     * Pending Staff Invite not found for this Staff Profile
+     */
+    404: ApiError & unknown;
+    /**
+     * Staff Invite is not pending, or the Staff Profile is inactive
+     */
+    409: ApiError & unknown;
+};
+
+export type PostApiV1StaffByIdInviteResendError = PostApiV1StaffByIdInviteResendErrors[keyof PostApiV1StaffByIdInviteResendErrors];
+
+export type PostApiV1StaffByIdInviteResendResponses = {
+    /**
+     * Staff Invite resent
+     */
+    200: ResendStaffInviteResponse;
+};
+
+export type PostApiV1StaffByIdInviteResendResponse = PostApiV1StaffByIdInviteResendResponses[keyof PostApiV1StaffByIdInviteResendResponses];
 
 export type GetApiV1ServicesData = {
     body?: never;

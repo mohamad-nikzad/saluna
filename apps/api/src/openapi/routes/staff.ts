@@ -2,6 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
 import {
   bookingAvailabilityQuerySchema,
+  cancelStaffInviteResponseSchema,
+  resendStaffInviteResponseSchema,
   staffBookingAvailabilityResponseSchema,
   staffCreateBodySchema,
   staffCreateResponseSchema,
@@ -59,6 +61,35 @@ const inviteConflictResponse = {
         example: {
           error: 'برای این شماره قبلاً دعوت در انتظار وجود دارد',
           code: 'duplicate_pending_invite',
+        },
+      }),
+    },
+  },
+} as const
+
+const inviteLifecycleConflictResponse = {
+  description:
+    'Staff Invite is not pending, or the Staff Profile is inactive',
+  content: {
+    'application/json': {
+      schema: apiErrorSchema.openapi({
+        example: {
+          error: 'این دعوت دیگر در انتظار نیست',
+          code: 'invite_not_pending',
+        },
+      }),
+    },
+  },
+} as const
+
+const inviteNotFoundResponse = {
+  description: 'Pending Staff Invite not found for this Staff Profile',
+  content: {
+    'application/json': {
+      schema: apiErrorSchema.openapi({
+        example: {
+          error: 'دعوت یافت نشد',
+          code: 'invite_not_found',
         },
       }),
     },
@@ -267,5 +298,51 @@ export const updateStaffServicesRoute = createRoute({
     401: unauthorizedResponse,
     403: forbiddenResponse,
     404: notFoundResponse,
+  },
+})
+
+export const cancelStaffInviteRoute = createRoute({
+  method: 'post',
+  path: '/{id}/invite/cancel',
+  tags: ['Staff'],
+  summary: 'Cancel pending Staff Invite',
+  description:
+    'Revokes the pending Staff Invite for a Staff Profile. Keeps the salon-owned Staff Profile.',
+  security: tenantSecurity,
+  request: { params: idParamSchema },
+  responses: {
+    200: {
+      description: 'Staff Invite cancelled',
+      content: {
+        'application/json': { schema: cancelStaffInviteResponseSchema },
+      },
+    },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: inviteNotFoundResponse,
+    409: inviteLifecycleConflictResponse,
+  },
+})
+
+export const resendStaffInviteRoute = createRoute({
+  method: 'post',
+  path: '/{id}/invite/resend',
+  tags: ['Staff'],
+  summary: 'Resend pending Staff Invite',
+  description:
+    'Issues a new invite token and refreshes expiry/delivery metadata for a pending Staff Invite. Does not create another Staff Profile.',
+  security: tenantSecurity,
+  request: { params: idParamSchema },
+  responses: {
+    200: {
+      description: 'Staff Invite resent',
+      content: {
+        'application/json': { schema: resendStaffInviteResponseSchema },
+      },
+    },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: inviteNotFoundResponse,
+    409: inviteLifecycleConflictResponse,
   },
 })
