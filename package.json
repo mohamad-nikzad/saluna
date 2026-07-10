@@ -45,9 +45,14 @@
     "bench:summary": "node benchmarks/summarize.mjs",
     "bench:compare": "node benchmarks/compare.mjs",
     "generate:api-contract": "pnpm --filter @repo/api generate:openapi",
-    "generate:api-client": "pnpm --filter @repo/api-client generate"
+    "generate:api-client": "pnpm --filter @repo/api-client generate",
+    "sandcastle": "tsx .sandcastle/main.mts",
+    "sandcastle:build": "pnpm exec sandcastle docker build-image --image-name sandcastle:saluna",
+    "sandcastle:sync-cursor-auth": "bash .sandcastle/sync-cursor-auth.sh",
+    "sandcastle:tickets": "node .sandcastle/tickets-tracker.mjs"
   },
   "devDependencies": {
+    "@ai-hero/sandcastle": "^0.12.0",
     "@playwright/test": "^1.59.1",
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",

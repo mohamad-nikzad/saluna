@@ -1,0 +1,8 @@
+.env
+corepack-cache/
+cursor-auth/
+cursor-home/
+logs/
+pnpm-store/
+worktrees/
+sandcastle.lock
