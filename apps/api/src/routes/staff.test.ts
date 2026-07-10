@@ -4,6 +4,8 @@ vi.mock('@repo/database/staff', () => ({
   resolveStaffTenantContext: vi.fn(),
   getAllStaff: vi.fn(),
   createManagerStaffInvite: vi.fn(),
+  cancelManagerStaffInvite: vi.fn(),
+  resendManagerStaffInvite: vi.fn(),
   deactivateStaffMember: vi.fn(),
   getUserById: vi.fn(),
   getUserWithServiceIds: vi.fn(),
@@ -144,7 +146,12 @@ describe('staff router', () => {
         phone: '09121234567',
         userId: null,
       },
-      invite: { id: 'invite-1', status: 'pending' },
+      invite: {
+        id: 'invite-1',
+        status: 'pending',
+        expiresAt: new Date('2026-07-25T12:00:00Z'),
+        lastDeliveredAt: new Date('2026-07-11T12:00:00Z'),
+      },
       inviteToken: 'token',
     } as never)
     vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
@@ -168,6 +175,13 @@ describe('staff router', () => {
         inviteStatus: 'pending',
         role: 'staff',
       },
+      inviteToken: 'token',
+      invite: {
+        id: 'invite-1',
+        status: 'pending',
+        expiresAt: '2026-07-25T12:00:00.000Z',
+        lastDeliveredAt: '2026-07-11T12:00:00.000Z',
+      },
     })
     expect(db.createManagerStaffInvite).toHaveBeenCalledWith({
       salonId: 's1',
@@ -177,6 +191,69 @@ describe('staff router', () => {
     })
     // Pending invites must not mint manager-controlled credentials.
     expect(db.updateStaffPassword).not.toHaveBeenCalled()
+  })
+
+  it('cancels a pending invite without deleting the Staff Profile', async () => {
+    vi.mocked(db.cancelManagerStaffInvite).mockResolvedValue({
+      status: 'cancelled',
+      invite: {
+        id: 'invite-1',
+        status: 'revoked',
+        revokedAt: new Date('2026-07-11T12:00:00Z'),
+      },
+      profile: {
+        id: 'profile-1',
+        name: 'Ali',
+        active: true,
+      },
+    } as never)
+    const res = await app.request('/api/v1/staff/profile-1/invite/cancel', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+    expect(res.status).toBe(200)
+    expect(db.cancelManagerStaffInvite).toHaveBeenCalledWith({
+      salonId: 's1',
+      staffProfileId: 'profile-1',
+    })
+    expect(await res.json()).toMatchObject({
+      success: true,
+      invite: { id: 'invite-1', status: 'revoked' },
+      profile: { id: 'profile-1', active: true },
+    })
+  })
+
+  it('resends a pending invite with refreshed delivery metadata and expiry', async () => {
+    vi.mocked(db.resendManagerStaffInvite).mockResolvedValue({
+      status: 'resent',
+      inviteToken: 'new-token',
+      invite: {
+        id: 'invite-1',
+        status: 'pending',
+        expiresAt: new Date('2026-07-25T12:00:00Z'),
+        lastDeliveredAt: new Date('2026-07-11T12:00:00Z'),
+      },
+      profile: { id: 'profile-1', name: 'Ali' },
+    } as never)
+    const res = await app.request('/api/v1/staff/profile-1/invite/resend', {
+      method: 'POST',
+      headers: authHeaders,
+    })
+    expect(res.status).toBe(200)
+    expect(db.resendManagerStaffInvite).toHaveBeenCalledWith({
+      salonId: 's1',
+      staffProfileId: 'profile-1',
+    })
+    expect(await res.json()).toMatchObject({
+      inviteToken: 'new-token',
+      invite: {
+        id: 'invite-1',
+        status: 'pending',
+        expiresAt: '2026-07-25T12:00:00.000Z',
+        lastDeliveredAt: '2026-07-11T12:00:00.000Z',
+      },
+      profile: { id: 'profile-1' },
+    })
   })
 
   it('409 on duplicate pending invite', async () => {

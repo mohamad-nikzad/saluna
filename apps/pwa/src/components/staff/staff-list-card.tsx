@@ -8,6 +8,10 @@ import { StaffListRowMenu } from '#/components/staff/staff-list-row-menu'
 import { StaffRosterChip } from '#/components/staff/staff-roster-chip'
 import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 import { staffRoleLabel } from '#/components/staff/staff-utils'
+import {
+  useCancelStaffInviteMutation,
+  useResendStaffInviteMutation,
+} from '#/lib/staff-queries'
 
 interface StaffListCardProps {
   member: User
@@ -29,6 +33,8 @@ export function StaffListCard({
   onDelete,
 }: StaffListCardProps) {
   const navigate = useNavigate()
+  const cancelInvite = useCancelStaffInviteMutation()
+  const resendInvite = useResendStaffInviteMutation()
 
   return (
     <div className="flex items-center gap-1.5 rounded-[18px] border border-line-soft bg-card p-3.5">
@@ -86,6 +92,20 @@ export function StaffListCard({
         onEditPassword={onEditPassword}
         onEditServices={onEditServices}
         onEditSchedule={onEditSchedule}
+        onResendInvite={
+          member.inviteStatus === 'pending'
+            ? () => {
+                resendInvite.mutate(member.id)
+              }
+            : undefined
+        }
+        onCancelInvite={
+          member.inviteStatus === 'pending'
+            ? () => {
+                cancelInvite.mutate(member.id)
+              }
+            : undefined
+        }
         onDelete={onDelete}
       />
 

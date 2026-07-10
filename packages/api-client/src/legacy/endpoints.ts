@@ -20,4 +20,5 @@ export const endpoints = {
     me: '/api/v1/auth/me',
   },
   salonHandoff: '/api/v1/salon-handoff',
+  staffInvites: '/api/v1/staff-invites',
 } as const

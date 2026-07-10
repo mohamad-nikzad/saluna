@@ -4,7 +4,9 @@ import {
   ListChecks,
   MoreVertical,
   Pencil,
+  RefreshCw,
   Trash2,
+  XCircle,
 } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import {
@@ -23,6 +25,8 @@ interface StaffListRowMenuProps {
   onEditPassword: () => void
   onEditServices: () => void
   onEditSchedule: () => void
+  onResendInvite?: () => void
+  onCancelInvite?: () => void
   onDelete: () => void
 }
 
@@ -33,10 +37,13 @@ export function StaffListRowMenu({
   onEditPassword,
   onEditServices,
   onEditSchedule,
+  onResendInvite,
+  onCancelInvite,
   onDelete,
 }: StaffListRowMenuProps) {
   const isSelf = member.id === currentUserId
   const isStaffRole = member.role === 'staff'
+  const isPendingInvite = member.inviteStatus === 'pending'
 
   return (
     <DropdownMenu>
@@ -63,7 +70,7 @@ export function StaffListRowMenu({
           ویرایش پروفایل
         </DropdownMenuItem>
 
-        {!isSelf && member.inviteStatus !== 'pending' ? (
+        {!isSelf && !isPendingInvite ? (
           <DropdownMenuItem
             className="gap-2"
             onSelect={() => {
@@ -96,6 +103,30 @@ export function StaffListRowMenu({
               روزها و ساعات کاری
             </DropdownMenuItem>
           </>
+        ) : null}
+
+        {isPendingInvite && onResendInvite ? (
+          <DropdownMenuItem
+            className="gap-2"
+            onSelect={() => {
+              onResendInvite()
+            }}
+          >
+            <RefreshCw className="h-4 w-4" />
+            ارسال دوباره دعوت
+          </DropdownMenuItem>
+        ) : null}
+
+        {isPendingInvite && onCancelInvite ? (
+          <DropdownMenuItem
+            className="gap-2"
+            onSelect={() => {
+              onCancelInvite()
+            }}
+          >
+            <XCircle className="h-4 w-4" />
+            لغو دعوت
+          </DropdownMenuItem>
         ) : null}
 
         {!isSelf ? (

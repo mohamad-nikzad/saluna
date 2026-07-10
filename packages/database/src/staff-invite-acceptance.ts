@@ -338,6 +338,25 @@ export async function acceptStaffInvite(input: {
       now,
     })
     if (decision.status === 'rejected') {
+      if (
+        decision.reason === 'invite_expired' &&
+        invite &&
+        invite.status === 'pending'
+      ) {
+        await tx
+          .update(staffInvites)
+          .set({
+            status: 'expired',
+            expiredAt: now,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(staffInvites.id, invite.id),
+              eq(staffInvites.status, 'pending'),
+            ),
+          )
+      }
       return decision
     }
     if (!invite || !profile) {

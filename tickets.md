@@ -88,14 +88,16 @@ Work the **frontier**: any ticket whose blockers are all done.
 
 **Blocked by:** Accept and decline phone-bound Staff Invites.
 
-- [ ] Manager can cancel a pending invite without deleting the Staff Profile.
-- [ ] Manager can resend a pending invite without creating duplicate Staff Profiles.
-- [ ] Resending refreshes invite delivery metadata and expiry.
-- [ ] Expired invites cannot be accepted.
-- [ ] Invite links can route users to login or registration.
-- [ ] Invite links still require the logged-in identity to verify the invited phone.
-- [ ] Opening an invite link while logged in as a different phone shows a safe switch-account path.
-- [ ] The invite model exposes a future delivery hook without requiring real SMS delivery in this ticket.
+- [x] Manager can cancel a pending invite without deleting the Staff Profile.
+- [x] Manager can resend a pending invite without creating duplicate Staff Profiles.
+- [x] Resending refreshes invite delivery metadata and expiry.
+- [x] Expired invites cannot be accepted.
+- [x] Invite links can route users to login or registration.
+- [x] Invite links still require the logged-in identity to verify the invited phone.
+- [x] Opening an invite link while logged in as a different phone shows a safe switch-account path.
+- [x] The invite model exposes a future delivery hook without requiring real SMS delivery in this ticket.
+
+> Closed: Cancel/resend pending invites; expiry blocks accept; invite links route to login/register with phone verify + switch-account; SMS delivery hook without real send
 
 ## Send staff notifications across accepted salons
 

@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as HandoffTokenRouteImport } from './routes/handoff.$token'
 import { Route as AuthedTodayRouteImport } from './routes/_authed/today'
 import { Route as AuthedSupportRouteImport } from './routes/_authed/support'
@@ -67,6 +68,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HandoffTokenRoute = HandoffTokenRouteImport.update({
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthedSupportRouteWithChildren
   '/today': typeof AuthedTodayRoute
   '/handoff/$token': typeof HandoffTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/clients/$id': typeof AuthedClientsIdRoute
   '/clients/import': typeof AuthedClientsImportRoute
   '/onboarding/done': typeof AuthedOnboardingDoneRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthedSettingsRoute
   '/today': typeof AuthedTodayRoute
   '/handoff/$token': typeof HandoffTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/clients/$id': typeof AuthedClientsIdRoute
   '/clients/import': typeof AuthedClientsImportRoute
   '/onboarding/done': typeof AuthedOnboardingDoneRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/_authed/support': typeof AuthedSupportRouteWithChildren
   '/_authed/today': typeof AuthedTodayRoute
   '/handoff/$token': typeof HandoffTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_authed/clients/$id': typeof AuthedClientsIdRoute
   '/_authed/clients/import': typeof AuthedClientsImportRoute
   '/_authed/onboarding/done': typeof AuthedOnboardingDoneRoute
@@ -349,6 +358,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/today'
     | '/handoff/$token'
+    | '/invite/$token'
     | '/clients/$id'
     | '/clients/import'
     | '/onboarding/done'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/today'
     | '/handoff/$token'
+    | '/invite/$token'
     | '/clients/$id'
     | '/clients/import'
     | '/onboarding/done'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/_authed/support'
     | '/_authed/today'
     | '/handoff/$token'
+    | '/invite/$token'
     | '/_authed/clients/$id'
     | '/_authed/clients/import'
     | '/_authed/onboarding/done'
@@ -444,6 +456,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   HandoffTokenRoute: typeof HandoffTokenRoute
+  InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -481,6 +494,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/handoff/$token': {
@@ -809,6 +829,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   HandoffTokenRoute: HandoffTokenRoute,
+  InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

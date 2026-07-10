@@ -39,6 +39,7 @@ import { messagingTelegramRoute } from './routes/messaging-telegram'
 import { adminRoute } from './routes/admin'
 import { supportTicketsRoute } from './routes/support-tickets'
 import { salonHandoffRoute } from './routes/salon-handoff'
+import { staffInviteLinksRoute } from './routes/staff-invite-links'
 import { adminSupportTicketsRoute } from './routes/admin-support-tickets'
 const env = getEnv()
 
@@ -81,6 +82,7 @@ const app = new Hono<AppEnv>()
   .route('/api/v1/admin/support-tickets', adminSupportTicketsRoute)
   .route('/api/v1/admin', adminRoute)
   .route('/api/v1/salon-handoff', salonHandoffRoute)
+  .route('/api/v1/staff-invites', staffInviteLinksRoute)
   .route('/api/v1/support-tickets', supportTicketsRoute)
   .use('/api/v1/clients', requireTenant('manage_clients'))
   .use('/api/v1/clients/*', requireTenant('manage_clients'))

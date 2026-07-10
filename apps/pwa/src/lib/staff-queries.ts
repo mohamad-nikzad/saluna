@@ -30,6 +30,7 @@ import type {
   StaffUser as GeneratedStaffUser,
 } from '@repo/api-client/types'
 
+import { apiClient } from '#/lib/api-client'
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
 export {
@@ -239,6 +240,51 @@ export function useUpdateStaffScheduleMutation(staffId: string) {
       invalidatesQuery: getApiV1StaffByIdScheduleQueryKey({
         path: { id: staffId },
       }),
+    },
+  })
+}
+
+export type ResendStaffInviteResult = {
+  inviteToken: string
+  invite: {
+    id: string
+    status: string
+    expiresAt: string
+    lastDeliveredAt: string | null
+  }
+}
+
+export function useCancelStaffInviteMutation() {
+  return useMutation<void, unknown, string>({
+    mutationFn: async (staffProfileId) => {
+      await apiClient.request(`/api/v1/staff/${staffProfileId}/invite/cancel`, {
+        method: 'POST',
+        body: {},
+      })
+    },
+    meta: {
+      errorMessage: 'لغو دعوت انجام نشد',
+      successMessage: 'دعوت لغو شد',
+      invalidatesQuery: getApiV1StaffQueryKey(),
+    },
+  })
+}
+
+export function useResendStaffInviteMutation() {
+  return useMutation<ResendStaffInviteResult, unknown, string>({
+    mutationFn: async (staffProfileId) => {
+      return apiClient.request<ResendStaffInviteResult>(
+        `/api/v1/staff/${staffProfileId}/invite/resend`,
+        {
+          method: 'POST',
+          body: {},
+        },
+      )
+    },
+    meta: {
+      errorMessage: 'ارسال دوباره دعوت انجام نشد',
+      successMessage: 'دعوت دوباره ارسال شد',
+      invalidatesQuery: getApiV1StaffQueryKey(),
     },
   })
 }

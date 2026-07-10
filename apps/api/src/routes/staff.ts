@@ -4,12 +4,14 @@ import {
   getAllStaff,
   getBusinessSettings,
   countManagers,
+  cancelManagerStaffInvite,
   createManagerStaffInvite,
   deactivateStaffMember,
   getStaffBookingAvailabilityForSlot,
   getStaffSchedules,
   getUserById,
   getUserWithServiceIds,
+  resendManagerStaffInvite,
   setStaffSchedules,
   setStaffServiceIds,
   updateStaffMember,
@@ -50,6 +52,18 @@ const inviteRejectionMessage: Record<
     'برای این شماره قبلاً پروفایل پرسنل فعال در این سالن وجود دارد',
 }
 
+const inviteLifecycleRejectionMessage: Record<
+  | 'invite_not_found'
+  | 'invite_not_pending'
+  | 'inactive_profile',
+  string
+> = {
+  invite_not_found: 'دعوت یافت نشد',
+  invite_not_pending: 'این دعوت دیگر در انتظار نیست',
+  inactive_profile:
+    'این پروفایل پرسنل غیرفعال است. ابتدا آن را فعال کنید و بعد دعوت را دوباره بفرستید.',
+}
+
 export const staff = new Hono<AppEnv>()
   .get('/', requireTenant(), async (c) => {
     const { salonId } = c.var.tenant
@@ -81,7 +95,93 @@ export const staff = new Hono<AppEnv>()
       if (!staffMember) {
         return error(c, 'دعوت ایجاد شد اما پروفایل بازخوانی نشد', 500)
       }
-      return ok(c, { user: staffMember })
+      return ok(c, {
+        user: staffMember,
+        inviteToken: result.inviteToken,
+        invite: {
+          id: result.invite.id,
+          status: result.invite.status,
+          expiresAt: result.invite.expiresAt.toISOString(),
+          lastDeliveredAt:
+            result.invite.lastDeliveredAt?.toISOString() ?? null,
+        },
+      })
+    },
+  )
+  .post(
+    '/:id/invite/cancel',
+    requireTenant('manage_settings'),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const result = await cancelManagerStaffInvite({
+        salonId,
+        staffProfileId: id,
+      })
+      if (result.status === 'rejected') {
+        const status = result.reason === 'invite_not_found' ? 404 : 409
+        return error(
+          c,
+          inviteLifecycleRejectionMessage[result.reason],
+          status,
+          result.reason,
+        )
+      }
+      return ok(c, {
+        success: true,
+        invite: {
+          id: result.invite.id,
+          status: result.invite.status,
+          revokedAt: result.invite.revokedAt?.toISOString() ?? null,
+        },
+        profile: {
+          id: result.profile.id,
+          name: result.profile.name,
+          active: result.profile.active,
+        },
+      })
+    },
+  )
+  .post(
+    '/:id/invite/resend',
+    requireTenant('manage_settings'),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const result = await resendManagerStaffInvite({
+        salonId,
+        staffProfileId: id,
+      })
+      if (result.status === 'rejected') {
+        const status =
+          result.reason === 'invite_not_found'
+            ? 404
+            : result.reason === 'inactive_profile'
+              ? 409
+              : 409
+        return error(
+          c,
+          inviteLifecycleRejectionMessage[result.reason],
+          status,
+          result.reason,
+        )
+      }
+      return ok(c, {
+        inviteToken: result.inviteToken,
+        invite: {
+          id: result.invite.id,
+          status: result.invite.status,
+          expiresAt: result.invite.expiresAt.toISOString(),
+          lastDeliveredAt:
+            result.invite.lastDeliveredAt?.toISOString() ?? null,
+        },
+        profile: {
+          id: result.profile.id,
+          name: result.profile.name,
+        },
+      })
     },
   )
   .patch(
