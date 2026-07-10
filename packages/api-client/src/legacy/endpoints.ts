@@ -18,6 +18,8 @@ export const endpoints = {
     signupWorkspace: '/api/v1/auth/signup/workspace',
     signOut: '/api/v1/auth/sign-out',
     me: '/api/v1/auth/me',
+    staffSalons: '/api/v1/auth/staff-salons',
+    staffInvites: '/api/v1/auth/staff-invites',
   },
   salonHandoff: '/api/v1/salon-handoff',
 } as const

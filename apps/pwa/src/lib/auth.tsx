@@ -6,6 +6,11 @@ import { ApiError } from '@repo/api-client'
 import type { MeResponse } from '@repo/api-client/auth'
 import type { User } from '@repo/salon-core/types'
 
+import {
+  clearPersistedActiveSalonId,
+  getPersistedActiveSalonId,
+  setPersistedActiveSalonId,
+} from '#/lib/active-salon'
 import { api } from '#/lib/api-client'
 
 export const authQueryKey = ['auth', 'me'] as const
@@ -16,7 +21,21 @@ async function fetchSessionUser({
   signal,
 }: { signal?: AbortSignal } = {}): Promise<AuthSession> {
   try {
-    return await api.auth.me({ signal })
+    const session = await api.auth.me({
+      signal,
+      salonId: getPersistedActiveSalonId(),
+    })
+    if (session.status === 'needs_salon_selection') {
+      clearPersistedActiveSalonId()
+      return session
+    }
+    if (
+      (session.status === 'ready' || session.status === undefined) &&
+      session.user.role === 'staff'
+    ) {
+      setPersistedActiveSalonId(session.user.salonId)
+    }
+    return session
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       return null
@@ -90,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore — clear local state regardless */
     }
+    clearPersistedActiveSalonId()
     setUser(null)
     void queryClient.invalidateQueries()
   }, [queryClient, setUser])
@@ -97,7 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const session = query.data ?? null
   const user =
     session?.status === 'needs_workspace' ||
-    session?.status === 'needs_staff_password'
+    session?.status === 'needs_staff_password' ||
+    session?.status === 'needs_salon_selection'
       ? null
       : (session?.user ?? null)
   const preWorkspaceUser =

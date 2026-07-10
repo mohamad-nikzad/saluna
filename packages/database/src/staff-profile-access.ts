@@ -3,10 +3,11 @@
  * a salon tenant context, and which Staff Profile that context is linked to.
  */
 
-import { and, eq, isNull, or } from 'drizzle-orm'
+import { and, eq, inArray, isNull, or } from 'drizzle-orm'
 import { getDb } from './client'
 import {
   member,
+  organization,
   salonMember,
   salonProfile,
   staffProfileAccesses,
@@ -149,6 +150,45 @@ export async function listActiveStaffProfileAccessesForUser(
     }
   }
   return [...bySalon.values()]
+}
+
+export type StaffSalonOption = {
+  salonId: string
+  salonName: string
+  staffProfileId: string
+}
+
+/**
+ * Accepted salons a staff identity may enter (active Staff Profile Access /
+ * claim-path compatibility), with salon display names for the picker.
+ */
+export async function listStaffSalonOptionsForUser(
+  userId: string,
+): Promise<StaffSalonOption[]> {
+  const activeAccesses = await listActiveStaffProfileAccessesForUser(userId)
+  const usable = activeAccesses.filter((access) => access.profileActive)
+  if (usable.length === 0) return []
+
+  const db = getDb()
+  const salonIds = usable.map((access) => access.salonId)
+  const nameRows = await db
+    .select({
+      salonId: organization.id,
+      salonName: organization.name,
+    })
+    .from(organization)
+    .where(
+      salonIds.length === 1
+        ? eq(organization.id, salonIds[0]!)
+        : inArray(organization.id, salonIds),
+    )
+  const names = new Map(nameRows.map((row) => [row.salonId, row.salonName]))
+
+  return usable.map((access) => ({
+    salonId: access.salonId,
+    salonName: names.get(access.salonId) ?? access.salonId,
+    staffProfileId: access.staffProfileId,
+  }))
 }
 
 /**

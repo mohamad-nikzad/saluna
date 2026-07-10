@@ -22,6 +22,10 @@ import { OtpCodeInput } from '#/components/auth/otp-code-input'
 import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
 import {
+  getPersistedActiveSalonId,
+  setPersistedActiveSalonId,
+} from '#/lib/active-salon'
+import {
   AUTH_OTP_CODE_LENGTH,
   AUTH_OTP_RESEND_SECONDS,
   getOtpErrorMessage,
@@ -65,6 +69,9 @@ export const Route = createFileRoute('/auth')({
     const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
+    if (session?.status === 'needs_salon_selection') {
+      throw redirect({ to: '/select-salon' })
+    }
     if (
       session &&
       session.status !== 'needs_workspace' &&
@@ -82,7 +89,7 @@ export const Route = createFileRoute('/auth')({
 function AuthPage() {
   const navigate = useNavigate()
   const { redirect: redirectTo } = Route.useSearch()
-  const { session: authSession, refresh, setUser } = useAuth()
+  const { session: authSession, refresh, setUser, setSession } = useAuth()
   const showDemoCredentials = import.meta.env.DEV
   const [mode, setMode] = useState<AuthMode>('phone')
   const [otpIntent, setOtpIntent] = useState<OtpIntent>('login')
@@ -123,13 +130,34 @@ function AuthPage() {
   const isRegistering = otpIntent === 'register'
 
   const login = useMutation({
-    mutationFn: (values: LoginFormInput) => api.auth.login(values),
+    mutationFn: (values: LoginFormInput) =>
+      api.auth.login(values, {
+        salonId: getPersistedActiveSalonId(),
+      }),
     meta: { skipToast: true },
-    onSuccess: async (data) => {
-      setUser(data.user)
+    onSuccess: async (session) => {
+      if (session.status === 'needs_workspace') {
+        setSession(session)
+        await navigate({ to: '/signup' })
+        return
+      }
+      if (session.status === 'needs_staff_password') {
+        setSession(session)
+        setMode('staffPassword')
+        return
+      }
+      if (session.status === 'needs_salon_selection') {
+        setSession(session)
+        await navigate({ to: '/select-salon' })
+        return
+      }
+      setUser(session.user)
+      if (session.user.role === 'staff' && session.user.salonId) {
+        setPersistedActiveSalonId(session.user.salonId)
+      }
       const safe = safeInternalRedirect(redirectTo)
       if (safe) await navigate({ href: safe })
-      else await navigate({ to: homePathForRole(data.user.role) })
+      else await navigate({ to: homePathForRole(session.user.role) })
     },
   })
 
@@ -204,7 +232,15 @@ function AuthPage() {
         setMode('staffPassword')
         return
       }
-      if (session?.user) {
+      if (session?.status === 'needs_salon_selection') {
+        setSession(session)
+        await navigate({ to: '/select-salon', replace: true })
+        return
+      }
+      if (session?.status === 'ready' || session?.status === undefined) {
+        if (session.user.role === 'staff' && session.user.salonId) {
+          setPersistedActiveSalonId(session.user.salonId)
+        }
         setUser(session.user)
         if (safe) await navigate({ href: safe })
         else await navigate({ to: homePathForRole(session.user.role) })
@@ -261,9 +297,17 @@ function AuthPage() {
     meta: { skipToast: true },
     onSuccess: async () => {
       const session = await refresh()
-      if (!session || session.status !== 'ready') {
+      if (session?.status === 'needs_salon_selection') {
+        setSession(session)
+        await navigate({ to: '/select-salon' })
+        return
+      }
+      if (!session || (session.status !== 'ready' && session.status !== undefined)) {
         setRecoveryError('تکمیل حساب انجام نشد. دوباره تلاش کنید.')
         return
+      }
+      if (session.user.role === 'staff' && session.user.salonId) {
+        setPersistedActiveSalonId(session.user.salonId)
       }
       setUser(session.user)
       const safe = safeInternalRedirect(redirectTo)

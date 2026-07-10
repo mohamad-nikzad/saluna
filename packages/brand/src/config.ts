@@ -35,6 +35,8 @@ export const brand = {
     starterServicesUsedBase: 'saloora:starter-services-used',
     starterServicesUsed: (salonId: string) =>
       `saloora:starter-services-used:${salonId}` as const,
+    /** Persisted active salon for multi-salon staff (BL-0016). */
+    activeSalonId: 'saluna:active-salon-id',
   },
   sw: {
     staticPrefix: 'aravira-static',

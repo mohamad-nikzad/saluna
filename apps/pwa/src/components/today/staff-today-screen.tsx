@@ -24,6 +24,7 @@ import { StaffTodaySkeleton } from '#/components/today-skeleton'
 import { StaffTodayContext } from '#/components/today/staff-today-context'
 import type { StatusActionFeedback } from '#/components/today/staff-today-context'
 import { HeaderGreeting } from '#/components/today/today-shared'
+import { StaffSalonSwitcher } from '#/components/staff/staff-salon-switcher'
 
 function StaffAppointmentCard({
   appointment,
@@ -227,6 +228,9 @@ export function StaffTodayScreen() {
 
   const staffHeader = (
     <header className="border-b border-line-soft bg-card px-5 pt-3.5 pb-4">
+      <div className="mb-2">
+        <StaffSalonSwitcher compact />
+      </div>
       <div className="flex items-start justify-between gap-3">
         <HeaderGreeting
           name={staffName}

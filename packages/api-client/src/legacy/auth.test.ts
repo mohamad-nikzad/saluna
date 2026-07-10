@@ -48,6 +48,18 @@ describe('legacy auth API wrapper', () => {
       password: 'secret123',
     })
 
+    expect(response.status === 'ready' || response.status === undefined).toBe(
+      true,
+    )
+    if (response.status === 'needs_workspace') {
+      throw new Error('unexpected needs_workspace')
+    }
+    if (response.status === 'needs_staff_password') {
+      throw new Error('unexpected needs_staff_password')
+    }
+    if (response.status === 'needs_salon_selection') {
+      throw new Error('unexpected needs_salon_selection')
+    }
     expect(response.user.id).toBe('u1')
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,

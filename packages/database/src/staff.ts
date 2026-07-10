@@ -52,9 +52,11 @@ export {
 export {
   evaluateStaffTenantAccess,
   listActiveStaffProfileAccessesForUser,
+  listStaffSalonOptionsForUser,
   resolveStaffTenantContext,
   type ActiveStaffProfileAccessSnapshot,
   type ResolveStaffTenantContextResult,
+  type StaffSalonOption,
   type StaffTenantAccessDecision,
   type StaffTenantAccessRejectionReason,
 } from './staff-profile-access'

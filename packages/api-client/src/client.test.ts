@@ -82,4 +82,25 @@ describe('configureGeneratedApiClient', () => {
 
     await expect(getApiV1Clients()).rejects.toBe(apiError)
   })
+
+  it('attaches X-Saluna-Salon-Id from getSalonId', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = input instanceof Request ? input : new Request(input, init)
+      expect(request.headers.get('X-Saluna-Salon-Id')).toBe('salon-b')
+      return new Response(JSON.stringify({ clients: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    configureGeneratedApiClient({
+      baseUrl: 'https://example.test',
+      getSalonId: () => 'salon-b',
+    })
+
+    await getApiV1Clients()
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
 })

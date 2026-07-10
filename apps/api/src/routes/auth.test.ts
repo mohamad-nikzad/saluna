@@ -43,6 +43,7 @@ vi.mock('@repo/database/staff', () => ({
   getStaffProfileForUser: vi.fn(),
   getUserWithServiceIds: vi.fn(),
   listPendingStaffInvitesForUser: vi.fn(),
+  listStaffSalonOptionsForUser: vi.fn(),
 }))
 
 vi.mock('@repo/database/client', () => {
@@ -91,6 +92,7 @@ import {
   getStaffProfileForUser,
   getUserWithServiceIds,
   listPendingStaffInvitesForUser,
+  listStaffSalonOptionsForUser,
 } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -141,6 +143,8 @@ beforeEach(() => {
   vi.mocked(claimStaffProfile).mockResolvedValue({ status: 'none' })
   vi.mocked(getStaffProfileForUser).mockResolvedValue(undefined as never)
   vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([])
+  vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
+  vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
 })
 
 describe('auth signup route', () => {
@@ -266,6 +270,8 @@ describe('auth /me shim', () => {
         username: '09121234567',
       },
     } as never)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
     vi.mocked(getMemberForUser).mockResolvedValue(undefined)
 
     const res = await app.request('/api/v1/auth/me')
@@ -291,6 +297,8 @@ describe('auth /me shim', () => {
         username: '09121234567',
       },
     } as never)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
     vi.mocked(getMemberForUser).mockResolvedValue(undefined)
     ;(
       getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
@@ -314,7 +322,7 @@ describe('auth /me shim', () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: { id: 'u1' },
     } as never)
-    vi.mocked(getMemberForUser).mockResolvedValue({
+    vi.mocked(getManagerMemberForUser).mockResolvedValue({
       userId: 'u1',
       organizationId: 's1',
       role: 'owner',
@@ -357,6 +365,206 @@ describe('auth /me shim', () => {
     expect(body.user.onboardingCompleted).toBe(true)
     expect(getUserWithServiceIds).toHaveBeenCalledWith('u1', 's1')
     expect(getManagerOnboardingFlags).toHaveBeenCalledWith('s1')
+  })
+
+  it('lets single-salon staff enter without a salon header', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phoneNumber: '09120000001',
+        username: '09120000001',
+      },
+    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+    ])
+    vi.mocked(getUserWithServiceIds).mockResolvedValue({
+      id: 'u2',
+      salonId: 'salon-a',
+      name: 'Staff',
+      role: 'staff',
+      color: 'blue',
+      phone: '09120000001',
+      createdAt: new Date('2026-01-01'),
+      serviceIds: null,
+    })
+
+    const res = await app.request('/api/v1/auth/me')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      status: 'ready',
+      user: {
+        id: 'u2',
+        salonId: 'salon-a',
+        role: 'staff',
+        salonName: 'Salon A',
+      },
+    })
+  })
+
+  it('returns needs_salon_selection for multi-salon staff without a salon header', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phoneNumber: '09120000001',
+        username: '09120000001',
+      },
+    } as never)
+    const salons = [
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+      {
+        salonId: 'salon-b',
+        salonName: 'Salon B',
+        staffProfileId: 'profile-b',
+      },
+    ]
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue(salons)
+
+    const res = await app.request('/api/v1/auth/me')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      status: 'needs_salon_selection',
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phone: '09120000001',
+      },
+      salons,
+    })
+    expect(getUserWithServiceIds).not.toHaveBeenCalled()
+  })
+
+  it('resolves multi-salon staff when X-Saluna-Salon-Id matches an accepted salon', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phoneNumber: '09120000001',
+        username: '09120000001',
+      },
+    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+      {
+        salonId: 'salon-b',
+        salonName: 'Salon B',
+        staffProfileId: 'profile-b',
+      },
+    ])
+    vi.mocked(getUserWithServiceIds).mockResolvedValue({
+      id: 'u2',
+      salonId: 'salon-b',
+      name: 'Staff',
+      role: 'staff',
+      color: 'blue',
+      phone: '09120000001',
+      createdAt: new Date('2026-01-01'),
+      serviceIds: null,
+    })
+
+    const res = await app.request('/api/v1/auth/me', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-b' },
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      status: 'ready',
+      user: {
+        salonId: 'salon-b',
+        role: 'staff',
+        salonName: 'Salon B',
+      },
+    })
+    expect(getUserWithServiceIds).toHaveBeenCalledWith('u2', 'salon-b')
+  })
+
+  it('falls back to needs_salon_selection when the stored salon is no longer valid', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phoneNumber: '09120000001',
+        username: '09120000001',
+      },
+    } as never)
+    const salons = [
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+      {
+        salonId: 'salon-b',
+        salonName: 'Salon B',
+        staffProfileId: 'profile-b',
+      },
+    ]
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue(salons)
+
+    const res = await app.request('/api/v1/auth/me', {
+      headers: { 'X-Saluna-Salon-Id': 'salon-gone' },
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      status: 'needs_salon_selection',
+      user: {
+        id: 'u2',
+        name: 'Staff',
+        phone: '09120000001',
+      },
+      salons,
+    })
+  })
+})
+
+describe('auth staff-salons route', () => {
+  it('lists accepted salons for staff', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u2' },
+    } as never)
+    const salons = [
+      {
+        salonId: 'salon-a',
+        salonName: 'Salon A',
+        staffProfileId: 'profile-a',
+      },
+    ]
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue(salons)
+
+    const res = await app.request('/api/v1/auth/staff-salons')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ salons })
+  })
+
+  it('returns an empty list for managers', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1' },
+    } as never)
+    vi.mocked(getManagerMemberForUser).mockResolvedValue({
+      userId: 'u1',
+      organizationId: 's1',
+      role: 'owner',
+      name: 'Ali',
+      username: '09121234567',
+    })
+
+    const res = await app.request('/api/v1/auth/staff-salons')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ salons: [] })
+    expect(listStaffSalonOptionsForUser).not.toHaveBeenCalled()
   })
 })
 
@@ -623,11 +831,13 @@ describe('OTP signup continuation routes', () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: { id: 'u1' },
     } as never)
-    vi.mocked(getMemberForUser).mockResolvedValue({
-      userId: 'u1',
-      organizationId: 'salon-1',
-      role: 'member',
-    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+      {
+        salonId: 'salon-1',
+        salonName: 'Salon One',
+        staffProfileId: 'profile-1',
+      },
+    ])
     vi.mocked(getStaffProfileForUser).mockResolvedValue({
       id: 'profile-1',
     } as never)
