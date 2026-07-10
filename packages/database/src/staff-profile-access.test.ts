@@ -86,4 +86,34 @@ describe('evaluateStaffTenantAccess', () => {
       }),
     ).toEqual({ status: 'rejected', reason: 'no_access' })
   })
+
+  it('rejects salon context after Staff Profile Access for that salon is revoked', () => {
+    // Before revoke the identity may enter salon-a. After revoke,
+    // listActiveStaffProfileAccessesForUser drops the revoked row (isNull(revokedAt)),
+    // so the same salon context is rejected.
+    expect(
+      evaluateStaffTenantAccess({
+        requestedSalonId: 'salon-a',
+        activeAccesses: [accessA, accessB],
+      }),
+    ).toEqual({
+      status: 'ok',
+      salonId: 'salon-a',
+      staffProfileId: 'profile-a',
+    })
+
+    expect(
+      evaluateStaffTenantAccess({
+        requestedSalonId: 'salon-a',
+        activeAccesses: [accessB],
+      }),
+    ).toEqual({ status: 'rejected', reason: 'wrong_salon' })
+
+    expect(
+      evaluateStaffTenantAccess({
+        requestedSalonId: 'salon-a',
+        activeAccesses: [],
+      }),
+    ).toEqual({ status: 'rejected', reason: 'no_access' })
+  })
 })

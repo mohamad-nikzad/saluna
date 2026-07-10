@@ -17,6 +17,7 @@ import {
   updateStaffMember,
   updateStaffPassword,
   validateActiveServiceIds,
+  type ReactivateStaffProfileResult,
   type StaffAccessRevocationRejectionReason,
 } from '@repo/database/staff'
 import { isDuplicatePhoneError } from '@repo/database/clients'
@@ -67,6 +68,24 @@ function accessRevocationStatus(
   reason: StaffAccessRevocationRejectionReason,
 ): 404 | 409 {
   if (reason === 'already_revoked') return 409
+  return 404
+}
+
+type ReactivateRejectionReason = Extract<
+  ReactivateStaffProfileResult,
+  { status: 'rejected' }
+>['reason']
+
+const reactivateRejectionMessage: Record<ReactivateRejectionReason, string> = {
+  already_active: 'این پروفایل پرسنل از قبل فعال است',
+  wrong_salon: 'این پروفایل متعلق به این سالن نیست',
+  profile_not_found: 'پروفایل پرسنل یافت نشد',
+}
+
+function reactivateRejectionStatus(
+  reason: ReactivateRejectionReason,
+): 404 | 409 {
+  if (reason === 'already_active') return 409
   return 404
 }
 
@@ -216,14 +235,12 @@ export const staff = new Hono<AppEnv>()
         staffProfileId: id,
       })
       if (result.status === 'rejected') {
-        const message =
-          result.reason === 'already_active'
-            ? 'این پروفایل پرسنل از قبل فعال است'
-            : result.reason === 'wrong_salon'
-              ? 'این پروفایل متعلق به این سالن نیست'
-              : 'پروفایل پرسنل یافت نشد'
-        const status = result.reason === 'already_active' ? 409 : 404
-        return error(c, message, status, result.reason)
+        return error(
+          c,
+          reactivateRejectionMessage[result.reason],
+          reactivateRejectionStatus(result.reason),
+          result.reason,
+        )
       }
 
       return ok(c, {

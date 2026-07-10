@@ -90,6 +90,13 @@ function staffInviteRejectionStatus(
   return 409
 }
 
+function staffLeaveRejectionStatus(
+  reason: StaffAccessRevocationRejectionReason,
+): 404 | 409 {
+  if (reason === 'already_revoked') return 409
+  return 404
+}
+
 function phoneToEmail(phone: string): string {
   return `${phone}@${brand.emailLocalDomain}`
 }
@@ -485,12 +492,10 @@ export const authRoute = new Hono<AppEnv>()
         salonId,
       })
       if (result.status === 'rejected') {
-        const status =
-          result.reason === 'already_revoked' ? 409 : 404
         return error(
           c,
           staffLeaveRejectionMessage[result.reason],
-          status,
+          staffLeaveRejectionStatus(result.reason),
           result.reason,
         )
       }
