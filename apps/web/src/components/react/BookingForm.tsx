@@ -42,7 +42,9 @@ function SubmitButton({
       className={className}
       style={{ backgroundColor: theme.primary }}
     >
-      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+      {isSubmitting ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : null}
       ارسال درخواست رزرو
     </button>
   )
@@ -54,9 +56,12 @@ export function BookingForm({ slug, service, picked, theme, variant }: Props) {
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
 
-  const canSubmit = !!picked && name.trim().length > 0 && phone.trim().length > 0
+  const canSubmit =
+    !!picked && name.trim().length > 0 && phone.trim().length > 0
 
-  const handleSubmit: NonNullable<ComponentProps<'form'>['onSubmit']> = (event) => {
+  const handleSubmit: NonNullable<ComponentProps<'form'>['onSubmit']> = (
+    event,
+  ) => {
     event.preventDefault()
     if (!picked) {
       setError('لطفاً یک زمان را انتخاب کنید.')
@@ -110,7 +115,9 @@ export function BookingForm({ slug, service, picked, theme, variant }: Props) {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="block">
-          <span className="text-xs font-bold opacity-70">نام و نام خانوادگی</span>
+          <span className="text-xs font-bold opacity-70">
+            نام و نام خانوادگی
+          </span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}

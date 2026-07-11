@@ -11,7 +11,7 @@ export type PushSubscriptionKeys = {
 export async function upsertPushSubscription(
   userId: string,
   salonId: string,
-  keys: PushSubscriptionKeys
+  keys: PushSubscriptionKeys,
 ): Promise<void> {
   const db = getDb()
   await db
@@ -37,7 +37,7 @@ export async function upsertPushSubscription(
 
 export async function getPushSubscriptionsForUser(
   userId: string,
-  salonId?: string
+  salonId?: string,
 ): Promise<PushSubscriptionKeys[]> {
   const db = getDb()
   return db
@@ -49,20 +49,27 @@ export async function getPushSubscriptionsForUser(
     .from(pushSubscriptions)
     .where(
       salonId
-        ? and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.salonId, salonId))
-        : eq(pushSubscriptions.userId, userId)
+        ? and(
+            eq(pushSubscriptions.userId, userId),
+            eq(pushSubscriptions.salonId, salonId),
+          )
+        : eq(pushSubscriptions.userId, userId),
     )
 }
 
-export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
+export async function deletePushSubscriptionByEndpoint(
+  endpoint: string,
+): Promise<void> {
   const db = getDb()
-  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint))
+  await db
+    .delete(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, endpoint))
 }
 
 export async function deletePushSubscriptionForUser(
   userId: string,
   salonId: string,
-  endpoint: string
+  endpoint: string,
 ): Promise<boolean> {
   const db = getDb()
   const removed = await db
@@ -71,8 +78,8 @@ export async function deletePushSubscriptionForUser(
       and(
         eq(pushSubscriptions.userId, userId),
         eq(pushSubscriptions.salonId, salonId),
-        eq(pushSubscriptions.endpoint, endpoint)
-      )
+        eq(pushSubscriptions.endpoint, endpoint),
+      ),
     )
     .returning({ id: pushSubscriptions.id })
   return removed.length > 0

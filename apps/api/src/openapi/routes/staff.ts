@@ -1,5 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
+import {
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
 import {
   bookingAvailabilityQuerySchema,
   cancelStaffInviteResponseSchema,
@@ -68,8 +72,7 @@ const inviteConflictResponse = {
 } as const
 
 const inviteLifecycleConflictResponse = {
-  description:
-    'Staff Invite is not pending, or the Staff Profile is inactive',
+  description: 'Staff Invite is not pending, or the Staff Profile is inactive',
   content: {
     'application/json': {
       schema: apiErrorSchema.openapi({
@@ -101,7 +104,8 @@ export const listStaffRoute = createRoute({
   path: '/',
   tags: ['Staff'],
   summary: 'List staff',
-  description: 'Returns all active staff and managers for the authenticated salon tenant.',
+  description:
+    'Returns all active staff and managers for the authenticated salon tenant.',
   security: tenantSecurity,
   responses: {
     200: {

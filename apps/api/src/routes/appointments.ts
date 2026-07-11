@@ -64,7 +64,9 @@ const STAFF_STATUS_UPDATES: ReadonlySet<Appointment['status']> = new Set([
   'no-show',
 ])
 
-function isAvailabilityMode(value: string | undefined): value is AvailabilityMode {
+function isAvailabilityMode(
+  value: string | undefined,
+): value is AvailabilityMode {
   return value === 'day' || value === 'nearest'
 }
 
@@ -146,12 +148,24 @@ export const appointments = new Hono<AppEnv>()
         })
         if (!intake.ok) {
           if (createdPlaceholderId) {
-            await deletePlaceholderClientIfOrphaned(createdPlaceholderId, salonId)
+            await deletePlaceholderClientIfOrphaned(
+              createdPlaceholderId,
+              salonId,
+            )
           }
-          return error(c, intake.error, intake.status as ContentfulStatusCode, intake.code)
+          return error(
+            c,
+            intake.error,
+            intake.status as ContentfulStatusCode,
+            intake.code,
+          )
         }
 
-        const appointment = await createAppointment(intake.command, salonId, userId)
+        const appointment = await createAppointment(
+          intake.command,
+          salonId,
+          userId,
+        )
 
         const staffNotification = await notifyStaffOfAppointmentCreated({
           salonId,
@@ -178,7 +192,10 @@ export const appointments = new Hono<AppEnv>()
           })
         }
 
-        const detail = await getAppointmentWithDetailsById(appointment.id, salonId)
+        const detail = await getAppointmentWithDetailsById(
+          appointment.id,
+          salonId,
+        )
 
         return ok(c, {
           appointment: detail ?? {
@@ -190,9 +207,10 @@ export const appointments = new Hono<AppEnv>()
         })
       } catch (err) {
         if (createdPlaceholderId) {
-          await deletePlaceholderClientIfOrphaned(createdPlaceholderId, salonId).catch(
-            () => {},
-          )
+          await deletePlaceholderClientIfOrphaned(
+            createdPlaceholderId,
+            salonId,
+          ).catch(() => {})
         }
         throw err
       }
@@ -237,7 +255,10 @@ export const appointments = new Hono<AppEnv>()
     async (c) => {
       const tenant = c.var.tenant
       const { id } = c.req.valid('param')
-      const appointment = await getAppointmentWithDetailsById(id, tenant.salonId)
+      const appointment = await getAppointmentWithDetailsById(
+        id,
+        tenant.salonId,
+      )
       if (!appointment) return error(c, 'نوبت یافت نشد', 404)
       if (
         tenant.role === 'staff' &&
@@ -283,9 +304,8 @@ export const appointments = new Hono<AppEnv>()
       let createdPlaceholderId: string | null = null
       try {
         let resolvedBody = body
-        let existingPlaceholderPatch:
-          | { name: string; notes?: string }
-          | null = null
+        let existingPlaceholderPatch: { name: string; notes?: string } | null =
+          null
 
         if (
           placeholderClient &&
@@ -347,9 +367,17 @@ export const appointments = new Hono<AppEnv>()
         })
         if (!intake.ok) {
           if (createdPlaceholderId) {
-            await deletePlaceholderClientIfOrphaned(createdPlaceholderId, salonId)
+            await deletePlaceholderClientIfOrphaned(
+              createdPlaceholderId,
+              salonId,
+            )
           }
-          return error(c, intake.error, intake.status as ContentfulStatusCode, intake.code)
+          return error(
+            c,
+            intake.error,
+            intake.status as ContentfulStatusCode,
+            intake.code,
+          )
         }
 
         const appointment = await updateAppointment(id, salonId, intake.patch)
@@ -372,7 +400,10 @@ export const appointments = new Hono<AppEnv>()
           nextClientId: appointment.clientId,
         })
 
-        const detail = await getAppointmentWithDetailsById(appointment.id, salonId)
+        const detail = await getAppointmentWithDetailsById(
+          appointment.id,
+          salonId,
+        )
         return ok(c, {
           appointment: detail ?? {
             ...appointment,
@@ -383,9 +414,10 @@ export const appointments = new Hono<AppEnv>()
         })
       } catch (err) {
         if (createdPlaceholderId) {
-          await deletePlaceholderClientIfOrphaned(createdPlaceholderId, salonId).catch(
-            () => {},
-          )
+          await deletePlaceholderClientIfOrphaned(
+            createdPlaceholderId,
+            salonId,
+          ).catch(() => {})
         }
         throw err
       }
@@ -419,7 +451,8 @@ export const appointments = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const { name, phone, notes, reassignToExistingClientId } = c.req.valid('json')
+      const { name, phone, notes, reassignToExistingClientId } =
+        c.req.valid('json')
 
       const result = await completePlaceholderAppointmentClient({
         salonId,
@@ -433,7 +466,8 @@ export const appointments = new Hono<AppEnv>()
       if (!result.ok) {
         const payload: Record<string, unknown> = { error: result.error }
         if (result.code) payload.code = result.code
-        if (result.existingClient) payload.existingClient = result.existingClient
+        if (result.existingClient)
+          payload.existingClient = result.existingClient
         return c.json(payload, result.status as ContentfulStatusCode)
       }
 

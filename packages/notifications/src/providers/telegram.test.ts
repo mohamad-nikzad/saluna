@@ -40,7 +40,9 @@ describe('createTelegramProvider().send', () => {
 
   it('posts to sendMessage and returns sent with providerMessageId', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true, result: { message_id: 7 } }), { status: 200 })
+      new Response(JSON.stringify({ ok: true, result: { message_id: 7 } }), {
+        status: 200,
+      }),
     )
     const provider = createTelegramProvider(() => testConfig)
     const result = await provider.send({
@@ -52,7 +54,9 @@ describe('createTelegramProvider().send', () => {
     expect(result.status).toBe('sent')
     expect(result.providerMessageId).toBe('7')
     const [url, init] = fetchMock.mock.calls[0]!
-    expect(String(url)).toBe('https://api.telegram.org/bottest-token/sendMessage')
+    expect(String(url)).toBe(
+      'https://api.telegram.org/bottest-token/sendMessage',
+    )
     const body = JSON.parse((init as RequestInit).body as string)
     expect(body.chat_id).toBe('42')
     expect(body.parse_mode).toBe('HTML')
@@ -61,9 +65,12 @@ describe('createTelegramProvider().send', () => {
 
   it('returns failed on HTTP error', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: false, error_code: 400, description: 'bad' }), {
-        status: 400,
-      })
+      new Response(
+        JSON.stringify({ ok: false, error_code: 400, description: 'bad' }),
+        {
+          status: 400,
+        },
+      ),
     )
     const provider = createTelegramProvider(() => testConfig)
     const result = await provider.send({
@@ -78,7 +85,9 @@ describe('createTelegramProvider().send', () => {
 
   it('serializes inline keyboard with callback_data when buttons are provided', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), { status: 200 })
+      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), {
+        status: 200,
+      }),
     )
     const provider = createTelegramProvider(() => testConfig)
     await provider.send({
@@ -89,7 +98,7 @@ describe('createTelegramProvider().send', () => {
       buttons: [[{ label: 'Approve', data: 'approve:r1' }]],
     })
     const body = JSON.parse(
-      (fetchMock.mock.calls[0]![1] as RequestInit).body as string
+      (fetchMock.mock.calls[0]![1] as RequestInit).body as string,
     )
     expect(body.reply_markup).toEqual({
       inline_keyboard: [[{ text: 'Approve', callback_data: 'approve:r1' }]],
@@ -98,7 +107,9 @@ describe('createTelegramProvider().send', () => {
 
   it('omits non-https url buttons from the inline keyboard', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), { status: 200 })
+      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), {
+        status: 200,
+      }),
     )
     const provider = createTelegramProvider(() => testConfig)
     await provider.send({
@@ -114,7 +125,7 @@ describe('createTelegramProvider().send', () => {
       ],
     })
     const body = JSON.parse(
-      (fetchMock.mock.calls[0]![1] as RequestInit).body as string
+      (fetchMock.mock.calls[0]![1] as RequestInit).body as string,
     )
     expect(body.reply_markup).toEqual({
       inline_keyboard: [[{ text: 'Approve', callback_data: 'approve:r1' }]],
@@ -123,7 +134,9 @@ describe('createTelegramProvider().send', () => {
 
   it('serializes inline keyboard with url when url buttons are provided', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), { status: 200 })
+      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), {
+        status: 200,
+      }),
     )
     const provider = createTelegramProvider(() => testConfig)
     await provider.send({
@@ -134,16 +147,20 @@ describe('createTelegramProvider().send', () => {
       buttons: [[{ label: 'Open app', url: 'https://app.example/requests/1' }]],
     })
     const body = JSON.parse(
-      (fetchMock.mock.calls[0]![1] as RequestInit).body as string
+      (fetchMock.mock.calls[0]![1] as RequestInit).body as string,
     )
     expect(body.reply_markup).toEqual({
-      inline_keyboard: [[{ text: 'Open app', url: 'https://app.example/requests/1' }]],
+      inline_keyboard: [
+        [{ text: 'Open app', url: 'https://app.example/requests/1' }],
+      ],
     })
   })
 
   it('escapes HTML in title and body', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), { status: 200 })
+      new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }), {
+        status: 200,
+      }),
     )
     const provider = createTelegramProvider(() => testConfig)
     await provider.send({
@@ -153,7 +170,7 @@ describe('createTelegramProvider().send', () => {
       body: 'a & b',
     })
     const body = JSON.parse(
-      (fetchMock.mock.calls[0]![1] as RequestInit).body as string
+      (fetchMock.mock.calls[0]![1] as RequestInit).body as string,
     )
     expect(body.text).toContain('&lt;x&gt;')
     expect(body.text).toContain('a &amp; b')

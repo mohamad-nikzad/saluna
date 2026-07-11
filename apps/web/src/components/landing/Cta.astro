@@ -27,7 +27,9 @@ const { loginHref, signupHref } = Astro.props
     </div>
 
     <div class="mx-auto max-w-3xl px-6 py-16 text-center sm:px-10 sm:py-20">
-      <h2 class={`${displayClass} text-3xl leading-tight text-[#4a1e2e] sm:text-5xl`}>
+      <h2
+        class={`${displayClass} text-3xl leading-tight text-[#4a1e2e] sm:text-5xl`}
+      >
         آماده‌ای {brandFa} را با سالن خودت تست کنی؟
       </h2>
       <p class="mt-5 text-base leading-8 text-[#6b4955] sm:text-lg">
@@ -35,7 +37,9 @@ const { loginHref, signupHref } = Astro.props
         {brandFa} چقدر با کار روزانه تیم تو هماهنگ می‌شود.
       </p>
 
-      <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <div
+        class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+      >
         <a
           href={signupHref}
           class="w-full rounded-md bg-[#c3425b] px-8 py-3 text-center text-base font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,0.32)] transition hover:bg-[#a82b46] sm:w-auto"

@@ -56,13 +56,13 @@ Add to `clients.index.tsx` header row (opposite title block):
 
 Reuse `FormSheet` shell (same pattern as `ClientDrawer` and catalog preset picker).
 
-| Area | Content |
-|------|---------|
-| Title | «ورود از فایل مخاطبین» |
-| Info bar | Sticky summary counts (see below) |
-| Toolbar | Search (name/phone) + «انتخاب همه» |
-| List | Checkbox + inline name input + inline phone input per importable row |
-| Footer | «افزودن N مشتری» — disabled when N = 0 |
+| Area     | Content                                                              |
+| -------- | -------------------------------------------------------------------- |
+| Title    | «ورود از فایل مخاطبین»                                               |
+| Info bar | Sticky summary counts (see below)                                    |
+| Toolbar  | Search (name/phone) + «انتخاب همه»                                   |
+| List     | Checkbox + inline name input + inline phone input per importable row |
+| Footer   | «افزودن N مشتری» — disabled when N = 0                               |
 
 ### Phone input in preview rows
 
@@ -109,23 +109,27 @@ function parseVcfFile(text: string): VcfDraftContact[]
 
 ### Parsing rules
 
-| Rule | Behavior |
-|------|----------|
-| Card split | `BEGIN:VCARD` … `END:VCARD` |
-| Folded lines | Unfold RFC continuations (leading space/tab on continuation line) |
-| Name | `FN` first; fallback structured `N` (compose given + family) |
-| Phone | Prefer `TEL` with `TYPE=CELL` or `TYPE=MOBILE`; else first `TEL` |
-| Strip prefix | Remove `tel:`, spaces, punctuation before normalize |
-| Normalize | `normalizePhone(tel)` — Persian/Arabic digits → Latin digits only |
-| No name | Card → **invalid** bucket (not shown) |
-| No / bad phone | Card → **invalid** bucket after `phoneSchema` fails |
+| Rule           | Behavior                                                          |
+| -------------- | ----------------------------------------------------------------- |
+| Card split     | `BEGIN:VCARD` … `END:VCARD`                                       |
+| Folded lines   | Unfold RFC continuations (leading space/tab on continuation line) |
+| Name           | `FN` first; fallback structured `N` (compose given + family)      |
+| Phone          | Prefer `TEL` with `TYPE=CELL` or `TYPE=MOBILE`; else first `TEL`  |
+| Strip prefix   | Remove `tel:`, spaces, punctuation before normalize               |
+| Normalize      | `normalizePhone(tel)` — Persian/Arabic digits → Latin digits only |
+| No name        | Card → **invalid** bucket (not shown)                             |
+| No / bad phone | Card → **invalid** bucket after `phoneSchema` fails               |
 
 ### Classification (client-side)
 
 After parse, each card is classified using loaded salon clients (`clientsListQueryOptions`):
 
 ```ts
-type ImportRowStatus = 'importable' | 'invalid' | 'duplicate-existing' | 'duplicate-file'
+type ImportRowStatus =
+  | 'importable'
+  | 'invalid'
+  | 'duplicate-existing'
+  | 'duplicate-file'
 
 type ClientImportPreviewRow = {
   localId: string
@@ -136,12 +140,12 @@ type ClientImportPreviewRow = {
 }
 ```
 
-| Bucket | Criteria | In preview list? |
-|--------|----------|------------------|
-| Importable | Valid name + passes `phoneSchema` + unique in file + not in salon | Yes |
-| Invalid | Missing name, missing phone, or fails `phoneSchema` | No — counted in info bar |
-| Duplicate (salon) | Normalized phone matches existing client | No — counted |
-| Duplicate (file) | Second+ row with same normalized phone in file | No — counted (first wins) |
+| Bucket            | Criteria                                                          | In preview list?          |
+| ----------------- | ----------------------------------------------------------------- | ------------------------- |
+| Importable        | Valid name + passes `phoneSchema` + unique in file + not in salon | Yes                       |
+| Invalid           | Missing name, missing phone, or fails `phoneSchema`               | No — counted in info bar  |
+| Duplicate (salon) | Normalized phone matches existing client                          | No — counted              |
+| Duplicate (file)  | Second+ row with same normalized phone in file                    | No — counted (first wins) |
 
 Re-validation on blur: if user edits a row to invalid, remove from list and update counts. If user fixes an invalid pattern… wait — invalid rows aren't in the list. So only importable rows can be edited; editing can demote a row out of the list (invalid) or if they fix phone that was duplicate... duplicates aren't in list so user can't fix those in preview. That's by design per UX decision.
 
@@ -212,14 +216,14 @@ New database helper: `createClientsBulk(salonId, clients)` in `packages/database
 
 ## Edge cases
 
-| Case | Behavior |
-|------|----------|
-| Empty file / no VCARD blocks | Toast: `فایل مخاطبین خالی است` — stay on file-pick step |
-| Invalid file (not VCF) | Toast: `فایل انتخاب‌شده معتبر نیست` |
-| > 200 importable rows | Show first 200 in preview; info bar: `فقط ۲۰۰ مورد اول نمایش داده شد` |
-| All filtered out | Empty list, disabled submit, offer re-pick |
-| Race duplicate on submit | Backend `skipped.duplicate-phone`; reflected in toast |
-| Network error | Standard mutation error toast |
+| Case                         | Behavior                                                              |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Empty file / no VCARD blocks | Toast: `فایل مخاطبین خالی است` — stay on file-pick step               |
+| Invalid file (not VCF)       | Toast: `فایل انتخاب‌شده معتبر نیست`                                   |
+| > 200 importable rows        | Show first 200 in preview; info bar: `فقط ۲۰۰ مورد اول نمایش داده شد` |
+| All filtered out             | Empty list, disabled submit, offer re-pick                            |
+| Race duplicate on submit     | Backend `skipped.duplicate-phone`; reflected in toast                 |
+| Network error                | Standard mutation error toast                                         |
 
 ## Testing
 

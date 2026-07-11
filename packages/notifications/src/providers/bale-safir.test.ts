@@ -183,7 +183,9 @@ describe('sendBaleSafirMessage()', () => {
   })
 
   it('returns a normalized failed delivery for non-JSON HTTP errors', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('upstream down', { status: 502 }))
+    fetchMock.mockResolvedValueOnce(
+      new Response('upstream down', { status: 502 }),
+    )
 
     const result = await sendBaleSafirMessage({
       phone: '09123456789',

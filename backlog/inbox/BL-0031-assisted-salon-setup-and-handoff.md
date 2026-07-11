@@ -121,4 +121,3 @@ The public salon page remains disabled unless the admin explicitly enables it at
 - The existing admin app, platform RBAC, admin audit log, salon onboarding operations, CatalogPreset support, OTP signup, and Client Import behavior provide substantial prior art.
 - Assisted onboarding in comparable salon products commonly combines configuration, migration, and handoff to the business; Saluna's first version keeps only the parts needed by its current team.
 - Domain language and architectural boundaries are recorded in `CONTEXT.md` and ADRs 0006–0008.
-

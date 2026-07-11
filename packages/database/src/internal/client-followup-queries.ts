@@ -50,7 +50,7 @@ export type ClientFollowUpMessageContext = {
 }
 
 function rowToClientFollowUpMessageDelivery(
-  row: typeof clientFollowUpMessageDeliveries.$inferSelect
+  row: typeof clientFollowUpMessageDeliveries.$inferSelect,
 ): ClientFollowUpMessageDelivery {
   return {
     id: row.id,
@@ -71,7 +71,7 @@ function rowToClientFollowUpMessageDelivery(
 
 export async function getClientSummary(
   salonId: string,
-  clientId: string
+  clientId: string,
 ): Promise<ClientSummary | null> {
   const [client, tags, allAppointments, openFollowUps] = await Promise.all([
     getClientById(clientId, salonId),
@@ -84,20 +84,34 @@ export async function getClientSummary(
   const today = salonTodayYmd()
   const upcomingAppointment =
     allAppointments
-      .filter((appointment) => appointment.date >= today && appointment.status !== 'cancelled' && appointment.status !== 'no-show')
-      .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))[0] ??
-    null
+      .filter(
+        (appointment) =>
+          appointment.date >= today &&
+          appointment.status !== 'cancelled' &&
+          appointment.status !== 'no-show',
+      )
+      .sort((a, b) =>
+        `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`),
+      )[0] ?? null
 
-  const completed = allAppointments.filter((appointment) => appointment.status === 'completed')
-  const cancelled = allAppointments.filter((appointment) => appointment.status === 'cancelled')
-  const noShows = allAppointments.filter((appointment) => appointment.status === 'no-show')
+  const completed = allAppointments.filter(
+    (appointment) => appointment.status === 'completed',
+  )
+  const cancelled = allAppointments.filter(
+    (appointment) => appointment.status === 'cancelled',
+  )
+  const noShows = allAppointments.filter(
+    (appointment) => appointment.status === 'no-show',
+  )
   const estimatedSpend = completed.reduce(
     (sum, appointment) => sum + appointment.bookedServicePrice,
-    0
+    0,
   )
   const lastCompleted = completed
     .slice()
-    .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`))[0]
+    .sort((a, b) =>
+      `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`),
+    )[0]
 
   const serviceCounts = new Map<string, { name: string; count: number }>()
   for (const appointment of completed) {
@@ -108,7 +122,9 @@ export async function getClientSummary(
     current.count += 1
     serviceCounts.set(appointment.bookedServiceName, current)
   }
-  const favoriteService = [...serviceCounts.values()].sort((a, b) => b.count - a.count)[0]
+  const favoriteService = [...serviceCounts.values()].sort(
+    (a, b) => b.count - a.count,
+  )[0]
 
   return {
     client: { ...client, tags },
@@ -131,12 +147,14 @@ export async function getClientSummary(
 
 export async function getClientFollowUps(
   salonId: string,
-  options?: { clientId?: string; status?: FollowUpStatus }
+  options?: { clientId?: string; status?: FollowUpStatus },
 ): Promise<ClientFollowUp[]> {
   const db = getDb()
   const conditions = [eq(clientFollowUps.salonId, salonId)]
-  if (options?.clientId) conditions.push(eq(clientFollowUps.clientId, options.clientId))
-  if (options?.status) conditions.push(eq(clientFollowUps.status, options.status))
+  if (options?.clientId)
+    conditions.push(eq(clientFollowUps.clientId, options.clientId))
+  if (options?.status)
+    conditions.push(eq(clientFollowUps.status, options.status))
 
   const rows = await db
     .select()
@@ -150,7 +168,7 @@ export async function createClientFollowUp(
   salonId: string,
   clientId: string,
   reason: FollowUpReason,
-  dueDate = salonTodayYmd()
+  dueDate = salonTodayYmd(),
 ): Promise<ClientFollowUp> {
   const db = getDb()
   const [row] = await db
@@ -163,7 +181,11 @@ export async function createClientFollowUp(
       dueDate,
     })
     .onConflictDoUpdate({
-      target: [clientFollowUps.salonId, clientFollowUps.clientId, clientFollowUps.reason],
+      target: [
+        clientFollowUps.salonId,
+        clientFollowUps.clientId,
+        clientFollowUps.reason,
+      ],
       set: {
         status: 'open',
         dueDate,
@@ -178,7 +200,7 @@ export async function createClientFollowUp(
 export async function updateClientFollowUpStatus(
   salonId: string,
   id: string,
-  status: FollowUpStatus
+  status: FollowUpStatus,
 ): Promise<ClientFollowUp | undefined> {
   const db = getDb()
   const [row] = await db
@@ -188,14 +210,16 @@ export async function updateClientFollowUpStatus(
       reviewedAt: status === 'reviewed' ? new Date() : null,
       updatedAt: new Date(),
     })
-    .where(and(eq(clientFollowUps.salonId, salonId), eq(clientFollowUps.id, id)))
+    .where(
+      and(eq(clientFollowUps.salonId, salonId), eq(clientFollowUps.id, id)),
+    )
     .returning()
   return row ? rowToClientFollowUp(row) : undefined
 }
 
 export async function getClientFollowUpMessageContext(
   salonId: string,
-  followUpId: string
+  followUpId: string,
 ): Promise<ClientFollowUpMessageContext | null> {
   const db = getDb()
   const [row] = await db
@@ -210,7 +234,12 @@ export async function getClientFollowUpMessageContext(
     .from(clientFollowUps)
     .innerJoin(clients, eq(clients.id, clientFollowUps.clientId))
     .innerJoin(organization, eq(organization.id, clientFollowUps.salonId))
-    .where(and(eq(clientFollowUps.salonId, salonId), eq(clientFollowUps.id, followUpId)))
+    .where(
+      and(
+        eq(clientFollowUps.salonId, salonId),
+        eq(clientFollowUps.id, followUpId),
+      ),
+    )
     .limit(1)
 
   if (!row) return null
@@ -242,8 +271,8 @@ export async function getLatestClientFollowUpMessageDelivery(input: {
       and(
         eq(clientFollowUpMessageDeliveries.salonId, input.salonId),
         eq(clientFollowUpMessageDeliveries.followUpId, input.followUpId),
-        eq(clientFollowUpMessageDeliveries.provider, input.provider)
-      )
+        eq(clientFollowUpMessageDeliveries.provider, input.provider),
+      ),
     )
     .orderBy(desc(clientFollowUpMessageDeliveries.createdAt))
     .limit(1)

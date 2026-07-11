@@ -15,7 +15,7 @@ vi.mock('@repo/database/clients', () => ({
 
 vi.mock('@repo/notifications', () => ({
   normalizeBaleSafirPhone: vi.fn((phone: string) =>
-    /^09\d{9}$/.test(phone) ? `98${phone.slice(1)}` : null
+    /^09\d{9}$/.test(phone) ? `98${phone.slice(1)}` : null,
   ),
   sendBaleSafirMessage: vi.fn(),
 }))
@@ -37,7 +37,10 @@ import * as retentionDb from '@repo/database/retention'
 import * as clientsDb from '@repo/database/clients'
 import * as notifications from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -60,18 +63,41 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
-  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
-  vi.mocked(clientsDb.getLatestClientFollowUpMessageDelivery).mockResolvedValue(null as never)
-  vi.mocked(clientsDb.createClientFollowUpMessageDelivery).mockImplementation(async (input) => ({
-    id: 'd1',
-    createdAt: new Date('2026-06-07T00:00:00.000Z'),
-    sentAt: input.status === 'sent' ? new Date('2026-06-07T00:00:00.000Z') : null,
-    providerMessageId: input.providerMessageId ?? null,
-    error: input.error ?? null,
-    ...input,
-  }) as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(clientsDb.getLatestClientFollowUpMessageDelivery).mockResolvedValue(
+    null as never,
+  )
+  vi.mocked(clientsDb.createClientFollowUpMessageDelivery).mockImplementation(
+    async (input) =>
+      ({
+        id: 'd1',
+        createdAt: new Date('2026-06-07T00:00:00.000Z'),
+        sentAt:
+          input.status === 'sent' ? new Date('2026-06-07T00:00:00.000Z') : null,
+        providerMessageId: input.providerMessageId ?? null,
+        error: input.error ?? null,
+        ...input,
+      }) as never,
+  )
   vi.mocked(notifications.sendBaleSafirMessage).mockResolvedValue({
     status: 'sent',
     providerMessageId: 'm1',
@@ -101,7 +127,9 @@ describe('retention router', () => {
   })
 
   it('GET returns retention queue', async () => {
-    vi.mocked(retentionDb.getRetentionQueue).mockResolvedValue([{ id: 'r1' }] as never)
+    vi.mocked(retentionDb.getRetentionQueue).mockResolvedValue([
+      { id: 'r1' },
+    ] as never)
     const res = await app.request('/api/v1/retention', { headers: authHeaders })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ items: [{ id: 'r1' }] })
@@ -118,7 +146,9 @@ describe('retention router', () => {
   })
 
   it('PATCH 404 when follow-up missing', async () => {
-    vi.mocked(clientsDb.updateClientFollowUpStatus).mockResolvedValue(undefined as never)
+    vi.mocked(clientsDb.updateClientFollowUpStatus).mockResolvedValue(
+      undefined as never,
+    )
     const res = await app.request('/api/v1/retention/abc', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -138,11 +168,17 @@ describe('retention router', () => {
       body: JSON.stringify({ status: 'reviewed' }),
     })
     expect(res.status).toBe(200)
-    expect(clientsDb.updateClientFollowUpStatus).toHaveBeenCalledWith('s1', 'abc', 'reviewed')
+    expect(clientsDb.updateClientFollowUpStatus).toHaveBeenCalledWith(
+      's1',
+      'abc',
+      'reviewed',
+    )
   })
 
   it('POST bale-message 404 when follow-up is missing', async () => {
-    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue(null as never)
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue(
+      null as never,
+    )
 
     const res = await app.request('/api/v1/retention/f1/bale-message', {
       method: 'POST',
@@ -176,7 +212,9 @@ describe('retention router', () => {
       client: { id: 'c1', name: 'Client', phone: '09123456789' },
       salon: { id: 's1', name: 'Salon' },
     } as never)
-    vi.mocked(clientsDb.getLatestClientFollowUpMessageDelivery).mockResolvedValue({
+    vi.mocked(
+      clientsDb.getLatestClientFollowUpMessageDelivery,
+    ).mockResolvedValue({
       id: 'd0',
       status: 'sent',
     } as never)

@@ -5,10 +5,7 @@ import { devices, expect, test } from '@playwright/test'
 
 import { SEEDED_MANAGER, login } from './helpers/auth'
 
-const OUT_DIR = path.join(
-  process.cwd(),
-  'apps/pwa/public/screenshots/bale',
-)
+const OUT_DIR = path.join(process.cwd(), 'apps/pwa/public/screenshots/bale')
 const MANIFEST_SCREENSHOTS_DIR = path.join(
   process.cwd(),
   'apps/pwa/public/screenshots',
@@ -47,7 +44,10 @@ async function capturePageScreenshot(
   })
 }
 
-function syncManifestScreenshot(sourceFilename: string, manifestFilename: string) {
+function syncManifestScreenshot(
+  sourceFilename: string,
+  manifestFilename: string,
+) {
   copyFileSync(
     path.join(OUT_DIR, sourceFilename),
     path.join(MANIFEST_SCREENSHOTS_DIR, manifestFilename),

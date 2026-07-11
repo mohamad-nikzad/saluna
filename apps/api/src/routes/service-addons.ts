@@ -25,7 +25,11 @@ function addonErrorResponse(c: Context, err: unknown) {
   if (msg.includes('active service add-on name must be unique per salon')) {
     return error(c, 'این نام افزودنی برای این سالن قبلاً ثبت شده است', 409)
   }
-  if (msg.includes('service add-on price and duration deltas must be non-negative')) {
+  if (
+    msg.includes(
+      'service add-on price and duration deltas must be non-negative',
+    )
+  ) {
     return error(c, 'قیمت و زمان افزودنی نمی‌توانند منفی باشند', 400)
   }
   if (msg.includes('service add-on price or duration delta must be positive')) {
@@ -58,7 +62,11 @@ export const serviceAddons = new Hono<AppEnv>()
       const { salonId } = c.var.tenant
       const { id, ...input } = c.req.valid('json')
 
-      if (id !== undefined && id !== null && !isClientProvidedEntityId(String(id))) {
+      if (
+        id !== undefined &&
+        id !== null &&
+        !isClientProvidedEntityId(String(id))
+      ) {
         return error(c, 'شناسه افزودنی نامعتبر است', 400)
       }
 

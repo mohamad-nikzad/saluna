@@ -78,7 +78,11 @@ export const publicRoutes = new Hono<AppEnv>()
       const limit = await checkAndRecordPublicSubmit(ip)
       if (!limit.allowed) {
         c.header('Retry-After', String(Math.ceil(limit.retryAfterMs / 1000)))
-        return error(c, 'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً بعداً تلاش کنید.', 429)
+        return error(
+          c,
+          'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً بعداً تلاش کنید.',
+          429,
+        )
       }
       const result = await createAppointmentRequest({
         slug,
@@ -96,7 +100,10 @@ export const publicRoutes = new Hono<AppEnv>()
       void notifyManagersOfNewAppointmentRequest(result.id, {
         publicAppBaseUrl: getMessagingAppBaseUrl(),
       }).catch((err) => {
-        console.error('[public] failed to notify managers of new request', { requestId: result.id, err })
+        console.error('[public] failed to notify managers of new request', {
+          requestId: result.id,
+          err,
+        })
       })
       return ok(c, { token: result.confirmationToken }, 201)
     },

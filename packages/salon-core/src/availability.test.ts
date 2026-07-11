@@ -7,7 +7,8 @@ import {
 } from './availability'
 
 function staffDay(
-  partial: Partial<AvailabilityStaffDay> & Pick<AvailabilityStaffDay, 'staffId' | 'staffName'>
+  partial: Partial<AvailabilityStaffDay> &
+    Pick<AvailabilityStaffDay, 'staffId' | 'staffName'>,
 ): AvailabilityStaffDay {
   return {
     staffId: partial.staffId,
@@ -215,7 +216,11 @@ describe('getAvailabilityForDay', () => {
       searchMode: 'specific',
     })
 
-    expect(result.slots.map((slot) => slot.startTime)).toEqual(['09:30', '10:00', '10:30'])
+    expect(result.slots.map((slot) => slot.startTime)).toEqual([
+      '09:30',
+      '10:00',
+      '10:30',
+    ])
   })
 
   it('keeps only slot boundaries where the full service fits', () => {

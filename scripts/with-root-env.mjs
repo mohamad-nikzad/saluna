@@ -36,8 +36,7 @@ function loadRootEnv() {
   parseEnvFile(path.join(repoRoot, '.env'))
   parseEnvFile(path.join(repoRoot, '.env.local'))
 
-  const extra = process.env.ROOT_ENV_FILES
-    ?.split(',')
+  const extra = process.env.ROOT_ENV_FILES?.split(',')
     .map((value) => value.trim())
     .filter(Boolean)
 
@@ -47,7 +46,8 @@ function loadRootEnv() {
 }
 
 function withWorkspaceBin(env) {
-  const pathKey = Object.keys(env).find((key) => key.toLowerCase() === 'path') ?? 'PATH'
+  const pathKey =
+    Object.keys(env).find((key) => key.toLowerCase() === 'path') ?? 'PATH'
   const workspaceBin = path.join(repoRoot, 'node_modules', '.bin')
   const currentPath = env[pathKey]
 

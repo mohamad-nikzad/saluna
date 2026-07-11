@@ -2,7 +2,12 @@ import type { ColorToken } from './colors'
 
 const tok = (oklch: string, hex: string): ColorToken => ({ oklch, hex })
 
-export type AppointmentStatusId = 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
+export type AppointmentStatusId =
+  | 'scheduled'
+  | 'confirmed'
+  | 'completed'
+  | 'cancelled'
+  | 'no-show'
 
 export type AppointmentStatusPalette = {
   readonly background: ColorToken
@@ -37,4 +42,3 @@ export const appointmentStatusPalettes = {
     border: tok('oklch(0.72 0.12 70)', '#D4AA4C'),
   },
 } as const satisfies Record<AppointmentStatusId, AppointmentStatusPalette>
-

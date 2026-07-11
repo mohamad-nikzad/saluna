@@ -177,7 +177,9 @@ describe('findClientByCanonicalPhone', () => {
   })
 
   it('skips clients without phone', () => {
-    expect(findClientByCanonicalPhone([clients[2]!], '09121111111')).toBeUndefined()
+    expect(
+      findClientByCanonicalPhone([clients[2]!], '09121111111'),
+    ).toBeUndefined()
   })
 })
 

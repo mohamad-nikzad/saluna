@@ -17,13 +17,9 @@ export {
   validateUpdateAppointmentIntake,
 } from './internal/appointment-intake'
 
-export {
-  getClientById,
-} from './internal/client-queries'
+export { getClientById } from './internal/client-queries'
 
-export {
-  getServiceById,
-} from './internal/service-queries'
+export { getServiceById } from './internal/service-queries'
 
 export {
   checkStaffAvailabilityForAppointment,

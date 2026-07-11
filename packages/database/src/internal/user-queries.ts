@@ -1,7 +1,13 @@
 import { and, eq, isNull, or } from 'drizzle-orm'
 import type { User } from '@repo/salon-core/types'
 import { getDb } from '../client'
-import { member, salonMember, staffInvites, staffProfiles, user } from '../schema'
+import {
+  member,
+  salonMember,
+  staffInvites,
+  staffProfiles,
+  user,
+} from '../schema'
 import { rowToUser, staffUserSelect } from './row-mappers'
 
 /**
@@ -18,13 +24,16 @@ export async function getUserById(id: string): Promise<User | undefined> {
     .innerJoin(member, eq(member.userId, user.id))
     .leftJoin(
       salonMember,
-      and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, member.organizationId))
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, member.organizationId),
+      ),
     )
     .where(
       and(
         eq(user.id, id),
-        or(isNull(salonMember.active), eq(salonMember.active, true))
-      )
+        or(isNull(salonMember.active), eq(salonMember.active, true)),
+      ),
     )
     .limit(1)
   const row = rows[0]

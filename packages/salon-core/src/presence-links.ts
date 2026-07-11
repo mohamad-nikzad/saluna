@@ -32,7 +32,9 @@ function hostMatches(value: string, hosts: readonly string[]): boolean {
     return false
   }
   const host = url.hostname.toLowerCase()
-  return hosts.some((allowed) => host === allowed || host.endsWith(`.${allowed}`))
+  return hosts.some(
+    (allowed) => host === allowed || host.endsWith(`.${allowed}`),
+  )
 }
 
 function socialLabel(

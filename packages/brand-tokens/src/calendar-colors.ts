@@ -47,6 +47,5 @@ export const calendarColorOptions = [
 export const calendarColorIds = calendarColorOptions.map((option) => option.id)
 
 export const calendarColorById = Object.fromEntries(
-  calendarColorOptions.map((option) => [option.id, option])
+  calendarColorOptions.map((option) => [option.id, option]),
 ) as Record<CalendarColorId, CalendarColorOption>
-

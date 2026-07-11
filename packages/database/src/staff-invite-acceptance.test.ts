@@ -28,7 +28,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -39,9 +44,18 @@ describe('evaluateStaffInviteAcceptance', () => {
   it('rejects when the session phone does not match the invite phone', () => {
     expect(
       evaluateStaffInviteAcceptance({
-        identity: { ...identity, phoneNumber: '09129876543', username: '09129876543' },
+        identity: {
+          ...identity,
+          phoneNumber: '09129876543',
+          username: '09129876543',
+        },
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -54,7 +68,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity: { ...identity, verified: false },
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -67,7 +86,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite: { ...invite, status: 'declined' },
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -80,7 +104,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite: { ...invite, expiresAt: new Date('2026-07-01T12:00:00Z') },
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -93,7 +122,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: false },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: false,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -106,7 +140,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: {
           id: 'access-other',
           staffProfileId: 'profile-other',
@@ -143,7 +182,12 @@ describe('evaluateStaffInviteAcceptance', () => {
       evaluateStaffInviteAcceptance({
         identity,
         invite,
-        profile: { id: 'profile-b', salonId: 'salon-b', userId: null, active: true },
+        profile: {
+          id: 'profile-b',
+          salonId: 'salon-b',
+          userId: null,
+          active: true,
+        },
         existingAccessForUserSalon: null,
         existingAccessForProfile: null,
         now,
@@ -165,7 +209,11 @@ describe('evaluateStaffInviteDecline', () => {
   it('rejects decline for a different phone', () => {
     expect(
       evaluateStaffInviteDecline({
-        identity: { ...identity, phoneNumber: '09129876543', username: '09129876543' },
+        identity: {
+          ...identity,
+          phoneNumber: '09129876543',
+          username: '09129876543',
+        },
         invite,
       }),
     ).toEqual({ status: 'rejected', reason: 'phone_mismatch' })

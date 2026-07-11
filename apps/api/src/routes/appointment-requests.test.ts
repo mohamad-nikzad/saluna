@@ -21,7 +21,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/appointment-requests'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -56,9 +59,26 @@ function authHeaders() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
-  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('appointment-requests router', () => {
@@ -78,7 +98,9 @@ describe('appointment-requests router', () => {
       phone: '09120000001',
       salonStatus: 'active',
     } as never)
-    const res = await app.request('/api/v1/appointment-requests', { headers: authHeaders() })
+    const res = await app.request('/api/v1/appointment-requests', {
+      headers: authHeaders(),
+    })
     expect(res.status).toBe(403)
   })
 
@@ -86,7 +108,9 @@ describe('appointment-requests router', () => {
     vi.mocked(db.listAppointmentRequests).mockResolvedValue([
       { id: 'r1', existingClient: null } as never,
     ])
-    const res = await app.request('/api/v1/appointment-requests', { headers: authHeaders() })
+    const res = await app.request('/api/v1/appointment-requests', {
+      headers: authHeaders(),
+    })
     expect(res.status).toBe(200)
     const body = (await res.json()) as { requests: unknown[] }
     expect(body.requests).toHaveLength(1)
@@ -95,8 +119,12 @@ describe('appointment-requests router', () => {
 
   it('GET /?status=expired forwards the filter', async () => {
     vi.mocked(db.listAppointmentRequests).mockResolvedValue([])
-    await app.request('/api/v1/appointment-requests?status=expired', { headers: authHeaders() })
-    expect(db.listAppointmentRequests).toHaveBeenCalledWith('s1', { status: 'expired' })
+    await app.request('/api/v1/appointment-requests?status=expired', {
+      headers: authHeaders(),
+    })
+    expect(db.listAppointmentRequests).toHaveBeenCalledWith('s1', {
+      status: 'expired',
+    })
   })
 
   it('POST /:id/approve calls approveAppointmentRequest with tenant context', async () => {
@@ -105,13 +133,19 @@ describe('appointment-requests router', () => {
       appointmentId: 'apt1',
       clientId: 'cli1',
     } as never)
-    const res = await app.request(`/api/v1/appointment-requests/${requestId}/approve`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ staffId: 'staff1' }),
-    })
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/approve`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffId: 'staff1' }),
+      },
+    )
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ appointmentId: 'apt1', clientId: 'cli1' })
+    expect(await res.json()).toEqual({
+      appointmentId: 'apt1',
+      clientId: 'cli1',
+    })
     expect(db.approveAppointmentRequest).toHaveBeenCalledWith({
       id: requestId,
       salonId: 's1',
@@ -127,31 +161,45 @@ describe('appointment-requests router', () => {
       error: 'slot taken',
       code: 'slot-conflict',
     } as never)
-    const res = await app.request(`/api/v1/appointment-requests/${requestId}/approve`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ staffId: 'staff1' }),
-    })
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/approve`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffId: 'staff1' }),
+      },
+    )
     expect(res.status).toBe(409)
-    expect(await res.json()).toEqual({ error: 'slot taken', code: 'slot-conflict' })
+    expect(await res.json()).toEqual({
+      error: 'slot taken',
+      code: 'slot-conflict',
+    })
   })
 
   it('POST /:id/approve 400 when staffId missing', async () => {
-    const res = await app.request(`/api/v1/appointment-requests/${requestId}/approve`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/approve`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    )
     expect(res.status).toBe(400)
   })
 
   it('POST /:id/reject forwards reason', async () => {
-    vi.mocked(db.rejectAppointmentRequest).mockResolvedValue({ ok: true } as never)
-    const res = await app.request(`/api/v1/appointment-requests/${requestId}/reject`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: 'full' }),
-    })
+    vi.mocked(db.rejectAppointmentRequest).mockResolvedValue({
+      ok: true,
+    } as never)
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/reject`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'full' }),
+      },
+    )
     expect(res.status).toBe(200)
     expect(db.rejectAppointmentRequest).toHaveBeenCalledWith({
       id: requestId,
@@ -167,11 +215,14 @@ describe('appointment-requests router', () => {
       status: 409,
       error: 'این درخواست قابل رد نیست',
     } as never)
-    const res = await app.request(`/api/v1/appointment-requests/${requestId}/reject`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/reject`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    )
     expect(res.status).toBe(409)
   })
 })

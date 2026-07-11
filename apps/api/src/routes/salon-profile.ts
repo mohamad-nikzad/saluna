@@ -1,5 +1,8 @@
 import { Hono } from 'hono'
-import { getSalonPresence, updateSalonPresence } from '@repo/database/salon-profile'
+import {
+  getSalonPresence,
+  updateSalonPresence,
+} from '@repo/database/salon-profile'
 import { presencePatchSchema } from '@repo/salon-core/forms/presence'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'

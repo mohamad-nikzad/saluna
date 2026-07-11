@@ -165,7 +165,9 @@ function ClientsPage() {
   const importFlow = useClientImport({
     existingClients: clients,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: getApiV1ClientsQueryKey() })
+      void queryClient.invalidateQueries({
+        queryKey: getApiV1ClientsQueryKey(),
+      })
     },
   })
 

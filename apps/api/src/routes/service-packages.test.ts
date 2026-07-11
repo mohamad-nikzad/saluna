@@ -44,7 +44,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/services'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'

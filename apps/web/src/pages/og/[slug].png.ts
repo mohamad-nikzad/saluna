@@ -11,7 +11,10 @@ import { fileURLToPath } from 'node:url'
 export const prerender = false
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fontPath = path.resolve(__dirname, '../../assets/fonts/Vazirmatn-Bold.ttf')
+const fontPath = path.resolve(
+  __dirname,
+  '../../assets/fonts/Vazirmatn-Bold.ttf',
+)
 
 let vazirmatn: Buffer | null = null
 

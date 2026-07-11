@@ -9,14 +9,14 @@ _Auto-generated. Re-run: `STACK=hono-edge BASE_URL=https://aravira-saloon.vercel
 
 ## Results
 
-| Scenario | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) | RPS | Errors |
-|---|---:|---:|---:|---:|---:|---:|
-| GET /api/services (cheap read) | 695 | 1097 | — | 548 | 17.3 | 50.2% |
-| GET /api/appointments (heavy read) | 234 | 234 | — | 234 | 2.34 | 100% |
-| GET /api/dashboard | 110 | 1139 | — | 257 | 15.3 | 89.3% |
-| GET /api/today | 111 | 111 | — | 111 | 3.34 | 100% |
-| GET /api/auth/me | 180 | 180 | — | 180 | 2.75 | 100% |
-| 7 endpoints, ramped 0→20 VUs | 136 | 665 | — | 412 | 43.6 | 98.2% |
+| Scenario                           | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) |  RPS | Errors |
+| ---------------------------------- | -------: | -------: | -------: | -------: | ---: | -----: |
+| GET /api/services (cheap read)     |      695 |     1097 |        — |      548 | 17.3 |  50.2% |
+| GET /api/appointments (heavy read) |      234 |      234 |        — |      234 | 2.34 |   100% |
+| GET /api/dashboard                 |      110 |     1139 |        — |      257 | 15.3 |  89.3% |
+| GET /api/today                     |      111 |      111 |        — |      111 | 3.34 |   100% |
+| GET /api/auth/me                   |      180 |      180 |        — |      180 | 2.75 |   100% |
+| 7 endpoints, ramped 0→20 VUs       |      136 |      665 |        — |      412 | 43.6 |  98.2% |
 
 ## Source files
 

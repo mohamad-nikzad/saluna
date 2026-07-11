@@ -84,7 +84,10 @@ vi.mock('@repo/database/client', () => {
 import { adminAuth, auth as authServer } from '@repo/auth/server'
 import { getDb } from '@repo/database/client'
 import { getManagerOnboardingFlags } from '@repo/database/onboarding'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 import {
   acceptStaffInvite,

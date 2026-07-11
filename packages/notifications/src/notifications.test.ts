@@ -27,7 +27,8 @@ vi.mock('@repo/database/messaging', () => ({
 }))
 
 vi.mock('@repo/database/public', () => ({
-  getEnabledMessagingProvidersForSalon: mocks.getEnabledMessagingProvidersForSalon,
+  getEnabledMessagingProvidersForSalon:
+    mocks.getEnabledMessagingProvidersForSalon,
 }))
 
 vi.mock('@repo/database/auth-users', () => ({
@@ -167,13 +168,18 @@ describe('createNotificationForUser', () => {
         externalId: 'chat-9',
         title: 'T',
         body: 'B',
-      })
+      }),
     )
     const channels = mocks.dispatchNotification.mock.calls.map((c) => c[1])
     expect(channels).toEqual(['in_app', 'sms', 'telegram'])
-    const tgCall = mocks.dispatchNotification.mock.calls.find((c) => c[1] === 'telegram')!
+    const tgCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'telegram',
+    )!
     expect(tgCall[2]).toBe('sent')
-    expect(tgCall[3]).toMatchObject({ provider: 'telegram', providerMessageId: 'tg-1' })
+    expect(tgCall[3]).toMatchObject({
+      provider: 'telegram',
+      providerMessageId: 'tg-1',
+    })
   })
 
   it('skips a provider when the user has no linked account', async () => {
@@ -198,7 +204,9 @@ describe('createNotificationForUser', () => {
     })
 
     expect(send).not.toHaveBeenCalled()
-    const tgCall = mocks.dispatchNotification.mock.calls.find((c) => c[1] === 'telegram')!
+    const tgCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'telegram',
+    )!
     expect(tgCall[2]).toBe('skipped')
     expect(tgCall[3]).toMatchObject({ error: 'not_linked' })
   })
@@ -222,7 +230,10 @@ describe('createNotificationForUser', () => {
       buildAccountLinkUrl: () => null,
       send: vi.fn().mockResolvedValue({ status: 'sent' }),
     })
-    mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue(['telegram', 'whatsapp'])
+    mocks.getEnabledMessagingProvidersForSalon.mockResolvedValue([
+      'telegram',
+      'whatsapp',
+    ])
 
     await createNotificationForUser({
       salonId: 'salon-1',
@@ -234,7 +245,9 @@ describe('createNotificationForUser', () => {
     })
 
     expect(mocks.getEnabledMessagingProvidersForSalon).toHaveBeenCalledTimes(1)
-    expect(mocks.getEnabledMessagingProvidersForSalon).toHaveBeenCalledWith('salon-1')
+    expect(mocks.getEnabledMessagingProvidersForSalon).toHaveBeenCalledWith(
+      'salon-1',
+    )
   })
 
   it('skips a provider when the salon has it disabled', async () => {
@@ -270,7 +283,9 @@ describe('createNotificationForUser', () => {
     })
 
     expect(send).not.toHaveBeenCalled()
-    const tgCall = mocks.dispatchNotification.mock.calls.find((c) => c[1] === 'telegram')!
+    const tgCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'telegram',
+    )!
     expect(tgCall[2]).toBe('skipped')
     expect(tgCall[3]).toMatchObject({ error: 'salon_disabled' })
   })
@@ -310,13 +325,17 @@ describe('createNotificationForUser', () => {
     })
 
     expect(send).not.toHaveBeenCalled()
-    const tgCall = mocks.dispatchNotification.mock.calls.find((c) => c[1] === 'telegram')!
+    const tgCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'telegram',
+    )!
     expect(tgCall[2]).toBe('skipped')
     expect(tgCall[3]).toMatchObject({ error: 'appointment_alerts_disabled' })
   })
 
   it('delivers non-appointment-request messaging when appointment alerts are disabled', async () => {
-    const send = vi.fn().mockResolvedValue({ status: 'sent', providerMessageId: 'tg-1' })
+    const send = vi
+      .fn()
+      .mockResolvedValue({ status: 'sent', providerMessageId: 'tg-1' })
     registerMessagingProvider({
       id: 'telegram',
       displayName: 'Telegram',
@@ -356,12 +375,16 @@ describe('createNotificationForUser', () => {
     })
 
     expect(send).toHaveBeenCalled()
-    const tgCall = mocks.dispatchNotification.mock.calls.find((c) => c[1] === 'telegram')!
+    const tgCall = mocks.dispatchNotification.mock.calls.find(
+      (c) => c[1] === 'telegram',
+    )!
     expect(tgCall[2]).toBe('sent')
   })
 
   it('passes messagingButtons from input to the provider', async () => {
-    const send = vi.fn().mockResolvedValue({ status: 'sent', providerMessageId: 'tg-1' })
+    const send = vi
+      .fn()
+      .mockResolvedValue({ status: 'sent', providerMessageId: 'tg-1' })
     registerMessagingProvider({
       id: 'telegram',
       displayName: 'Telegram',
@@ -389,13 +412,15 @@ describe('createNotificationForUser', () => {
       title: 'T',
       body: 'B',
       route: '/x',
-      messagingButtons: [[{ label: 'Open', url: 'https://app.example/requests/1' }]],
+      messagingButtons: [
+        [{ label: 'Open', url: 'https://app.example/requests/1' }],
+      ],
     })
 
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
         buttons: [[{ label: 'Open', url: 'https://app.example/requests/1' }]],
-      })
+      }),
     )
   })
 

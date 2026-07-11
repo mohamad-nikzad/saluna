@@ -26,7 +26,9 @@ export type UnlinkInput = {
 const INVALID_LINK_TOKEN_MESSAGE =
   'این لینک نامعتبر یا منقضی شده است. لطفاً از داخل برنامه دوباره تلاش کنید.'
 
-export async function handleLinkStart(input: LinkStartInput): Promise<CommandResult> {
+export async function handleLinkStart(
+  input: LinkStartInput,
+): Promise<CommandResult> {
   const token = await consumeLinkTokenIfValid(input.token, input.provider)
   if (!token) {
     return {
@@ -36,7 +38,10 @@ export async function handleLinkStart(input: LinkStartInput): Promise<CommandRes
     }
   }
 
-  const existing = await findAccountByExternalId(input.provider, input.externalId)
+  const existing = await findAccountByExternalId(
+    input.provider,
+    input.externalId,
+  )
   if (existing && existing.userId !== token.userId) {
     return {
       status: 'error',
@@ -55,14 +60,22 @@ export async function handleLinkStart(input: LinkStartInput): Promise<CommandRes
 
   return {
     status: 'ok',
-    message: 'حساب شما با موفقیت متصل شد ✅\nاز این پس اعلان‌های آراویرا را در همین گفت‌وگو دریافت خواهید کرد.',
+    message:
+      'حساب شما با موفقیت متصل شد ✅\nاز این پس اعلان‌های آراویرا را در همین گفت‌وگو دریافت خواهید کرد.',
   }
 }
 
 export async function handleUnlink(input: UnlinkInput): Promise<CommandResult> {
-  const account = await findAccountByExternalId(input.provider, input.externalId)
+  const account = await findAccountByExternalId(
+    input.provider,
+    input.externalId,
+  )
   if (!account) {
-    return { status: 'error', code: 'not_linked', message: 'حسابی برای قطع اتصال یافت نشد.' }
+    return {
+      status: 'error',
+      code: 'not_linked',
+      message: 'حسابی برای قطع اتصال یافت نشد.',
+    }
   }
   await deleteMessagingAccount(account.id, account.userId)
   return { status: 'ok', message: 'اتصال حساب پیام‌رسان قطع شد.' }

@@ -9,7 +9,9 @@ import {
 } from './registry'
 import type { MessagingProvider } from './types'
 
-function fakeProvider(overrides: Partial<MessagingProvider> = {}): MessagingProvider {
+function fakeProvider(
+  overrides: Partial<MessagingProvider> = {},
+): MessagingProvider {
   return {
     id: 'telegram',
     displayName: 'Telegram',

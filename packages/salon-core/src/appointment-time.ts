@@ -1,4 +1,10 @@
-import { addMinutes, differenceInMinutes, format, isValid, parse } from 'date-fns'
+import {
+  addMinutes,
+  differenceInMinutes,
+  format,
+  isValid,
+  parse,
+} from 'date-fns'
 
 const ANCHOR = new Date(2000, 0, 1)
 const DEFAULT_TIME = '09:00'
@@ -32,13 +38,22 @@ export function formatTimeHm(d: Date): string {
   return format(d, 'HH:mm')
 }
 
-export function endTimeFromDuration(startTime: string, durationMinutes: number): string {
+export function endTimeFromDuration(
+  startTime: string,
+  durationMinutes: number,
+): string {
   const start = parseTimeHm(startTime)
-  const end = addMinutes(start, Number.isFinite(durationMinutes) ? durationMinutes : 0)
+  const end = addMinutes(
+    start,
+    Number.isFinite(durationMinutes) ? durationMinutes : 0,
+  )
   return formatTimeHm(end)
 }
 
-export function durationMinutesFromRange(startTime: string, endTime: string): number {
+export function durationMinutesFromRange(
+  startTime: string,
+  endTime: string,
+): number {
   const a = parseTimeHm(startTime)
   const b = parseTimeHm(endTime)
   if (!isValid(a) || !isValid(b)) return 0
@@ -49,7 +64,10 @@ export function isEndAfterStart(startTime: string, endTime: string): boolean {
   return durationMinutesFromRange(startTime, endTime) > 0
 }
 
-export function sameAddonIds(a: readonly string[], b: readonly string[]): boolean {
+export function sameAddonIds(
+  a: readonly string[],
+  b: readonly string[],
+): boolean {
   if (a.length !== b.length) return false
   const sortedA = [...a].sort()
   const sortedB = [...b].sort()
@@ -58,13 +76,16 @@ export function sameAddonIds(a: readonly string[], b: readonly string[]): boolea
 
 export function validateAppointmentWindow(
   startTime: string,
-  endTime: string
+  endTime: string,
 ): { ok: true } | { ok: false; error: string } {
   if (!isEndAfterStart(startTime, endTime)) {
     return { ok: false, error: 'ساعت پایان باید بعد از شروع باشد' }
   }
   const mins = durationMinutesFromRange(startTime, endTime)
-  if (mins < APPOINTMENT_DURATION_BOUNDS.min || mins > APPOINTMENT_DURATION_BOUNDS.max) {
+  if (
+    mins < APPOINTMENT_DURATION_BOUNDS.min ||
+    mins > APPOINTMENT_DURATION_BOUNDS.max
+  ) {
     return {
       ok: false,
       error: `مدت نوبت باید بین ${APPOINTMENT_DURATION_BOUNDS.min} و ${APPOINTMENT_DURATION_BOUNDS.max} دقیقه باشد`,

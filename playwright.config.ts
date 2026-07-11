@@ -33,7 +33,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
+  reporter: [
+    ['list'],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+  ],
   use: {
     // Match Vite's default host so cookies and dev tooling align with local usage.
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',

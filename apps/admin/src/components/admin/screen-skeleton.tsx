@@ -1,6 +1,10 @@
 import { Skeleton } from '#/components/ui/skeleton'
 
-export function ScreenSkeleton({ label = 'در حال بارگذاری' }: { label?: string }) {
+export function ScreenSkeleton({
+  label = 'در حال بارگذاری',
+}: {
+  label?: string
+}) {
   return (
     <div
       role="status"

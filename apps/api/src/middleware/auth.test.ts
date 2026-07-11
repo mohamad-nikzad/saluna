@@ -36,7 +36,8 @@ process.env.DATABASE_URL = 'postgres://stub'
 process.env.PLATFORM_ADMIN_BOOTSTRAP_PHONES = '09121111111'
 
 const { adminAuth, auth } = await import('@repo/auth/server')
-const { getManagerMemberForUser, getMemberForUser } = await import('@repo/database/members')
+const { getManagerMemberForUser, getMemberForUser } =
+  await import('@repo/database/members')
 const { resolveStaffTenantContext } = await import('@repo/database/staff')
 const {
   getPlatformAdminForUser,

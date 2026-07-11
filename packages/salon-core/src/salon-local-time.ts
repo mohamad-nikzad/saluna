@@ -17,7 +17,10 @@ export function salonCurrentHm(now: Date = new Date()): string {
   return now.toLocaleTimeString('en-GB', HM_FORMAT_OPTIONS)
 }
 
-export function salonHmAfterMinutes(minutes: number, now: Date = new Date()): string {
+export function salonHmAfterMinutes(
+  minutes: number,
+  now: Date = new Date(),
+): string {
   return salonCurrentHm(new Date(now.getTime() + minutes * 60 * 1000))
 }
 

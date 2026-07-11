@@ -1,6 +1,9 @@
 import { GalleryVerticalEnd } from 'lucide-react'
 
-import { adminNavGroups, filterNavGroupsByRole } from '#/components/layout/nav-items'
+import {
+  adminNavGroups,
+  filterNavGroupsByRole,
+} from '#/components/layout/nav-items'
 import { NavMain } from '#/components/nav-main'
 import { NavUser } from '#/components/nav-user'
 import {

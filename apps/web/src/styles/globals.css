@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 
 @theme inline {
-  --font-sans: var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
+  --font-sans:
+    var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
 }
 
 @layer base {

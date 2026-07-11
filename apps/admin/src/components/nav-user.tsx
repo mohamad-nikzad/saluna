@@ -4,7 +4,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ChevronsUpDown, LogOut } from 'lucide-react'
 import { useState } from 'react'
 
-import { filterNavItemsByRole, navUserDropdownItems } from '#/components/layout/nav-items'
+import {
+  filterNavItemsByRole,
+  navUserDropdownItems,
+} from '#/components/layout/nav-items'
 import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar'
 import {
   DropdownMenu,
@@ -15,7 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '#/components/ui/sidebar'
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '#/components/ui/sidebar'
 
 async function signOut() {
   const response = await fetch('/api/v1/auth/sign-out', {
@@ -120,7 +128,9 @@ export function NavUser({
               </>
             ) : null}
             {signOutError ? (
-              <p className="px-2 py-1.5 text-sm text-destructive">{signOutError}</p>
+              <p className="px-2 py-1.5 text-sm text-destructive">
+                {signOutError}
+              </p>
             ) : null}
             <DropdownMenuItem disabled={signingOut} onClick={handleSignOut}>
               <LogOut />

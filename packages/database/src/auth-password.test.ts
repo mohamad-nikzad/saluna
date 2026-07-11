@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { hashCredentialPassword, verifyCredentialPassword } from './auth-password'
+import {
+  hashCredentialPassword,
+  verifyCredentialPassword,
+} from './auth-password'
 
 describe('credential password hashing', () => {
   it('verifies passwords hashed for Better Auth credential accounts', async () => {

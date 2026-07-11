@@ -10,12 +10,12 @@ Public marketing + salon booking surface (Astro). SSR via `@astrojs/node` (`mode
 
 ## Environment variables
 
-| Variable | Purpose |
-|----------|---------|
+| Variable         | Purpose                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------- |
 | `PUBLIC_APP_URL` | Canonical site origin (sitemap, OG URLs, robots). Example: `https://salon.example` |
-| `PUBLIC_API_URL` | Public Hono API origin for client fetches. Example: `https://api.example` |
-| `HOST` | Bind address (default `0.0.0.0` in Docker / PM2) |
-| `PORT` | Listen port (default `3001`) |
+| `PUBLIC_API_URL` | Public Hono API origin for client fetches. Example: `https://api.example`          |
+| `HOST`           | Bind address (default `0.0.0.0` in Docker / PM2)                                   |
+| `PORT`           | Listen port (default `3001`)                                                       |
 
 `with-root-env.mjs` maps `NEXT_PUBLIC_*` -> `PUBLIC_*` when the Astro names are unset.
 

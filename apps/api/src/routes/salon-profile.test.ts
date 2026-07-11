@@ -20,7 +20,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/salon-profile'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -129,7 +132,9 @@ describe('salon-profile router', () => {
       body: JSON.stringify({ address: 'خیابان ولیعصر' }),
     })
     expect(res.status).toBe(200)
-    expect(db.updateSalonPresence).toHaveBeenCalledWith('s1', { address: 'خیابان ولیعصر' })
+    expect(db.updateSalonPresence).toHaveBeenCalledWith('s1', {
+      address: 'خیابان ولیعصر',
+    })
   })
 
   it('manager PATCH persists presence fields', async () => {

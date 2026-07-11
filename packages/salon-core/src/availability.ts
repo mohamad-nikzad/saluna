@@ -93,10 +93,12 @@ function addMinutesHm(hm: string, deltaMinutes: number): string {
   return minutesToHm(hmToMinutes(hm) + deltaMinutes)
 }
 
-function roundUpToSlotBoundary(hm: string, slotDurationMinutes: number): string {
+function roundUpToSlotBoundary(
+  hm: string,
+  slotDurationMinutes: number,
+): string {
   const minutes = hmToMinutes(hm)
-  const rounded =
-    Math.ceil(minutes / slotDurationMinutes) * slotDurationMinutes
+  const rounded = Math.ceil(minutes / slotDurationMinutes) * slotDurationMinutes
   return minutesToHm(rounded)
 }
 
@@ -117,7 +119,7 @@ function compareSlots(a: AvailabilitySlot, b: AvailabilitySlot): number {
 function buildFreeRanges(
   workingStart: string,
   workingEnd: string,
-  appointments: AvailabilityStaffDay['appointments']
+  appointments: AvailabilityStaffDay['appointments'],
 ): AvailabilityRange[] {
   const ranges: AvailabilityRange[] = []
   const blockingAppointments = appointments
@@ -129,7 +131,8 @@ function buildFreeRanges(
 
   for (const appointment of blockingAppointments) {
     const blockedStart = maxHm(workingStart, appointment.startTime)
-    const blockedEnd = appointment.endTime <= workingEnd ? appointment.endTime : workingEnd
+    const blockedEnd =
+      appointment.endTime <= workingEnd ? appointment.endTime : workingEnd
 
     if (blockedEnd <= cursor) {
       continue
@@ -191,7 +194,9 @@ function expandRangeToSlots(input: {
   return slots
 }
 
-export function getAvailabilityForDay(input: DayAvailabilityInput): DayAvailabilityResult {
+export function getAvailabilityForDay(
+  input: DayAvailabilityInput,
+): DayAvailabilityResult {
   if (input.staffDays.length === 0) {
     return {
       slots: [],
@@ -220,7 +225,7 @@ export function getAvailabilityForDay(input: DayAvailabilityInput): DayAvailabil
     const ranges = buildFreeRanges(
       staffDay.workingHours.workingStart,
       staffDay.workingHours.workingEnd,
-      staffDay.appointments
+      staffDay.appointments,
     )
 
     for (const range of ranges) {
@@ -233,7 +238,7 @@ export function getAvailabilityForDay(input: DayAvailabilityInput): DayAvailabil
           serviceDurationMinutes: input.serviceDurationMinutes,
           slotDurationMinutes: input.slotDurationMinutes,
           minStartTime,
-        })
+        }),
       )
     }
   }

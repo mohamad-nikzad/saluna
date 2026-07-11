@@ -25,7 +25,8 @@ const badgeVariants = cva(
         danger:
           'rounded-full border-transparent bg-destructive-soft text-destructive',
         neutral: 'rounded-full border-transparent bg-paper-deep text-sage-deep',
-        ghost: 'rounded-full border-transparent bg-transparent text-muted-foreground',
+        ghost:
+          'rounded-full border-transparent bg-transparent text-muted-foreground',
       },
     },
     defaultVariants: {

@@ -117,7 +117,9 @@ export const getPublicAppointmentRequestRoute = createRoute({
     200: {
       description: 'Appointment request status for the customer',
       content: {
-        'application/json': { schema: publicAppointmentRequestStatusViewSchema },
+        'application/json': {
+          schema: publicAppointmentRequestStatusViewSchema,
+        },
       },
     },
     404: notFoundResponse,
@@ -134,7 +136,9 @@ export const cancelPublicAppointmentRequestRoute = createRoute({
     200: {
       description: 'Request cancelled',
       content: {
-        'application/json': { schema: publicCancelAppointmentRequestResponseSchema },
+        'application/json': {
+          schema: publicCancelAppointmentRequestResponseSchema,
+        },
       },
     },
     404: notFoundResponse,

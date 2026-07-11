@@ -1,6 +1,12 @@
 export type CalendarColorId = 'rose' | 'violet' | 'mint' | 'gold' | 'coral'
 
-export const CALENDAR_COLOR_IDS = ['rose', 'violet', 'mint', 'gold', 'coral'] as const
+export const CALENDAR_COLOR_IDS = [
+  'rose',
+  'violet',
+  'mint',
+  'gold',
+  'coral',
+] as const
 
 export const LEGACY_CALENDAR_COLOR_MAP: Record<string, CalendarColorId> = {
   'bg-staff-1': 'rose',
@@ -17,13 +23,15 @@ export function isCalendarColorId(value: string): value is CalendarColorId {
 }
 
 export function normalizeCalendarColorId(
-  value: string | null | undefined
+  value: string | null | undefined,
 ): CalendarColorId {
   if (!value) return 'rose'
   if (isCalendarColorId(value)) return value
   return LEGACY_CALENDAR_COLOR_MAP[value] ?? 'rose'
 }
 
-export function resolveCalendarColor(value: string | null | undefined): CalendarColorId {
+export function resolveCalendarColor(
+  value: string | null | undefined,
+): CalendarColorId {
   return normalizeCalendarColorId(value)
 }

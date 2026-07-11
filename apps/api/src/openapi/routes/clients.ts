@@ -1,5 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
+import {
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
 import {
   clientBulkCreateBodySchemaOpenApi,
   clientBulkCreateResponseSchema,
@@ -51,7 +55,8 @@ export const listClientsRoute = createRoute({
   path: '/',
   tags: ['Clients'],
   summary: 'List clients',
-  description: 'Returns all non-placeholder clients for the authenticated salon tenant.',
+  description:
+    'Returns all non-placeholder clients for the authenticated salon tenant.',
   security: tenantSecurity,
   responses: {
     200: {
@@ -98,13 +103,17 @@ export const bulkCreateClientsRoute = createRoute({
   request: {
     body: {
       required: true,
-      content: { 'application/json': { schema: clientBulkCreateBodySchemaOpenApi } },
+      content: {
+        'application/json': { schema: clientBulkCreateBodySchemaOpenApi },
+      },
     },
   },
   responses: {
     200: {
       description: 'Partial or full success',
-      content: { 'application/json': { schema: clientBulkCreateResponseSchema } },
+      content: {
+        'application/json': { schema: clientBulkCreateResponseSchema },
+      },
     },
     400: validationErrorResponse,
     401: unauthorizedResponse,

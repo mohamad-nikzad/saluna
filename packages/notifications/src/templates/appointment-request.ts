@@ -25,7 +25,7 @@ export type AppointmentRequestTemplate = {
 }
 
 export function renderAppointmentRequestPending(
-  input: AppointmentRequestTemplateInput
+  input: AppointmentRequestTemplateInput,
 ): AppointmentRequestTemplate {
   const date = formatJalaliFullDate(input.date)
   const title = `درخواست رزرو جدید — ${input.salonName}`
@@ -40,10 +40,14 @@ export function renderAppointmentRequestPending(
     { label: '✅ تأیید', data: `approve:${input.requestId}` },
     { label: '❌ رد', data: `reject:${input.requestId}` },
   ]
-  const linkRow: MessagingButton[] | null = isTelegramInlineButtonUrl(input.deepLinkUrl)
+  const linkRow: MessagingButton[] | null = isTelegramInlineButtonUrl(
+    input.deepLinkUrl,
+  )
     ? [{ label: 'مشاهده در برنامه', url: input.deepLinkUrl }]
     : null
-  const buttons: MessagingButton[][] = linkRow ? [actionRow, linkRow] : [actionRow]
+  const buttons: MessagingButton[][] = linkRow
+    ? [actionRow, linkRow]
+    : [actionRow]
 
   return {
     title,

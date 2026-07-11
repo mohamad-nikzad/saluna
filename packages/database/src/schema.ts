@@ -425,7 +425,10 @@ export const staffInvites = pgTable(
       .notNull()
       .references(() => staffProfiles.id, { onDelete: 'cascade' }),
     phone: text('phone').notNull(),
-    status: text('status').notNull().$type<StaffInviteStatus>().default('pending'),
+    status: text('status')
+      .notNull()
+      .$type<StaffInviteStatus>()
+      .default('pending'),
     tokenHash: text('token_hash').notNull(),
     invitedByUserId: uuid('invited_by_user_id')
       .notNull()

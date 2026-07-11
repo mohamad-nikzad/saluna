@@ -330,9 +330,12 @@ describe('resolveStaffNotificationRecipient', () => {
         { limit: true },
       ),
       // Explicit revokedAt guard.
-      selectChain([{ id: 'access-revoked', revokedAt: new Date('2026-07-01') }], {
-        limit: true,
-      }),
+      selectChain(
+        [{ id: 'access-revoked', revokedAt: new Date('2026-07-01') }],
+        {
+          limit: true,
+        },
+      ),
     ]
     mocks.getDb.mockReturnValue({
       select: vi.fn(() => selectBuilders.shift()),

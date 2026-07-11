@@ -29,12 +29,21 @@ const jsonLd = {
 }
 ---
 
-<PublicInfoLayout title={title} description={description} canonical={canonical} jsonLd={jsonLd}>
+<PublicInfoLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  jsonLd={jsonLd}
+>
   <section class="px-5 py-16 sm:px-8 sm:py-20">
-    <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <div
+      class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start"
+    >
       <div>
         <p class="text-sm font-extrabold text-[#9b3348]">تماس با ما</p>
-        <h1 class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}>
+        <h1
+          class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}
+        >
           ارتباط با تیم سالونا
         </h1>
         <p class="mt-6 text-base leading-8 text-[#6b4955]">
@@ -44,12 +53,17 @@ const jsonLd = {
         </p>
       </div>
 
-      <div class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)]">
+      <div
+        class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)]"
+      >
         <dl class="grid gap-5">
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">شماره تماس</dt>
             <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
-              <a href={`tel:${publicSiteInfo.contact.phone}`} class="hover:text-[#9b3348]">
+              <a
+                href={`tel:${publicSiteInfo.contact.phone}`}
+                class="hover:text-[#9b3348]"
+              >
                 {publicSiteInfo.contact.phone}
               </a>
             </dd>
@@ -58,8 +72,14 @@ const jsonLd = {
             hasEmail ? (
               <div>
                 <dt class="text-xs font-bold text-[#9b3348]">ایمیل</dt>
-                <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
-                  <a href={`mailto:${publicSiteInfo.contact.email}`} class="hover:text-[#9b3348]">
+                <dd
+                  class="mt-2 text-lg font-extrabold text-[#3f2730]"
+                  dir="ltr"
+                >
+                  <a
+                    href={`mailto:${publicSiteInfo.contact.email}`}
+                    class="hover:text-[#9b3348]"
+                  >
                     {publicSiteInfo.contact.email}
                   </a>
                 </dd>
@@ -70,8 +90,14 @@ const jsonLd = {
             hasTelegram ? (
               <div>
                 <dt class="text-xs font-bold text-[#9b3348]">تلگرام</dt>
-                <dd class="mt-2 text-lg font-extrabold text-[#3f2730]" dir="ltr">
-                  <a href={publicSiteInfo.contact.telegram} class="hover:text-[#9b3348]">
+                <dd
+                  class="mt-2 text-lg font-extrabold text-[#3f2730]"
+                  dir="ltr"
+                >
+                  <a
+                    href={publicSiteInfo.contact.telegram}
+                    class="hover:text-[#9b3348]"
+                  >
                     {publicSiteInfo.contact.telegram}
                   </a>
                 </dd>
@@ -80,7 +106,9 @@ const jsonLd = {
           }
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">موقعیت</dt>
-            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.location}</dd>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">
+              {publicSiteInfo.location}
+            </dd>
           </div>
         </dl>
 

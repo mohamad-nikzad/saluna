@@ -13,7 +13,8 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('./appointment-queries', () => ({
-  getAppointmentsWithDetailsByDateRange: mocks.getAppointmentsWithDetailsByDateRange,
+  getAppointmentsWithDetailsByDateRange:
+    mocks.getAppointmentsWithDetailsByDateRange,
 }))
 
 vi.mock('./client-queries', () => ({
@@ -113,7 +114,7 @@ describe('today placeholder attention', () => {
           appointmentId: 'appointment-1',
           priority: 1,
         }),
-      ])
+      ]),
     )
   })
 
@@ -162,6 +163,8 @@ describe('today placeholder attention', () => {
 
     const data = await getTodayData('salon-1', '2026-05-01', 'staff-1')
 
-    expect(data.attentionItems.find((item) => item.type === 'incomplete-client')).toBeUndefined()
+    expect(
+      data.attentionItems.find((item) => item.type === 'incomplete-client'),
+    ).toBeUndefined()
   })
 })

@@ -20,7 +20,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/settings'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -43,9 +46,26 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
-  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('settings router', () => {
@@ -65,8 +85,12 @@ describe('settings router', () => {
       phone: '09120000001',
       salonStatus: 'active',
     } as never)
-    vi.mocked(db.getBusinessSettings).mockResolvedValue({ workingStart: '09:00' } as never)
-    const res = await app.request('/api/v1/settings/business', { headers: authHeaders })
+    vi.mocked(db.getBusinessSettings).mockResolvedValue({
+      workingStart: '09:00',
+    } as never)
+    const res = await app.request('/api/v1/settings/business', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ settings: { workingStart: '09:00' } })
   })
@@ -91,7 +115,9 @@ describe('settings router', () => {
   })
 
   it('manager PATCH updates settings', async () => {
-    vi.mocked(db.updateBusinessSettings).mockResolvedValue({ workingStart: '08:00' } as never)
+    vi.mocked(db.updateBusinessSettings).mockResolvedValue({
+      workingStart: '08:00',
+    } as never)
     const res = await app.request('/api/v1/settings/business', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -106,7 +132,9 @@ describe('settings router', () => {
   })
 
   it('manager PATCH persists workingDays', async () => {
-    vi.mocked(db.updateBusinessSettings).mockResolvedValue({ workingDays: 62 } as never)
+    vi.mocked(db.updateBusinessSettings).mockResolvedValue({
+      workingDays: 62,
+    } as never)
     const res = await app.request('/api/v1/settings/business', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },

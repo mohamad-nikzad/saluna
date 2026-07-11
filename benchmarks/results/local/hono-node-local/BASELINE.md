@@ -9,14 +9,14 @@ _Auto-generated. Re-run: `STACK=hono-node-local BASE_URL=http://localhost:3000 .
 
 ## Results
 
-| Scenario | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) | RPS | Errors |
-|---|---:|---:|---:|---:|---:|---:|
-| GET /api/services (cheap read) | 4.91 | 7.10 | — | 5.10 | 1937 | 0.00% |
-| GET /api/appointments (heavy read) | 7.31 | 9.90 | — | 7.47 | 1325 | 0.00% |
-| GET /api/dashboard | 14.2 | 18.0 | — | 14.5 | 685 | 0.00% |
-| GET /api/today | 25.7 | 38.3 | — | 28.1 | 354 | 0.00% |
-| GET /api/auth/me | 3.70 | 7.16 | — | 4.24 | 4643 | 0.00% |
-| 7 endpoints, ramped 0→20 VUs | 41.9 | 115 | — | 45.4 | 1096 | 0.00% |
+| Scenario                           | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) |  RPS | Errors |
+| ---------------------------------- | -------: | -------: | -------: | -------: | ---: | -----: |
+| GET /api/services (cheap read)     |     4.91 |     7.10 |        — |     5.10 | 1937 |  0.00% |
+| GET /api/appointments (heavy read) |     7.31 |     9.90 |        — |     7.47 | 1325 |  0.00% |
+| GET /api/dashboard                 |     14.2 |     18.0 |        — |     14.5 |  685 |  0.00% |
+| GET /api/today                     |     25.7 |     38.3 |        — |     28.1 |  354 |  0.00% |
+| GET /api/auth/me                   |     3.70 |     7.16 |        — |     4.24 | 4643 |  0.00% |
+| 7 endpoints, ramped 0→20 VUs       |     41.9 |      115 |        — |     45.4 | 1096 |  0.00% |
 
 ## Source files
 

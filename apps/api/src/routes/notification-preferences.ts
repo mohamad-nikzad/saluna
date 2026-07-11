@@ -23,7 +23,10 @@ export const notificationPreferences = new Hono<AppEnv>()
     return ok(c, { preferences })
   })
   .patch('/', async (c) => {
-    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>
+    const body = (await c.req.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >
     const patch: PreferencesPatch = {}
     for (const key of booleanKeys) {
       if (body[key] === undefined) continue
@@ -33,7 +36,11 @@ export const notificationPreferences = new Hono<AppEnv>()
       patch[key] = body[key] as boolean
     }
     const { salonId, userId } = c.var.tenant
-    const preferences = await updateNotificationPreferences(salonId, userId, patch)
+    const preferences = await updateNotificationPreferences(
+      salonId,
+      userId,
+      patch,
+    )
     return ok(c, { preferences })
   })
 

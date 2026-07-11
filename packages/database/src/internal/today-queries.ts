@@ -1,16 +1,27 @@
-import type { AppointmentWithDetails, TodayAttentionItem, TodayData } from '@repo/salon-core/types'
+import type {
+  AppointmentWithDetails,
+  TodayAttentionItem,
+  TodayData,
+} from '@repo/salon-core/types'
 import { durationMinutesFromRange } from '@repo/salon-core/appointment-time'
 import { dayOfWeekFromDate } from '@repo/salon-core/staff-availability'
-import { salonCurrentHm, salonHmAfterMinutes, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import {
+  salonCurrentHm,
+  salonHmAfterMinutes,
+  salonTodayYmd,
+} from '@repo/salon-core/salon-local-time'
 import { getAppointmentsWithDetailsByDateRange } from './appointment-queries'
 import { getClientTagsForClients } from './client-queries'
 import { getBusinessSettings } from './settings-queries'
 import { getAllStaff, getStaffSchedules } from './staff-queries'
 
-const ACTIVE_TODAY_STATUSES = new Set<AppointmentWithDetails['status']>(['scheduled', 'confirmed'])
+const ACTIVE_TODAY_STATUSES = new Set<AppointmentWithDetails['status']>([
+  'scheduled',
+  'confirmed',
+])
 
 function appointmentsByClient(
-  appointments: AppointmentWithDetails[]
+  appointments: AppointmentWithDetails[],
 ): Map<string, AppointmentWithDetails[]> {
   const byClient = new Map<string, AppointmentWithDetails[]>()
   for (const appointment of appointments) {
@@ -21,7 +32,9 @@ function appointmentsByClient(
   return byClient
 }
 
-function countAppointmentsByStatus(appointments: AppointmentWithDetails[]): TodayData['counts'] {
+function countAppointmentsByStatus(
+  appointments: AppointmentWithDetails[],
+): TodayData['counts'] {
   const counts: TodayData['counts'] = {
     scheduled: 0,
     confirmed: 0,
@@ -44,17 +57,22 @@ export async function getTodayData(
     salonId,
     date,
     date,
-    staffIdFilter
+    staffIdFilter,
   )
-  const [staff, tagsByClient, allClientAppointments, businessHours] = await Promise.all([
-    getAllStaff(salonId),
-    getClientTagsForClients(
-      [...new Set(appointmentsForDay.map((appointment) => appointment.clientId))],
-      salonId
-    ),
-    getAppointmentsWithDetailsByDateRange(salonId, '1900-01-01', date),
-    getBusinessSettings(salonId),
-  ])
+  const [staff, tagsByClient, allClientAppointments, businessHours] =
+    await Promise.all([
+      getAllStaff(salonId),
+      getClientTagsForClients(
+        [
+          ...new Set(
+            appointmentsForDay.map((appointment) => appointment.clientId),
+          ),
+        ],
+        salonId,
+      ),
+      getAppointmentsWithDetailsByDateRange(salonId, '1900-01-01', date),
+      getBusinessSettings(salonId),
+    ])
 
   const historyByClient = appointmentsByClient(allClientAppointments)
   const current = useLiveClock ? salonCurrentHm() : ''
@@ -67,9 +85,12 @@ export async function getTodayData(
       (row) =>
         row.id !== appointment.id &&
         row.status === 'completed' &&
-        `${row.date} ${row.startTime}` < `${appointment.date} ${appointment.startTime}`
+        `${row.date} ${row.startTime}` <
+          `${appointment.date} ${appointment.startTime}`,
     )
-    const noShowCount = clientHistory.filter((row) => row.status === 'no-show').length
+    const noShowCount = clientHistory.filter(
+      (row) => row.status === 'no-show',
+    ).length
     const tags = tagsByClient.get(appointment.clientId) ?? []
     const isVip = tags.some((tag) => tag.label.toLowerCase() === 'vip')
     const isSoonWindow =
@@ -93,10 +114,7 @@ export async function getTodayData(
       })
     }
 
-    if (
-      isSoonWindow &&
-      appointment.status === 'scheduled'
-    ) {
+    if (isSoonWindow && appointment.status === 'scheduled') {
       attentionItems.push({
         id: `${appointment.id}:soon`,
         type: 'soon',
@@ -107,7 +125,11 @@ export async function getTodayData(
         priority: 2,
       })
     }
-    if (useLiveClock && appointment.status === 'confirmed' && appointment.endTime < current) {
+    if (
+      useLiveClock &&
+      appointment.status === 'confirmed' &&
+      appointment.endTime < current
+    ) {
       attentionItems.push({
         id: `${appointment.id}:overdue`,
         type: 'overdue',
@@ -154,13 +176,17 @@ export async function getTodayData(
   }
 
   const staffLoad = staff
-    .filter((member) => member.role === 'staff' && (!staffIdFilter || member.id === staffIdFilter))
+    .filter(
+      (member) =>
+        member.role === 'staff' &&
+        (!staffIdFilter || member.id === staffIdFilter),
+    )
     .map((member) => {
       const rows = appointmentsForDay.filter(
         (appointment) =>
           appointment.staffId === member.id &&
           appointment.status !== 'cancelled' &&
-          appointment.status !== 'no-show'
+          appointment.status !== 'no-show',
       )
       return {
         staffId: member.id,
@@ -168,20 +194,29 @@ export async function getTodayData(
         appointmentCount: rows.length,
         bookedMinutes: rows.reduce(
           (sum, appointment) =>
-            sum + durationMinutesFromRange(appointment.startTime, appointment.endTime),
-          0
+            sum +
+            durationMinutesFromRange(
+              appointment.startTime,
+              appointment.endTime,
+            ),
+          0,
         ),
       }
     })
 
   const scheduleRows = await Promise.all(
-    staffLoad.map(async (load) => [load.staffId, await getStaffSchedules(salonId, load.staffId)] as const)
+    staffLoad.map(
+      async (load) =>
+        [load.staffId, await getStaffSchedules(salonId, load.staffId)] as const,
+    ),
   )
   const schedulesByStaff = new Map(scheduleRows)
 
   const openSlots = staffLoad.map((load) => {
     const memberSchedules = schedulesByStaff.get(load.staffId) ?? []
-    const schedule = memberSchedules.find((row) => row.dayOfWeek === dayOfWeekFromDate(date))
+    const schedule = memberSchedules.find(
+      (row) => row.dayOfWeek === dayOfWeekFromDate(date),
+    )
     if (schedule && !schedule.active) {
       return { staffId: load.staffId, staffName: load.staffName, ranges: [] }
     }
@@ -189,13 +224,18 @@ export async function getTodayData(
       return { staffId: load.staffId, staffName: load.staffName, ranges: [] }
     }
 
-    const start = schedule?.active ? schedule.workingStart : businessHours.workingStart
-    const end = schedule?.active ? schedule.workingEnd : businessHours.workingEnd
+    const start = schedule?.active
+      ? schedule.workingStart
+      : businessHours.workingStart
+    const end = schedule?.active
+      ? schedule.workingEnd
+      : businessHours.workingEnd
     const booked = appointmentsForDay
       .filter(
         (appointment) =>
           appointment.staffId === load.staffId &&
-          (appointment.status === 'scheduled' || appointment.status === 'confirmed')
+          (appointment.status === 'scheduled' ||
+            appointment.status === 'confirmed'),
       )
       .sort((a, b) => a.startTime.localeCompare(b.startTime))
     const ranges: Array<{ startTime: string; endTime: string }> = []

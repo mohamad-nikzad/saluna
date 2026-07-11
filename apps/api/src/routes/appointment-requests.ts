@@ -20,7 +20,9 @@ const listQuerySchema = z.object({
 })
 
 const approveBodySchema = z.object({ staffId: z.string().min(1) })
-const rejectBodySchema = z.object({ reason: z.string().trim().min(1).optional() })
+const rejectBodySchema = z.object({
+  reason: z.string().trim().min(1).optional(),
+})
 
 export const appointmentRequestsRoute = new Hono<AppEnv>()
   .use('*', requireTenant('manage_appointments'))
@@ -50,7 +52,10 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
       if (!result.ok) {
         return error(c, result.error, result.status as 404, result.code)
       }
-      return ok(c, { appointmentId: result.appointmentId, clientId: result.clientId })
+      return ok(c, {
+        appointmentId: result.appointmentId,
+        clientId: result.clientId,
+      })
     },
   )
   .post(

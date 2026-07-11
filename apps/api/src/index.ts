@@ -7,12 +7,9 @@ bootstrapMessagingProviders()
 
 const env = getEnv()
 
-const server = serve(
-  { fetch: app.fetch, port: env.PORT },
-  (info) => {
-    console.log(`[api] listening on http://${info.address}:${info.port}`)
-  },
-)
+const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+  console.log(`[api] listening on http://${info.address}:${info.port}`)
+})
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[api] received ${signal}, shutting down`)

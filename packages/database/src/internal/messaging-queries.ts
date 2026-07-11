@@ -3,12 +3,18 @@ import { DEFAULT_PUBLIC_LAYOUT_ID } from '@repo/salon-core/public-layouts'
 import { DEFAULT_PUBLIC_THEME_ID } from '@repo/salon-core/public-themes'
 import { getDb } from '../client'
 import type { MessagingProviderId } from '../messaging-provider-id'
-import { messagingLinkTokens, salonPublicSettings, userMessagingAccounts } from '../schema'
+import {
+  messagingLinkTokens,
+  salonPublicSettings,
+  userMessagingAccounts,
+} from '../schema'
 
 export type { MessagingProviderId }
 
 type DbClient = ReturnType<typeof getDb>
-type DbExecutor = DbClient | Parameters<Parameters<DbClient['transaction']>[0]>[0]
+type DbExecutor =
+  | DbClient
+  | Parameters<Parameters<DbClient['transaction']>[0]>[0]
 
 export type UserMessagingAccount = {
   id: string
@@ -54,7 +60,7 @@ export type MessagingLinkRateLimitResult =
 
 /** Limits how many link tokens a user can mint per rolling window. */
 export async function checkMessagingLinkRateLimit(
-  userId: string
+  userId: string,
 ): Promise<MessagingLinkRateLimitResult> {
   const db = getDb()
   const now = new Date()
@@ -66,8 +72,8 @@ export async function checkMessagingLinkRateLimit(
     .where(
       and(
         eq(messagingLinkTokens.userId, userId),
-        gte(messagingLinkTokens.createdAt, windowStart)
-      )
+        gte(messagingLinkTokens.createdAt, windowStart),
+      ),
     )
 
   if (count < MESSAGING_LINK_MAX_PER_WINDOW) {
@@ -80,20 +86,25 @@ export async function checkMessagingLinkRateLimit(
     .where(
       and(
         eq(messagingLinkTokens.userId, userId),
-        gte(messagingLinkTokens.createdAt, windowStart)
-      )
+        gte(messagingLinkTokens.createdAt, windowStart),
+      ),
     )
     .orderBy(messagingLinkTokens.createdAt)
     .limit(1)
 
   const retryAfterMs = oldest
-    ? Math.max(0, oldest.createdAt.getTime() + MESSAGING_LINK_WINDOW_MS - now.getTime())
+    ? Math.max(
+        0,
+        oldest.createdAt.getTime() + MESSAGING_LINK_WINDOW_MS - now.getTime(),
+      )
     : MESSAGING_LINK_WINDOW_MS
 
   return { allowed: false, retryAfterMs }
 }
 
-function rowToAccount(row: typeof userMessagingAccounts.$inferSelect): UserMessagingAccount {
+function rowToAccount(
+  row: typeof userMessagingAccounts.$inferSelect,
+): UserMessagingAccount {
   return {
     id: row.id,
     userId: row.userId,
@@ -106,7 +117,9 @@ function rowToAccount(row: typeof userMessagingAccounts.$inferSelect): UserMessa
   }
 }
 
-function rowToToken(row: typeof messagingLinkTokens.$inferSelect): MessagingLinkToken {
+function rowToToken(
+  row: typeof messagingLinkTokens.$inferSelect,
+): MessagingLinkToken {
   return {
     token: row.token,
     userId: row.userId,
@@ -118,7 +131,9 @@ function rowToToken(row: typeof messagingLinkTokens.$inferSelect): MessagingLink
   }
 }
 
-export async function createLinkToken(input: CreateLinkTokenInput): Promise<MessagingLinkToken> {
+export async function createLinkToken(
+  input: CreateLinkTokenInput,
+): Promise<MessagingLinkToken> {
   const db = getDb()
   const expiresAt = new Date(Date.now() + input.ttlMinutes * 60 * 1000)
   const [row] = await db
@@ -136,7 +151,7 @@ export async function createLinkToken(input: CreateLinkTokenInput): Promise<Mess
 /** Reads a link token without consuming it. Returns undefined if missing, consumed, or expired. */
 export async function findValidLinkToken(
   token: string,
-  provider: MessagingProviderId
+  provider: MessagingProviderId,
 ): Promise<MessagingLinkToken | undefined> {
   const db = getDb()
   const now = new Date()
@@ -147,8 +162,8 @@ export async function findValidLinkToken(
       and(
         eq(messagingLinkTokens.token, token),
         eq(messagingLinkTokens.provider, provider),
-        isNull(messagingLinkTokens.consumedAt)
-      )
+        isNull(messagingLinkTokens.consumedAt),
+      ),
     )
     .limit(1)
   if (!row) return undefined
@@ -159,7 +174,7 @@ export async function findValidLinkToken(
 /** Atomically consumes a link token when valid (unconsumed, unexpired). */
 export async function consumeLinkTokenIfValid(
   token: string,
-  provider: MessagingProviderId
+  provider: MessagingProviderId,
 ): Promise<MessagingLinkToken | undefined> {
   const db = getDb()
   const now = new Date()
@@ -171,8 +186,8 @@ export async function consumeLinkTokenIfValid(
         eq(messagingLinkTokens.token, token),
         eq(messagingLinkTokens.provider, provider),
         isNull(messagingLinkTokens.consumedAt),
-        gte(messagingLinkTokens.expiresAt, now)
-      )
+        gte(messagingLinkTokens.expiresAt, now),
+      ),
     )
     .returning()
   return row ? rowToToken(row) : undefined
@@ -183,7 +198,7 @@ export const consumeLinkToken = consumeLinkTokenIfValid
 
 async function upsertAccountWithExecutor(
   executor: DbExecutor,
-  input: UpsertAccountInput
+  input: UpsertAccountInput,
 ): Promise<UserMessagingAccount> {
   const [row] = await executor
     .insert(userMessagingAccounts)
@@ -209,7 +224,7 @@ async function upsertAccountWithExecutor(
 async function enableMessagingProviderForSalonWithExecutor(
   executor: DbExecutor,
   salonId: string,
-  provider: MessagingProviderId
+  provider: MessagingProviderId,
 ): Promise<void> {
   const [row] = await executor
     .select({ providers: salonPublicSettings.enabledMessagingProviders })
@@ -251,19 +266,23 @@ export type LinkMessagingAccountInput = UpsertAccountInput & {
 
 /** Upserts the user messaging account and enables the provider for the salon atomically. */
 export async function linkMessagingAccountAndEnableProvider(
-  input: LinkMessagingAccountInput
+  input: LinkMessagingAccountInput,
 ): Promise<UserMessagingAccount> {
   const db = getDb()
   return db.transaction(async (tx) => {
     const account = await upsertAccountWithExecutor(tx, input)
-    await enableMessagingProviderForSalonWithExecutor(tx, input.salonId, input.provider)
+    await enableMessagingProviderForSalonWithExecutor(
+      tx,
+      input.salonId,
+      input.provider,
+    )
     return account
   })
 }
 
 export async function findAccountByExternalId(
   provider: MessagingProviderId,
-  externalId: string
+  externalId: string,
 ): Promise<UserMessagingAccount | undefined> {
   const db = getDb()
   const [row] = await db
@@ -272,8 +291,8 @@ export async function findAccountByExternalId(
     .where(
       and(
         eq(userMessagingAccounts.provider, provider),
-        eq(userMessagingAccounts.externalId, externalId)
-      )
+        eq(userMessagingAccounts.externalId, externalId),
+      ),
     )
     .limit(1)
   return row ? rowToAccount(row) : undefined
@@ -281,7 +300,7 @@ export async function findAccountByExternalId(
 
 export async function findAccountByUserAndProvider(
   userId: string,
-  provider: MessagingProviderId
+  provider: MessagingProviderId,
 ): Promise<UserMessagingAccount | undefined> {
   const db = getDb()
   const [row] = await db
@@ -290,45 +309,58 @@ export async function findAccountByUserAndProvider(
     .where(
       and(
         eq(userMessagingAccounts.userId, userId),
-        eq(userMessagingAccounts.provider, provider)
-      )
+        eq(userMessagingAccounts.provider, provider),
+      ),
     )
     .limit(1)
   return row ? rowToAccount(row) : undefined
 }
 
-export async function upsertAccount(input: UpsertAccountInput): Promise<UserMessagingAccount> {
+export async function upsertAccount(
+  input: UpsertAccountInput,
+): Promise<UserMessagingAccount> {
   return upsertAccountWithExecutor(getDb(), input)
 }
 
 export async function setAccountEnabled(
   id: string,
   userId: string,
-  enabled: boolean
+  enabled: boolean,
 ): Promise<UserMessagingAccount | undefined> {
   const db = getDb()
   const [row] = await db
     .update(userMessagingAccounts)
     .set({ enabled, updatedAt: new Date() })
     .where(
-      and(eq(userMessagingAccounts.id, id), eq(userMessagingAccounts.userId, userId))
+      and(
+        eq(userMessagingAccounts.id, id),
+        eq(userMessagingAccounts.userId, userId),
+      ),
     )
     .returning()
   return row ? rowToAccount(row) : undefined
 }
 
-export async function deleteAccount(id: string, userId: string): Promise<boolean> {
+export async function deleteAccount(
+  id: string,
+  userId: string,
+): Promise<boolean> {
   const db = getDb()
   const rows = await db
     .delete(userMessagingAccounts)
     .where(
-      and(eq(userMessagingAccounts.id, id), eq(userMessagingAccounts.userId, userId))
+      and(
+        eq(userMessagingAccounts.id, id),
+        eq(userMessagingAccounts.userId, userId),
+      ),
     )
     .returning({ id: userMessagingAccounts.id })
   return rows.length > 0
 }
 
-export async function listAccountsForUser(userId: string): Promise<UserMessagingAccount[]> {
+export async function listAccountsForUser(
+  userId: string,
+): Promise<UserMessagingAccount[]> {
   const db = getDb()
   const rows = await db
     .select()

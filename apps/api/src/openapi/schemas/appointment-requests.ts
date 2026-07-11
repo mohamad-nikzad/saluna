@@ -51,7 +51,8 @@ export const appointmentRequestsListQuerySchema = z
   .object({
     status: appointmentRequestStatusSchema.optional().openapi({
       param: { name: 'status', in: 'query' },
-      description: 'Filter by request status. Defaults to pending on the server.',
+      description:
+        'Filter by request status. Defaults to pending on the server.',
     }),
   })
   .openapi('AppointmentRequestsListQuery')
@@ -65,7 +66,8 @@ export const appointmentRequestsListResponseSchema = z
 export const approveAppointmentRequestBodySchema = z
   .object({
     staffId: z.string().min(1).openapi({
-      description: 'Staff member assigned when converting the request to an appointment',
+      description:
+        'Staff member assigned when converting the request to an appointment',
     }),
   })
   .openapi('ApproveAppointmentRequestRequest')

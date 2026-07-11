@@ -8,7 +8,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+)
 const migrationsDir = path.join(repoRoot, 'packages/database/src/migrations')
 
 function loadEnvFile(fileName) {
@@ -46,7 +49,9 @@ if (!url) {
   process.exit(1)
 }
 
-const journal = JSON.parse(readFileSync(path.join(migrationsDir, 'meta/_journal.json'), 'utf8'))
+const journal = JSON.parse(
+  readFileSync(path.join(migrationsDir, 'meta/_journal.json'), 'utf8'),
+)
 
 /** @type {{ tag: string, ready: (sql: import('postgres').Sql) => Promise<boolean> }[]} */
 const featureMigrations = [

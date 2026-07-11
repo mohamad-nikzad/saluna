@@ -31,12 +31,21 @@ const jsonLd = {
 }
 ---
 
-<PublicInfoLayout title={title} description={description} canonical={canonical} jsonLd={jsonLd}>
+<PublicInfoLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  jsonLd={jsonLd}
+>
   <section class="px-5 py-16 sm:px-8 sm:py-20">
-    <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <div
+      class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start"
+    >
       <div>
         <p class="text-sm font-extrabold text-[#9b3348]">درباره ما</p>
-        <h1 class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}>
+        <h1
+          class={`${displayClass} mt-3 break-words text-4xl leading-tight text-[#3f2730] sm:text-5xl`}
+        >
           سالونا برای نظم روزانه سالن‌های زیبایی ساخته می‌شود
         </h1>
         <p class="mt-6 text-base leading-8 text-[#6b4955]">
@@ -46,23 +55,33 @@ const jsonLd = {
         </p>
       </div>
 
-      <div class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)]">
+      <div
+        class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,0.06)]"
+      >
         <dl class="grid gap-5 sm:grid-cols-2">
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">نام محصول</dt>
-            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.brandName}</dd>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">
+              {publicSiteInfo.brandName}
+            </dd>
           </div>
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">ارائه‌دهنده</dt>
-            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.operatorName}</dd>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">
+              {publicSiteInfo.operatorName}
+            </dd>
           </div>
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">موقعیت</dt>
-            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.location}</dd>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">
+              {publicSiteInfo.location}
+            </dd>
           </div>
           <div>
             <dt class="text-xs font-bold text-[#9b3348]">وضعیت دسترسی</dt>
-            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">{publicSiteInfo.availability}</dd>
+            <dd class="mt-2 text-lg font-extrabold text-[#3f2730]">
+              {publicSiteInfo.availability}
+            </dd>
           </div>
         </dl>
       </div>
@@ -74,14 +93,15 @@ const jsonLd = {
       <article class="rounded-2xl border border-[#f3d5dd] bg-white/70 p-6">
         <h2 class="text-lg font-extrabold text-[#3f2730]">ماموریت</h2>
         <p class="mt-3 text-sm leading-7 text-[#6b4955]">
-          ساده‌تر کردن مدیریت نوبت، مشتری، پرسنل و خدمات برای سالن‌هایی که می‌خواهند
-          اطلاعاتشان پراکنده نباشد.
+          ساده‌تر کردن مدیریت نوبت، مشتری، پرسنل و خدمات برای سالن‌هایی که
+          می‌خواهند اطلاعاتشان پراکنده نباشد.
         </p>
       </article>
       <article class="rounded-2xl border border-[#f3d5dd] bg-white/70 p-6">
         <h2 class="text-lg font-extrabold text-[#3f2730]">رویکرد</h2>
         <p class="mt-3 text-sm leading-7 text-[#6b4955]">
-          قابلیت‌ها مرحله‌به‌مرحله و بر اساس نیاز واقعی سالن‌ها توسعه داده می‌شوند.
+          قابلیت‌ها مرحله‌به‌مرحله و بر اساس نیاز واقعی سالن‌ها توسعه داده
+          می‌شوند.
         </p>
       </article>
       <article class="rounded-2xl border border-[#f3d5dd] bg-white/70 p-6">

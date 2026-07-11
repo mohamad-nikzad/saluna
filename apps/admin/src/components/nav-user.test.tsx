@@ -15,13 +15,9 @@ import { SidebarProvider } from '#/components/ui/sidebar'
 const navigate = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    to,
-    children,
-  }: {
-    to: string
-    children: ReactNode
-  }) => <a href={to}>{children}</a>,
+  Link: ({ to, children }: { to: string; children: ReactNode }) => (
+    <a href={to}>{children}</a>
+  ),
   useNavigate: () => navigate,
 }))
 
@@ -79,7 +75,9 @@ describe('NavUser', () => {
       },
     })
     const clearSpy = vi.spyOn(queryClient, 'clear')
-    queryClient.setQueryData(['admin-auth-me-test'], { user: { role: 'platform_owner' } })
+    queryClient.setQueryData(['admin-auth-me-test'], {
+      user: { role: 'platform_owner' },
+    })
 
     renderNavUser(queryClient)
 

@@ -51,30 +51,32 @@ describe('AdminShell', () => {
 
     expect(await screen.findByText('ورود به پنل ادمین الزامی است')).toBeTruthy()
     expect(
-      screen.getByText(
-        'با حسابی که نقش فعال ادمین پلتفرم دارد وارد شوید.',
-      ),
+      screen.getByText('با حسابی که نقش فعال ادمین پلتفرم دارد وارد شوید.'),
     ).toBeTruthy()
     expect(
-      screen.getByRole('link', { name: /رفتن به صفحه ورود/ }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: /رفتن به صفحه ورود/ })
+        .getAttribute('href'),
     ).toBe('/login')
   })
 
   it('shows access denied when auth me returns 403', async () => {
-    authMeQuery.queryFn.mockRejectedValue(
-      new ApiError('Forbidden', 403, null),
-    )
+    authMeQuery.queryFn.mockRejectedValue(new ApiError('Forbidden', 403, null))
 
     renderWithProviders(<AdminShell />)
 
-    expect(await screen.findByText('دسترسی به پنل ادمین مجاز نیست')).toBeTruthy()
+    expect(
+      await screen.findByText('دسترسی به پنل ادمین مجاز نیست'),
+    ).toBeTruthy()
     expect(
       screen.getByText(
         'نشست شما معتبر است، اما این حساب اجازه دسترسی به پنل ادمین Saluna را ندارد.',
       ),
     ).toBeTruthy()
     expect(
-      screen.getByRole('link', { name: /رفتن به صفحه ورود/ }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: /رفتن به صفحه ورود/ })
+        .getAttribute('href'),
     ).toBe('/login')
   })
 })

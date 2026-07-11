@@ -115,7 +115,9 @@ export function rowToClientTag(row: typeof clientTags.$inferSelect): ClientTag {
   }
 }
 
-export function rowToClientFollowUp(row: typeof clientFollowUps.$inferSelect): ClientFollowUp {
+export function rowToClientFollowUp(
+  row: typeof clientFollowUps.$inferSelect,
+): ClientFollowUp {
   return {
     id: row.id,
     salonId: row.salonId,
@@ -129,7 +131,9 @@ export function rowToClientFollowUp(row: typeof clientFollowUps.$inferSelect): C
   }
 }
 
-export function rowToAppointment(row: typeof appointments.$inferSelect): Appointment {
+export function rowToAppointment(
+  row: typeof appointments.$inferSelect,
+): Appointment {
   return {
     id: row.id,
     clientId: row.clientId,
@@ -152,7 +156,7 @@ export function rowToAppointment(row: typeof appointments.$inferSelect): Appoint
 }
 
 export function rowToAppointmentAddonLine(
-  row: typeof appointmentAddonLines.$inferSelect
+  row: typeof appointmentAddonLines.$inferSelect,
 ): BookedAppointmentAddonLine {
   return {
     id: row.id,
@@ -166,7 +170,9 @@ export function rowToAppointmentAddonLine(
   }
 }
 
-export function rowToStaffSchedule(row: typeof staffSchedules.$inferSelect): StaffSchedule {
+export function rowToStaffSchedule(
+  row: typeof staffSchedules.$inferSelect,
+): StaffSchedule {
   return {
     id: row.id,
     salonId: row.salonId,
@@ -180,7 +186,9 @@ export function rowToStaffSchedule(row: typeof staffSchedules.$inferSelect): Sta
   }
 }
 
-export function rowToBusinessHours(row: typeof businessSettings.$inferSelect): BusinessHours {
+export function rowToBusinessHours(
+  row: typeof businessSettings.$inferSelect,
+): BusinessHours {
   return {
     workingStart: row.workingStart,
     workingEnd: row.workingEnd,
@@ -256,7 +264,9 @@ export function joinedRowToService(row: {
   }
 }
 
-function legacyCategoryFromCatalogName(name: string | null | undefined): Service['category'] {
+function legacyCategoryFromCatalogName(
+  name: string | null | undefined,
+): Service['category'] {
   if (name === 'ناخن') return 'nails'
   if (name === 'پوست') return 'skincare'
   if (name === 'اسپا') return 'spa'

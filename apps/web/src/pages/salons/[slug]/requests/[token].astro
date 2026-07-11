@@ -51,12 +51,17 @@ const timeRange = `${formatHm(view.requestedStartTime)} تا ${formatHm(view.req
     style={`--salon-accent: ${accent}`}
   >
     <div class="mx-auto w-full max-w-2xl px-5 py-12 sm:px-8">
-      <a href={`/salons/${slug}`} class="text-sm text-[#7a2a40] hover:underline">
+      <a
+        href={`/salons/${slug}`}
+        class="text-sm text-[#7a2a40] hover:underline"
+      >
         {view.salon.name}
       </a>
 
       <div class={`mt-4 rounded-2xl p-5 ${headline.tone}`}>
-        <p class="text-base font-extrabold leading-7 sm:text-lg">{headline.title}</p>
+        <p class="text-base font-extrabold leading-7 sm:text-lg">
+          {headline.title}
+        </p>
         <p class="mt-2 text-sm leading-7 opacity-90">{headline.body}</p>
       </div>
 
@@ -68,7 +73,9 @@ const timeRange = `${formatHm(view.requestedStartTime)} تا ${formatHm(view.req
             class="flex items-baseline justify-between gap-3 border-b border-[#f3d5dd] pb-2"
           >
             <dt class="text-xs text-[#8b6b73]">خدمت</dt>
-            <dd class="text-sm font-bold text-[#3f2730]">{view.bookedServiceName}</dd>
+            <dd class="text-sm font-bold text-[#3f2730]">
+              {view.bookedServiceName}
+            </dd>
           </div>
           <div
             class="flex items-baseline justify-between gap-3 border-b border-[#f3d5dd] pb-2"
@@ -96,7 +103,9 @@ const timeRange = `${formatHm(view.requestedStartTime)} تا ${formatHm(view.req
           </div>
           <div class="flex items-baseline justify-between gap-3 pb-2">
             <dt class="text-xs text-[#8b6b73]">ساعت</dt>
-            <dd class="text-sm font-bold text-[#3f2730]" dir="ltr">{timeRange}</dd>
+            <dd class="text-sm font-bold text-[#3f2730]" dir="ltr">
+              {timeRange}
+            </dd>
           </div>
         </dl>
 
@@ -125,7 +134,12 @@ const timeRange = `${formatHm(view.requestedStartTime)} تا ${formatHm(view.req
       {
         view.status === 'pending' ? (
           <div class="mt-6">
-            <CancelRequestButton client:load slug={slug!} token={token!} accent={accent} />
+            <CancelRequestButton
+              client:load
+              slug={slug!}
+              token={token!}
+              accent={accent}
+            />
           </div>
         ) : null
       }

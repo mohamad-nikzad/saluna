@@ -34,7 +34,7 @@ type ClientRetentionHistory = {
 }
 
 function appointmentsByClient(
-  appointments: AppointmentWithDetails[]
+  appointments: AppointmentWithDetails[],
 ): Map<string, AppointmentWithDetails[]> {
   const byClient = new Map<string, AppointmentWithDetails[]>()
   for (const appointment of appointments) {
@@ -47,17 +47,23 @@ function appointmentsByClient(
 
 function buildClientRetentionHistory(
   clients: Client[],
-  appointments: AppointmentWithDetails[]
+  appointments: AppointmentWithDetails[],
 ): ClientRetentionHistory[] {
   const byClient = appointmentsByClient(appointments)
 
   return clients.map((client) => {
     const rows = byClient.get(client.id) ?? []
-    const completed = rows.filter((appointment) => appointment.status === 'completed')
-    const noShows = rows.filter((appointment) => appointment.status === 'no-show')
+    const completed = rows.filter(
+      (appointment) => appointment.status === 'completed',
+    )
+    const noShows = rows.filter(
+      (appointment) => appointment.status === 'no-show',
+    )
     const lastCompleted = completed
       .slice()
-      .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`))[0]
+      .sort((a, b) =>
+        `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`),
+      )[0]
 
     return {
       client,
@@ -67,7 +73,7 @@ function buildClientRetentionHistory(
       lastCompleted,
       estimatedSpend: completed.reduce(
         (sum, appointment) => sum + appointment.bookedServicePrice,
-        0
+        0,
       ),
     }
   })
@@ -93,7 +99,11 @@ function addLifecycleCandidates(input: {
       lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
     }
 
-    if (item.completed.length > 0 && lastVisitDate && lastVisitDate < inactiveCutoff) {
+    if (
+      item.completed.length > 0 &&
+      lastVisitDate &&
+      lastVisitDate < inactiveCutoff
+    ) {
       candidates.set(`${item.client.id}:inactive`, {
         ...base,
         reason: 'inactive',
@@ -103,7 +113,10 @@ function addLifecycleCandidates(input: {
 
     if (
       item.completed.length === 1 &&
-      !item.rows.some((appointment) => appointment.date > today && appointment.status !== 'cancelled')
+      !item.rows.some(
+        (appointment) =>
+          appointment.date > today && appointment.status !== 'cancelled',
+      )
     ) {
       candidates.set(`${item.client.id}:new-client`, {
         ...base,
@@ -131,7 +144,11 @@ function addVipCandidates(input: {
 
   for (const item of histories
     .filter((row) => row.completed.length > 0)
-    .sort((a, b) => b.estimatedSpend - a.estimatedSpend || b.completed.length - a.completed.length)
+    .sort(
+      (a, b) =>
+        b.estimatedSpend - a.estimatedSpend ||
+        b.completed.length - a.completed.length,
+    )
     .slice(0, 5)) {
     candidates.set(`${item.client.id}:vip`, {
       client: item.client,
@@ -153,7 +170,10 @@ function buildRetentionCandidates(input: {
   today: string
 }): Map<string, RetentionCandidate> {
   const candidates = new Map<string, RetentionCandidate>()
-  const histories = buildClientRetentionHistory(input.clients, input.appointments)
+  const histories = buildClientRetentionHistory(
+    input.clients,
+    input.appointments,
+  )
   const inactiveCutoff = addDaysYmd(input.today, -60)
 
   addLifecycleCandidates({
@@ -167,7 +187,9 @@ function buildRetentionCandidates(input: {
   return candidates
 }
 
-export async function getRetentionQueue(salonId: string): Promise<RetentionItem[]> {
+export async function getRetentionQueue(
+  salonId: string,
+): Promise<RetentionItem[]> {
   const db = getDb()
   const today = salonTodayYmd()
   const [clientRows, appointmentRows, existingRows] = await Promise.all([
@@ -181,11 +203,15 @@ export async function getRetentionQueue(salonId: string): Promise<RetentionItem[
     appointments: appointmentRows,
     today,
   })
-  const existingByKey = new Map(existingRows.map((row) => [`${row.clientId}:${row.reason}`, row]))
+  const existingByKey = new Map(
+    existingRows.map((row) => [`${row.clientId}:${row.reason}`, row]),
+  )
   const result: RetentionItem[] = []
 
   for (const candidate of candidates.values()) {
-    const existing = existingByKey.get(`${candidate.client.id}:${candidate.reason}`)
+    const existing = existingByKey.get(
+      `${candidate.client.id}:${candidate.reason}`,
+    )
     if (existing && existing.status !== 'open') continue
 
     const followUp =
@@ -202,11 +228,15 @@ export async function getRetentionQueue(salonId: string): Promise<RetentionItem[
               dueDate: candidate.dueDate,
             })
             .onConflictDoUpdate({
-              target: [clientFollowUps.salonId, clientFollowUps.clientId, clientFollowUps.reason],
+              target: [
+                clientFollowUps.salonId,
+                clientFollowUps.clientId,
+                clientFollowUps.reason,
+              ],
               set: { updatedAt: new Date() },
             })
             .returning()
-        )[0]
+        )[0],
       )
 
     result.push({

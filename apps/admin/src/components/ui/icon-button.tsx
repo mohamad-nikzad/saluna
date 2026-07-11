@@ -9,7 +9,13 @@ type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function IconButton({ label, children, ...props }: IconButtonProps) {
   return (
-    <Button size="icon" variant="ghost" aria-label={label} title={label} {...props}>
+    <Button
+      size="icon"
+      variant="ghost"
+      aria-label={label}
+      title={label}
+      {...props}
+    >
       {children}
     </Button>
   )

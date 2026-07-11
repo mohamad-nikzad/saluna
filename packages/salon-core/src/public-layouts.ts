@@ -24,19 +24,20 @@ export const PUBLIC_LAYOUTS: readonly PublicLayout[] = [
   {
     id: 'inline',
     name: 'فهرست خدمات',
-    description: 'خدمات دسته‌بندی‌شده؛ با لمس هر خدمت، رزرو همان‌جا باز می‌شود.',
+    description:
+      'خدمات دسته‌بندی‌شده؛ با لمس هر خدمت، رزرو همان‌جا باز می‌شود.',
   },
 ] as const
 
 export const DEFAULT_PUBLIC_LAYOUT_ID: PublicLayoutId = 'agenda'
 
-export function resolvePublicLayout(id: string | null | undefined): PublicLayout {
+export function resolvePublicLayout(
+  id: string | null | undefined,
+): PublicLayout {
   const found = PUBLIC_LAYOUTS.find((l) => l.id === id)
   return found ?? PUBLIC_LAYOUTS[0]!
 }
 
 export function isPublicLayoutId(value: unknown): value is PublicLayoutId {
-  return (
-    typeof value === 'string' && PUBLIC_LAYOUTS.some((l) => l.id === value)
-  )
+  return typeof value === 'string' && PUBLIC_LAYOUTS.some((l) => l.id === value)
 }

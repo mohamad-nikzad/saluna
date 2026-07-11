@@ -110,9 +110,7 @@ function isSafeHttpsUrl(url: string): boolean {
   }
 }
 
-function toSafirInlineKeyboard(
-  rows: BaleSafirButton[][] | undefined,
-):
+function toSafirInlineKeyboard(rows: BaleSafirButton[][] | undefined):
   | {
       inline_keyboard: BaleSafirInlineKeyboardButton[][]
     }
@@ -200,9 +198,9 @@ export async function sendBaleSafirMessage(input: {
 
   try {
     const response = await getFetch()(endpoint, init)
-    const body = (await response.json().catch(() => null)) as
-      | BaleSafirSendMessageResponse
-      | null
+    const body = (await response
+      .json()
+      .catch(() => null)) as BaleSafirSendMessageResponse | null
     const safirError = getFirstSafirError(body?.error_data)
 
     if (!response.ok || safirError) {

@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
 import type { User } from '@repo/salon-core/types'
-import { getUserById, getUserWithPasswordByPhone } from '@repo/database/auth-users'
+import {
+  getUserById,
+  getUserWithPasswordByPhone,
+} from '@repo/database/auth-users'
 import { getAuthKeys } from './keys'
 
 const DEV_JWT_SECRET = 'development-only-jwt-secret-do-not-use-in-production'
@@ -12,7 +15,9 @@ function getJwtSecret(): Uint8Array {
 
   if (secret) {
     if (NODE_ENV === 'production' && secret.length < 32) {
-      throw new Error('JWT_SECRET must be at least 32 characters in production.')
+      throw new Error(
+        'JWT_SECRET must be at least 32 characters in production.',
+      )
     }
     return new TextEncoder().encode(secret)
   }
@@ -51,7 +56,8 @@ export async function getUserFromToken(token: string): Promise<User | null> {
 }
 
 function extractBearerToken(request: Request): string | null {
-  const header = request.headers.get('authorization') ?? request.headers.get('Authorization')
+  const header =
+    request.headers.get('authorization') ?? request.headers.get('Authorization')
   if (!header) return null
   const match = header.match(/^Bearer\s+(.+)$/i)
   return match ? match[1].trim() : null
@@ -69,7 +75,9 @@ function extractSessionCookie(request: Request): string | null {
   return null
 }
 
-export async function getCurrentUserFromRequest(request: Request): Promise<User | null> {
+export async function getCurrentUserFromRequest(
+  request: Request,
+): Promise<User | null> {
   const bearer = extractBearerToken(request)
   if (bearer) {
     const fromBearer = await getUserFromToken(bearer)
@@ -84,7 +92,7 @@ export async function getCurrentUserFromRequest(request: Request): Promise<User 
 
 export async function login(
   phone: string,
-  password: string
+  password: string,
 ): Promise<{ user: User; token: string } | null> {
   const row = await getUserWithPasswordByPhone(phone)
   if (!row) return null

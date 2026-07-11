@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { isSalonOpenOnDate, validateStaffAvailability, dayOfWeekFromDate } from './staff-availability'
+import {
+  isSalonOpenOnDate,
+  validateStaffAvailability,
+  dayOfWeekFromDate,
+} from './staff-availability'
 import type { BusinessHours, StaffSchedule } from './types'
 
 const business: BusinessHours = {
@@ -10,7 +14,8 @@ const business: BusinessHours = {
 }
 
 function schedule(
-  partial: Partial<StaffSchedule> & Pick<StaffSchedule, 'dayOfWeek' | 'active' | 'workingStart' | 'workingEnd'>
+  partial: Partial<StaffSchedule> &
+    Pick<StaffSchedule, 'dayOfWeek' | 'active' | 'workingStart' | 'workingEnd'>,
 ): StaffSchedule {
   return {
     id: '1',
@@ -25,7 +30,12 @@ function schedule(
 describe('validateStaffAvailability', () => {
   it('accepts booking inside staff hours when staff day is active', () => {
     const r = validateStaffAvailability({
-      schedule: schedule({ dayOfWeek: 1, active: true, workingStart: '10:00', workingEnd: '18:00' }),
+      schedule: schedule({
+        dayOfWeek: 1,
+        active: true,
+        workingStart: '10:00',
+        workingEnd: '18:00',
+      }),
       hasAnyScheduleRows: true,
       businessHours: business,
       startTime: '11:00',
@@ -37,7 +47,12 @@ describe('validateStaffAvailability', () => {
 
   it('rejects booking before staff start', () => {
     const r = validateStaffAvailability({
-      schedule: schedule({ dayOfWeek: 2, active: true, workingStart: '10:00', workingEnd: '18:00' }),
+      schedule: schedule({
+        dayOfWeek: 2,
+        active: true,
+        workingStart: '10:00',
+        workingEnd: '18:00',
+      }),
       hasAnyScheduleRows: true,
       businessHours: business,
       startTime: '09:00',
@@ -49,7 +64,12 @@ describe('validateStaffAvailability', () => {
 
   it('rejects booking after staff end', () => {
     const r = validateStaffAvailability({
-      schedule: schedule({ dayOfWeek: 3, active: true, workingStart: '10:00', workingEnd: '18:00' }),
+      schedule: schedule({
+        dayOfWeek: 3,
+        active: true,
+        workingStart: '10:00',
+        workingEnd: '18:00',
+      }),
       hasAnyScheduleRows: true,
       businessHours: business,
       startTime: '17:30',
@@ -61,7 +81,12 @@ describe('validateStaffAvailability', () => {
 
   it('rejects inactive staff day when schedule rows exist', () => {
     const r = validateStaffAvailability({
-      schedule: schedule({ dayOfWeek: 4, active: false, workingStart: '10:00', workingEnd: '18:00' }),
+      schedule: schedule({
+        dayOfWeek: 4,
+        active: false,
+        workingStart: '10:00',
+        workingEnd: '18:00',
+      }),
       hasAnyScheduleRows: true,
       businessHours: business,
       startTime: '11:00',
@@ -110,7 +135,9 @@ describe('validateStaffAvailability', () => {
 
 describe('dayOfWeekFromDate', () => {
   it('returns UTC weekday index for ISO date string', () => {
-    expect(dayOfWeekFromDate('2026-04-20')).toBe(new Date('2026-04-20T00:00:00Z').getUTCDay())
+    expect(dayOfWeekFromDate('2026-04-20')).toBe(
+      new Date('2026-04-20T00:00:00Z').getUTCDay(),
+    )
   })
 })
 

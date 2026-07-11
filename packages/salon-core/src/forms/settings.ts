@@ -1,7 +1,11 @@
 import { z } from 'zod'
 
 import { formMessages } from './messages'
-import { durationMinutesSchema, timeOfDaySchema, timeToMinutes } from './primitives'
+import {
+  durationMinutesSchema,
+  timeOfDaySchema,
+  timeToMinutes,
+} from './primitives'
 
 /**
  * Salon working-days bitmask. Bit 0 = Saturday … bit 6 = Friday.
@@ -30,7 +34,9 @@ export const businessSettingsSchema = z
   })
   .superRefine((values, ctx) => {
     if (!values.workingStart || !values.workingEnd) return
-    if (timeToMinutes(values.workingEnd) <= timeToMinutes(values.workingStart)) {
+    if (
+      timeToMinutes(values.workingEnd) <= timeToMinutes(values.workingStart)
+    ) {
       ctx.addIssue({
         code: 'custom',
         path: ['workingEnd'],

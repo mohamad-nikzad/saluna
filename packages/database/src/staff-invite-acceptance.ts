@@ -198,10 +198,7 @@ export async function listPendingStaffInvitesForUser(
     })
     .from(staffInvites)
     .innerJoin(organization, eq(organization.id, staffInvites.salonId))
-    .innerJoin(
-      staffProfiles,
-      eq(staffProfiles.id, staffInvites.staffProfileId),
-    )
+    .innerJoin(staffProfiles, eq(staffProfiles.id, staffInvites.staffProfileId))
     .where(
       and(
         eq(staffInvites.phone, phone),
@@ -291,7 +288,7 @@ export async function acceptStaffInvite(input: {
     const profile = profileRows[0] ?? null
 
     const existingAccessForUserSalon = invite
-      ? (
+      ? ((
           await tx
             .select({
               id: staffProfileAccesses.id,
@@ -307,11 +304,11 @@ export async function acceptStaffInvite(input: {
             )
             .limit(1)
             .for('update')
-        )[0] ?? null
+        )[0] ?? null)
       : null
 
     const existingAccessForProfile = invite
-      ? (
+      ? ((
           await tx
             .select({
               id: staffProfileAccesses.id,
@@ -326,7 +323,7 @@ export async function acceptStaffInvite(input: {
             )
             .limit(1)
             .for('update')
-        )[0] ?? null
+        )[0] ?? null)
       : null
 
     const decision = evaluateStaffInviteAcceptance({

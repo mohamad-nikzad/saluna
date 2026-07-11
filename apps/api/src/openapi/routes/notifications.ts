@@ -1,5 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
+import {
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
 import {
   listNotificationsQuerySchema,
   markAllNotificationsReadResponseSchema,

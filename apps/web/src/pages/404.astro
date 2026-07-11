@@ -3,8 +3,13 @@ import { pageTitle } from '@repo/brand'
 import Base from '../layouts/Base.astro'
 ---
 
-<Base title={pageTitle('صفحه یافت نشد')} description="صفحه‌ای که دنبال آن بودید پیدا نشد.">
-  <main class="flex min-h-dvh flex-col items-center justify-center gap-6 px-5 text-center">
+<Base
+  title={pageTitle('صفحه یافت نشد')}
+  description="صفحه‌ای که دنبال آن بودید پیدا نشد."
+>
+  <main
+    class="flex min-h-dvh flex-col items-center justify-center gap-6 px-5 text-center"
+  >
     <h1 class="text-2xl font-extrabold text-[#3f2730]">صفحه یافت نشد</h1>
     <p class="max-w-md text-sm leading-7 text-[#6b4955]">
       آدرسی که وارد کرده‌اید وجود ندارد یا حذف شده است.

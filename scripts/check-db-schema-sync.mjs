@@ -26,22 +26,31 @@ try {
     {
       cwd: repoRoot,
       encoding: 'utf8',
-    }
+    },
   )
 
-  const output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim()
+  const output = [result.stdout, result.stderr]
+    .filter(Boolean)
+    .join('\n')
+    .trim()
 
   if (result.status !== 0) {
     console.error(output || 'drizzle-kit generate failed')
     process.exit(result.status ?? 1)
   }
 
-  const generatedSql = readdirSync(tempDir).filter((file) => file.endsWith('.sql'))
+  const generatedSql = readdirSync(tempDir).filter((file) =>
+    file.endsWith('.sql'),
+  )
 
   if (generatedSql.length > 0) {
-    console.error('Schema drift detected: checked-in migrations do not match schema.ts.')
+    console.error(
+      'Schema drift detected: checked-in migrations do not match schema.ts.',
+    )
     console.error(`Generated migration preview: ${generatedSql.join(', ')}`)
-    console.error('Run `pnpm db:generate` and commit the resulting migration files.')
+    console.error(
+      'Run `pnpm db:generate` and commit the resulting migration files.',
+    )
     process.exit(1)
   }
 

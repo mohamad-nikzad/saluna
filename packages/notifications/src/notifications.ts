@@ -34,7 +34,10 @@ export type CreateNotificationForUserInput = CreateNotificationInput & {
 }
 
 function isAppointmentRequestNotification(type: string): boolean {
-  return type === 'appointment_request_pending' || type.startsWith('appointment_request_')
+  return (
+    type === 'appointment_request_pending' ||
+    type.startsWith('appointment_request_')
+  )
 }
 
 function isStaffAppointmentCreatedNotification(type: string): boolean {
@@ -58,9 +61,11 @@ async function deliverMessagingChannels(
   notification: AppNotification,
   preferences: NotificationPreferences,
   salonEnabledProviders: Set<MessagingProviderId>,
-  messagingButtons?: MessagingButton[][]
+  messagingButtons?: MessagingButton[][],
 ) {
-  const gateOnAppointmentAlerts = isAppointmentRequestNotification(notification.type)
+  const gateOnAppointmentAlerts = isAppointmentRequestNotification(
+    notification.type,
+  )
 
   for (const provider of listConfiguredMessagingProviders()) {
     // appointment_alerts_disabled applies only to appointment-request notifications;
@@ -75,10 +80,15 @@ async function deliverMessagingChannels(
           error,
         })
       }
-      await recordNotificationDelivery(notification.id, provider.id, 'skipped', {
-        provider: provider.id,
-        error,
-      })
+      await recordNotificationDelivery(
+        notification.id,
+        provider.id,
+        'skipped',
+        {
+          provider: provider.id,
+          error,
+        },
+      )
       continue
     }
 
@@ -92,14 +102,22 @@ async function deliverMessagingChannels(
           error,
         })
       }
-      await recordNotificationDelivery(notification.id, provider.id, 'skipped', {
-        provider: provider.id,
-        error,
-      })
+      await recordNotificationDelivery(
+        notification.id,
+        provider.id,
+        'skipped',
+        {
+          provider: provider.id,
+          error,
+        },
+      )
       continue
     }
 
-    const account = await findAccountByUserAndProvider(notification.userId, provider.id)
+    const account = await findAccountByUserAndProvider(
+      notification.userId,
+      provider.id,
+    )
     if (!account || !account.enabled) {
       const error = account ? 'user_disabled' : 'not_linked'
       if (gateOnAppointmentAlerts && provider.id === 'telegram') {
@@ -110,10 +128,15 @@ async function deliverMessagingChannels(
           error,
         })
       }
-      await recordNotificationDelivery(notification.id, provider.id, 'skipped', {
-        provider: provider.id,
-        error,
-      })
+      await recordNotificationDelivery(
+        notification.id,
+        provider.id,
+        'skipped',
+        {
+          provider: provider.id,
+          error,
+        },
+      )
       continue
     }
 
@@ -124,17 +147,22 @@ async function deliverMessagingChannels(
       body: notification.body,
       ...(messagingButtons ? { buttons: messagingButtons } : {}),
     })
-    await recordNotificationDelivery(notification.id, provider.id, result.status, {
-      provider: provider.id,
-      providerMessageId: result.providerMessageId ?? null,
-      error: result.error ?? null,
-    })
+    await recordNotificationDelivery(
+      notification.id,
+      provider.id,
+      result.status,
+      {
+        provider: provider.id,
+        providerMessageId: result.providerMessageId ?? null,
+        error: result.error ?? null,
+      },
+    )
   }
 }
 
 async function deliverBaleSafirStaffFallback(
   notification: AppNotification,
-  salonEnabledProviders: Set<MessagingProviderId>
+  salonEnabledProviders: Set<MessagingProviderId>,
 ) {
   if (!isStaffAppointmentCreatedNotification(notification.type)) return
 
@@ -150,7 +178,10 @@ async function deliverBaleSafirStaffFallback(
     return
   }
 
-  const account = await findAccountByUserAndProvider(notification.userId, 'bale')
+  const account = await findAccountByUserAndProvider(
+    notification.userId,
+    'bale',
+  )
   if (account?.enabled) return
   if (account && !account.enabled) {
     await recordNotificationDelivery(notification.id, 'bale', 'skipped', {
@@ -190,8 +221,14 @@ async function deliverBaleSafirStaffFallback(
   })
 }
 
-export async function createNotificationForUser(input: CreateNotificationForUserInput) {
-  const { enabledProviders: enabledProvidersOverride, messagingButtons, ...createInput } = input
+export async function createNotificationForUser(
+  input: CreateNotificationForUserInput,
+) {
+  const {
+    enabledProviders: enabledProvidersOverride,
+    messagingButtons,
+    ...createInput
+  } = input
   const notification = await createNotificationRecordForUser(createInput)
 
   await deliverInApp(notification)
@@ -199,7 +236,7 @@ export async function createNotificationForUser(input: CreateNotificationForUser
 
   const preferences = await getNotificationPreferences(
     notification.salonId,
-    notification.userId
+    notification.userId,
   )
   const salonEnabledProviders =
     enabledProvidersOverride ??
@@ -209,7 +246,7 @@ export async function createNotificationForUser(input: CreateNotificationForUser
     notification,
     preferences,
     salonEnabledProviders,
-    messagingButtons
+    messagingButtons,
   )
   await deliverBaleSafirStaffFallback(notification, salonEnabledProviders)
 

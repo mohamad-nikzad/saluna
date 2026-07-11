@@ -73,7 +73,10 @@ import * as appts from '@repo/database/appointments'
 import * as clientsDb from '@repo/database/clients'
 import * as notif from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -118,7 +121,9 @@ beforeEach(() => {
     name: 'Manager',
     username: '09120000000',
   } as never)
-  vi.mocked(notif.notifyStaffOfAppointmentCreated).mockResolvedValue(null as never)
+  vi.mocked(notif.notifyStaffOfAppointmentCreated).mockResolvedValue(
+    null as never,
+  )
 })
 
 describe('appointments router', () => {

@@ -19,7 +19,9 @@ function setupDbMock() {
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         where: vi.fn(async () => {
-          const phones = [...new Set([...mocks.existingPhones, ...mocks.insertedPhones])]
+          const phones = [
+            ...new Set([...mocks.existingPhones, ...mocks.insertedPhones]),
+          ]
           return phones.map((phone) => ({ phone }))
         }),
       })),
@@ -31,7 +33,11 @@ function setupDbMock() {
           returning: vi.fn(async () => {
             if (mocks.insertError) throw mocks.insertError
             const phone = values.phone as string | null
-            if (phone && (mocks.existingPhones.includes(phone) || mocks.insertedPhones.includes(phone))) {
+            if (
+              phone &&
+              (mocks.existingPhones.includes(phone) ||
+                mocks.insertedPhones.includes(phone))
+            ) {
               throw new Error('duplicate key value violates unique constraint')
             }
             if (phone) mocks.insertedPhones.push(phone)
@@ -71,7 +77,10 @@ describe('createClientsBulk', () => {
 
     expect(result.created).toHaveLength(2)
     expect(result.skipped).toEqual([])
-    expect(result.created.map((client) => client.phone)).toEqual(['09121111111', '09122222222'])
+    expect(result.created.map((client) => client.phone)).toEqual([
+      '09121111111',
+      '09122222222',
+    ])
   })
 
   it('skips clients whose phone already exists in the salon', async () => {
@@ -84,7 +93,9 @@ describe('createClientsBulk', () => {
 
     expect(result.created).toHaveLength(1)
     expect(result.created[0]?.phone).toBe('09122222222')
-    expect(result.skipped).toEqual([{ phone: '09121111111', reason: 'duplicate-phone' }])
+    expect(result.skipped).toEqual([
+      { phone: '09121111111', reason: 'duplicate-phone' },
+    ])
   })
 
   it('skips invalid rows without blocking valid ones', async () => {
@@ -106,19 +117,25 @@ describe('createClientsBulk', () => {
     ])
 
     expect(result.created).toHaveLength(0)
-    expect(result.skipped).toEqual([{ phone: '09123333333', reason: 'duplicate-phone' }])
+    expect(result.skipped).toEqual([
+      { phone: '09123333333', reason: 'duplicate-phone' },
+    ])
     expect(mocks.insert).not.toHaveBeenCalled()
   })
 
   it('skips duplicate-phone when insert races a concurrent create', async () => {
-    mocks.insertError = new Error('duplicate key value violates unique constraint')
+    mocks.insertError = new Error(
+      'duplicate key value violates unique constraint',
+    )
 
     const result = await createClientsBulk('salon-1', [
       { name: 'مینا', phone: '09124444444' },
     ])
 
     expect(result.created).toHaveLength(0)
-    expect(result.skipped).toEqual([{ phone: '09124444444', reason: 'duplicate-phone' }])
+    expect(result.skipped).toEqual([
+      { phone: '09124444444', reason: 'duplicate-phone' },
+    ])
   })
 
   it('skips later in-batch duplicates after the first row is created', async () => {
@@ -128,6 +145,8 @@ describe('createClientsBulk', () => {
     ])
 
     expect(result.created).toHaveLength(1)
-    expect(result.skipped).toEqual([{ phone: '09125555555', reason: 'duplicate-phone' }])
+    expect(result.skipped).toEqual([
+      { phone: '09125555555', reason: 'duplicate-phone' },
+    ])
   })
 })

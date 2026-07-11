@@ -20,7 +20,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/onboarding'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'
@@ -40,7 +43,7 @@ function makeStatus(
     publicPageConfigured: boolean
     notificationsConfigured: boolean
   }> = {},
-  extra: Partial<{ completedAt: Date | null; skippedAt: Date | null }> = {}
+  extra: Partial<{ completedAt: Date | null; skippedAt: Date | null }> = {},
 ) {
   return {
     salon: { id: 's1', name: 'S', slug: 's', phone: null, address: null },
@@ -63,7 +66,9 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(authServer.api.getSession).mockImplementation(
     async (args: any) =>
-      (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
   )
   vi.mocked(getMemberForUser).mockResolvedValue({
     userId: 'u1',
@@ -98,7 +103,9 @@ describe('onboarding router', () => {
       phone: '09120000001',
       salonStatus: 'active',
     } as never)
-    const res = await app.request('/api/v1/onboarding', { headers: authHeaders })
+    const res = await app.request('/api/v1/onboarding', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(403)
   })
 
@@ -112,7 +119,9 @@ describe('onboarding router', () => {
       notificationsConfigured: true,
     })
     vi.mocked(db.getOnboardingStatus).mockResolvedValue(status as never)
-    const res = await app.request('/api/v1/onboarding', { headers: authHeaders })
+    const res = await app.request('/api/v1/onboarding', {
+      headers: authHeaders,
+    })
     expect(res.status).toBe(200)
     const body = (await res.json()) as { onboarding: typeof status }
     expect(Object.keys(body.onboarding.steps).sort()).toEqual(
@@ -123,7 +132,7 @@ describe('onboarding router', () => {
         'publicPageConfigured',
         'servicesAdded',
         'staffAdded',
-      ].sort()
+      ].sort(),
     )
     expect(body.onboarding.steps.presenceSet).toBe(true)
     expect(body.onboarding.steps.notificationsConfigured).toBe(true)
@@ -151,7 +160,7 @@ describe('onboarding router', () => {
 
   it('PATCH complete updates state', async () => {
     vi.mocked(db.updateOnboardingState).mockResolvedValue(
-      makeStatus({}, { completedAt: new Date() }) as never
+      makeStatus({}, { completedAt: new Date() }) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -175,7 +184,7 @@ describe('onboarding router', () => {
 
   it('PATCH confirm-business-hours updates state', async () => {
     vi.mocked(db.updateOnboardingState).mockResolvedValue(
-      makeStatus({ businessHoursSet: true }) as never
+      makeStatus({ businessHoursSet: true }) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -183,14 +192,19 @@ describe('onboarding router', () => {
       body: JSON.stringify({ action: 'confirm-business-hours' }),
     })
     expect(res.status).toBe(200)
-    expect(db.updateOnboardingState).toHaveBeenCalledWith('s1', 'confirm-business-hours')
-    const body = (await res.json()) as { onboarding: ReturnType<typeof makeStatus> }
+    expect(db.updateOnboardingState).toHaveBeenCalledWith(
+      's1',
+      'confirm-business-hours',
+    )
+    const body = (await res.json()) as {
+      onboarding: ReturnType<typeof makeStatus>
+    }
     expect(body.onboarding.steps.businessHoursSet).toBe(true)
   })
 
   it('PATCH skip fails (400) when services or staff missing', async () => {
     vi.mocked(db.getOnboardingStatus).mockResolvedValue(
-      makeStatus({ servicesAdded: true, staffAdded: false }) as never
+      makeStatus({ servicesAdded: true, staffAdded: false }) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -203,7 +217,7 @@ describe('onboarding router', () => {
 
   it('PATCH skip fails (400) when services missing', async () => {
     vi.mocked(db.getOnboardingStatus).mockResolvedValue(
-      makeStatus({ servicesAdded: false, staffAdded: true }) as never
+      makeStatus({ servicesAdded: false, staffAdded: true }) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -216,7 +230,7 @@ describe('onboarding router', () => {
 
   it('PATCH set-manager-staff flips staffAdded to true', async () => {
     vi.mocked(db.updateOnboardingState).mockResolvedValue(
-      makeStatus({ staffAdded: true }) as never
+      makeStatus({ staffAdded: true }) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -224,21 +238,26 @@ describe('onboarding router', () => {
       body: JSON.stringify({ action: 'set-manager-staff' }),
     })
     expect(res.status).toBe(200)
-    expect(db.updateOnboardingState).toHaveBeenCalledWith('s1', 'set-manager-staff')
-    const body = (await res.json()) as { onboarding: ReturnType<typeof makeStatus> }
+    expect(db.updateOnboardingState).toHaveBeenCalledWith(
+      's1',
+      'set-manager-staff',
+    )
+    const body = (await res.json()) as {
+      onboarding: ReturnType<typeof makeStatus>
+    }
     expect(body.onboarding.steps.staffAdded).toBe(true)
   })
 
   it('PATCH skip allowed once services + manager-staff are set', async () => {
     // manager-staff path: staffAdded derived true even with no staff rows.
     vi.mocked(db.getOnboardingStatus).mockResolvedValue(
-      makeStatus({ servicesAdded: true, staffAdded: true }) as never
+      makeStatus({ servicesAdded: true, staffAdded: true }) as never,
     )
     vi.mocked(db.updateOnboardingState).mockResolvedValue(
       makeStatus(
         { servicesAdded: true, staffAdded: true },
-        { skippedAt: new Date() }
-      ) as never
+        { skippedAt: new Date() },
+      ) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',
@@ -251,13 +270,13 @@ describe('onboarding router', () => {
 
   it('PATCH skip succeeds when services + staff both present', async () => {
     vi.mocked(db.getOnboardingStatus).mockResolvedValue(
-      makeStatus({ servicesAdded: true, staffAdded: true }) as never
+      makeStatus({ servicesAdded: true, staffAdded: true }) as never,
     )
     vi.mocked(db.updateOnboardingState).mockResolvedValue(
       makeStatus(
         { servicesAdded: true, staffAdded: true },
-        { skippedAt: new Date() }
-      ) as never
+        { skippedAt: new Date() },
+      ) as never,
     )
     const res = await app.request('/api/v1/onboarding', {
       method: 'PATCH',

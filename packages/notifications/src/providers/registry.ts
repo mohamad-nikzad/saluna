@@ -10,7 +10,9 @@ export function unregisterMessagingProvider(id: MessagingProviderId): void {
   providers.delete(id)
 }
 
-export function getMessagingProvider(id: MessagingProviderId): MessagingProvider | undefined {
+export function getMessagingProvider(
+  id: MessagingProviderId,
+): MessagingProvider | undefined {
   return providers.get(id)
 }
 

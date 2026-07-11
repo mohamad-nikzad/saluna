@@ -1,9 +1,5 @@
 export { ApiError, NetworkError } from './errors'
-export {
-  createApiClient,
-  createAuthApi,
-  endpoints,
-} from './legacy'
+export { createApiClient, createAuthApi, endpoints } from './legacy'
 export type {
   ApiClient,
   ApiClientOptions,

@@ -158,9 +158,7 @@ export async function listActiveStaffProfileAccessesForUser(
           isNotNull(staffProfileAccesses.revokedAt),
         ),
       )
-    const revokedSalonIds = new Set(
-      revokedAccessRows.map((row) => row.salonId),
-    )
+    const revokedSalonIds = new Set(revokedAccessRows.map((row) => row.salonId))
     for (const row of claimOnly) {
       if (!revokedSalonIds.has(row.salonId)) {
         bySalon.set(row.salonId, row)
@@ -337,10 +335,7 @@ export async function resolveStaffNotificationRecipient(input: {
       staffProfiles,
       eq(staffProfiles.id, staffProfileAccesses.staffProfileId),
     )
-    .innerJoin(
-      organization,
-      eq(organization.id, staffProfileAccesses.salonId),
-    )
+    .innerJoin(organization, eq(organization.id, staffProfileAccesses.salonId))
     .where(
       and(
         eq(staffProfileAccesses.salonId, input.salonId),

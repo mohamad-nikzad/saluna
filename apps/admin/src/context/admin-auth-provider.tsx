@@ -18,11 +18,7 @@ export function AdminAuthProvider({
   runtime: AdminMeResponse['runtime']
   children: ReactNode
 }) {
-  return (
-    <AdminAuthContext value={{ me, runtime }}>
-      {children}
-    </AdminAuthContext>
-  )
+  return <AdminAuthContext value={{ me, runtime }}>{children}</AdminAuthContext>
 }
 
 export function useAdminAuth() {

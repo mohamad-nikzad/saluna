@@ -18,8 +18,8 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] Managers cannot invite inactive Staff Profiles until they reactivate them.
 - [x] The same salon cannot create duplicate pending invites or duplicate active Staff Profiles for the same intended staff phone.
 
-
 > Closed: Manager Staff Invite create path: name+phone → Staff Profile + pending invite; list pending; schedule/services config; no login access; inactive/duplicate guards
+
 ## Accept and decline phone-bound Staff Invites
 
 **What to build:** Staff register or log in themselves, verify the invited phone through OTP, and see pending invites for that phone. They can explicitly accept or decline each invite. Acceptance creates Staff Profile Access for that salon without removing access to any other salon.
@@ -35,8 +35,8 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] One Staff Profile cannot have more than one active accepted identity.
 - [x] Accepted and declined invite history is retained for support visibility.
 
-
 > Closed: Staff list/accept/decline phone-bound invites; accept creates Staff Profile Access and preserves other salon access; history retained
+
 ## Authorize staff through Staff Profile Access
 
 **What to build:** Staff authorization uses Staff Profile Access instead of a single claimed Staff Profile. Tenant-scoped staff API behavior resolves the active staff profile for the salon and keeps staff appointment access limited to that Staff Profile.
@@ -51,8 +51,8 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] Existing manager and owner single-salon behavior remains unchanged.
 - [x] API and domain tests cover wrong-salon, pending-invite, and revoked-access rejection.
 
-
 > Closed: Staff tenant auth via Staff Profile Access + salon header; appointment scoping to linked profile; wrong-salon/pending/revoked rejection tests
+
 ## Add staff salon picker and active salon context
 
 **What to build:** Staff with multiple accepted salons choose the salon they are entering after login. The PWA remembers the selected salon, sends that active salon context on tenant API calls, and exposes an in-app salon switcher.
@@ -66,7 +66,6 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] The PWA persists selected salon ID locally and falls back to the picker if it is no longer valid.
 - [x] Tenant-scoped staff API calls include the selected salon context.
 - [x] The API verifies the selected salon context against active Staff Profile Access before serving tenant data.
-
 
 > Closed: Staff salon picker + persisted active salon; X-Saluna-Salon-Id on tenant calls; in-app switcher; single-salon skip
 
@@ -85,8 +84,8 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] Deactivating a Staff Profile revokes access for that salon.
 - [x] Reactivating a Staff Profile does not automatically restore old access.
 
-
 > Closed: Manager revoke + staff leave remove Staff Profile Access only; deactivate revokes access; reactivate does not restore; schedule/capabilities/appointments stay on the Staff Profile
+
 ## Handle invite lifecycle and invite links
 
 **What to build:** Managers can cancel and resend pending invites. Invites expire. Invite links route staff into login or registration but never grant access by themselves. SMS delivery remains a future hook rather than a real integration.

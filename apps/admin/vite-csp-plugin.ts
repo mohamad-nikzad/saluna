@@ -16,7 +16,9 @@ export function adminCspPlugin(port: number): Plugin {
         const metaTag = `<meta http-equiv="Content-Security-Policy" content="${csp}" />`
 
         if (!CSP_META.test(html)) {
-          throw new Error('index.html is missing a Content-Security-Policy meta tag')
+          throw new Error(
+            'index.html is missing a Content-Security-Policy meta tag',
+          )
         }
 
         return html.replace(CSP_META, metaTag)

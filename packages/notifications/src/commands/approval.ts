@@ -3,7 +3,10 @@ import {
   getAppointmentRequestForCallback,
   rejectAppointmentRequest,
 } from '@repo/database/appointment-requests'
-import { findAccountByExternalId, type MessagingProviderId } from '@repo/database/messaging'
+import {
+  findAccountByExternalId,
+  type MessagingProviderId,
+} from '@repo/database/messaging'
 import { getMemberForUser } from '@repo/database/members'
 import { listCapableStaffForService } from '@repo/database/staff'
 import { salonCurrentHm } from '@repo/salon-core/salon-local-time'
@@ -42,11 +45,21 @@ type ResolvedCaller = {
   displayName: string
 }
 
-type ResolveOk = { ok: true; caller: ResolvedCaller; salonId: string; serviceId: string }
+type ResolveOk = {
+  ok: true
+  caller: ResolvedCaller
+  salonId: string
+  serviceId: string
+}
 type ResolveErr = { ok: false; outcome: CallbackOutcome }
 
-async function resolveCaller(input: CallbackInput): Promise<ResolveOk | ResolveErr> {
-  const account = await findAccountByExternalId(input.provider, input.externalId)
+async function resolveCaller(
+  input: CallbackInput,
+): Promise<ResolveOk | ResolveErr> {
+  const account = await findAccountByExternalId(
+    input.provider,
+    input.externalId,
+  )
   if (!account || !account.enabled) {
     return {
       ok: false,
@@ -71,7 +84,11 @@ async function resolveCaller(input: CallbackInput): Promise<ResolveOk | ResolveE
   }
 
   const member = await getMemberForUser(account.userId)
-  if (!member || member.organizationId !== request.salonId || !MANAGER_ROLES.has(member.role)) {
+  if (
+    !member ||
+    member.organizationId !== request.salonId ||
+    !MANAGER_ROLES.has(member.role)
+  ) {
     return {
       ok: false,
       outcome: {
@@ -104,7 +121,7 @@ async function resolveCaller(input: CallbackInput): Promise<ResolveOk | ResolveE
 /** Single "open in app" URL button, or null when no base URL is configured. */
 function openInAppButton(
   requestId: string,
-  publicAppBaseUrl: string | null | undefined
+  publicAppBaseUrl: string | null | undefined,
 ): MessagingButton | null {
   const base = publicAppBaseUrl?.trim()
   if (!base) return null
@@ -115,7 +132,7 @@ function openInAppButton(
 
 function openInAppKeyboard(
   requestId: string,
-  publicAppBaseUrl: string | null | undefined
+  publicAppBaseUrl: string | null | undefined,
 ): MessagingButton[][] | null {
   const button = openInAppButton(requestId, publicAppBaseUrl)
   return button ? [[button]] : null
@@ -124,7 +141,7 @@ function openInAppKeyboard(
 /** The original live-notification keyboard: `[[approve, reject], [open-in-app?]]`. */
 function originalRequestKeyboard(
   requestId: string,
-  publicAppBaseUrl: string | null | undefined
+  publicAppBaseUrl: string | null | undefined,
 ): MessagingButton[][] {
   const rows: MessagingButton[][] = [
     [
@@ -140,7 +157,7 @@ function originalRequestKeyboard(
 async function approveWithStaff(
   input: CallbackInput,
   resolved: ResolveOk,
-  staffId: string
+  staffId: string,
 ): Promise<CallbackOutcome> {
   const result = await approveAppointmentRequest({
     id: input.requestId,
@@ -151,14 +168,21 @@ async function approveWithStaff(
   if (!result.ok) {
     if (result.status === 409) {
       return {
-        messageHtml: '⚠️ این درخواست دیگر قابل تأیید نیست (احتمالاً قبلاً رسیدگی شده یا تداخل دارد).',
-        replacementKeyboard: openInAppKeyboard(input.requestId, input.publicAppBaseUrl),
+        messageHtml:
+          '⚠️ این درخواست دیگر قابل تأیید نیست (احتمالاً قبلاً رسیدگی شده یا تداخل دارد).',
+        replacementKeyboard: openInAppKeyboard(
+          input.requestId,
+          input.publicAppBaseUrl,
+        ),
         toast: 'تأیید ممکن نیست',
       }
     }
     return {
       messageHtml: `⚠️ ${escapeHtml(result.error)}`,
-      replacementKeyboard: openInAppKeyboard(input.requestId, input.publicAppBaseUrl),
+      replacementKeyboard: openInAppKeyboard(
+        input.requestId,
+        input.publicAppBaseUrl,
+      ),
       toast: 'خطا',
     }
   }
@@ -172,16 +196,22 @@ async function approveWithStaff(
 }
 
 export async function handleApprovalCallback(
-  input: CallbackInput
+  input: CallbackInput,
 ): Promise<CallbackOutcome> {
   const resolved = await resolveCaller(input)
   if (!resolved.ok) return resolved.outcome
 
-  const staff = await listCapableStaffForService(resolved.salonId, resolved.serviceId)
+  const staff = await listCapableStaffForService(
+    resolved.salonId,
+    resolved.serviceId,
+  )
   if (staff.length === 0) {
     return {
       messageHtml: '👉 برای انتخاب پرسنل، در برنامه باز کنید.',
-      replacementKeyboard: openInAppKeyboard(input.requestId, input.publicAppBaseUrl),
+      replacementKeyboard: openInAppKeyboard(
+        input.requestId,
+        input.publicAppBaseUrl,
+      ),
       toast: 'انتخاب پرسنل در برنامه',
     }
   }
@@ -194,7 +224,9 @@ export async function handleApprovalCallback(
   const staffRows: MessagingButton[][] = staff.map((s, idx) => [
     { label: s.name, data: `asg:${input.requestId}:${idx}` },
   ])
-  const backRow: MessagingButton[] = [{ label: '↩️ بازگشت', data: `back:${input.requestId}` }]
+  const backRow: MessagingButton[] = [
+    { label: '↩️ بازگشت', data: `back:${input.requestId}` },
+  ]
   const openButton = openInAppButton(input.requestId, input.publicAppBaseUrl)
   if (openButton) backRow.push(openButton)
 
@@ -207,17 +239,23 @@ export async function handleApprovalCallback(
 }
 
 export async function handleAssignCallback(
-  input: AssignCallbackInput
+  input: AssignCallbackInput,
 ): Promise<CallbackOutcome> {
   const resolved = await resolveCaller(input)
   if (!resolved.ok) return resolved.outcome
 
-  const staff = await listCapableStaffForService(resolved.salonId, resolved.serviceId)
+  const staff = await listCapableStaffForService(
+    resolved.salonId,
+    resolved.serviceId,
+  )
   const picked = staff[input.staffIndex]
   if (!picked) {
     return {
       messageHtml: '👉 برای انتخاب پرسنل، در برنامه باز کنید.',
-      replacementKeyboard: openInAppKeyboard(input.requestId, input.publicAppBaseUrl),
+      replacementKeyboard: openInAppKeyboard(
+        input.requestId,
+        input.publicAppBaseUrl,
+      ),
       toast: 'انتخاب پرسنل نامعتبر است',
     }
   }
@@ -226,21 +264,24 @@ export async function handleAssignCallback(
 }
 
 export async function handleBackCallback(
-  input: CallbackInput
+  input: CallbackInput,
 ): Promise<CallbackOutcome> {
   const resolved = await resolveCaller(input)
   if (!resolved.ok) return resolved.outcome
 
   return {
     messageHtml: '',
-    replacementKeyboard: originalRequestKeyboard(input.requestId, input.publicAppBaseUrl),
+    replacementKeyboard: originalRequestKeyboard(
+      input.requestId,
+      input.publicAppBaseUrl,
+    ),
     toast: 'بازگشت',
     mode: 'markup',
   }
 }
 
 export async function handleRejectionCallback(
-  input: CallbackInput
+  input: CallbackInput,
 ): Promise<CallbackOutcome> {
   const resolved = await resolveCaller(input)
   if (!resolved.ok) return resolved.outcome

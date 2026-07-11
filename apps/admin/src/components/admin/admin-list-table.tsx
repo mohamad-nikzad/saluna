@@ -8,7 +8,10 @@ import { ScreenSkeleton } from '#/components/admin/screen-skeleton'
 import { DataTable } from '#/components/data-table/data-table'
 import { DataTablePagination } from '#/components/data-table/data-table-pagination'
 import { DataTableToolbar } from '#/components/data-table/data-table-toolbar'
-import { useTableSearch, type TableSearchRouteId } from '#/hooks/use-table-search'
+import {
+  useTableSearch,
+  type TableSearchRouteId,
+} from '#/hooks/use-table-search'
 import { normalizePageSize } from '#/lib/admin-search-schemas'
 
 type RecordRow = Record<string, unknown>
@@ -75,11 +78,11 @@ export function AdminListTable({
           onQueryChange={(query) => setTableState({ query, page: 1 })}
           onReset={() => setTableState({ query: '', page: 1 })}
         />
-        {toolbarActions ? <div className="shrink-0">{toolbarActions}</div> : null}
+        {toolbarActions ? (
+          <div className="shrink-0">{toolbarActions}</div>
+        ) : null}
       </div>
-      {hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
       {listQuery.isLoading ? <ScreenSkeleton label={loadingLabel} /> : null}
       {listQuery.isError ? (
         <ErrorPanel
@@ -111,7 +114,9 @@ export function AdminListTable({
                 pageSize: normalizePageSize(next.pageSize, tableState.pageSize),
               })
             }
-            onPageSizeChange={(pageSize) => setTableState({ page: 1, pageSize })}
+            onPageSizeChange={(pageSize) =>
+              setTableState({ page: 1, pageSize })
+            }
           />
         </>
       ) : null}

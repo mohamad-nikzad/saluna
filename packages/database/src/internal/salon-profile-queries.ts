@@ -61,11 +61,12 @@ export function toSalonPresenceView(
  */
 export async function updateSalonPresence(
   salonId: string,
-  payload: PresencePatchPayload
+  payload: PresencePatchPayload,
 ): Promise<SalonPresenceView> {
   const db = getDb()
 
-  const set: Partial<Record<(typeof PRESENCE_FIELDS)[number], string | null>> = {}
+  const set: Partial<Record<(typeof PRESENCE_FIELDS)[number], string | null>> =
+    {}
   for (const field of PRESENCE_FIELDS) {
     if (field in payload) {
       set[field] = payload[field] ?? null
@@ -94,7 +95,7 @@ export async function updateSalonPresence(
 }
 
 export async function getSalonPresence(
-  salonId: string
+  salonId: string,
 ): Promise<SalonPresenceView> {
   const db = getDb()
   const rows = await db

@@ -98,10 +98,13 @@ describe('clientBulkCreateSchema', () => {
   })
 
   it(`rejects more than ${MAX_BULK_CLIENTS} clients`, () => {
-    const clients = Array.from({ length: MAX_BULK_CLIENTS + 1 }, (_, index) => ({
-      name: `Client ${index}`,
-      phone: '09123456789',
-    }))
+    const clients = Array.from(
+      { length: MAX_BULK_CLIENTS + 1 },
+      (_, index) => ({
+        name: `Client ${index}`,
+        phone: '09123456789',
+      }),
+    )
     const result = clientBulkCreateSchema.safeParse({ clients })
     expect(result.success).toBe(false)
   })

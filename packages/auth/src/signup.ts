@@ -75,14 +75,20 @@ function rowToSignupUser(row: typeof users.$inferSelect): User {
 
 function uniqueConstraintName(error: unknown): string | undefined {
   if (!error || typeof error !== 'object') return undefined
-  const maybe = error as { code?: unknown; constraint_name?: unknown; constraint?: unknown }
+  const maybe = error as {
+    code?: unknown
+    constraint_name?: unknown
+    constraint?: unknown
+  }
   if (maybe.code !== '23505') return undefined
   if (typeof maybe.constraint_name === 'string') return maybe.constraint_name
   if (typeof maybe.constraint === 'string') return maybe.constraint
   return ''
 }
 
-export function validateSignupInput(input: SignupInput): SignupInput & { normalizedPhone: string } {
+export function validateSignupInput(
+  input: SignupInput,
+): SignupInput & { normalizedPhone: string } {
   const salonName = input.salonName.trim()
   const managerName = input.managerName.trim()
   const slug = normalizeSignupSlug(input.slug)
@@ -95,13 +101,17 @@ export function validateSignupInput(input: SignupInput): SignupInput & { normali
     throw new SignupValidationError('نام مدیر الزامی است')
   }
   if (!SLUG_PATTERN.test(slug) || slug.length < 3 || slug.length > 48) {
-    throw new SignupValidationError('آدرس سالن باید ۳ تا ۴۸ کاراکتر انگلیسی، عدد یا خط تیره باشد')
+    throw new SignupValidationError(
+      'آدرس سالن باید ۳ تا ۴۸ کاراکتر انگلیسی، عدد یا خط تیره باشد',
+    )
   }
   if (!/^09\d{9}$/.test(normalizedPhone)) {
     throw new SignupValidationError('شماره موبایل مدیر معتبر نیست')
   }
   if (!validatePassword(input.password)) {
-    throw new SignupValidationError('رمز عبور باید حداقل ۸ کاراکتر و شامل حرف و عدد باشد')
+    throw new SignupValidationError(
+      'رمز عبور باید حداقل ۸ کاراکتر و شامل حرف و عدد باشد',
+    )
   }
 
   return {
@@ -114,7 +124,9 @@ export function validateSignupInput(input: SignupInput): SignupInput & { normali
   }
 }
 
-export async function createSalonWorkspace(input: SignupInput): Promise<SignupResult> {
+export async function createSalonWorkspace(
+  input: SignupInput,
+): Promise<SignupResult> {
   const parsed = validateSignupInput(input)
   const db = getDb()
 

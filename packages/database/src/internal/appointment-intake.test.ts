@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { validateCreateAppointmentIntake, validateUpdateAppointmentIntake } from './appointment-intake'
+import {
+  validateCreateAppointmentIntake,
+  validateUpdateAppointmentIntake,
+} from './appointment-intake'
 
 const mocks = vi.hoisted(() => ({
   getClientById: vi.fn(),
@@ -26,7 +29,8 @@ vi.mock('./service-queries', () => ({
 }))
 
 vi.mock('./staff-queries', () => ({
-  checkStaffAvailabilityForAppointment: mocks.checkStaffAvailabilityForAppointment,
+  checkStaffAvailabilityForAppointment:
+    mocks.checkStaffAvailabilityForAppointment,
   getAllStaff: mocks.getAllStaff,
   staffMayPerformService: mocks.staffMayPerformService,
 }))
@@ -236,7 +240,7 @@ describe('appointment intake placeholder rules', () => {
     expect(mocks.staffMayPerformService).toHaveBeenCalledWith(
       'staff-1',
       'combo-1',
-      'salon-1'
+      'salon-1',
     )
   })
 
@@ -269,7 +273,7 @@ describe('appointment intake placeholder rules', () => {
     expect(mocks.staffMayPerformService).toHaveBeenCalledWith(
       'staff-1',
       'combo-1',
-      'salon-1'
+      'salon-1',
     )
   })
 
@@ -430,8 +434,12 @@ describe('appointment intake placeholder rules', () => {
         endTime: '12:30',
       },
     })
-    expect(result.ok && 'patch' in result && result.patch.serviceId).toBeUndefined()
-    expect(result.ok && 'patch' in result && result.patch.addonIds).toBeUndefined()
+    expect(
+      result.ok && 'patch' in result && result.patch.serviceId,
+    ).toBeUndefined()
+    expect(
+      result.ok && 'patch' in result && result.patch.addonIds,
+    ).toBeUndefined()
   })
 
   it('keeps a custom end time when service or add-ons change', async () => {

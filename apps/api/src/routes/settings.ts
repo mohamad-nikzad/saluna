@@ -1,5 +1,8 @@
 import { Hono } from 'hono'
-import { getBusinessSettings, updateBusinessSettings } from '@repo/database/settings'
+import {
+  getBusinessSettings,
+  updateBusinessSettings,
+} from '@repo/database/settings'
 import { businessSettingsSchema } from '@repo/salon-core/forms/settings'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'

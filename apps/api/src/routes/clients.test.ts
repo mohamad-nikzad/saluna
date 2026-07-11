@@ -11,7 +11,8 @@ vi.mock('@repo/database/clients', async (importOriginal) => {
     createClient: vi.fn(),
     createClientsBulk: vi.fn(),
     updateClient: vi.fn(),
-    isClientProvidedEntityId: (id: string | undefined) => typeof id === 'string' && id.length > 0,
+    isClientProvidedEntityId: (id: string | undefined) =>
+      typeof id === 'string' && id.length > 0,
     getClientSummary: vi.fn(),
     createClientFollowUp: vi.fn(),
   }
@@ -32,7 +33,10 @@ vi.mock('@repo/database/members', () => ({
 
 import * as db from '@repo/database/clients'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 import { MAX_BULK_CLIENTS } from '@repo/salon-core/forms/limits'
 
@@ -57,9 +61,26 @@ function authHeaders() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(authServer.api.getSession).mockImplementation(async (args: any) => (args?.headers?.get?.('Authorization') ? { user: { id: 'u1' } } : null) as never)
-  vi.mocked(getMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
-  vi.mocked(getManagerMemberForUser).mockResolvedValue({ userId: 'u1', organizationId: 's1', role: 'owner', name: 'Manager', username: '09120000000' } as never)
+  vi.mocked(authServer.api.getSession).mockImplementation(
+    async (args: any) =>
+      (args?.headers?.get?.('Authorization')
+        ? { user: { id: 'u1' } }
+        : null) as never,
+  )
+  vi.mocked(getMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 's1',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000000',
+  } as never)
 })
 
 describe('clients router', () => {
@@ -87,7 +108,9 @@ describe('clients router', () => {
   })
 
   it('returns 409 duplicate-phone code', async () => {
-    vi.mocked(db.createClient).mockRejectedValue(new Error('duplicate key value'))
+    vi.mocked(db.createClient).mockRejectedValue(
+      new Error('duplicate key value'),
+    )
     const res = await app.request('/api/v1/clients', {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
@@ -104,7 +127,9 @@ describe('clients router', () => {
     const res = await app.request('/api/v1/clients/bulk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clients: [{ name: 'Ali', phone: '09121234567' }] }),
+      body: JSON.stringify({
+        clients: [{ name: 'Ali', phone: '09121234567' }],
+      }),
     })
     expect(res.status).toBe(401)
   })
@@ -121,10 +146,13 @@ describe('clients router', () => {
   })
 
   it(`returns 400 for bulk create with more than ${MAX_BULK_CLIENTS} clients`, async () => {
-    const clients = Array.from({ length: MAX_BULK_CLIENTS + 1 }, (_, index) => ({
-      name: `Client ${index}`,
-      phone: '09123456789',
-    }))
+    const clients = Array.from(
+      { length: MAX_BULK_CLIENTS + 1 },
+      (_, index) => ({
+        name: `Client ${index}`,
+        phone: '09123456789',
+      }),
+    )
     const res = await app.request('/api/v1/clients/bulk', {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
@@ -137,7 +165,9 @@ describe('clients router', () => {
 
   it('returns 200 bulk create response shape from createClientsBulk', async () => {
     vi.mocked(db.createClientsBulk).mockResolvedValue({
-      created: [{ id: 'c1', name: 'Ali', phone: '09121234567', isPlaceholder: false }],
+      created: [
+        { id: 'c1', name: 'Ali', phone: '09121234567', isPlaceholder: false },
+      ],
       skipped: [{ phone: '09129876543', reason: 'duplicate-phone' }],
     } as never)
 
@@ -154,7 +184,9 @@ describe('clients router', () => {
 
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
-      created: [{ id: 'c1', name: 'Ali', phone: '09121234567', isPlaceholder: false }],
+      created: [
+        { id: 'c1', name: 'Ali', phone: '09121234567', isPlaceholder: false },
+      ],
       skipped: [{ phone: '09129876543', reason: 'duplicate-phone' }],
     })
     expect(db.createClientsBulk).toHaveBeenCalledWith('s1', [
@@ -164,7 +196,10 @@ describe('clients router', () => {
   })
 
   it('accepts unknown follow-up reason and defaults to manual', async () => {
-    vi.mocked(db.getClientById).mockResolvedValue({ id: 'c1', name: 'Ali' } as never)
+    vi.mocked(db.getClientById).mockResolvedValue({
+      id: 'c1',
+      name: 'Ali',
+    } as never)
     vi.mocked(db.createClientFollowUp).mockResolvedValue({
       id: 'f1',
       reason: 'manual',
@@ -178,6 +213,11 @@ describe('clients router', () => {
     })
 
     expect(res.status).toBe(200)
-    expect(db.createClientFollowUp).toHaveBeenCalledWith('s1', 'c1', 'manual', undefined)
+    expect(db.createClientFollowUp).toHaveBeenCalledWith(
+      's1',
+      'c1',
+      'manual',
+      undefined,
+    )
   })
 })

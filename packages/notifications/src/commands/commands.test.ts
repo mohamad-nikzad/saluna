@@ -12,7 +12,8 @@ vi.mock('@repo/database/messaging', () => ({
   consumeLinkTokenIfValid: mocks.consumeLinkTokenIfValid,
   findAccountByExternalId: mocks.findAccountByExternalId,
   findAccountByUserAndProvider: mocks.findAccountByUserAndProvider,
-  linkMessagingAccountAndEnableProvider: mocks.linkMessagingAccountAndEnableProvider,
+  linkMessagingAccountAndEnableProvider:
+    mocks.linkMessagingAccountAndEnableProvider,
   deleteAccount: mocks.deleteAccount,
 }))
 
@@ -78,7 +79,10 @@ describe('handleLinkStart', () => {
   })
 
   it('links account on happy path', async () => {
-    mocks.consumeLinkTokenIfValid.mockResolvedValue({ ...validToken, consumedAt: new Date() })
+    mocks.consumeLinkTokenIfValid.mockResolvedValue({
+      ...validToken,
+      consumedAt: new Date(),
+    })
     mocks.findAccountByExternalId.mockResolvedValue(undefined)
     mocks.linkMessagingAccountAndEnableProvider.mockResolvedValue({
       id: 'acc-1',
@@ -111,7 +115,10 @@ describe('handleLinkStart', () => {
 describe('handleUnlink', () => {
   it('returns not_linked when no account exists', async () => {
     mocks.findAccountByExternalId.mockResolvedValue(undefined)
-    const result = await handleUnlink({ provider: 'telegram', externalId: '42' })
+    const result = await handleUnlink({
+      provider: 'telegram',
+      externalId: '42',
+    })
     expect(result.status).toBe('error')
   })
 
@@ -127,7 +134,10 @@ describe('handleUnlink', () => {
       updatedAt: new Date(),
     })
     mocks.deleteAccount.mockResolvedValue(true)
-    const result = await handleUnlink({ provider: 'telegram', externalId: '42' })
+    const result = await handleUnlink({
+      provider: 'telegram',
+      externalId: '42',
+    })
     expect(result.status).toBe('ok')
     expect(mocks.deleteAccount).toHaveBeenCalledWith('acc-1', 'user-A')
   })

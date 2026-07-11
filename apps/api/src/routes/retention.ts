@@ -16,7 +16,11 @@ import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { error, ok } from '../lib/responses'
 
-const allowedStatuses = new Set<FollowUpStatus>(['open', 'reviewed', 'dismissed'])
+const allowedStatuses = new Set<FollowUpStatus>([
+  'open',
+  'reviewed',
+  'dismissed',
+])
 
 const idParamSchema = z.object({ id: z.string().min(1) })
 const baleMessageBodySchema = z.object({
@@ -82,7 +86,10 @@ export const retention = new Hono<AppEnv>()
     if (!parsedBody.success) return error(c, 'درخواست نامعتبر است', 400)
 
     const { salonId, userId } = c.var.tenant
-    const context = await getClientFollowUpMessageContext(salonId, parsedParam.data.id)
+    const context = await getClientFollowUpMessageContext(
+      salonId,
+      parsedParam.data.id,
+    )
     if (!context) return error(c, 'پیگیری یافت نشد', 404)
     if (context.followUp.status !== 'open') {
       return error(c, 'فقط پیگیری باز قابل ارسال است', 409)

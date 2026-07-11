@@ -4,8 +4,8 @@
 
 ## Dev
 
-| App | Package | Port | Role |
-|-----|---------|------|------|
+| App             | Package     | Port | Role                       |
+| --------------- | ----------- | ---- | -------------------------- |
 | Astro (current) | `@repo/web` | 3001 | Public marketing + booking |
 
 ```bash

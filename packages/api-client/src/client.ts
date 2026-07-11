@@ -48,10 +48,16 @@ function normalizeGeneratedError(
     return new NetworkError(error)
   }
 
-  return new ApiError(extractErrorMessage(error, response.status), response.status, error)
+  return new ApiError(
+    extractErrorMessage(error, response.status),
+    response.status,
+    error,
+  )
 }
 
-export function configureGeneratedApiClient(options: GeneratedApiClientOptions): void {
+export function configureGeneratedApiClient(
+  options: GeneratedApiClientOptions,
+): void {
   const baseUrl = options.baseUrl.replace(/\/+$/, '')
 
   accessTokenProvider = options.getAccessToken

@@ -59,8 +59,12 @@ export const publicAppointmentRequestSchema = z
     }
   })
 
-export type PublicAppointmentRequestInput = z.input<typeof publicAppointmentRequestSchema>
-export type PublicAppointmentRequestPayload = z.output<typeof publicAppointmentRequestSchema>
+export type PublicAppointmentRequestInput = z.input<
+  typeof publicAppointmentRequestSchema
+>
+export type PublicAppointmentRequestPayload = z.output<
+  typeof publicAppointmentRequestSchema
+>
 
 const serviceVisibilitySchema = z.object({
   serviceId: idSchema,
@@ -82,7 +86,9 @@ const bioSchema = z
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : undefined
   })
-  .pipe(z.string().max(PUBLIC_BIO_MAX_LENGTH, formMessages.bioTooLong).optional())
+  .pipe(
+    z.string().max(PUBLIC_BIO_MAX_LENGTH, formMessages.bioTooLong).optional(),
+  )
   .optional()
 
 export const publicSettingsSchema = z.object({
@@ -124,5 +130,9 @@ export const publicPageOnboardingSchema = z.object({
   bioText: onboardingBioSchema,
 })
 
-export type PublicPageOnboardingInput = z.input<typeof publicPageOnboardingSchema>
-export type PublicPageOnboardingPayload = z.output<typeof publicPageOnboardingSchema>
+export type PublicPageOnboardingInput = z.input<
+  typeof publicPageOnboardingSchema
+>
+export type PublicPageOnboardingPayload = z.output<
+  typeof publicPageOnboardingSchema
+>

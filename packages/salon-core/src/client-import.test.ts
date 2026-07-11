@@ -25,7 +25,8 @@ import type {
 import type { VcfDraftContact } from './vcf'
 
 function draft(
-  overrides: Partial<VcfDraftContact> & Pick<VcfDraftContact, 'localId' | 'name'>,
+  overrides: Partial<VcfDraftContact> &
+    Pick<VcfDraftContact, 'localId' | 'name'>,
 ): VcfDraftContact {
   return {
     phone: overrides.phone ?? null,
@@ -45,7 +46,9 @@ function previewRow(
   }
 }
 
-function counts(overrides: Partial<ClientImportCounts> = {}): ClientImportCounts {
+function counts(
+  overrides: Partial<ClientImportCounts> = {},
+): ClientImportCounts {
   return {
     totalInFile: 0,
     eligible: 0,
@@ -77,17 +80,29 @@ describe('classifyImportContact', () => {
     {
       label: 'invalid phone',
       input: { localId: '1', name: 'Bad', phone: '123' },
-      expected: { eligible: false, reason: 'invalid', invalidDetail: 'invalid-phone' },
+      expected: {
+        eligible: false,
+        reason: 'invalid',
+        invalidDetail: 'invalid-phone',
+      },
     },
     {
       label: 'landline phone',
       input: { localId: '1', name: 'Home', phone: '+98 21 5669 8841' },
-      expected: { eligible: false, reason: 'invalid', invalidDetail: 'invalid-phone' },
+      expected: {
+        eligible: false,
+        reason: 'invalid',
+        invalidDetail: 'invalid-phone',
+      },
     },
     {
       label: 'null phone',
       input: { localId: '1', name: 'No phone', phone: null },
-      expected: { eligible: false, reason: 'invalid', invalidDetail: 'missing-phone' },
+      expected: {
+        eligible: false,
+        reason: 'invalid',
+        invalidDetail: 'missing-phone',
+      },
     },
     {
       label: 'duplicate existing',
@@ -97,7 +112,9 @@ describe('classifyImportContact', () => {
     {
       label: '+98 existing duplicate',
       input: { localId: '1', name: 'Existing', phone: '989123456789' },
-      context: { canonicalExistingPhones: buildCanonicalExistingPhones(['09123456789']) },
+      context: {
+        canonicalExistingPhones: buildCanonicalExistingPhones(['09123456789']),
+      },
       expected: { eligible: false, reason: 'duplicate-existing' },
     },
   ] as const satisfies ReadonlyArray<{
@@ -153,11 +170,17 @@ describe('classifyImportContact', () => {
 describe('formatImportSkipReasonLabel', () => {
   it.each([
     {
-      row: { reason: 'invalid' as const, invalidDetail: 'invalid-phone' as const },
+      row: {
+        reason: 'invalid' as const,
+        invalidDetail: 'invalid-phone' as const,
+      },
       label: 'شماره نامعتبر',
     },
     {
-      row: { reason: 'invalid' as const, invalidDetail: 'missing-phone' as const },
+      row: {
+        reason: 'invalid' as const,
+        invalidDetail: 'missing-phone' as const,
+      },
       label: 'بدون شماره',
     },
     {
@@ -195,10 +218,7 @@ describe('buildClientImportPreview', () => {
       draft({ localId: '5', name: 'Dup B', phone: '09124444444' }),
     ]
 
-    const preview = buildClientImportPreview(
-      drafts,
-      new Set(['09123333333']),
-    )
+    const preview = buildClientImportPreview(drafts, new Set(['09123333333']))
 
     expect(preview.counts).toEqual({
       totalInFile: 5,
@@ -264,10 +284,7 @@ describe('buildClientImportPreview', () => {
       draft({ localId: '1', name: 'Existing', phone: '989123456789' }),
     ]
 
-    const preview = buildClientImportPreview(
-      drafts,
-      new Set(['09123456789']),
-    )
+    const preview = buildClientImportPreview(drafts, new Set(['09123456789']))
 
     expect(preview.counts).toMatchObject({
       eligible: 0,
@@ -281,10 +298,7 @@ describe('buildClientImportPreview', () => {
       draft({ localId: '1', name: 'Existing', phone: '09121111111' }),
     ]
 
-    const preview = buildClientImportPreview(
-      drafts,
-      new Set(['09121111111']),
-    )
+    const preview = buildClientImportPreview(drafts, new Set(['09121111111']))
 
     expect(preview.counts).toMatchObject({
       eligible: 0,
@@ -314,10 +328,7 @@ describe('buildClientImportPreview', () => {
       draft({ localId: '2', name: 'Also bad', phone: '123' }),
     ]
 
-    const preview = buildClientImportPreview(
-      drafts,
-      new Set(['123']),
-    )
+    const preview = buildClientImportPreview(drafts, new Set(['123']))
 
     expect(preview.counts).toMatchObject({
       invalid: 2,
@@ -371,7 +382,11 @@ describe('revalidateImportRow', () => {
     },
     {
       label: '+98 canonicalization against existing',
-      row: previewRow({ localId: '1', name: 'Existing', phone: '989123456789' }),
+      row: previewRow({
+        localId: '1',
+        name: 'Existing',
+        phone: '989123456789',
+      }),
       others: [],
       contextExisting: buildCanonicalExistingPhones(['09123456789']),
       expected: { valid: false, reason: 'duplicate-existing' },
@@ -379,13 +394,17 @@ describe('revalidateImportRow', () => {
     {
       label: 'duplicate in file',
       row: previewRow({ localId: '2', name: 'Second', phone: '09121111111' }),
-      others: [previewRow({ localId: '1', name: 'First', phone: '09121111111' })],
+      others: [
+        previewRow({ localId: '1', name: 'First', phone: '09121111111' }),
+      ],
       expected: { valid: false, reason: 'duplicate-in-file' },
     },
     {
       label: 'valid when unique',
       row: previewRow({ localId: '1', name: 'Unique', phone: '09121111111' }),
-      others: [previewRow({ localId: '2', name: 'Other', phone: '09122222222' })],
+      others: [
+        previewRow({ localId: '2', name: 'Other', phone: '09122222222' }),
+      ],
       expected: { valid: true },
     },
   ] as const satisfies ReadonlyArray<{
@@ -408,7 +427,6 @@ describe('revalidateImportRow', () => {
     expect(revalidateImportRow(row, [row], new Set())).toEqual({ valid: true })
   })
 })
-
 
 describe('matchesImportRowSearch', () => {
   const row = previewRow({
@@ -505,12 +523,12 @@ describe('formatImportCounts', () => {
 
 describe('summarizeImportCounts', () => {
   it('classifies count summaries', () => {
-    expect(
-      summarizeImportCounts(counts({ totalInFile: 5, invalid: 5 })),
-    ).toBe(ImportCountSummary.EmptyEligible)
-    expect(
-      summarizeImportCounts(counts({ totalInFile: 3, eligible: 3 })),
-    ).toBe(ImportCountSummary.AllEligible)
+    expect(summarizeImportCounts(counts({ totalInFile: 5, invalid: 5 }))).toBe(
+      ImportCountSummary.EmptyEligible,
+    )
+    expect(summarizeImportCounts(counts({ totalInFile: 3, eligible: 3 }))).toBe(
+      ImportCountSummary.AllEligible,
+    )
     expect(
       summarizeImportCounts(
         counts({ totalInFile: 5, eligible: 2, invalid: 3 }),

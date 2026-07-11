@@ -50,7 +50,11 @@ export const serviceFamilies = new Hono<AppEnv>()
       const { salonId } = c.var.tenant
       const { id, categoryId, name, active } = c.req.valid('json')
 
-      if (id !== undefined && id !== null && !isClientProvidedEntityId(String(id))) {
+      if (
+        id !== undefined &&
+        id !== null &&
+        !isClientProvidedEntityId(String(id))
+      ) {
         return error(c, 'شناسه گروه خدمات نامعتبر است', 400)
       }
 

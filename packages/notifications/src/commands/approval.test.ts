@@ -69,7 +69,9 @@ const managerMember = {
 }
 
 beforeEach(() => {
-  Object.values(mocks).forEach((m) => 'mockReset' in m && (m as { mockReset: () => void }).mockReset())
+  Object.values(mocks).forEach(
+    (m) => 'mockReset' in m && (m as { mockReset: () => void }).mockReset(),
+  )
   mocks.salonCurrentHm.mockReturnValue('14:32')
 })
 
@@ -80,7 +82,9 @@ describe('handleApprovalCallback', () => {
     mocks.findAccountByExternalId.mockResolvedValue(linkedAccount)
     mocks.getAppointmentRequestForCallback.mockResolvedValue(pendingRequest)
     mocks.getMemberForUser.mockResolvedValue(managerMember)
-    mocks.listCapableStaffForService.mockResolvedValue([{ id: 'staff-99', name: 'سارا' }])
+    mocks.listCapableStaffForService.mockResolvedValue([
+      { id: 'staff-99', name: 'سارا' },
+    ])
     mocks.approveAppointmentRequest.mockResolvedValue({
       ok: true,
       appointmentId: 'apt-1',
@@ -122,7 +126,12 @@ describe('handleApprovalCallback', () => {
     expect(mocks.approveAppointmentRequest).not.toHaveBeenCalled()
     expect(outcome.messageHtml).toContain('برنامه')
     expect(outcome.replacementKeyboard).toEqual([
-      [{ label: 'مشاهده در برنامه', url: 'https://app.example/requests?focus=req-1' }],
+      [
+        {
+          label: 'مشاهده در برنامه',
+          url: 'https://app.example/requests?focus=req-1',
+        },
+      ],
     ])
   })
 
@@ -150,7 +159,10 @@ describe('handleApprovalCallback', () => {
       [{ label: 'نگار', data: 'asg:req-1:1' }],
       [
         { label: '↩️ بازگشت', data: 'back:req-1' },
-        { label: 'مشاهده در برنامه', url: 'https://app.example/requests?focus=req-1' },
+        {
+          label: 'مشاهده در برنامه',
+          url: 'https://app.example/requests?focus=req-1',
+        },
       ],
     ])
   })
@@ -206,7 +218,9 @@ describe('handleApprovalCallback', () => {
     mocks.findAccountByExternalId.mockResolvedValue(linkedAccount)
     mocks.getAppointmentRequestForCallback.mockResolvedValue(pendingRequest)
     mocks.getMemberForUser.mockResolvedValue(managerMember)
-    mocks.listCapableStaffForService.mockResolvedValue([{ id: 'staff-99', name: 'سارا' }])
+    mocks.listCapableStaffForService.mockResolvedValue([
+      { id: 'staff-99', name: 'سارا' },
+    ])
     mocks.approveAppointmentRequest.mockResolvedValue({
       ok: false,
       status: 409,
@@ -278,7 +292,10 @@ describe('handleAssignCallback', () => {
       { id: 'staff-1', name: 'سارا' },
       { id: 'staff-2', name: 'نگار' },
     ])
-    mocks.approveAppointmentRequest.mockResolvedValue({ ok: true, appointmentId: 'apt-1' })
+    mocks.approveAppointmentRequest.mockResolvedValue({
+      ok: true,
+      appointmentId: 'apt-1',
+    })
 
     const outcome = await handleAssignCallback({
       provider: 'telegram',
@@ -303,7 +320,9 @@ describe('handleAssignCallback', () => {
     mocks.findAccountByExternalId.mockResolvedValue(linkedAccount)
     mocks.getAppointmentRequestForCallback.mockResolvedValue(pendingRequest)
     mocks.getMemberForUser.mockResolvedValue(managerMember)
-    mocks.listCapableStaffForService.mockResolvedValue([{ id: 'staff-1', name: 'سارا' }])
+    mocks.listCapableStaffForService.mockResolvedValue([
+      { id: 'staff-1', name: 'سارا' },
+    ])
 
     const outcome = await handleAssignCallback({
       provider: 'telegram',
@@ -316,7 +335,12 @@ describe('handleAssignCallback', () => {
     expect(mocks.approveAppointmentRequest).not.toHaveBeenCalled()
     expect(outcome.toast).toBe('انتخاب پرسنل نامعتبر است')
     expect(outcome.replacementKeyboard).toEqual([
-      [{ label: 'مشاهده در برنامه', url: 'https://app.example/requests?focus=req-1' }],
+      [
+        {
+          label: 'مشاهده در برنامه',
+          url: 'https://app.example/requests?focus=req-1',
+        },
+      ],
     ])
   })
 })
@@ -341,7 +365,12 @@ describe('handleBackCallback', () => {
         { label: '✅ تأیید', data: 'approve:req-1' },
         { label: '❌ رد', data: 'reject:req-1' },
       ],
-      [{ label: 'مشاهده در برنامه', url: 'https://app.example/requests?focus=req-1' }],
+      [
+        {
+          label: 'مشاهده در برنامه',
+          url: 'https://app.example/requests?focus=req-1',
+        },
+      ],
     ])
   })
 })

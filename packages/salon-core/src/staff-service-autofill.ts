@@ -7,7 +7,10 @@ function sortServices(a: Service, b: Service): number {
 }
 
 /** Active services this staff member may perform (null restriction = all active). */
-export function eligibleServicesForStaff(staffMember: User, activeServices: Service[]): Service[] {
+export function eligibleServicesForStaff(
+  staffMember: User,
+  activeServices: Service[],
+): Service[] {
   const active = activeServices.filter((s) => s.active)
   if (staffMember.serviceIds == null) {
     return [...active].sort(sortServices)
@@ -39,7 +42,7 @@ function pickPreferredService(services: Service[]): Service {
  */
 export function autoPickServiceForStaff(
   eligible: Service[],
-  options?: AutoPickServiceOptions
+  options?: AutoPickServiceOptions,
 ): Service | null {
   if (eligible.length === 0) return null
   if (eligible.length === 1) return eligible[0]
@@ -53,13 +56,20 @@ export function autoPickServiceForStaff(
   return null
 }
 
-export function eligibleStaffForService(allStaff: User[], serviceId: string): User[] {
+export function eligibleStaffForService(
+  allStaff: User[],
+  serviceId: string,
+): User[] {
   return allStaff.filter(
-    (member) => member.serviceIds == null || member.serviceIds.includes(serviceId)
+    (member) =>
+      member.serviceIds == null || member.serviceIds.includes(serviceId),
   )
 }
 
-export function autoPickStaffForService(allStaff: User[], serviceId: string): User | null {
+export function autoPickStaffForService(
+  allStaff: User[],
+  serviceId: string,
+): User | null {
   const eligible = eligibleStaffForService(allStaff, serviceId)
   return eligible.length === 1 ? eligible[0] : null
 }

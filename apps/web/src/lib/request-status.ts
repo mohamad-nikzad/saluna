@@ -8,7 +8,9 @@ export type RequestStatusHeadline = {
   tone: string
 }
 
-export function headlineFor(status: AppointmentRequestStatus): RequestStatusHeadline {
+export function headlineFor(
+  status: AppointmentRequestStatus,
+): RequestStatusHeadline {
   switch (status) {
     case 'pending':
       return {

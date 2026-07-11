@@ -36,7 +36,8 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   }
 
   if (meQuery.isError) {
-    const status = meQuery.error instanceof ApiError ? meQuery.error.status : 500
+    const status =
+      meQuery.error instanceof ApiError ? meQuery.error.status : 500
     const isUnauthenticated = status === 401
     return (
       <main className="grid min-h-svh place-items-center bg-sidebar p-4">
@@ -79,8 +80,8 @@ export function AdminShell({ children }: { children?: ReactNode }) {
           <AdminTopbar />
           {runtime.dataSource === 'live' ? (
             <div className="border-b border-destructive/35 bg-destructive px-4 py-2 text-center text-sm font-semibold text-destructive-foreground">
-              به داده‌های LIVE تولید متصل هستید. تغییرات این پنل روی داده‌های واقعی
-              اعمال می‌شود.
+              به داده‌های LIVE تولید متصل هستید. تغییرات این پنل روی داده‌های
+              واقعی اعمال می‌شود.
             </div>
           ) : null}
           <main className="flex w-full flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-7">

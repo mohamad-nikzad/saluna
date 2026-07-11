@@ -17,16 +17,16 @@ const fontsourceBase =
 
 /** @type {{ url: string; file: string; outDir: string }[]} */
 const files = [
-  ...([400, 500, 600, 700, 800].map((weight) => ({
+  ...[400, 500, 600, 700, 800].map((weight) => ({
     url: `${fontsourceBase}/vazirmatn-arabic-${weight}-normal.woff2`,
     file: `vazirmatn-arabic-${weight}.woff2`,
     outDir: webFontDir,
-  }))),
-  ...([100, 200, 300, 400, 500, 600, 700, 800, 900].map((weight) => ({
+  })),
+  ...[100, 200, 300, 400, 500, 600, 700, 800, 900].map((weight) => ({
     url: `${fontsourceBase}/vazirmatn-arabic-${weight}-normal.woff2`,
     file: `vazirmatn-${weight}.woff2`,
     outDir: pwaFontDir,
-  }))),
+  })),
   {
     url: 'https://cdn.jsdelivr.net/npm/@fontsource/lalezar@5.2.5/files/lalezar-arabic-400-normal.woff2',
     file: 'lalezar-arabic-400.woff2',

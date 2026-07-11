@@ -30,7 +30,9 @@ function derivePasswordKey(password: string, salt: string): Promise<Buffer> {
   })
 }
 
-export async function hashCredentialPassword(password: string): Promise<string> {
+export async function hashCredentialPassword(
+  password: string,
+): Promise<string> {
   const salt = randomBytes(16).toString('hex')
   const key = await derivePasswordKey(password, salt)
   return `${salt}:${key.toString('hex')}`

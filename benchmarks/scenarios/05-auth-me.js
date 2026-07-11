@@ -1,6 +1,11 @@
 import http from 'k6/http'
 import { check } from 'k6'
-import { loginAndGetCookie, authHeaders, BASE_URL, API_PREFIX } from '../lib/auth.js'
+import {
+  loginAndGetCookie,
+  authHeaders,
+  BASE_URL,
+  API_PREFIX,
+} from '../lib/auth.js'
 import { buildSummary } from '../lib/report.js'
 
 export const options = {
@@ -28,7 +33,7 @@ export default function (data) {
     headers,
     tags: { name: 'GET /api/auth/me' },
   })
-  check(r, { '200': (r) => r.status === 200 })
+  check(r, { 200: (r) => r.status === 200 })
 }
 
 export function handleSummary(data) {

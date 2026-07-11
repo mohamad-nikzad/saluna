@@ -21,7 +21,10 @@ function getWorkspaceRoot(): string | null {
 function loadLocalEnvFile(fileName: string) {
   const workspaceRoot = getWorkspaceRoot()
   if (!workspaceRoot) return
-  const filePath = path.join(/* turbopackIgnore: true */ workspaceRoot, fileName)
+  const filePath = path.join(
+    /* turbopackIgnore: true */ workspaceRoot,
+    fileName,
+  )
   if (!existsSync(filePath)) return
 
   const contents = readFileSync(filePath, 'utf8')
@@ -57,8 +60,7 @@ export function loadDatabaseEnvFiles() {
   loadLocalEnvFile('.env')
   loadLocalEnvFile('.env.local')
 
-  const extraFiles = process.env.DATABASE_ENV_FILE
-    ?.split(',')
+  const extraFiles = process.env.DATABASE_ENV_FILE?.split(',')
     .map((value) => value.trim())
     .filter(Boolean)
 
@@ -83,12 +85,12 @@ export function getDatabaseUrl(options: DatabaseUrlOptions = {}): string {
   const directUrl = readEnv('DATABASE_URL_DIRECT')
 
   const url = options.preferDirect
-    ? directUrl ?? runtimeUrl
-    : runtimeUrl ?? directUrl
+    ? (directUrl ?? runtimeUrl)
+    : (runtimeUrl ?? directUrl)
 
   if (!url) {
     throw new Error(
-      'Set DATABASE_URL (and optionally DATABASE_URL_DIRECT for migrations/seeds).'
+      'Set DATABASE_URL (and optionally DATABASE_URL_DIRECT for migrations/seeds).',
     )
   }
 

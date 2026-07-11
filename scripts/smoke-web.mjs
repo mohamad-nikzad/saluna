@@ -7,7 +7,10 @@
  *   BASE_URL=http://127.0.0.1:3001 node scripts/smoke-web.mjs
  *   BASE_URL=http://127.0.0.1:3001 SLUG=my-salon node scripts/smoke-web.mjs
  */
-const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '')
+const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(
+  /\/$/,
+  '',
+)
 const slug = process.env.SLUG
 const requestToken = process.env.REQUEST_TOKEN
 
@@ -97,11 +100,14 @@ async function main() {
       if (reqRes.status !== 200) fail(`GET ${reqPath}`, String(reqRes.status))
       else pass(`GET ${reqPath} → ${reqRes.status}`)
       const reqCache = header(reqRes, 'cache-control')
-      if (reqCache.includes('no-store')) pass('request page Cache-Control no-store')
+      if (reqCache.includes('no-store'))
+        pass('request page Cache-Control no-store')
       else fail('request cache header', reqCache || '(missing)')
     }
   } else {
-    console.log('\n(skip salon checks: set SLUG=your-salon-slug to test booking routes)')
+    console.log(
+      '\n(skip salon checks: set SLUG=your-salon-slug to test booking routes)',
+    )
   }
 
   {
@@ -110,7 +116,9 @@ async function main() {
     else fail('missing salon status', String(res.status))
   }
 
-  console.log(process.exitCode ? '\nSome checks failed.' : '\nAll checks passed.')
+  console.log(
+    process.exitCode ? '\nSome checks failed.' : '\nAll checks passed.',
+  )
 }
 
 main().catch((err) => {

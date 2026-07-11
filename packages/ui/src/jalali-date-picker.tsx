@@ -33,7 +33,12 @@ interface JalaliDatePickerProps {
 
 const numFmt = new Intl.NumberFormat('fa-IR')
 
-export function JalaliDatePicker({ value, onChange, id, className }: JalaliDatePickerProps) {
+export function JalaliDatePicker({
+  value,
+  onChange,
+  id,
+  className,
+}: JalaliDatePickerProps) {
   const [open, setOpen] = useState(false)
 
   const selected = useMemo(() => {
@@ -47,7 +52,9 @@ export function JalaliDatePicker({ value, onChange, id, className }: JalaliDateP
   }, [])
 
   const [viewYear, setViewYear] = useState(() => selected?.jy ?? todayJalali.jy)
-  const [viewMonth, setViewMonth] = useState(() => selected?.jm ?? todayJalali.jm)
+  const [viewMonth, setViewMonth] = useState(
+    () => selected?.jm ?? todayJalali.jm,
+  )
 
   const handleOpen = useCallback(
     (isOpen: boolean) => {
@@ -157,7 +164,10 @@ export function JalaliDatePicker({ value, onChange, id, className }: JalaliDateP
             {/* Weekday headers */}
             <div className="grid grid-cols-7 text-center">
               {JALALI_WEEKDAYS_SHORT.map((wd) => (
-                <div key={wd} className="text-muted-foreground py-1 text-xs font-medium select-none">
+                <div
+                  key={wd}
+                  className="text-muted-foreground py-1 text-xs font-medium select-none"
+                >
                   {wd}
                 </div>
               ))}
@@ -191,7 +201,9 @@ export function JalaliDatePicker({ value, onChange, id, className }: JalaliDateP
                         className={cn(
                           'aspect-square min-h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-95',
                           'hover:bg-accent hover:text-accent-foreground',
-                          isToday && !isSelected && 'bg-accent text-accent-foreground ring-1 ring-primary/30',
+                          isToday &&
+                            !isSelected &&
+                            'bg-accent text-accent-foreground ring-1 ring-primary/30',
                           isSelected &&
                             'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm',
                         )}
@@ -215,7 +227,9 @@ export function JalaliDatePicker({ value, onChange, id, className }: JalaliDateP
                 const y = now.getFullYear()
                 const m = now.getMonth() + 1
                 const d = now.getDate()
-                onChange(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`)
+                onChange(
+                  `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+                )
                 setOpen(false)
               }}
             >

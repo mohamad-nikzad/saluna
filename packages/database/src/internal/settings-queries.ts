@@ -12,7 +12,9 @@ const defaultBusinessHours: BusinessHours = {
   workingDays: 126,
 }
 
-export async function getBusinessSettings(salonId: string): Promise<BusinessHours> {
+export async function getBusinessSettings(
+  salonId: string,
+): Promise<BusinessHours> {
   const db = getDb()
   const rows = await db
     .select()
@@ -31,7 +33,7 @@ export async function getBusinessSettings(salonId: string): Promise<BusinessHour
 
 export async function updateBusinessSettings(
   salonId: string,
-  data: Partial<BusinessHours>
+  data: Partial<BusinessHours>,
 ): Promise<BusinessHours> {
   const db = getDb()
   const current = await getBusinessSettings(salonId)

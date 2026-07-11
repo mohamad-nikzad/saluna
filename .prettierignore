@@ -7,3 +7,7 @@ coverage
 playwright-report
 test-results
 pnpm-lock.yaml
+.agents
+.claude
+.codex
+.cursor

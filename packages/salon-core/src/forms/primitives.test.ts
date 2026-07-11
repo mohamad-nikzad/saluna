@@ -68,7 +68,11 @@ describe('jalaliDateSchema', () => {
   })
 
   it('accepts "yyyy/mm/dd" string with Persian digits', () => {
-    expect(jalaliDateSchema.parse('۱۴۰۴/۰۱/۲۶')).toEqual({ jy: 1404, jm: 1, jd: 26 })
+    expect(jalaliDateSchema.parse('۱۴۰۴/۰۱/۲۶')).toEqual({
+      jy: 1404,
+      jm: 1,
+      jd: 26,
+    })
   })
 
   it('rejects out-of-range month', () => {

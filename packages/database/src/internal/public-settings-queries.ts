@@ -6,7 +6,11 @@ import type { Service } from '@repo/salon-core/types'
 
 import { getDb } from '../client'
 import type { MessagingProviderId } from '../messaging-provider-id'
-import { organization, salonPublicSettings, servicePublicVisibility } from '../schema'
+import {
+  organization,
+  salonPublicSettings,
+  servicePublicVisibility,
+} from '../schema'
 import { getAllServices } from './service-queries'
 
 export type ManagerPublicSettingsView = {
@@ -43,7 +47,7 @@ type SalonPublicSettingsRow = typeof salonPublicSettings.$inferSelect
 export function buildManagerPublicSettingsUpsertFields(
   salonId: string,
   payload: PublicSettingsPayload,
-  base?: SalonPublicSettingsRow
+  base?: SalonPublicSettingsRow,
 ) {
   return {
     salonId,
@@ -52,14 +56,16 @@ export function buildManagerPublicSettingsUpsertFields(
     themeId: payload.themeId ?? base?.themeId ?? DEFAULT_PUBLIC_THEME_ID,
     layoutId: payload.layoutId ?? base?.layoutId ?? DEFAULT_PUBLIC_LAYOUT_ID,
     appointmentRequestsEnabled:
-      payload.appointmentRequestsEnabled ?? base?.appointmentRequestsEnabled ?? true,
+      payload.appointmentRequestsEnabled ??
+      base?.appointmentRequestsEnabled ??
+      true,
     enabledMessagingProviders: base?.enabledMessagingProviders ?? [],
     updatedAt: new Date(),
   }
 }
 
 export async function getManagerPublicSettings(
-  salonId: string
+  salonId: string,
 ): Promise<ManagerPublicSettingsResult> {
   const db = getDb()
   const salonRows = await db
@@ -111,7 +117,7 @@ export async function getManagerPublicSettings(
  * tenant level.
  */
 export async function getEnabledMessagingProvidersForSalon(
-  salonId: string
+  salonId: string,
 ): Promise<MessagingProviderId[]> {
   const db = getDb()
   const [row] = await db
@@ -124,7 +130,7 @@ export async function getEnabledMessagingProvidersForSalon(
 
 export async function enableMessagingProviderForSalon(
   salonId: string,
-  provider: MessagingProviderId
+  provider: MessagingProviderId,
 ): Promise<void> {
   const db = getDb()
   const current = await getEnabledMessagingProvidersForSalon(salonId)
@@ -157,7 +163,7 @@ export async function enableMessagingProviderForSalon(
 
 export async function updateManagerPublicSettings(
   salonId: string,
-  payload: PublicSettingsPayload
+  payload: PublicSettingsPayload,
 ): Promise<ManagerPublicSettingsResult> {
   const db = getDb()
 
@@ -187,8 +193,8 @@ export async function updateManagerPublicSettings(
         .where(
           and(
             eq(servicePublicVisibility.salonId, salonId),
-            inArray(servicePublicVisibility.serviceId, serviceIds)
-          )
+            inArray(servicePublicVisibility.serviceId, serviceIds),
+          ),
         )
       await tx.insert(servicePublicVisibility).values(
         payload.services.map((s) => ({
@@ -196,7 +202,7 @@ export async function updateManagerPublicSettings(
           serviceId: s.serviceId,
           visible: s.visible,
           updatedAt: new Date(),
-        }))
+        })),
       )
     }
   })

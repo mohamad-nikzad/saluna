@@ -9,7 +9,13 @@ import { formatJalaliFullDate } from '@repo/salon-core/jalali'
 import { displayPhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
-import { buildRequestDeepLink, faDigits, isolate, isTelegramInlineButtonUrl, rtl } from '../format'
+import {
+  buildRequestDeepLink,
+  faDigits,
+  isolate,
+  isTelegramInlineButtonUrl,
+  rtl,
+} from '../format'
 import { escapeHtml } from '../providers/telegram'
 import type { MessagingButton } from '../providers/types'
 
@@ -40,8 +46,13 @@ type ResolvedCaller = {
   name: string
 }
 
-async function resolveCaller(input: BotTextInput): Promise<ResolvedCaller | null> {
-  const account = await findAccountByExternalId(input.provider, input.externalId)
+async function resolveCaller(
+  input: BotTextInput,
+): Promise<ResolvedCaller | null> {
+  const account = await findAccountByExternalId(
+    input.provider,
+    input.externalId,
+  )
   if (!account || !account.enabled) return null
   const member = await getMemberForUser(account.userId)
   if (!member) return null
@@ -62,7 +73,9 @@ const NOT_LINKED: BotTextResult = {
   ],
 }
 
-export async function handlePendingCommand(input: BotTextInput): Promise<BotTextResult> {
+export async function handlePendingCommand(
+  input: BotTextInput,
+): Promise<BotTextResult> {
   const caller = await resolveCaller(input)
   if (!caller) return NOT_LINKED
   if (caller.role !== 'manager') {
@@ -73,7 +86,9 @@ export async function handlePendingCommand(input: BotTextInput): Promise<BotText
     }
   }
 
-  const requests = await listAppointmentRequests(caller.salonId, { status: 'pending' })
+  const requests = await listAppointmentRequests(caller.salonId, {
+    status: 'pending',
+  })
   if (requests.length === 0) {
     return { messages: [{ messageHtml: '✅ درخواست در انتظار ندارید.' }] }
   }
@@ -93,7 +108,9 @@ export async function handlePendingCommand(input: BotTextInput): Promise<BotText
       rtl(escapeHtml(name)),
       rtl(`✂️ ${escapeHtml(r.bookedServiceName)}`),
       rtl(`📞 ${isolate(faDigits(displayPhone(r.customerPhone)))}`),
-      rtl(`📅 ${escapeHtml(date)} ساعت ${isolate(faDigits(r.requestedStartTime))}`),
+      rtl(
+        `📅 ${escapeHtml(date)} ساعت ${isolate(faDigits(r.requestedStartTime))}`,
+      ),
     ].join('\n\n')
     const buttons: MessagingButton[][] = [
       [
@@ -112,7 +129,9 @@ export async function handlePendingCommand(input: BotTextInput): Promise<BotText
   return { messages }
 }
 
-export async function handleTodayCommand(input: BotTextInput): Promise<BotTextResult> {
+export async function handleTodayCommand(
+  input: BotTextInput,
+): Promise<BotTextResult> {
   const caller = await resolveCaller(input)
   if (!caller) return NOT_LINKED
 
@@ -121,13 +140,17 @@ export async function handleTodayCommand(input: BotTextInput): Promise<BotTextRe
     caller.salonId,
     today,
     today,
-    caller.role === 'staff' ? caller.userId : undefined
+    caller.role === 'staff' ? caller.userId : undefined,
   )
 
   const dateLabel = formatJalaliFullDate(today)
   if (appointments.length === 0) {
     return {
-      messages: [{ messageHtml: `📅 <b>${escapeHtml(dateLabel)}</b>\nقراری برای امروز ثبت نشده است.` }],
+      messages: [
+        {
+          messageHtml: `📅 <b>${escapeHtml(dateLabel)}</b>\nقراری برای امروز ثبت نشده است.`,
+        },
+      ],
     }
   }
 
@@ -139,7 +162,9 @@ export async function handleTodayCommand(input: BotTextInput): Promise<BotTextRe
       caller.role === 'manager'
         ? `${a.client.name} • ${a.staff.name}`
         : a.client.name
-    lines.push(`• ${escapeHtml(time)} — ${escapeHtml(who)} — ${escapeHtml(a.service.name)}`)
+    lines.push(
+      `• ${escapeHtml(time)} — ${escapeHtml(who)} — ${escapeHtml(a.service.name)}`,
+    )
   }
   if (appointments.length > shown.length) {
     lines.push(`… و ${appointments.length - shown.length} مورد دیگر`)

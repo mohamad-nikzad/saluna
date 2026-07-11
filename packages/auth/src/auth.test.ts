@@ -19,13 +19,17 @@ describe('session secret hardening', () => {
     vi.stubEnv('NODE_ENV', 'production')
     vi.stubEnv('JWT_SECRET', '')
 
-    await expect(createSession('user-1')).rejects.toThrow('JWT_SECRET is required')
+    await expect(createSession('user-1')).rejects.toThrow(
+      'JWT_SECRET is required',
+    )
   })
 
   it('rejects weak production JWT_SECRET values', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     vi.stubEnv('JWT_SECRET', 'short-secret')
 
-    await expect(createSession('user-1')).rejects.toThrow('at least 32 characters')
+    await expect(createSession('user-1')).rejects.toThrow(
+      'at least 32 characters',
+    )
   })
 })

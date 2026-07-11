@@ -10,7 +10,10 @@ export function loginAndGetCookie() {
   const res = http.post(
     `${BASE_URL}${API_PREFIX}/auth/login`,
     JSON.stringify({ phone: PHONE, password: PASSWORD }),
-    { headers: { 'Content-Type': 'application/json' }, tags: { name: 'login' } }
+    {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { name: 'login' },
+    },
   )
   const ok = check(res, { 'login 200': (r) => r.status === 200 })
   if (!ok) fail(`Login failed: ${res.status} ${res.body}`)

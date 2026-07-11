@@ -20,7 +20,10 @@ export function formatPersianDayHeader(date: Date): string {
 }
 
 /** Compact day header for narrow columns: weekday abbreviation + day number on separate lines */
-export function formatPersianDayHeaderCompact(date: Date): { weekday: string; day: string } {
+export function formatPersianDayHeaderCompact(date: Date): {
+  weekday: string
+  day: string
+} {
   return {
     weekday: safeFormat(date, { weekday: 'short' }),
     day: safeFormat(date, { day: 'numeric' }),
@@ -50,7 +53,11 @@ export function formatPersianFullDate(date: Date): string {
 /** Week range title */
 export function formatPersianWeekRange(weekStart: Date, weekEnd: Date): string {
   const a = safeFormat(weekStart, { day: 'numeric', month: 'long' })
-  const b = safeFormat(weekEnd, { day: 'numeric', month: 'long', year: 'numeric' })
+  const b = safeFormat(weekEnd, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
   return `${a} تا ${b}`
 }
 
@@ -71,7 +78,10 @@ function startOfSaturdayWeek(d: Date): Date {
 }
 
 /** List view day heading with relative prefix (امروز / فردا / پس‌فردا / هفته بعد …) */
-export function formatPersianListDayRelative(date: Date, today: Date = new Date()): string {
+export function formatPersianListDayRelative(
+  date: Date,
+  today: Date = new Date(),
+): string {
   const base = formatPersianListDay(date)
   const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const ref = new Date(today.getFullYear(), today.getMonth(), today.getDate())
@@ -82,8 +92,9 @@ export function formatPersianListDayRelative(date: Date, today: Date = new Date(
   if (diff === -1) return `دیروز · ${base}`
   if (diff > 2) {
     const weekDiff = Math.round(
-      (startOfSaturdayWeek(day).getTime() - startOfSaturdayWeek(ref).getTime()) /
-        (7 * 86_400_000)
+      (startOfSaturdayWeek(day).getTime() -
+        startOfSaturdayWeek(ref).getTime()) /
+        (7 * 86_400_000),
     )
     if (weekDiff === 1) return `هفته بعد · ${base}`
     if (weekDiff === 2) return `دو هفته بعد · ${base}`
@@ -108,6 +119,6 @@ export function expandedZonedToDate(z: {
     z.hour ?? 0,
     z.minute ?? 0,
     z.second ?? 0,
-    z.millisecond ?? 0
+    z.millisecond ?? 0,
   )
 }

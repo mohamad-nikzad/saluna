@@ -1,5 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
-import { apiErrorSchema, idParamSchema, tenantSecurity } from '../schemas/common'
+import {
+  apiErrorSchema,
+  idParamSchema,
+  tenantSecurity,
+} from '../schemas/common'
 import {
   appointmentCreateBodySchema,
   appointmentDeleteResponseSchema,
@@ -50,7 +54,9 @@ export const listAppointmentsRoute = createRoute({
   responses: {
     200: {
       description: 'Appointments with client, staff, and service details',
-      content: { 'application/json': { schema: appointmentsListResponseSchema } },
+      content: {
+        'application/json': { schema: appointmentsListResponseSchema },
+      },
     },
     400: validationErrorResponse,
     401: unauthorizedResponse,
@@ -136,7 +142,9 @@ export const updateAppointmentRoute = createRoute({
   responses: {
     200: {
       description: 'Updated appointment or cleanup result',
-      content: { 'application/json': { schema: appointmentUpdateResponseSchema } },
+      content: {
+        'application/json': { schema: appointmentUpdateResponseSchema },
+      },
     },
     400: validationErrorResponse,
     401: unauthorizedResponse,
@@ -155,7 +163,9 @@ export const deleteAppointmentRoute = createRoute({
   responses: {
     200: {
       description: 'Deletion result',
-      content: { 'application/json': { schema: appointmentDeleteResponseSchema } },
+      content: {
+        'application/json': { schema: appointmentDeleteResponseSchema },
+      },
     },
     401: unauthorizedResponse,
     403: forbiddenResponse,

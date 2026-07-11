@@ -25,7 +25,8 @@ export const getBusinessSettingsRoute = createRoute({
   path: '/business',
   tags: ['Settings'],
   summary: 'Get business settings',
-  description: 'Salon working hours and slot duration. Readable by any tenant member.',
+  description:
+    'Salon working hours and slot duration. Readable by any tenant member.',
   security: tenantSecurity,
   responses: {
     200: {

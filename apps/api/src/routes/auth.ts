@@ -41,7 +41,10 @@ import {
   type StaffAccessRevocationRejectionReason,
   type StaffInviteAcceptanceRejectionReason,
 } from '@repo/database/staff'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { mapRole } from '@repo/auth/permissions'
 import { SALON_CONTEXT_HEADER } from '@repo/auth/tenant'
 import type { AppEnv } from '../factory'
@@ -70,7 +73,8 @@ const staffInviteRejectionMessage: Record<
   invite_expired: 'مهلت این دعوت به پایان رسیده است',
   inactive_profile: 'پروفایل پرسنل این دعوت غیرفعال است',
   duplicate_salon_access: 'شما از قبل به این سالن دسترسی دارید',
-  profile_already_accepted: 'این پروفایل پرسنل قبلاً به حساب دیگری متصل شده است',
+  profile_already_accepted:
+    'این پروفایل پرسنل قبلاً به حساب دیگری متصل شده است',
   invite_not_found: 'دعوت یافت نشد',
 }
 

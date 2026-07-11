@@ -53,7 +53,10 @@ vi.mock('@repo/database/members', () => ({
 import { isWebPushConfigured } from '@repo/notifications'
 import * as pushDb from '@repo/database/push'
 import { auth as authServer } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 
 process.env.NODE_ENV = 'test'

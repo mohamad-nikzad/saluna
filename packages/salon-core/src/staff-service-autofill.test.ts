@@ -18,7 +18,9 @@ const baseUser = (over: Partial<User>): User => ({
   ...over,
 })
 
-const svc = (over: Partial<Service> & Pick<Service, 'id' | 'name' | 'category'>): Service => ({
+const svc = (
+  over: Partial<Service> & Pick<Service, 'id' | 'name' | 'category'>,
+): Service => ({
   duration: 45,
   price: 1,
   color: 'bg-staff-1',
@@ -45,7 +47,9 @@ describe('eligibleServicesForStaff', () => {
       svc({ id: 'x', name: 'X', category: 'hair' }),
       svc({ id: 'y', name: 'Y', category: 'hair' }),
     ]
-    expect(eligibleServicesForStaff(member, list).map((s) => s.id)).toEqual(['x'])
+    expect(eligibleServicesForStaff(member, list).map((s) => s.id)).toEqual([
+      'x',
+    ])
   })
 
   it('treats an empty explicit service list as no eligible services', () => {
@@ -85,7 +89,7 @@ describe('autoPickServiceForStaff', () => {
       svc({ id: 'b', name: 'B', category: 'nails', duration: 120 }),
     ]
     expect(
-      autoPickServiceForStaff(mixed, { staffHasExplicitServiceList: true })?.id
+      autoPickServiceForStaff(mixed, { staffHasExplicitServiceList: true })?.id,
     ).toBe('b')
   })
 })

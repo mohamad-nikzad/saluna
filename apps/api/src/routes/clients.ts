@@ -38,17 +38,26 @@ function validationErrorHook(
   c: { json: (body: { error: string }, status: 400) => Response },
 ) {
   if (!result.success) {
-    return c.json({ error: result.error?.issues[0]?.message ?? 'داده نامعتبر' }, 400)
+    return c.json(
+      { error: result.error?.issues[0]?.message ?? 'داده نامعتبر' },
+      400,
+    )
   }
 }
 
-const listClientsHandler: RouteHandler<typeof listClientsRoute, AppEnv> = async (c) => {
+const listClientsHandler: RouteHandler<
+  typeof listClientsRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const list = await getAllClients(salonId)
   return c.json({ clients: jsonSerialized(list) }, 200)
 }
 
-const createClientHandler: RouteHandler<typeof createClientRoute, AppEnv> = async (c) => {
+const createClientHandler: RouteHandler<
+  typeof createClientRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const { name, phone, notes, tags, id: requestedId } = c.req.valid('json')
   try {
@@ -60,7 +69,10 @@ const createClientHandler: RouteHandler<typeof createClientRoute, AppEnv> = asyn
       ...(isClientProvidedEntityId(requestedId) ? { id: requestedId } : {}),
     })
     const savedTags = await setClientTags(client.id, salonId, tags)
-    return c.json({ client: jsonSerialized({ ...client, tags: savedTags }) }, 200)
+    return c.json(
+      { client: jsonSerialized({ ...client, tags: savedTags }) },
+      200,
+    )
   } catch (err) {
     if (isDuplicatePhoneError(err)) {
       return c.json(
@@ -75,7 +87,9 @@ const createClientHandler: RouteHandler<typeof createClientRoute, AppEnv> = asyn
   }
 }
 
-const getClientHandler: RouteHandler<typeof getClientRoute, AppEnv> = async (c) => {
+const getClientHandler: RouteHandler<typeof getClientRoute, AppEnv> = async (
+  c,
+) => {
   const { salonId } = c.var.tenant
   const { id } = c.req.valid('param')
   const client = await getClientById(id, salonId)
@@ -84,7 +98,10 @@ const getClientHandler: RouteHandler<typeof getClientRoute, AppEnv> = async (c) 
   return c.json({ client: jsonSerialized({ ...client, tags }) }, 200)
 }
 
-const updateClientHandler: RouteHandler<typeof updateClientRoute, AppEnv> = async (c) => {
+const updateClientHandler: RouteHandler<
+  typeof updateClientRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const { id } = c.req.valid('param')
   const { name, phone, notes, tags } = c.req.valid('json')
@@ -94,7 +111,10 @@ const updateClientHandler: RouteHandler<typeof updateClientRoute, AppEnv> = asyn
     const savedTags = Array.isArray(tags)
       ? await setClientTags(id, salonId, tags)
       : await getClientTags(id, salonId)
-    return c.json({ client: jsonSerialized({ ...client, tags: savedTags }) }, 200)
+    return c.json(
+      { client: jsonSerialized({ ...client, tags: savedTags }) },
+      200,
+    )
   } catch (err) {
     if (isDuplicatePhoneError(err)) {
       return c.json(
@@ -109,7 +129,10 @@ const updateClientHandler: RouteHandler<typeof updateClientRoute, AppEnv> = asyn
   }
 }
 
-const getClientSummaryHandler: RouteHandler<typeof getClientSummaryRoute, AppEnv> = async (c) => {
+const getClientSummaryHandler: RouteHandler<
+  typeof getClientSummaryRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const { id } = c.req.valid('param')
   const summary = await getClientSummary(salonId, id)
@@ -117,22 +140,28 @@ const getClientSummaryHandler: RouteHandler<typeof getClientSummaryRoute, AppEnv
   return c.json(jsonSerialized(summary), 200)
 }
 
-const bulkCreateClientsHandler: RouteHandler<typeof bulkCreateClientsRoute, AppEnv> = async (c) => {
+const bulkCreateClientsHandler: RouteHandler<
+  typeof bulkCreateClientsRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const { clients: clientRows } = c.req.valid('json')
   const result = await createClientsBulk(salonId, clientRows)
   return c.json(jsonSerialized(result), 200)
 }
 
-const createClientFollowUpHandler: RouteHandler<typeof createClientFollowUpRoute, AppEnv> = async (
-  c,
-) => {
+const createClientFollowUpHandler: RouteHandler<
+  typeof createClientFollowUpRoute,
+  AppEnv
+> = async (c) => {
   const { salonId } = c.var.tenant
   const { id } = c.req.valid('param')
   const client = await getClientById(id, salonId)
   if (!client) return c.json({ error: 'مشتری یافت نشد' }, 404)
   const body = c.req.valid('json')
-  const reason: FollowUpReason = allowedReasons.has(body.reason as FollowUpReason)
+  const reason: FollowUpReason = allowedReasons.has(
+    body.reason as FollowUpReason,
+  )
     ? (body.reason as FollowUpReason)
     : 'manual'
   const followUp = await createClientFollowUp(salonId, id, reason, body.dueDate)

@@ -1,5 +1,8 @@
 import webpush from 'web-push'
-import { deletePushSubscriptionByEndpoint, getPushSubscriptionsForUser } from '@repo/database/push'
+import {
+  deletePushSubscriptionByEndpoint,
+  getPushSubscriptionsForUser,
+} from '@repo/database/push'
 
 let vapidConfigured = false
 
@@ -33,7 +36,7 @@ export type PushPayload = {
 
 export async function sendWebPushToUser(
   userId: string,
-  payload: PushPayload
+  payload: PushPayload,
 ): Promise<void> {
   if (!ensureVapidConfigured()) {
     return
@@ -52,16 +55,19 @@ export async function sendWebPushToUser(
             keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           body,
-          { TTL: 60 * 60 }
+          { TTL: 60 * 60 },
         )
       } catch (err: unknown) {
-        const status = typeof err === 'object' && err && 'statusCode' in err ? (err as { statusCode?: number }).statusCode : undefined
+        const status =
+          typeof err === 'object' && err && 'statusCode' in err
+            ? (err as { statusCode?: number }).statusCode
+            : undefined
         if (status === 404 || status === 410) {
           await deletePushSubscriptionByEndpoint(sub.endpoint)
         } else {
           console.error('Web push send error:', err)
         }
       }
-    })
+    }),
   )
 }

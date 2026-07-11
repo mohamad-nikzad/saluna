@@ -216,7 +216,9 @@
   --color-status-no-show-background: var(--status-no-show-background);
   --color-status-no-show-foreground: var(--status-no-show-foreground);
   --color-status-no-show-border: var(--status-no-show-border);
-  --font-sans: var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans:
+    var(--font-vazirmatn), system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'SF Mono', Consolas, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

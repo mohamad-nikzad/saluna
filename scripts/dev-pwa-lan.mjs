@@ -36,7 +36,18 @@ const children = [
   }),
   spawn(
     'pnpm',
-    ['--filter', '@repo/pwa', 'exec', 'vite', 'dev', '--host', '0.0.0.0', '--port', pwaPort, '--strictPort'],
+    [
+      '--filter',
+      '@repo/pwa',
+      'exec',
+      'vite',
+      'dev',
+      '--host',
+      '0.0.0.0',
+      '--port',
+      pwaPort,
+      '--strictPort',
+    ],
     {
       env: {
         ...process.env,
@@ -55,7 +66,9 @@ console.log('PWA (HTTPS — required for Android Contact Picker):')
 console.log(`  ${appUrl}`)
 console.log('')
 console.log(`API proxied via PWA at ${appUrl}/api → 127.0.0.1:${apiPort}`)
-console.log('Phone must be on the same Wi‑Fi. Accept the self-signed certificate warning in Chrome.')
+console.log(
+  'Phone must be on the same Wi‑Fi. Accept the self-signed certificate warning in Chrome.',
+)
 console.log('')
 
 let shuttingDown = false
@@ -71,7 +84,10 @@ function killChild(child, signal) {
     }
   } catch (err) {
     if (err?.code !== 'ESRCH') {
-      console.error(`Failed to send ${signal} to child process ${child.pid}:`, err)
+      console.error(
+        `Failed to send ${signal} to child process ${child.pid}:`,
+        err,
+      )
     }
   }
 }

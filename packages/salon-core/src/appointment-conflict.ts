@@ -2,7 +2,7 @@ import type { Appointment } from './types'
 
 /** Statuses that occupy the calendar for conflict purposes (per scheduling plan). */
 export function isBlockingAppointmentStatus(
-  status: Appointment['status']
+  status: Appointment['status'],
 ): boolean {
   return status === 'scheduled' || status === 'confirmed'
 }
@@ -12,24 +12,34 @@ export function appointmentIntervalsConflict(
   aStart: string,
   aEnd: string,
   bStart: string,
-  bEnd: string
+  bEnd: string,
 ): boolean {
   return aStart < bEnd && aEnd > bStart
 }
 
 export function hasAppointmentConflict(
-  appointments: Pick<Appointment, 'staffId' | 'date' | 'startTime' | 'endTime' | 'status' | 'id'>[],
+  appointments: Pick<
+    Appointment,
+    'staffId' | 'date' | 'startTime' | 'endTime' | 'status' | 'id'
+  >[],
   staffId: string,
   date: string,
   startTime: string,
   endTime: string,
-  excludeId?: string
+  excludeId?: string,
 ): boolean {
   for (const apt of appointments) {
     if (apt.staffId !== staffId || apt.date !== date) continue
     if (!isBlockingAppointmentStatus(apt.status)) continue
     if (excludeId && apt.id === excludeId) continue
-    if (appointmentIntervalsConflict(apt.startTime, apt.endTime, startTime, endTime)) {
+    if (
+      appointmentIntervalsConflict(
+        apt.startTime,
+        apt.endTime,
+        startTime,
+        endTime,
+      )
+    ) {
       return true
     }
   }
@@ -41,7 +51,10 @@ export type ScheduleConflictRow = Pick<
   'id' | 'staffId' | 'clientId' | 'date' | 'startTime' | 'endTime' | 'status'
 > & { salonId?: string }
 
-export type ScheduleOverlapFlags = { staffConflict: boolean; clientConflict: boolean }
+export type ScheduleOverlapFlags = {
+  staffConflict: boolean
+  clientConflict: boolean
+}
 
 export const SCHEDULE_CONFLICT_CODES = {
   STAFF_OVERLAP: 'STAFF_OVERLAP',
@@ -65,9 +78,10 @@ export function detectScheduleOverlaps(
     endTime: string
     excludeId?: string
     salonId?: string
-  }
+  },
 ): ScheduleOverlapFlags {
-  const { staffId, clientId, date, startTime, endTime, excludeId, salonId } = params
+  const { staffId, clientId, date, startTime, endTime, excludeId, salonId } =
+    params
   let staffConflict = false
   let clientConflict = false
 
@@ -76,7 +90,15 @@ export function detectScheduleOverlaps(
     if (apt.date !== date) continue
     if (excludeId && apt.id === excludeId) continue
     if (!isBlockingAppointmentStatus(apt.status)) continue
-    if (!appointmentIntervalsConflict(apt.startTime, apt.endTime, startTime, endTime)) continue
+    if (
+      !appointmentIntervalsConflict(
+        apt.startTime,
+        apt.endTime,
+        startTime,
+        endTime,
+      )
+    )
+      continue
     if (apt.staffId === staffId) staffConflict = true
     if (apt.clientId === clientId) clientConflict = true
   }

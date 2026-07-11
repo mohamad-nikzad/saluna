@@ -10,22 +10,27 @@ export type NotifyManagersOfNewAppointmentRequestOptions = {
 
 export async function notifyManagersOfNewAppointmentRequest(
   requestId: string,
-  options: NotifyManagersOfNewAppointmentRequestOptions = {}
+  options: NotifyManagersOfNewAppointmentRequestOptions = {},
 ): Promise<void> {
   const ctx = await getAppointmentRequestNotificationContext(requestId)
   if (!ctx) return
   const managerIds = await listManagerUserIdsForSalon(ctx.salonId)
   if (managerIds.length === 0) {
-    console.warn('[notifications] no managers to notify for appointment request', {
-      requestId,
-      salonId: ctx.salonId,
-    })
+    console.warn(
+      '[notifications] no managers to notify for appointment request',
+      {
+        requestId,
+        salonId: ctx.salonId,
+      },
+    )
     return
   }
 
   const deepLinkPath = `/requests?focus=${ctx.requestId}`
   const baseUrl = options.publicAppBaseUrl?.trim() ?? ''
-  const deepLinkUrl = baseUrl ? `${baseUrl.replace(/\/$/, '')}${deepLinkPath}` : deepLinkPath
+  const deepLinkUrl = baseUrl
+    ? `${baseUrl.replace(/\/$/, '')}${deepLinkPath}`
+    : deepLinkPath
   const template = renderAppointmentRequestPending({
     requestId: ctx.requestId,
     salonName: ctx.salonName,
@@ -49,8 +54,12 @@ export async function notifyManagersOfNewAppointmentRequest(
         data: template.data,
         ...(template.buttons ? { messagingButtons: template.buttons } : {}),
       }).catch((err) => {
-        console.error('[notifications] notify manager failed', { userId, requestId, err })
-      })
-    )
+        console.error('[notifications] notify manager failed', {
+          userId,
+          requestId,
+          err,
+        })
+      }),
+    ),
   )
 }

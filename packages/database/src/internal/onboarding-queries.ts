@@ -64,7 +64,9 @@ export async function getManagerOnboardingFlags(salonId: string): Promise<{
     db
       .select({ value: count() })
       .from(member)
-      .where(and(eq(member.organizationId, salonId), eq(member.role, 'member'))),
+      .where(
+        and(eq(member.organizationId, salonId), eq(member.role, 'member')),
+      ),
   ])
 
   const onboarding = onboardingRows[0]
@@ -78,7 +80,9 @@ export async function getManagerOnboardingFlags(salonId: string): Promise<{
   }
 }
 
-export async function getOnboardingStatus(salonId: string): Promise<OnboardingStatus> {
+export async function getOnboardingStatus(
+  salonId: string,
+): Promise<OnboardingStatus> {
   const db = getDb()
 
   const [
@@ -117,7 +121,9 @@ export async function getOnboardingStatus(salonId: string): Promise<OnboardingSt
     db
       .select({ value: count() })
       .from(member)
-      .where(and(eq(member.organizationId, salonId), eq(member.role, 'member'))),
+      .where(
+        and(eq(member.organizationId, salonId), eq(member.role, 'member')),
+      ),
 
     db
       .select({ id: salonProfile.organizationId })
@@ -134,8 +140,8 @@ export async function getOnboardingStatus(salonId: string): Promise<OnboardingSt
             isNotNull(salonProfile.socialTelegram),
             isNotNull(salonProfile.socialWhatsapp),
             isNotNull(salonProfile.website),
-          )
-        )
+          ),
+        ),
       )
       .limit(1),
 
@@ -154,8 +160,8 @@ export async function getOnboardingStatus(salonId: string): Promise<OnboardingSt
           eq(member.organizationId, salonId),
           inArray(member.role, MANAGER_ROLES),
           eq(userMessagingAccounts.provider, 'telegram'),
-          eq(userMessagingAccounts.enabled, true)
-        )
+          eq(userMessagingAccounts.enabled, true),
+        ),
       )
       .limit(1),
   ])
@@ -167,7 +173,8 @@ export async function getOnboardingStatus(salonId: string): Promise<OnboardingSt
     steps: {
       businessHoursSet: onboarding?.businessHoursConfirmedAt != null,
       servicesAdded: (serviceCount[0]?.value ?? 0) > 0,
-      staffAdded: (staffCount[0]?.value ?? 0) > 0 || onboarding?.managerIsStaff === true,
+      staffAdded:
+        (staffCount[0]?.value ?? 0) > 0 || onboarding?.managerIsStaff === true,
       presenceSet: presenceRows.length > 0,
       publicPageConfigured: publicSettingsRows[0]?.enabled === true,
       notificationsConfigured: notificationsRows.length > 0,
@@ -198,7 +205,7 @@ export async function confirmBusinessHours(salonId: string): Promise<void> {
 
 export async function updateOnboardingState(
   salonId: string,
-  action: OnboardingAction
+  action: OnboardingAction,
 ): Promise<OnboardingStatus> {
   const db = getDb()
   const now = new Date()

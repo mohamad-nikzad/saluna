@@ -25,7 +25,8 @@ export const getSalonPresenceRoute = createRoute({
   path: '/presence',
   tags: ['Salon profile'],
   summary: 'Get salon presence',
-  description: 'Address, maps, social links, and website shown on the public page.',
+  description:
+    'Address, maps, social links, and website shown on the public page.',
   security: tenantSecurity,
   responses: {
     200: {

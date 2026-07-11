@@ -33,7 +33,9 @@ function devConnectSrc(port: number): readonly string[] {
   ]
 }
 
-function serializeDirectives(directives: Record<string, readonly string[]>): string {
+function serializeDirectives(
+  directives: Record<string, readonly string[]>,
+): string {
   return Object.entries(directives)
     .map(([name, values]) => `${name} ${values.join(' ')}`)
     .join('; ')

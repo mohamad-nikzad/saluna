@@ -92,9 +92,7 @@ function reactivateRejectionStatus(
 }
 
 const inviteLifecycleRejectionMessage: Record<
-  | 'invite_not_found'
-  | 'invite_not_pending'
-  | 'inactive_profile',
+  'invite_not_found' | 'invite_not_pending' | 'inactive_profile',
   string
 > = {
   invite_not_found: 'دعوت یافت نشد',
@@ -127,10 +125,18 @@ export const staff = new Hono<AppEnv>()
         invitedByUserId: userId,
       })
       if (result.status === 'rejected') {
-        return error(c, inviteRejectionMessage[result.reason], 409, result.reason)
+        return error(
+          c,
+          inviteRejectionMessage[result.reason],
+          409,
+          result.reason,
+        )
       }
 
-      const staffMember = await getUserWithServiceIds(result.profile.id, salonId)
+      const staffMember = await getUserWithServiceIds(
+        result.profile.id,
+        salonId,
+      )
       if (!staffMember) {
         return error(c, 'دعوت ایجاد شد اما پروفایل بازخوانی نشد', 500)
       }
@@ -141,8 +147,7 @@ export const staff = new Hono<AppEnv>()
           id: result.invite.id,
           status: result.invite.status,
           expiresAt: result.invite.expiresAt.toISOString(),
-          lastDeliveredAt:
-            result.invite.lastDeliveredAt?.toISOString() ?? null,
+          lastDeliveredAt: result.invite.lastDeliveredAt?.toISOString() ?? null,
         },
       })
     },
@@ -208,8 +213,7 @@ export const staff = new Hono<AppEnv>()
           id: result.invite.id,
           status: result.invite.status,
           expiresAt: result.invite.expiresAt.toISOString(),
-          lastDeliveredAt:
-            result.invite.lastDeliveredAt?.toISOString() ?? null,
+          lastDeliveredAt: result.invite.lastDeliveredAt?.toISOString() ?? null,
         },
         profile: {
           id: result.profile.id,

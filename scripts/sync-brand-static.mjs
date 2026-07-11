@@ -20,7 +20,10 @@ async function patchManifest() {
   if (Array.isArray(manifest.screenshots)) {
     for (const shot of manifest.screenshots) {
       if (typeof shot.label === 'string' && shot.label.includes('سال')) {
-        shot.label = shot.label.replace(/سالونا|سالورا/g, brandCopy.pwaShortName)
+        shot.label = shot.label.replace(
+          /سالونا|سالورا/g,
+          brandCopy.pwaShortName,
+        )
       }
     }
   }

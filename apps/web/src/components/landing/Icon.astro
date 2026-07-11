@@ -26,9 +26,11 @@ const elements = icons[name]
   {
     elements.map(([tag, attrs]) => {
       if (tag === 'path') return <path d={attrs.d} />
-      if (tag === 'circle') return <circle cx={attrs.cx} cy={attrs.cy} r={attrs.r} />
+      if (tag === 'circle')
+        return <circle cx={attrs.cx} cy={attrs.cy} r={attrs.r} />
       if (tag === 'rect') return <rect {...attrs} />
-      if (tag === 'line') return <line x1={attrs.x1} x2={attrs.x2} y1={attrs.y1} y2={attrs.y2} />
+      if (tag === 'line')
+        return <line x1={attrs.x1} x2={attrs.x2} y1={attrs.y1} y2={attrs.y2} />
     })
   }
 </svg>

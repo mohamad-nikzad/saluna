@@ -23,7 +23,10 @@ export function useAuditLogSearch(
 ) {
   const search = useSearch({ from: '/_admin/audit-log' }) as AuditLogSearch
   const navigate = useNavigate({ from: '/audit-log' })
-  const defaults = { page: DEFAULT_TABLE_SEARCH.page, pageSize: defaultPageSize }
+  const defaults = {
+    page: DEFAULT_TABLE_SEARCH.page,
+    pageSize: defaultPageSize,
+  }
 
   const state: AuditLogUrlState = {
     page: search.page ?? defaults.page,
@@ -45,10 +48,7 @@ export function useAuditLogSearch(
             next.pageSize ?? current.pageSize ?? defaults.pageSize,
             defaults.pageSize,
           ),
-          q:
-            next.search !== undefined
-              ? next.search || undefined
-              : current.q,
+          q: next.search !== undefined ? next.search || undefined : current.q,
           action:
             next.action !== undefined
               ? next.action || undefined

@@ -28,7 +28,10 @@ import {
   staffUserSelect,
 } from './row-mappers'
 import { isClientProvidedEntityId } from './client-queries'
-import { getActiveServiceAddonsForService, getServiceById } from './service-queries'
+import {
+  getActiveServiceAddonsForService,
+  getServiceById,
+} from './service-queries'
 
 type SnapshotKeys =
   | 'bookedServiceName'
@@ -39,15 +42,24 @@ type SnapshotKeys =
   | 'bookedAddonCount'
   | 'bookedAddons'
 
-type AppointmentCommand = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys> & {
+type AppointmentCommand = Omit<
+  Appointment,
+  'id' | 'createdAt' | 'updatedAt' | SnapshotKeys
+> & {
   id?: string
   addonIds?: string[]
 }
-type AppointmentPatch = Partial<Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>> & {
+type AppointmentPatch = Partial<
+  Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
+> & {
   addonIds?: string[]
 }
 
-function snapshotFromService(service: { name: string; duration: number; price: number }) {
+function snapshotFromService(service: {
+  name: string
+  duration: number
+  price: number
+}) {
   return {
     bookedServiceName: service.name,
     bookedServiceDuration: service.duration,
@@ -57,10 +69,11 @@ function snapshotFromService(service: { name: string; duration: number; price: n
 
 function attachAddonCounts<T extends Appointment>(
   appointmentsList: T[],
-  lines: BookedAppointmentAddonLine[]
+  lines: BookedAppointmentAddonLine[],
 ): T[] {
   const counts = new Map<string, number>()
-  for (const line of lines) counts.set(line.appointmentId, (counts.get(line.appointmentId) ?? 0) + 1)
+  for (const line of lines)
+    counts.set(line.appointmentId, (counts.get(line.appointmentId) ?? 0) + 1)
   return appointmentsList.map((appointment) => ({
     ...appointment,
     bookedAddonCount: counts.get(appointment.id) ?? 0,
@@ -69,7 +82,7 @@ function attachAddonCounts<T extends Appointment>(
 
 async function getAddonLinesForAppointments(
   salonId: string,
-  appointmentIds: string[]
+  appointmentIds: string[],
 ): Promise<BookedAppointmentAddonLine[]> {
   if (appointmentIds.length === 0) return []
   const db = getDb()
@@ -79,16 +92,19 @@ async function getAddonLinesForAppointments(
     .where(
       and(
         eq(appointmentAddonLines.salonId, salonId),
-        inArray(appointmentAddonLines.appointmentId, appointmentIds)
-      )
+        inArray(appointmentAddonLines.appointmentId, appointmentIds),
+      ),
     )
-    .orderBy(asc(appointmentAddonLines.sortOrder), asc(appointmentAddonLines.bookedAddonName))
+    .orderBy(
+      asc(appointmentAddonLines.sortOrder),
+      asc(appointmentAddonLines.bookedAddonName),
+    )
   return rows.map(rowToAppointmentAddonLine)
 }
 
 function attachAddonDetails<T extends Appointment>(
   appointmentsList: T[],
-  lines: BookedAppointmentAddonLine[]
+  lines: BookedAppointmentAddonLine[],
 ): T[] {
   const byAppointmentId = new Map<string, BookedAppointmentAddonLine[]>()
   for (const line of lines) {
@@ -121,7 +137,10 @@ async function resolveAppointmentAddons(input: {
   validateAppointmentAddonIds(addonIds)
   if (addonIds.length === 0) return []
 
-  const matchingAddons = await getActiveServiceAddonsForService(input.serviceId, input.salonId)
+  const matchingAddons = await getActiveServiceAddonsForService(
+    input.serviceId,
+    input.salonId,
+  )
   const byId = new Map(matchingAddons.map((addon) => [addon.id, addon]))
   const selected = addonIds.map((id) => byId.get(id))
   if (selected.some((addon) => !addon)) {
@@ -132,12 +151,14 @@ async function resolveAppointmentAddons(input: {
 
 export function totalSnapshotFromServiceAndAddons(
   service: { duration: number; price: number },
-  addons: Array<{ durationDelta: number; priceDelta: number }>
+  addons: Array<{ durationDelta: number; priceDelta: number }>,
 ) {
   return {
     bookedTotalDuration:
-      service.duration + addons.reduce((sum, addon) => sum + addon.durationDelta, 0),
-    bookedTotalPrice: service.price + addons.reduce((sum, addon) => sum + addon.priceDelta, 0),
+      service.duration +
+      addons.reduce((sum, addon) => sum + addon.durationDelta, 0),
+    bookedTotalPrice:
+      service.price + addons.reduce((sum, addon) => sum + addon.priceDelta, 0),
   }
 }
 
@@ -191,7 +212,10 @@ export async function getAppointmentsByDateRange(
     .where(and(...conditions))
     .orderBy(asc(appointments.date), asc(appointments.startTime))
   const mapped = rows.map(rowToAppointment)
-  const lines = await getAddonLinesForAppointments(salonId, mapped.map((appointment) => appointment.id))
+  const lines = await getAddonLinesForAppointments(
+    salonId,
+    mapped.map((appointment) => appointment.id),
+  )
   return attachAddonCounts(mapped, lines)
 }
 
@@ -220,22 +244,43 @@ export async function getAppointmentsWithDetailsByDateRange(
       service: services,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)))
+    .innerJoin(
+      clients,
+      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
+    )
     .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(member, and(eq(member.userId, user.id), eq(member.organizationId, salonId)))
-    .leftJoin(salonMember, and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, salonId)))
-    .innerJoin(services, and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId)))
+    .innerJoin(
+      member,
+      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, salonId),
+      ),
+    )
+    .innerJoin(
+      services,
+      and(
+        eq(appointments.serviceId, services.id),
+        eq(services.salonId, salonId),
+      ),
+    )
     .where(and(...conditions))
     .orderBy(asc(appointments.date), asc(appointments.startTime))
 
   const mapped = rows.map(attachAppointmentDetails)
-  const lines = await getAddonLinesForAppointments(salonId, mapped.map((appointment) => appointment.id))
+  const lines = await getAddonLinesForAppointments(
+    salonId,
+    mapped.map((appointment) => appointment.id),
+  )
   return attachAddonCounts(mapped, lines)
 }
 
 export async function getClientAppointmentsWithDetails(
   salonId: string,
-  clientId: string
+  clientId: string,
 ): Promise<AppointmentWithDetails[]> {
   const db = getDb()
   const rows = await db
@@ -246,22 +291,48 @@ export async function getClientAppointmentsWithDetails(
       service: services,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)))
+    .innerJoin(
+      clients,
+      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
+    )
     .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(member, and(eq(member.userId, user.id), eq(member.organizationId, salonId)))
-    .leftJoin(salonMember, and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, salonId)))
-    .innerJoin(services, and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId)))
-    .where(and(eq(appointments.salonId, salonId), eq(appointments.clientId, clientId)))
+    .innerJoin(
+      member,
+      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, salonId),
+      ),
+    )
+    .innerJoin(
+      services,
+      and(
+        eq(appointments.serviceId, services.id),
+        eq(services.salonId, salonId),
+      ),
+    )
+    .where(
+      and(
+        eq(appointments.salonId, salonId),
+        eq(appointments.clientId, clientId),
+      ),
+    )
     .orderBy(desc(appointments.date), desc(appointments.startTime))
 
   const mapped = rows.map(attachAppointmentDetails)
-  const lines = await getAddonLinesForAppointments(salonId, mapped.map((appointment) => appointment.id))
+  const lines = await getAddonLinesForAppointments(
+    salonId,
+    mapped.map((appointment) => appointment.id),
+  )
   return attachAddonDetails(mapped, lines)
 }
 
 export async function getAppointmentWithDetailsById(
   id: string,
-  salonId: string
+  salonId: string,
 ): Promise<AppointmentWithDetails | undefined> {
   const db = getDb()
   const rows = await db
@@ -272,11 +343,29 @@ export async function getAppointmentWithDetailsById(
       service: services,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)))
+    .innerJoin(
+      clients,
+      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
+    )
     .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(member, and(eq(member.userId, user.id), eq(member.organizationId, salonId)))
-    .leftJoin(salonMember, and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, salonId)))
-    .innerJoin(services, and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId)))
+    .innerJoin(
+      member,
+      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, salonId),
+      ),
+    )
+    .innerJoin(
+      services,
+      and(
+        eq(appointments.serviceId, services.id),
+        eq(services.salonId, salonId),
+      ),
+    )
     .where(and(eq(appointments.id, id), eq(appointments.salonId, salonId)))
     .limit(1)
 
@@ -284,14 +373,14 @@ export async function getAppointmentWithDetailsById(
   if (!row) return undefined
   const [appointment] = attachAddonDetails(
     [attachAppointmentDetails(row)],
-    await getAddonLinesForAppointments(salonId, [row.appointment.id])
+    await getAddonLinesForAppointments(salonId, [row.appointment.id]),
   )
   return appointment
 }
 
 export async function getAppointmentById(
   id: string,
-  salonId: string
+  salonId: string,
 ): Promise<Appointment | undefined> {
   const db = getDb()
   const rows = await db
@@ -303,7 +392,7 @@ export async function getAppointmentById(
   if (!row) return undefined
   const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
-    await getAddonLinesForAppointments(salonId, [row.id])
+    await getAddonLinesForAppointments(salonId, [row.id]),
   )
   return appointment
 }
@@ -321,7 +410,7 @@ export type CreateAppointmentOptions = {
 export async function createAppointment(
   apt: AppointmentCommand,
   salonId: string,
-  optionsOrCreatedByUserId?: string | CreateAppointmentOptions
+  optionsOrCreatedByUserId?: string | CreateAppointmentOptions,
 ): Promise<Appointment> {
   const options: CreateAppointmentOptions =
     typeof optionsOrCreatedByUserId === 'string'
@@ -336,8 +425,14 @@ export async function createAppointment(
     addonIds: apt.addonIds,
   })
   const snapshotSource = options.serviceSnapshotOverride ?? service
-  const totals = totalSnapshotFromServiceAndAddons(snapshotSource, selectedAddons)
-  const bookedTotalDuration = durationMinutesFromRange(apt.startTime, apt.endTime)
+  const totals = totalSnapshotFromServiceAndAddons(
+    snapshotSource,
+    selectedAddons,
+  )
+  const bookedTotalDuration = durationMinutesFromRange(
+    apt.startTime,
+    apt.endTime,
+  )
   const values: typeof appointments.$inferInsert = {
     salonId,
     clientId: apt.clientId,
@@ -360,14 +455,18 @@ export async function createAppointment(
     const [created] = await tx.insert(appointments).values(values).returning()
     if (selectedAddons.length > 0) {
       await tx.insert(appointmentAddonLines).values(
-        addonLineValues({ salonId, appointmentId: created.id, addons: selectedAddons })
+        addonLineValues({
+          salonId,
+          appointmentId: created.id,
+          addons: selectedAddons,
+        }),
       )
     }
     return [created]
   })
   const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
-    await getAddonLinesForAppointments(salonId, [row.id])
+    await getAddonLinesForAppointments(salonId, [row.id]),
   )
   return appointment
 }
@@ -375,16 +474,20 @@ export async function createAppointment(
 export async function updateAppointment(
   id: string,
   salonId: string,
-  data: AppointmentPatch
+  data: AppointmentPatch,
 ): Promise<Appointment | undefined> {
   const db = getDb()
   const existing = await getAppointmentById(id, salonId)
   if (!existing) return undefined
   const serviceId = data.serviceId ?? existing.serviceId
-  const existingAddonIds = (existing.bookedAddons ?? []).map((line) => line.serviceAddonId)
-  const serviceChanged = data.serviceId !== undefined && data.serviceId !== existing.serviceId
+  const existingAddonIds = (existing.bookedAddons ?? []).map(
+    (line) => line.serviceAddonId,
+  )
+  const serviceChanged =
+    data.serviceId !== undefined && data.serviceId !== existing.serviceId
   const addonIdsChanged =
-    data.addonIds !== undefined && !sameAddonIds(data.addonIds, existingAddonIds)
+    data.addonIds !== undefined &&
+    !sameAddonIds(data.addonIds, existingAddonIds)
   const serviceOrAddonsChanged = serviceChanged || addonIdsChanged
   if (serviceChanged && data.addonIds === undefined) {
     throw new Error('appointment service changes require explicit add-on ids')
@@ -409,14 +512,13 @@ export async function updateAppointment(
       serviceId,
       addonIds: data.addonIds ?? existingAddonIds,
     })
-    const baseSnapshot =
-      serviceChanged
-        ? snapshotFromService(service)
-        : {
-            bookedServiceName: existing.bookedServiceName,
-            bookedServiceDuration: existing.bookedServiceDuration,
-            bookedServicePrice: existing.bookedServicePrice,
-          }
+    const baseSnapshot = serviceChanged
+      ? snapshotFromService(service)
+      : {
+          bookedServiceName: existing.bookedServiceName,
+          bookedServiceDuration: existing.bookedServiceDuration,
+          bookedServicePrice: existing.bookedServicePrice,
+        }
     Object.assign(patch, baseSnapshot)
     Object.assign(
       patch,
@@ -425,8 +527,8 @@ export async function updateAppointment(
           duration: baseSnapshot.bookedServiceDuration,
           price: baseSnapshot.bookedServicePrice,
         },
-        selectedAddons
-      )
+        selectedAddons,
+      ),
     )
   }
   if (data.date !== undefined) patch.date = data.date
@@ -436,7 +538,7 @@ export async function updateAppointment(
   } else if (serviceOrAddonsChanged) {
     patch.endTime = endTimeFromDuration(
       data.startTime ?? existing.startTime,
-      patch.bookedTotalDuration ?? existing.bookedTotalDuration
+      patch.bookedTotalDuration ?? existing.bookedTotalDuration,
     )
   }
   if (data.status !== undefined) patch.status = data.status
@@ -454,12 +556,16 @@ export async function updateAppointment(
         .where(
           and(
             eq(appointmentAddonLines.salonId, salonId),
-            eq(appointmentAddonLines.appointmentId, id)
-          )
+            eq(appointmentAddonLines.appointmentId, id),
+          ),
         )
       if (selectedAddons.length > 0) {
         await tx.insert(appointmentAddonLines).values(
-          addonLineValues({ salonId, appointmentId: id, addons: selectedAddons })
+          addonLineValues({
+            salonId,
+            appointmentId: id,
+            addons: selectedAddons,
+          }),
         )
       }
     }
@@ -468,12 +574,15 @@ export async function updateAppointment(
   if (!row) return undefined
   const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
-    await getAddonLinesForAppointments(salonId, [row.id])
+    await getAddonLinesForAppointments(salonId, [row.id]),
   )
   return appointment
 }
 
-export async function deleteAppointment(id: string, salonId: string): Promise<boolean> {
+export async function deleteAppointment(
+  id: string,
+  salonId: string,
+): Promise<boolean> {
   const db = getDb()
   const deleted = await db
     .delete(appointments)
@@ -489,7 +598,7 @@ export async function getScheduleOverlapFlags(
   date: string,
   startTime: string,
   endTime: string,
-  excludeId?: string
+  excludeId?: string,
 ) {
   const db = getDb()
   const rows = await db
@@ -508,8 +617,11 @@ export async function getScheduleOverlapFlags(
       and(
         eq(appointments.salonId, salonId),
         eq(appointments.date, date),
-        or(eq(appointments.staffId, staffId), eq(appointments.clientId, clientId))
-      )
+        or(
+          eq(appointments.staffId, staffId),
+          eq(appointments.clientId, clientId),
+        ),
+      ),
     )
 
   return detectScheduleOverlaps(rows, {

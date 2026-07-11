@@ -87,7 +87,9 @@ describe('client summary combo snapshots', () => {
       createdAt: new Date('2026-04-01T08:00:00Z'),
     })
     mocks.getClientTags.mockResolvedValue([])
-    mocks.getClientAppointmentsWithDetails.mockResolvedValue([completedComboAppointment()])
+    mocks.getClientAppointmentsWithDetails.mockResolvedValue([
+      completedComboAppointment(),
+    ])
     mocks.getClientFollowUpsDb.mockReturnValue({
       select: () => ({
         from: () => ({

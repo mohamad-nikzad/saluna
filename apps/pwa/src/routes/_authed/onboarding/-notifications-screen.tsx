@@ -66,8 +66,8 @@ export function NotificationsScreen() {
       }
     >
       <p className="text-sm leading-relaxed text-muted-foreground">
-        با اتصال به پیام‌رسان، نوبت‌های جدید را فوری دریافت می‌کنید و
-        می‌توانید همان‌جا تأیید یا رد کنید.
+        با اتصال به پیام‌رسان، نوبت‌های جدید را فوری دریافت می‌کنید و می‌توانید
+        همان‌جا تأیید یا رد کنید.
       </p>
 
       {visibleProviderConfigs.map((config) => (

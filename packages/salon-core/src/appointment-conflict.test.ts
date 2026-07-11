@@ -21,11 +21,15 @@ describe('isBlockingAppointmentStatus', () => {
 
 describe('appointmentIntervalsConflict', () => {
   it('returns true when ranges overlap', () => {
-    expect(appointmentIntervalsConflict('09:00', '10:00', '09:30', '10:30')).toBe(true)
+    expect(
+      appointmentIntervalsConflict('09:00', '10:00', '09:30', '10:30'),
+    ).toBe(true)
   })
 
   it('returns false when ranges are adjacent without overlap', () => {
-    expect(appointmentIntervalsConflict('09:00', '10:00', '10:00', '11:00')).toBe(false)
+    expect(
+      appointmentIntervalsConflict('09:00', '10:00', '10:00', '11:00'),
+    ).toBe(false)
   })
 })
 
@@ -45,7 +49,7 @@ describe('hasAppointmentConflict', () => {
       'a',
       '2026-01-01',
       '09:30',
-      '10:30'
+      '10:30',
     )
     expect(ok).toBe(false)
   })
@@ -66,8 +70,8 @@ describe('hasAppointmentConflict', () => {
         'a',
         '2026-01-01',
         '09:30',
-        '10:30'
-      )
+        '10:30',
+      ),
     ).toBe(false)
   })
 
@@ -86,7 +90,7 @@ describe('hasAppointmentConflict', () => {
       'a',
       '2026-01-01',
       '09:30',
-      '10:30'
+      '10:30',
     )
     expect(bad).toBe(true)
   })
@@ -108,8 +112,8 @@ describe('hasAppointmentConflict', () => {
         '2026-01-01',
         '09:00',
         '10:00',
-        'self'
-      )
+        'self',
+      ),
     ).toBe(false)
   })
 })
@@ -124,32 +128,28 @@ describe('detectScheduleOverlaps', () => {
 
   it('allows different staff and different client', () => {
     const flags = detectScheduleOverlaps(
-      [
-        { ...baseRow, id: '1', staffId: 's1', clientId: 'c1' },
-      ],
+      [{ ...baseRow, id: '1', staffId: 's1', clientId: 'c1' }],
       {
         staffId: 's2',
         clientId: 'c2',
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags).toEqual({ staffConflict: false, clientConflict: false })
   })
 
   it('blocks same staff different client', () => {
     const flags = detectScheduleOverlaps(
-      [
-        { ...baseRow, id: '1', staffId: 's1', clientId: 'c1' },
-      ],
+      [{ ...baseRow, id: '1', staffId: 's1', clientId: 'c1' }],
       {
         staffId: 's1',
         clientId: 'c2',
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags.staffConflict).toBe(true)
     expect(flags.clientConflict).toBe(false)
@@ -157,16 +157,14 @@ describe('detectScheduleOverlaps', () => {
 
   it('blocks same client different staff', () => {
     const flags = detectScheduleOverlaps(
-      [
-        { ...baseRow, id: '1', staffId: 's1', clientId: 'c1' },
-      ],
+      [{ ...baseRow, id: '1', staffId: 's1', clientId: 'c1' }],
       {
         staffId: 's2',
         clientId: 'c1',
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags.staffConflict).toBe(false)
     expect(flags.clientConflict).toBe(true)
@@ -174,16 +172,14 @@ describe('detectScheduleOverlaps', () => {
 
   it('blocks same client and same staff', () => {
     const flags = detectScheduleOverlaps(
-      [
-        { ...baseRow, id: '1', staffId: 's1', clientId: 'c1' },
-      ],
+      [{ ...baseRow, id: '1', staffId: 's1', clientId: 'c1' }],
       {
         staffId: 's1',
         clientId: 'c1',
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags.staffConflict).toBe(true)
     expect(flags.clientConflict).toBe(true)
@@ -206,16 +202,14 @@ describe('detectScheduleOverlaps', () => {
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags).toEqual({ staffConflict: false, clientConflict: false })
   })
 
   it('respects excludeId', () => {
     const flags = detectScheduleOverlaps(
-      [
-        { ...baseRow, id: 'self', staffId: 's1', clientId: 'c1' },
-      ],
+      [{ ...baseRow, id: 'self', staffId: 's1', clientId: 'c1' }],
       {
         staffId: 's1',
         clientId: 'c1',
@@ -223,7 +217,7 @@ describe('detectScheduleOverlaps', () => {
         startTime: '09:00',
         endTime: '10:00',
         excludeId: 'self',
-      }
+      },
     )
     expect(flags).toEqual({ staffConflict: false, clientConflict: false })
   })
@@ -231,7 +225,13 @@ describe('detectScheduleOverlaps', () => {
   it('ignores overlapping rows from a different salon when tenant context is provided', () => {
     const flags = detectScheduleOverlaps(
       [
-        { ...baseRow, id: 'other-salon', salonId: 'salon-b', staffId: 's1', clientId: 'c1' },
+        {
+          ...baseRow,
+          id: 'other-salon',
+          salonId: 'salon-b',
+          staffId: 's1',
+          clientId: 'c1',
+        },
       ],
       {
         salonId: 'salon-a',
@@ -240,7 +240,7 @@ describe('detectScheduleOverlaps', () => {
         date: '2026-01-01',
         startTime: '09:30',
         endTime: '10:30',
-      }
+      },
     )
     expect(flags).toEqual({ staffConflict: false, clientConflict: false })
   })

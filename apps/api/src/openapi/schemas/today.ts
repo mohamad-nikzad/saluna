@@ -4,11 +4,15 @@ import { appointmentStatusSchema } from './dashboard'
 
 export const todayQuerySchema = z
   .object({
-    date: z.string().optional().openapi({
-      param: { name: 'date', in: 'query' },
-      example: '2026-06-07',
-      description: 'Calendar date (YYYY-MM-DD). Defaults to salon local today.',
-    }),
+    date: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'date', in: 'query' },
+        example: '2026-06-07',
+        description:
+          'Calendar date (YYYY-MM-DD). Defaults to salon local today.',
+      }),
   })
   .openapi('TodayQuery')
 

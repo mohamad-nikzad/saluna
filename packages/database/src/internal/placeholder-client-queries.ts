@@ -2,9 +2,24 @@ import { and, count, eq } from 'drizzle-orm'
 import type { AppointmentWithDetails, Client } from '@repo/salon-core/types'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { getDb } from '../client'
-import { appointments, clients, member, salonMember, services, user } from '../schema'
-import { attachAppointmentDetails, rowToClient, staffUserSelect } from './row-mappers'
-import { createClient, getClientByPhone, isClientProvidedEntityId } from './client-queries'
+import {
+  appointments,
+  clients,
+  member,
+  salonMember,
+  services,
+  user,
+} from '../schema'
+import {
+  attachAppointmentDetails,
+  rowToClient,
+  staffUserSelect,
+} from './row-mappers'
+import {
+  createClient,
+  getClientByPhone,
+  isClientProvidedEntityId,
+} from './client-queries'
 
 type PlaceholderFailure = {
   ok: false
@@ -43,7 +58,7 @@ function fail(
   status: number,
   error: string,
   code?: string,
-  existingClient?: Client
+  existingClient?: Client,
 ): PlaceholderFailure {
   return {
     ok: false,
@@ -72,7 +87,7 @@ export async function createPlaceholderClient(input: {
 
 export async function deletePlaceholderClientIfOrphaned(
   clientId: string,
-  salonId: string
+  salonId: string,
 ): Promise<boolean> {
   const db = getDb()
   return deletePlaceholderClientIfOrphanedWithDb(db, clientId, salonId)
@@ -81,7 +96,7 @@ export async function deletePlaceholderClientIfOrphaned(
 async function deletePlaceholderClientIfOrphanedWithDb(
   db: PlaceholderDbLike,
   clientId: string,
-  salonId: string
+  salonId: string,
 ): Promise<boolean> {
   const clientRows = await db
     .select()
@@ -94,7 +109,12 @@ async function deletePlaceholderClientIfOrphanedWithDb(
   const usage = await db
     .select({ value: count() })
     .from(appointments)
-    .where(and(eq(appointments.salonId, salonId), eq(appointments.clientId, clientId)))
+    .where(
+      and(
+        eq(appointments.salonId, salonId),
+        eq(appointments.clientId, clientId),
+      ),
+    )
   if ((usage[0]?.value ?? 0) > 0) return false
 
   const deleted = await db
@@ -113,7 +133,9 @@ export async function validatePlaceholderClientUsage(input: {
   const clientRows = await db
     .select()
     .from(clients)
-    .where(and(eq(clients.id, input.clientId), eq(clients.salonId, input.salonId)))
+    .where(
+      and(eq(clients.id, input.clientId), eq(clients.salonId, input.salonId)),
+    )
     .limit(1)
 
   const clientRow = clientRows[0]
@@ -129,17 +151,22 @@ export async function validatePlaceholderClientUsage(input: {
   const usageRows = await db
     .select({ appointmentId: appointments.id })
     .from(appointments)
-    .where(and(eq(appointments.salonId, input.salonId), eq(appointments.clientId, input.clientId)))
+    .where(
+      and(
+        eq(appointments.salonId, input.salonId),
+        eq(appointments.clientId, input.clientId),
+      ),
+    )
     .limit(2)
 
   const conflictingUsage = usageRows.find(
-    (row) => !input.appointmentId || row.appointmentId !== input.appointmentId
+    (row) => !input.appointmentId || row.appointmentId !== input.appointmentId,
   )
   if (conflictingUsage) {
     return fail(
       409,
       'این مشتری موقت قبلاً به نوبت دیگری وصل شده است',
-      'placeholder-reuse'
+      'placeholder-reuse',
     )
   }
 
@@ -153,8 +180,12 @@ export async function cleanupPlaceholderAfterAppointmentMutation(input: {
   deletedAppointmentId?: string
 }): Promise<boolean> {
   if (!input.previousClientId) return false
-  if (input.nextClientId && input.previousClientId === input.nextClientId) return false
-  return deletePlaceholderClientIfOrphaned(input.previousClientId, input.salonId)
+  if (input.nextClientId && input.previousClientId === input.nextClientId)
+    return false
+  return deletePlaceholderClientIfOrphaned(
+    input.previousClientId,
+    input.salonId,
+  )
 }
 
 export async function cancelIncompletePlaceholderAppointment(input: {
@@ -169,8 +200,19 @@ export async function cancelIncompletePlaceholderAppointment(input: {
       isPlaceholder: clients.isPlaceholder,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, input.salonId)))
-    .where(and(eq(appointments.id, input.appointmentId), eq(appointments.salonId, input.salonId)))
+    .innerJoin(
+      clients,
+      and(
+        eq(appointments.clientId, clients.id),
+        eq(clients.salonId, input.salonId),
+      ),
+    )
+    .where(
+      and(
+        eq(appointments.id, input.appointmentId),
+        eq(appointments.salonId, input.salonId),
+      ),
+    )
     .limit(1)
 
   const row = appointmentRows[0]
@@ -184,13 +226,18 @@ export async function cancelIncompletePlaceholderAppointment(input: {
   return db.transaction(async (tx) => {
     const deleted = await tx
       .delete(appointments)
-      .where(and(eq(appointments.id, input.appointmentId), eq(appointments.salonId, input.salonId)))
+      .where(
+        and(
+          eq(appointments.id, input.appointmentId),
+          eq(appointments.salonId, input.salonId),
+        ),
+      )
       .returning({ id: appointments.id })
 
     const placeholderDeleted = await deletePlaceholderClientIfOrphanedWithDb(
       tx,
       row.clientId,
-      input.salonId
+      input.salonId,
     )
 
     return {
@@ -217,8 +264,19 @@ export async function completePlaceholderAppointmentClient(input: {
       client: clients,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, input.salonId)))
-    .where(and(eq(appointments.id, input.appointmentId), eq(appointments.salonId, input.salonId)))
+    .innerJoin(
+      clients,
+      and(
+        eq(appointments.clientId, clients.id),
+        eq(clients.salonId, input.salonId),
+      ),
+    )
+    .where(
+      and(
+        eq(appointments.id, input.appointmentId),
+        eq(appointments.salonId, input.salonId),
+      ),
+    )
     .limit(1)
 
   const row = appointmentRows[0]
@@ -239,7 +297,7 @@ export async function completePlaceholderAppointmentClient(input: {
         409,
         'این شماره تماس برای مشتری دیگری ثبت شده است',
         'duplicate-phone',
-        existingClient
+        existingClient,
       )
     }
 
@@ -250,18 +308,35 @@ export async function completePlaceholderAppointmentClient(input: {
           clientId: existingClient.id,
           updatedAt: new Date(),
         })
-        .where(and(eq(appointments.id, input.appointmentId), eq(appointments.salonId, input.salonId)))
+        .where(
+          and(
+            eq(appointments.id, input.appointmentId),
+            eq(appointments.salonId, input.salonId),
+          ),
+        )
 
       const usage = await tx
         .select({ value: count() })
         .from(appointments)
-        .where(and(eq(appointments.salonId, input.salonId), eq(appointments.clientId, placeholderClient.id)))
+        .where(
+          and(
+            eq(appointments.salonId, input.salonId),
+            eq(appointments.clientId, placeholderClient.id),
+          ),
+        )
       if ((usage[0]?.value ?? 0) === 0) {
-        await deletePlaceholderClientIfOrphanedWithDb(tx, placeholderClient.id, input.salonId)
+        await deletePlaceholderClientIfOrphanedWithDb(
+          tx,
+          placeholderClient.id,
+          input.salonId,
+        )
       }
     })
 
-    const detail = await getAppointmentWithDetailsOrThrow(input.appointmentId, input.salonId)
+    const detail = await getAppointmentWithDetailsOrThrow(
+      input.appointmentId,
+      input.salonId,
+    )
     return {
       ok: true,
       appointment: detail,
@@ -277,9 +352,17 @@ export async function completePlaceholderAppointmentClient(input: {
       notes: input.notes?.trim() || null,
       isPlaceholder: false,
     })
-    .where(and(eq(clients.id, placeholderClient.id), eq(clients.salonId, input.salonId)))
+    .where(
+      and(
+        eq(clients.id, placeholderClient.id),
+        eq(clients.salonId, input.salonId),
+      ),
+    )
 
-  const detail = await getAppointmentWithDetailsOrThrow(input.appointmentId, input.salonId)
+  const detail = await getAppointmentWithDetailsOrThrow(
+    input.appointmentId,
+    input.salonId,
+  )
   return {
     ok: true,
     appointment: detail,
@@ -289,7 +372,7 @@ export async function completePlaceholderAppointmentClient(input: {
 
 async function getAppointmentWithDetailsOrThrow(
   appointmentId: string,
-  salonId: string
+  salonId: string,
 ): Promise<AppointmentWithDetails> {
   const db = getDb()
   const rows = await db
@@ -300,16 +383,41 @@ async function getAppointmentWithDetailsOrThrow(
       service: services,
     })
     .from(appointments)
-    .innerJoin(clients, and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)))
+    .innerJoin(
+      clients,
+      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
+    )
     .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(member, and(eq(member.userId, user.id), eq(member.organizationId, salonId)))
-    .leftJoin(salonMember, and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, salonId)))
-    .innerJoin(services, and(eq(appointments.serviceId, services.id), eq(services.salonId, salonId)))
-    .where(and(eq(appointments.id, appointmentId), eq(appointments.salonId, salonId)))
+    .innerJoin(
+      member,
+      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
+    )
+    .leftJoin(
+      salonMember,
+      and(
+        eq(salonMember.userId, user.id),
+        eq(salonMember.organizationId, salonId),
+      ),
+    )
+    .innerJoin(
+      services,
+      and(
+        eq(appointments.serviceId, services.id),
+        eq(services.salonId, salonId),
+      ),
+    )
+    .where(
+      and(
+        eq(appointments.id, appointmentId),
+        eq(appointments.salonId, salonId),
+      ),
+    )
     .limit(1)
   const row = rows[0]
   if (!row) {
-    throw new Error(`Appointment ${appointmentId} was not found after placeholder completion`)
+    throw new Error(
+      `Appointment ${appointmentId} was not found after placeholder completion`,
+    )
   }
   return attachAppointmentDetails(row)
 }

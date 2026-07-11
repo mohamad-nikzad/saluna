@@ -17,17 +17,17 @@ No backend changes. No iOS support. Online-only PWA (no offline queue).
 
 ## Decisions (from design review)
 
-| Topic | Decision |
-|-------|----------|
-| Visibility | Feature-detect `navigator.contacts?.select` |
-| Bulk layout | Phone-first hero; VCF guides under «ورود با فایل» |
-| Multi-phone (bulk) | First `tel` that normalizes to valid salon phone |
-| Multi-phone (single) | Inline chooser when `tel.length > 1` |
-| Fields | Name + phone only |
-| Duplicate (picker) | Auto-select existing Client by canonical phone |
-| Duplicate (drawer) | Confirm dialog: link existing or cancel |
-| Cancel / empty pick | Silent no-op |
-| Copy | «افزودن گروهی», «ورود گروهی مشتریان», «از مخاطبین گوشی» |
+| Topic                | Decision                                                |
+| -------------------- | ------------------------------------------------------- |
+| Visibility           | Feature-detect `navigator.contacts?.select`             |
+| Bulk layout          | Phone-first hero; VCF guides under «ورود با فایل»       |
+| Multi-phone (bulk)   | First `tel` that normalizes to valid salon phone        |
+| Multi-phone (single) | Inline chooser when `tel.length > 1`                    |
+| Fields               | Name + phone only                                       |
+| Duplicate (picker)   | Auto-select existing Client by canonical phone          |
+| Duplicate (drawer)   | Confirm dialog: link existing or cancel                 |
+| Cancel / empty pick  | Silent no-op                                            |
+| Copy                 | «افزودن گروهی», «ورود گروهی مشتریان», «از مخاطبین گوشی» |
 
 ## Read before starting
 
@@ -72,7 +72,9 @@ export type DeviceContactPickerRow = {
 
 export function composeDeviceContactName(name?: string[]): string
 
-export function chooseDeviceContactPhone(tels: string[] | undefined): string | null
+export function chooseDeviceContactPhone(
+  tels: string[] | undefined,
+): string | null
 
 export function mapDeviceContactsToDrafts(
   contacts: DeviceContactPickerRow[],
@@ -301,13 +303,13 @@ Same pick + resolve as Task 4, then:
 
 ### 6.1 Copy audit
 
-| Location | New copy |
-|----------|----------|
-| `clients.index.tsx` | «افزودن گروهی» |
-| `clients.import.tsx` header | «ورود گروهی مشتریان» |
-| Import landing (picker available) | Hero + «ورود با فایل» |
-| Single pick buttons | «از مخاطبین گوشی» |
-| Info bar `totalInFile` label | Optional: «مخاطب» instead of «در فایل» when source was device (nice-to-have; can defer) |
+| Location                          | New copy                                                                                |
+| --------------------------------- | --------------------------------------------------------------------------------------- |
+| `clients.index.tsx`               | «افزودن گروهی»                                                                          |
+| `clients.import.tsx` header       | «ورود گروهی مشتریان»                                                                    |
+| Import landing (picker available) | Hero + «ورود با فایل»                                                                   |
+| Single pick buttons               | «از مخاطبین گوشی»                                                                       |
+| Info bar `totalInFile` label      | Optional: «مخاطب» instead of «در فایل» when source was device (nice-to-have; can defer) |
 
 ### 6.2 Manual QA (Android Chrome)
 

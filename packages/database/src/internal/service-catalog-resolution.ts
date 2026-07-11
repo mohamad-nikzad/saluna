@@ -33,14 +33,17 @@ export async function getActiveFamily(familyId: string, salonId: string) {
       categoryName: serviceCategories.name,
     })
     .from(serviceFamilies)
-    .innerJoin(serviceCategories, eq(serviceFamilies.categoryId, serviceCategories.id))
+    .innerJoin(
+      serviceCategories,
+      eq(serviceFamilies.categoryId, serviceCategories.id),
+    )
     .where(
       and(
         eq(serviceFamilies.id, familyId),
         eq(serviceFamilies.salonId, salonId),
         eq(serviceFamilies.active, true),
-        eq(serviceCategories.active, true)
-      )
+        eq(serviceCategories.active, true),
+      ),
     )
     .limit(1)
   return row
@@ -55,8 +58,8 @@ export async function getActiveCategory(categoryId: string, salonId: string) {
       and(
         eq(serviceCategories.id, categoryId),
         eq(serviceCategories.salonId, salonId),
-        eq(serviceCategories.active, true)
-      )
+        eq(serviceCategories.active, true),
+      ),
     )
     .limit(1)
   return row
@@ -70,32 +73,35 @@ export async function getActiveCategory(categoryId: string, salonId: string) {
 export async function resolveServiceCategory(
   salonId: string,
   categoryId: string | null | undefined,
-  familyId: string | null | undefined
+  familyId: string | null | undefined,
 ): Promise<string> {
   if (familyId) {
     const family = await getActiveFamily(familyId, salonId)
     if (!family) {
       throw new CatalogReferenceError(
         'family_missing',
-        'service family not found or inactive'
+        'service family not found or inactive',
       )
     }
     if (categoryId && categoryId !== family.categoryId) {
       throw new CatalogReferenceError(
         'family_category_mismatch',
-        'service family does not belong to the given category'
+        'service family does not belong to the given category',
       )
     }
     return family.categoryId
   }
   if (!categoryId) {
-    throw new CatalogReferenceError('category_required', 'service category is required')
+    throw new CatalogReferenceError(
+      'category_required',
+      'service category is required',
+    )
   }
   const category = await getActiveCategory(categoryId, salonId)
   if (!category) {
     throw new CatalogReferenceError(
       'category_missing',
-      'service category not found or inactive'
+      'service category not found or inactive',
     )
   }
   return categoryId

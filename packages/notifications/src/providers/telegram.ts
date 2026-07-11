@@ -26,13 +26,17 @@ let resolveConfig: () => TelegramConfig | null = () => null
 let cachedApi: { token: string; api: Api } | null = null
 let fetchOverride: TelegramFetchFn | undefined
 
-export function initTelegramMessaging(getConfig: () => TelegramConfig | null): void {
+export function initTelegramMessaging(
+  getConfig: () => TelegramConfig | null,
+): void {
   resolveConfig = getConfig
   cachedApi = null
 }
 
 /** @internal Vitest-only hook; production uses grammY's node-fetch client. */
-export function setTelegramFetchForTests(fetchFn: TelegramFetchFn | undefined): void {
+export function setTelegramFetchForTests(
+  fetchFn: TelegramFetchFn | undefined,
+): void {
   fetchOverride = fetchFn
   cachedApi = null
 }
@@ -53,7 +57,7 @@ function getApi(config: TelegramConfig): Api {
 }
 
 function toInlineKeyboard(
-  rows: MessagingButton[][] | undefined
+  rows: MessagingButton[][] | undefined,
 ): InlineKeyboardMarkup | undefined {
   if (!rows || rows.length === 0) return undefined
   const inline_keyboard = rows
@@ -64,7 +68,7 @@ function toInlineKeyboard(
           return [{ text: b.label, url: b.url }]
         }
         return [{ text: b.label, callback_data: b.data ?? '' }]
-      })
+      }),
     )
     .filter((row) => row.length > 0)
   if (inline_keyboard.length === 0) return undefined
@@ -173,14 +177,17 @@ export async function answerTelegramCallback(input: {
   if (!config) return
   const api = getApi(config)
   try {
-    await api.answerCallbackQuery(input.callbackQueryId, input.text ? { text: input.text } : {})
+    await api.answerCallbackQuery(
+      input.callbackQueryId,
+      input.text ? { text: input.text } : {},
+    )
   } catch {
     // best-effort
   }
 }
 
 export function createTelegramProvider(
-  getConfig: () => TelegramConfig | null = resolveConfig
+  getConfig: () => TelegramConfig | null = resolveConfig,
 ): MessagingProvider {
   return {
     id: 'telegram',
@@ -215,7 +222,10 @@ export function createTelegramProvider(
         return { status: 'sent', providerMessageId: String(message.message_id) }
       } catch (err) {
         const error = describeError(err).slice(0, 1024)
-        console.error('[messaging.send.failed]', { provider: 'telegram', error })
+        console.error('[messaging.send.failed]', {
+          provider: 'telegram',
+          error,
+        })
         return { status: 'failed', error }
       }
     },
@@ -223,10 +233,7 @@ export function createTelegramProvider(
 }
 
 export function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 export { getTelegramConfig }

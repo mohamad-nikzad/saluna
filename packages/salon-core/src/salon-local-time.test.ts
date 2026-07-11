@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { addDaysYmd, salonCurrentHm, salonHmAfterMinutes, salonTodayYmd } from './salon-local-time'
+import {
+  addDaysYmd,
+  salonCurrentHm,
+  salonHmAfterMinutes,
+  salonTodayYmd,
+} from './salon-local-time'
 
 describe('salon local time', () => {
   it('formats the salon calendar day in Tehran time', () => {
-    expect(salonTodayYmd(new Date('2026-04-28T21:00:00.000Z'))).toBe('2026-04-29')
+    expect(salonTodayYmd(new Date('2026-04-28T21:00:00.000Z'))).toBe(
+      '2026-04-29',
+    )
   })
 
   it('formats HH:mm and offsets in Tehran time', () => {

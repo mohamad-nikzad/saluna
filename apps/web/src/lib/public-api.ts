@@ -46,16 +46,16 @@ function rethrowPublicApiError(error: unknown): never {
 
 const LEGACY_SERVICE_CATEGORIES = ['hair', 'nails', 'skincare', 'spa'] as const
 
-function isLegacyServiceCategory(
-  value: unknown,
-): value is Service['category'] {
+function isLegacyServiceCategory(value: unknown): value is Service['category'] {
   return (
     typeof value === 'string' &&
     LEGACY_SERVICE_CATEGORIES.includes(value as Service['category'])
   )
 }
 
-function toPublicService(service: GeneratedPublicSalonView['services'][number]) {
+function toPublicService(
+  service: GeneratedPublicSalonView['services'][number],
+) {
   if (
     !isLegacyServiceCategory(service.category) ||
     typeof service.categoryId !== 'string' ||

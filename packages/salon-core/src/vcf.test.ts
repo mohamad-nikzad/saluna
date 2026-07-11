@@ -218,11 +218,7 @@ describe('parseVcfFile', () => {
   })
 
   it('includes nameless cards so the classifier can count them as invalid', () => {
-    const text = [
-      'BEGIN:VCARD',
-      'TEL:09123456789',
-      'END:VCARD',
-    ].join('\n')
+    const text = ['BEGIN:VCARD', 'TEL:09123456789', 'END:VCARD'].join('\n')
 
     const [contact] = parseVcfFile(text)
     expect(contact).toMatchObject({
@@ -232,11 +228,7 @@ describe('parseVcfFile', () => {
   })
 
   it('returns phone null when a card has no TEL', () => {
-    const text = [
-      'BEGIN:VCARD',
-      'FN:مریم',
-      'END:VCARD',
-    ].join('\n')
+    const text = ['BEGIN:VCARD', 'FN:مریم', 'END:VCARD'].join('\n')
 
     const [contact] = parseVcfFile(text)
     expect(contact).toMatchObject({

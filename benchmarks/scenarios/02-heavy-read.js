@@ -1,6 +1,11 @@
 import http from 'k6/http'
 import { check } from 'k6'
-import { loginAndGetCookie, authHeaders, BASE_URL, API_PREFIX } from '../lib/auth.js'
+import {
+  loginAndGetCookie,
+  authHeaders,
+  BASE_URL,
+  API_PREFIX,
+} from '../lib/auth.js'
 import { buildSummary } from '../lib/report.js'
 
 export const options = {
@@ -24,7 +29,9 @@ export function setup() {
 
 const today = new Date()
 const startDate = today.toISOString().slice(0, 10)
-const endDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
+const endDate = new Date(today.getTime() + 7 * 86400_000)
+  .toISOString()
+  .slice(0, 10)
 
 export default function (data) {
   const headers = authHeaders(data.cookie)
@@ -32,7 +39,7 @@ export default function (data) {
     `${BASE_URL}${API_PREFIX}/appointments?startDate=${startDate}&endDate=${endDate}`,
     { headers, tags: { name: 'GET /api/appointments' } },
   )
-  check(r, { '200': (r) => r.status === 200 })
+  check(r, { 200: (r) => r.status === 200 })
 }
 
 export function handleSummary(data) {

@@ -65,7 +65,12 @@ export const staffInviteLinksRoute = new Hono<AppEnv>().get(
     const { token } = c.req.valid('param')
     const resolved = await resolveStaffInviteByToken({ token })
     if (resolved.status === 'not_found') {
-      return error(c, 'لینک دعوت نامعتبر یا منقضی شده است', 404, 'INVITE_INVALID')
+      return error(
+        c,
+        'لینک دعوت نامعتبر یا منقضی شده است',
+        404,
+        'INVITE_INVALID',
+      )
     }
 
     const invite = resolved.invite

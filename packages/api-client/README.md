@@ -18,26 +18,26 @@ packages/api-client/src/
   index.ts         # errors + legacy auth exports
 ```
 
-| Directory | Owner | Rule |
-|-----------|-------|------|
-| `src/legacy/` | Manual | Auth-only `createApiClient()` + `createAuthApi()`. Removed for all other domains in Phase 20. |
-| `src/generated/` | HeyAPI | Regenerated from `packages/api-contract/openapi.json`. **Do not edit manually.** |
+| Directory        | Owner  | Rule                                                                                          |
+| ---------------- | ------ | --------------------------------------------------------------------------------------------- |
+| `src/legacy/`    | Manual | Auth-only `createApiClient()` + `createAuthApi()`. Removed for all other domains in Phase 20. |
+| `src/generated/` | HeyAPI | Regenerated from `packages/api-contract/openapi.json`. **Do not edit manually.**              |
 
 HeyAPI clears `src/generated/` on each run, so do not add hand-maintained files there.
 
 ## Entrypoints
 
-| Import | Purpose |
-|--------|---------|
-| `@repo/api-client` | `ApiError` / `NetworkError` + legacy auth (`createApiClient`, `createAuthApi`) |
-| `@repo/api-client/legacy` | Explicit legacy auth access |
-| `@repo/api-client/auth` | Auth factory and types only |
-| `@repo/api-client/generated-client` | Generated client setup (`configureGeneratedApiClient`) |
-| `@repo/api-client/sdk` | Generated non-React SDK (server, scripts) |
-| `@repo/api-client/query` | Generated TanStack Query options |
-| `@repo/api-client/types` | Generated API DTOs (request/response, params) |
-| `@repo/api-client/react` | Shared domain hooks scaffold |
-| `@repo/api-client/errors` | Stable `ApiError` / `NetworkError` contract |
+| Import                              | Purpose                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| `@repo/api-client`                  | `ApiError` / `NetworkError` + legacy auth (`createApiClient`, `createAuthApi`) |
+| `@repo/api-client/legacy`           | Explicit legacy auth access                                                    |
+| `@repo/api-client/auth`             | Auth factory and types only                                                    |
+| `@repo/api-client/generated-client` | Generated client setup (`configureGeneratedApiClient`)                         |
+| `@repo/api-client/sdk`              | Generated non-React SDK (server, scripts)                                      |
+| `@repo/api-client/query`            | Generated TanStack Query options                                               |
+| `@repo/api-client/types`            | Generated API DTOs (request/response, params)                                  |
+| `@repo/api-client/react`            | Shared domain hooks scaffold                                                   |
+| `@repo/api-client/errors`           | Stable `ApiError` / `NetworkError` contract                                    |
 
 ---
 
@@ -50,8 +50,8 @@ import { configureGeneratedApiClient } from '@repo/api-client/generated-client'
 
 configureGeneratedApiClient({
   baseUrl: env.apiBaseUrl,
-  credentials: 'include',              // web cookie auth
-  getAccessToken: () => getToken(),  // optional bearer provider
+  credentials: 'include', // web cookie auth
+  getAccessToken: () => getToken(), // optional bearer provider
 })
 ```
 
@@ -116,7 +116,7 @@ import { createApiClient, createAuthApi } from '@repo/api-client'
 const apiClient = createApiClient({
   baseUrl: env.apiBaseUrl,
   credentials: 'include', // web: cookie session
-  getToken: () => token,  // optional bearer (native)
+  getToken: () => token, // optional bearer (native)
 })
 
 const auth = createAuthApi(apiClient)
@@ -129,9 +129,9 @@ PWA wiring (`apps/pwa/src/lib/api-client.ts`): one `createApiClient()` instance 
 
 ## Type strategy
 
-| Source | Use for |
-|--------|---------|
-| `@repo/salon-core` | Domain models, business logic, forms, validation |
+| Source                   | Use for                                              |
+| ------------------------ | ---------------------------------------------------- |
+| `@repo/salon-core`       | Domain models, business logic, forms, validation     |
 | `@repo/api-client/types` | API request/response DTOs, path params, query params |
 
 Use generated DTO types at the API boundary. Add mappers only when generated DTOs differ from domain types.
@@ -144,10 +144,10 @@ Use generated DTO types at the API boundary. Add mappers only when generated DTO
 import { ApiError, NetworkError } from '@repo/api-client/errors'
 ```
 
-| Class | When |
-|-------|------|
-| `ApiError` | HTTP response with non-2xx status. `status`, `message`, `payload`. |
-| `NetworkError` | Fetch/connectivity failure. `cause` holds the underlying error. |
+| Class          | When                                                               |
+| -------------- | ------------------------------------------------------------------ |
+| `ApiError`     | HTTP response with non-2xx status. `status`, `message`, `payload`. |
+| `NetworkError` | Fetch/connectivity failure. `cause` holds the underlying error.    |
 
 Legacy and generated clients both normalize to these classes.
 
@@ -165,10 +165,10 @@ pnpm generate:api-contract
 pnpm generate:api-client
 ```
 
-| Command | Runs | Output |
-|---------|------|--------|
-| `pnpm generate:api-contract` | `apps/api` OpenAPI script | `packages/api-contract/openapi.json` |
-| `pnpm generate:api-client` | `openapi-ts` in this package | `packages/api-client/src/generated/` |
+| Command                      | Runs                         | Output                               |
+| ---------------------------- | ---------------------------- | ------------------------------------ |
+| `pnpm generate:api-contract` | `apps/api` OpenAPI script    | `packages/api-contract/openapi.json` |
+| `pnpm generate:api-client`   | `openapi-ts` in this package | `packages/api-client/src/generated/` |
 
 ```txt
 Hono OpenAPI routes (apps/api)

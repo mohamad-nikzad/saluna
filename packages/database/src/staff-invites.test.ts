@@ -132,7 +132,9 @@ describe('evaluateCancelManagerStaffInvite', () => {
       },
     })
     // Profile is returned for the response; cancel never issues a profile delete.
-    expect(decision.status === 'cancel' && decision.profile.id).toBe('profile-1')
+    expect(decision.status === 'cancel' && decision.profile.id).toBe(
+      'profile-1',
+    )
   })
 
   it('rejects when the Staff Profile is missing', () => {

@@ -34,18 +34,20 @@ describe('businessSettingsSchema', () => {
   })
 
   it('rejects workingDays of zero when provided', () => {
-    expect(businessSettingsSchema.safeParse({ workingDays: 0 }).success).toBe(false)
+    expect(businessSettingsSchema.safeParse({ workingDays: 0 }).success).toBe(
+      false,
+    )
   })
 
   it.each([127])('accepts boundary workingDays %i', (value) => {
-    expect(businessSettingsSchema.safeParse({ workingDays: value }).success).toBe(
-      true,
-    )
+    expect(
+      businessSettingsSchema.safeParse({ workingDays: value }).success,
+    ).toBe(true)
   })
 
   it.each([-1, 128, 12.5])('rejects out-of-range workingDays %s', (value) => {
-    expect(businessSettingsSchema.safeParse({ workingDays: value }).success).toBe(
-      false,
-    )
+    expect(
+      businessSettingsSchema.safeParse({ workingDays: value }).success,
+    ).toBe(false)
   })
 })

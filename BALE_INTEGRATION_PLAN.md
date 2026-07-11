@@ -25,7 +25,7 @@ runtime, and Safir phone delivery errors.
   - Key facts from docs: API base is
     `https://tapi.bale.ai/bot<token>/METHOD_NAME`; requests must use HTTPS;
     supported webhook ports are `443` and `88`; responses use `{ ok, result,
-    description, error_code, parameters }`; `callback_data` is 1 to 64 bytes;
+description, error_code, parameters }`; `callback_data` is 1 to 64 bytes;
     `sendMessage` text is 1 to 4096 characters.
 - Bale Safir docs: https://docs.bale.ai/safir
   - Read `send_message`, `MessageData`, `ReplyMarkup`, phone-number format,
@@ -248,7 +248,7 @@ Webhook behavior:
 - Parse Bale `Update` JSON with local types or a thin provider-local type file.
 - For `message.text`:
   - `/start <token>` calls `messagingCommands.handleLinkStart({ provider:
-    "bale", token, externalId, displayName })`.
+"bale", token, externalId, displayName })`.
   - Bare `/start` explains that users should connect from inside the app.
   - `/pending`, `/today`, `/unlink`, `/help`, and reply-keyboard labels call
     the same command handlers used by Telegram with `provider: "bale"`.

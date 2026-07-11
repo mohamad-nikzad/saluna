@@ -210,9 +210,15 @@ export type AppointmentCreateInput = z.input<typeof appointmentCreateSchema>
 export type AppointmentCreatePayload = z.output<typeof appointmentCreateSchema>
 export type AppointmentUpdateInput = z.input<typeof appointmentUpdateSchema>
 export type AppointmentUpdatePayload = z.output<typeof appointmentUpdateSchema>
-export type CompletePlaceholderClientInput = z.input<typeof completePlaceholderClientSchema>
-export type CompletePlaceholderClientPayload = z.output<typeof completePlaceholderClientSchema>
+export type CompletePlaceholderClientInput = z.input<
+  typeof completePlaceholderClientSchema
+>
+export type CompletePlaceholderClientPayload = z.output<
+  typeof completePlaceholderClientSchema
+>
 export type AvailabilitySearchInput = z.input<typeof availabilitySearchSchema>
-export type AvailabilitySearchPayload = z.output<typeof availabilitySearchSchema>
+export type AvailabilitySearchPayload = z.output<
+  typeof availabilitySearchSchema
+>
 export type AppointmentFormInput = z.input<typeof appointmentFormSchema>
 export type AppointmentFormPayload = z.output<typeof appointmentFormSchema>

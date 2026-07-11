@@ -56,20 +56,26 @@ export async function getDashboardData(salonId: string) {
     monthRevenue,
     newClientsThisMonth,
   ] = await Promise.all([
-    db.select({ value: count() }).from(clients).where(eq(clients.salonId, salonId)),
+    db
+      .select({ value: count() })
+      .from(clients)
+      .where(eq(clients.salonId, salonId)),
 
     db
       .select({ value: count() })
       .from(member)
       .leftJoin(
         salonMember,
-        and(eq(salonMember.userId, member.userId), eq(salonMember.organizationId, salonId))
+        and(
+          eq(salonMember.userId, member.userId),
+          eq(salonMember.organizationId, salonId),
+        ),
       )
       .where(
         and(
           eq(member.organizationId, salonId),
-          or(isNull(salonMember.active), eq(salonMember.active, true))
-        )
+          or(isNull(salonMember.active), eq(salonMember.active, true)),
+        ),
       ),
 
     db
@@ -79,8 +85,8 @@ export async function getDashboardData(salonId: string) {
         and(
           eq(appointments.salonId, salonId),
           eq(appointments.date, today),
-          ne(appointments.status, 'cancelled')
-        )
+          ne(appointments.status, 'cancelled'),
+        ),
       ),
 
     db
@@ -91,8 +97,8 @@ export async function getDashboardData(salonId: string) {
           eq(appointments.salonId, salonId),
           gte(appointments.date, week.start),
           lte(appointments.date, week.end),
-          ne(appointments.status, 'cancelled')
-        )
+          ne(appointments.status, 'cancelled'),
+        ),
       ),
 
     db
@@ -103,8 +109,8 @@ export async function getDashboardData(salonId: string) {
           eq(appointments.salonId, salonId),
           gte(appointments.date, month.start),
           lte(appointments.date, month.end),
-          ne(appointments.status, 'cancelled')
-        )
+          ne(appointments.status, 'cancelled'),
+        ),
       ),
 
     db
@@ -113,7 +119,9 @@ export async function getDashboardData(salonId: string) {
         count: count(),
       })
       .from(appointments)
-      .where(and(eq(appointments.salonId, salonId), eq(appointments.date, today)))
+      .where(
+        and(eq(appointments.salonId, salonId), eq(appointments.date, today)),
+      )
       .groupBy(appointments.status),
 
     db
@@ -126,8 +134,8 @@ export async function getDashboardData(salonId: string) {
         and(
           eq(appointments.salonId, salonId),
           gte(appointments.date, month.start),
-          lte(appointments.date, month.end)
-        )
+          lte(appointments.date, month.end),
+        ),
       )
       .groupBy(appointments.status),
 
@@ -143,8 +151,8 @@ export async function getDashboardData(salonId: string) {
           eq(appointments.salonId, salonId),
           gte(appointments.date, month.start),
           lte(appointments.date, month.end),
-          ne(appointments.status, 'cancelled')
-        )
+          ne(appointments.status, 'cancelled'),
+        ),
       )
       .groupBy(appointments.serviceId, appointments.bookedServiceName)
       .orderBy(sql`count(*) desc`)
@@ -161,15 +169,18 @@ export async function getDashboardData(salonId: string) {
       .innerJoin(user, eq(appointments.staffId, user.id))
       .leftJoin(
         salonMember,
-        and(eq(salonMember.userId, user.id), eq(salonMember.organizationId, salonId))
+        and(
+          eq(salonMember.userId, user.id),
+          eq(salonMember.organizationId, salonId),
+        ),
       )
       .where(
         and(
           eq(appointments.salonId, salonId),
           gte(appointments.date, month.start),
           lte(appointments.date, month.end),
-          ne(appointments.status, 'cancelled')
-        )
+          ne(appointments.status, 'cancelled'),
+        ),
       )
       .groupBy(appointments.staffId, user.name, salonMember.color)
       .orderBy(sql`count(*) desc`),
@@ -184,8 +195,8 @@ export async function getDashboardData(salonId: string) {
           eq(appointments.salonId, salonId),
           gte(appointments.date, month.start),
           lte(appointments.date, month.end),
-          eq(appointments.status, 'completed')
-        )
+          eq(appointments.status, 'completed'),
+        ),
       ),
 
     db
@@ -195,8 +206,8 @@ export async function getDashboardData(salonId: string) {
         and(
           eq(clients.salonId, salonId),
           gte(clients.createdAt, new Date(month.start + 'T00:00:00')),
-          lte(clients.createdAt, new Date(month.end + 'T23:59:59'))
-        )
+          lte(clients.createdAt, new Date(month.end + 'T23:59:59')),
+        ),
       ),
   ])
 

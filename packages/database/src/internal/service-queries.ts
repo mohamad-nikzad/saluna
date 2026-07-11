@@ -652,9 +652,7 @@ async function normalizeAndValidateAddonScopes(
             ),
           )
   return normalizeServiceAddonScopes(scopes, {
-    families: [
-      ...serviceFamilyRows,
-    ],
+    families: [...serviceFamilyRows],
     services: serviceRows,
   })
 }

@@ -45,7 +45,11 @@ export const serviceCategories = new Hono<AppEnv>()
       const { salonId } = c.var.tenant
       const { id, name, active } = c.req.valid('json')
 
-      if (id !== undefined && id !== null && !isClientProvidedEntityId(String(id))) {
+      if (
+        id !== undefined &&
+        id !== null &&
+        !isClientProvidedEntityId(String(id))
+      ) {
         return error(c, 'شناسه بخش نامعتبر است', 400)
       }
 

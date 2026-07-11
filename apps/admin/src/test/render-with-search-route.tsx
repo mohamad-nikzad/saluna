@@ -59,9 +59,7 @@ export async function renderAdminRoute(
     </QueryClientProvider>
   )
 
-  const rendered = render(
-    options.wrapper ? options.wrapper(tree) : tree,
-  )
+  const rendered = render(options.wrapper ? options.wrapper(tree) : tree)
 
   return { ...rendered, router, history } as RenderAdminRouteResult
 }
@@ -74,7 +72,9 @@ export function locationSearch(
 
   if (typeof search === 'object') {
     const params = new URLSearchParams()
-    for (const [key, value] of Object.entries(search as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      search as Record<string, unknown>,
+    )) {
       if (value !== undefined && value !== null && value !== '') {
         params.set(key, String(value))
       }

@@ -32,9 +32,7 @@ function bodyFromCoreSchema<T extends z.ZodType>(
 
 const isoDateTimeSchema = z.string().datetime().or(z.string())
 
-export const staffRoleSchema = z
-  .enum(['staff', 'manager'])
-  .openapi('StaffRole')
+export const staffRoleSchema = z.enum(['staff', 'manager']).openapi('StaffRole')
 
 export const staffUserSchema = z
   .object({
@@ -178,18 +176,27 @@ export const staffScheduleUpdateResponseSchema = z
 
 export const bookingAvailabilityQuerySchema = z
   .object({
-    date: z.string().optional().openapi({
-      param: { name: 'date', in: 'query' },
-      example: '2026-06-07',
-    }),
-    startTime: z.string().optional().openapi({
-      param: { name: 'startTime', in: 'query' },
-      example: '10:00',
-    }),
-    endTime: z.string().optional().openapi({
-      param: { name: 'endTime', in: 'query' },
-      example: '11:00',
-    }),
+    date: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'date', in: 'query' },
+        example: '2026-06-07',
+      }),
+    startTime: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'startTime', in: 'query' },
+        example: '10:00',
+      }),
+    endTime: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'endTime', in: 'query' },
+        example: '11:00',
+      }),
   })
   .openapi('StaffBookingAvailabilityQuery')
 

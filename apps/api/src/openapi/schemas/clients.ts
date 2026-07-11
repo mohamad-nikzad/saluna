@@ -34,8 +34,14 @@ export const clientCreateBodySchema = bodyFromCoreSchema(
   {
     name: z.string().openapi({ example: 'علی رضایی' }),
     phone: z.string().openapi({ example: '09121234567' }),
-    notes: z.string().optional().openapi({ example: 'ترجیح می‌دهد صبح‌ها بیاید' }),
-    tags: z.array(z.string()).optional().openapi({ example: ['VIP'] }),
+    notes: z
+      .string()
+      .optional()
+      .openapi({ example: 'ترجیح می‌دهد صبح‌ها بیاید' }),
+    tags: z
+      .array(z.string())
+      .optional()
+      .openapi({ example: ['VIP'] }),
     id: z.string().optional().openapi({
       example: '550e8400-e29b-41d4-a716-446655440000',
       description: 'Optional client-provided UUID for offline-first sync',
@@ -50,7 +56,10 @@ export const clientUpdateBodySchema = bodyFromCoreSchema(
     name: z.string().optional().openapi({ example: 'علی رضایی' }),
     phone: z.string().optional().openapi({ example: '09121234567' }),
     notes: z.string().optional(),
-    tags: z.array(z.string()).optional().openapi({ example: ['VIP'] }),
+    tags: z
+      .array(z.string())
+      .optional()
+      .openapi({ example: ['VIP'] }),
   },
   clientUpdateSchema,
 )
@@ -82,7 +91,9 @@ export const clientBulkCreateBodySchemaOpenApi = bodyFromCoreSchema(
 export const clientBulkSkippedSchema = z
   .object({
     phone: z.string().openapi({ example: '09121234567' }),
-    reason: z.enum(['duplicate-phone', 'invalid']).openapi({ example: 'duplicate-phone' }),
+    reason: z
+      .enum(['duplicate-phone', 'invalid'])
+      .openapi({ example: 'duplicate-phone' }),
   })
   .openapi('ClientBulkCreateSkipped')
 
@@ -94,7 +105,8 @@ export const followUpBodySchema = z
   .object({
     reason: z.string().optional().openapi({
       example: 'manual',
-      description: 'Follow-up reason; unknown values default to manual server-side',
+      description:
+        'Follow-up reason; unknown values default to manual server-side',
     }),
     dueDate: z.string().optional().openapi({ example: '2026-06-15' }),
   })
@@ -219,7 +231,13 @@ export const appointmentWithDetailsSchema = z
     date: z.string(),
     startTime: z.string(),
     endTime: z.string(),
-    status: z.enum(['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show']),
+    status: z.enum([
+      'scheduled',
+      'confirmed',
+      'completed',
+      'cancelled',
+      'no-show',
+    ]),
     notes: z.string().optional(),
     createdAt: isoDateTimeSchema,
     updatedAt: isoDateTimeSchema,

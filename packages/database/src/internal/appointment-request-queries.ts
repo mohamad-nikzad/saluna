@@ -33,7 +33,7 @@ export type ListAppointmentRequestsFilter = {
  */
 export async function listAppointmentRequests(
   salonId: string,
-  filter: ListAppointmentRequestsFilter = {}
+  filter: ListAppointmentRequestsFilter = {},
 ): Promise<AppointmentRequestListItem[]> {
   const db = getDb()
   const status = filter.status ?? 'pending'
@@ -51,7 +51,10 @@ export async function listAppointmentRequests(
     .select()
     .from(appointmentRequests)
     .where(and(...conditions))
-    .orderBy(asc(appointmentRequests.requestedDate), asc(appointmentRequests.requestedStartTime))
+    .orderBy(
+      asc(appointmentRequests.requestedDate),
+      asc(appointmentRequests.requestedStartTime),
+    )
 
   if (rows.length === 0) return []
 
@@ -75,7 +78,7 @@ export async function listAppointmentRequests(
 
 export async function lookupClientByPhone(
   salonId: string,
-  phone: string
+  phone: string,
 ): Promise<{ id: string; name: string } | null> {
   const client = await getClientByPhone(phone, salonId)
   if (!client) return null
@@ -100,7 +103,7 @@ export type ApproveAppointmentRequestResult =
  * snapshot honored.
  */
 export async function approveAppointmentRequest(
-  input: ApproveAppointmentRequestInput
+  input: ApproveAppointmentRequestInput,
 ): Promise<ApproveAppointmentRequestResult> {
   const db = getDb()
 
@@ -108,7 +111,10 @@ export async function approveAppointmentRequest(
     .select()
     .from(appointmentRequests)
     .where(
-      and(eq(appointmentRequests.id, input.id), eq(appointmentRequests.salonId, input.salonId))
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+      ),
     )
     .limit(1)
   if (!request) {
@@ -138,7 +144,12 @@ export async function approveAppointmentRequest(
     notes: request.notes ?? undefined,
   })
   if (!intake.ok) {
-    return { ok: false, status: intake.status, error: intake.error, ...(intake.code ? { code: intake.code } : {}) }
+    return {
+      ok: false,
+      status: intake.status,
+      error: intake.error,
+      ...(intake.code ? { code: intake.code } : {}),
+    }
   }
 
   const appointment = await createAppointment(intake.command, input.salonId, {
@@ -165,8 +176,8 @@ export async function approveAppointmentRequest(
       and(
         eq(appointmentRequests.id, input.id),
         eq(appointmentRequests.salonId, input.salonId),
-        eq(appointmentRequests.status, 'pending')
-      )
+        eq(appointmentRequests.status, 'pending'),
+      ),
     )
     .returning({ id: appointmentRequests.id })
 
@@ -189,7 +200,7 @@ export type RejectAppointmentRequestResult =
   | { ok: false; status: number; error: string }
 
 export async function rejectAppointmentRequest(
-  input: RejectAppointmentRequestInput
+  input: RejectAppointmentRequestInput,
 ): Promise<RejectAppointmentRequestResult> {
   const db = getDb()
   const updated = await db
@@ -205,8 +216,8 @@ export async function rejectAppointmentRequest(
       and(
         eq(appointmentRequests.id, input.id),
         eq(appointmentRequests.salonId, input.salonId),
-        eq(appointmentRequests.status, 'pending')
-      )
+        eq(appointmentRequests.status, 'pending'),
+      ),
     )
     .returning({ id: appointmentRequests.id })
   if (updated.length === 0) {
@@ -216,8 +227,8 @@ export async function rejectAppointmentRequest(
       .where(
         and(
           eq(appointmentRequests.id, input.id),
-          eq(appointmentRequests.salonId, input.salonId)
-        )
+          eq(appointmentRequests.salonId, input.salonId),
+        ),
       )
       .limit(1)
     if (!existing) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
@@ -243,7 +254,7 @@ export type AppointmentRequestNotificationContext = {
  * Returns `undefined` if the request was deleted between submit and dispatch.
  */
 export async function getAppointmentRequestNotificationContext(
-  requestId: string
+  requestId: string,
 ): Promise<AppointmentRequestNotificationContext | undefined> {
   const db = getDb()
   const rows = await db
@@ -293,7 +304,7 @@ export type AppointmentRequestCallbackContext = {
  * circuit when the request is already non-pending.
  */
 export async function getAppointmentRequestForCallback(
-  requestId: string
+  requestId: string,
 ): Promise<AppointmentRequestCallbackContext | undefined> {
   const db = getDb()
   const rows = await db
@@ -327,7 +338,9 @@ export async function getAppointmentRequestForCallback(
  * (`requestedDate < salonToday`) to `expired`. Returns the number of rows
  * touched. See plan §7.
  */
-export async function expirePastDueAppointmentRequests(now?: Date): Promise<number> {
+export async function expirePastDueAppointmentRequests(
+  now?: Date,
+): Promise<number> {
   const db = getDb()
   const today = salonTodayYmd(now ?? new Date())
   const updated = await db
@@ -336,8 +349,8 @@ export async function expirePastDueAppointmentRequests(now?: Date): Promise<numb
     .where(
       and(
         eq(appointmentRequests.status, 'pending'),
-        lt(appointmentRequests.requestedDate, today)
-      )
+        lt(appointmentRequests.requestedDate, today),
+      ),
     )
     .returning({ id: appointmentRequests.id })
   return updated.length

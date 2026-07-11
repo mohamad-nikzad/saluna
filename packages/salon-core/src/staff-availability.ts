@@ -11,7 +11,13 @@ export type StaffAvailabilityCode =
 
 export type StaffAvailabilityResult =
   | { ok: true; source: 'staff' | 'business'; hours: BusinessHours }
-  | { ok: false; code: StaffAvailabilityCode; error: string; source: 'staff' | 'business'; hours: BusinessHours }
+  | {
+      ok: false
+      code: StaffAvailabilityCode
+      error: string
+      source: 'staff' | 'business'
+      hours: BusinessHours
+    }
 
 export type StaffWorkingHoursResult =
   | { ok: true; source: 'staff' | 'business'; hours: BusinessHours }
@@ -45,18 +51,16 @@ export function isSalonOpenOnDate(workingDays: number, date: string): boolean {
 export function validateAgainstHours(
   startTime: string,
   endTime: string,
-  hours: Pick<BusinessHours, 'workingStart' | 'workingEnd'>
+  hours: Pick<BusinessHours, 'workingStart' | 'workingEnd'>,
 ): boolean {
   return startTime >= hours.workingStart && endTime <= hours.workingEnd
 }
 
-export function resolveStaffWorkingHoursForDay(
-  params: {
-    schedule: StaffSchedule | undefined
-    hasAnyScheduleRows: boolean
-    businessHours: BusinessHours
-  }
-): StaffWorkingHoursResult {
+export function resolveStaffWorkingHoursForDay(params: {
+  schedule: StaffSchedule | undefined
+  hasAnyScheduleRows: boolean
+  businessHours: BusinessHours
+}): StaffWorkingHoursResult {
   const { schedule, hasAnyScheduleRows, businessHours } = params
 
   if (schedule) {
@@ -93,15 +97,13 @@ export function resolveStaffWorkingHoursForDay(
   return { ok: true, source: 'business', hours: businessHours }
 }
 
-export function validateStaffAvailability(
-  params: {
-    schedule: StaffSchedule | undefined
-    hasAnyScheduleRows: boolean
-    businessHours: BusinessHours
-    startTime: string
-    endTime: string
-  }
-): StaffAvailabilityResult {
+export function validateStaffAvailability(params: {
+  schedule: StaffSchedule | undefined
+  hasAnyScheduleRows: boolean
+  businessHours: BusinessHours
+  startTime: string
+  endTime: string
+}): StaffAvailabilityResult {
   const { businessHours, startTime, endTime } = params
   const resolved = resolveStaffWorkingHoursForDay(params)
 
@@ -109,7 +111,10 @@ export function validateStaffAvailability(
     return resolved
   }
 
-  if (resolved.source === 'staff' && !validateAgainstHours(startTime, endTime, resolved.hours)) {
+  if (
+    resolved.source === 'staff' &&
+    !validateAgainstHours(startTime, endTime, resolved.hours)
+  ) {
     return {
       ok: false,
       code: STAFF_AVAILABILITY_CODES.OUTSIDE_STAFF_HOURS,
@@ -119,7 +124,10 @@ export function validateStaffAvailability(
     }
   }
 
-  if (resolved.source === 'business' && !validateAgainstHours(startTime, endTime, resolved.hours)) {
+  if (
+    resolved.source === 'business' &&
+    !validateAgainstHours(startTime, endTime, resolved.hours)
+  ) {
     return {
       ok: false,
       code: STAFF_AVAILABILITY_CODES.OUTSIDE_BUSINESS_HOURS,

@@ -158,12 +158,20 @@ export function classifyImportContact(
   }
 
   if (input.phone == null) {
-    return { eligible: false, reason: 'invalid', invalidDetail: 'missing-phone' }
+    return {
+      eligible: false,
+      reason: 'invalid',
+      invalidDetail: 'missing-phone',
+    }
   }
 
   const phoneResult = phoneSchema.safeParse(input.phone)
   if (!phoneResult.success) {
-    return { eligible: false, reason: 'invalid', invalidDetail: 'invalid-phone' }
+    return {
+      eligible: false,
+      reason: 'invalid',
+      invalidDetail: 'invalid-phone',
+    }
   }
 
   const phone = phoneResult.data

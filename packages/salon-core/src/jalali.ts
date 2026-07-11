@@ -1,8 +1,16 @@
 const JALALI_MONTHS = [
-  'فروردین', 'اردیبهشت', 'خرداد',
-  'تیر', 'مرداد', 'شهریور',
-  'مهر', 'آبان', 'آذر',
-  'دی', 'بهمن', 'اسفند',
+  'فروردین',
+  'اردیبهشت',
+  'خرداد',
+  'تیر',
+  'مرداد',
+  'شهریور',
+  'مهر',
+  'آبان',
+  'آذر',
+  'دی',
+  'بهمن',
+  'اسفند',
 ] as const
 
 const JALALI_WEEKDAYS_SHORT = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] as const
@@ -49,7 +57,8 @@ export function toGregorian(jy: number, jm: number, jd: number) {
   const jy2 = jy - 979
   const jd2 = jd - 1
 
-  let jDayNo = 365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor(((jy2 % 33) + 3) / 4)
+  let jDayNo =
+    365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor(((jy2 % 33) + 3) / 4)
   for (let i = 0; i < jm - 1; i++) jDayNo += i < 6 ? 31 : 30
   jDayNo += jd2
 
@@ -77,7 +86,20 @@ export function toGregorian(jy: number, jm: number, jd: number) {
     gDayNo %= 365
   }
 
-  const gDaysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  const gDaysInMonth = [
+    31,
+    leap ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ]
   let gm = 0
   for (let i = 0; i < 12 && gDayNo >= gDaysInMonth[i]; i++) {
     gDayNo -= gDaysInMonth[i]
@@ -88,7 +110,7 @@ export function toGregorian(jy: number, jm: number, jd: number) {
 }
 
 export function isJalaliLeap(jy: number): boolean {
-  const rem = ((jy - 474) % 2820 + 2820) % 2820 + 474
+  const rem = ((((jy - 474) % 2820) + 2820) % 2820) + 474
   return ((rem + 38) * 682) % 2816 < 682
 }
 
@@ -105,7 +127,11 @@ export function parseGregorianToJalali(dateStr: string) {
 }
 
 /** Jalali date parts → Gregorian "yyyy-MM-dd" */
-export function jalaliToGregorianStr(jy: number, jm: number, jd: number): string {
+export function jalaliToGregorianStr(
+  jy: number,
+  jm: number,
+  jd: number,
+): string {
   const { gy, gm, gd } = toGregorian(jy, jm, jd)
   return `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`
 }
@@ -120,7 +146,9 @@ export function formatJalaliDate(dateStr: string): string {
 /** Format Gregorian "yyyy-MM-dd" as full Jalali with weekday: "شنبه، ۲۶ فروردین ۱۴۰۴" */
 export function formatJalaliFullDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00')
-  const weekday = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date)
+  const weekday = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(
+    date,
+  )
   const jalali = formatJalaliDate(dateStr)
   return `${weekday}، ${jalali}`
 }

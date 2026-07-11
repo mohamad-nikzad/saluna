@@ -117,9 +117,12 @@ export const availabilityQuerySchema = z
       param: { name: 'date', in: 'query' },
       example: '2026-06-07',
     }),
-    staffId: z.string().optional().openapi({
-      param: { name: 'staffId', in: 'query' },
-    }),
+    staffId: z
+      .string()
+      .optional()
+      .openapi({
+        param: { name: 'staffId', in: 'query' },
+      }),
   })
   .openapi('AppointmentAvailabilityQuery')
 

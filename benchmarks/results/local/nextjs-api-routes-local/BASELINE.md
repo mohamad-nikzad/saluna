@@ -9,14 +9,14 @@ _Auto-generated. Re-run: `STACK=nextjs-api-routes-local BASE_URL=http://localhos
 
 ## Results
 
-| Scenario | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) | RPS | Errors |
-|---|---:|---:|---:|---:|---:|---:|
-| GET /api/services (cheap read) | 6.76 | 9.68 | — | 7.02 | 1411 | 0.00% |
-| GET /api/appointments (heavy read) | 8.06 | 11.1 | — | 8.40 | 1181 | 0.00% |
-| GET /api/dashboard | 13.7 | 18.1 | — | 14.2 | 699 | 0.00% |
-| GET /api/today | 24.7 | 30.6 | — | 25.2 | 396 | 0.00% |
-| GET /api/auth/me | 5.91 | 8.75 | — | 6.33 | 3134 | 0.00% |
-| 7 endpoints, ramped 0→20 VUs | 51.2 | 146 | — | 57.1 | 870 | 0.00% |
+| Scenario                           | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) |  RPS | Errors |
+| ---------------------------------- | -------: | -------: | -------: | -------: | ---: | -----: |
+| GET /api/services (cheap read)     |     6.76 |     9.68 |        — |     7.02 | 1411 |  0.00% |
+| GET /api/appointments (heavy read) |     8.06 |     11.1 |        — |     8.40 | 1181 |  0.00% |
+| GET /api/dashboard                 |     13.7 |     18.1 |        — |     14.2 |  699 |  0.00% |
+| GET /api/today                     |     24.7 |     30.6 |        — |     25.2 |  396 |  0.00% |
+| GET /api/auth/me                   |     5.91 |     8.75 |        — |     6.33 | 3134 |  0.00% |
+| 7 endpoints, ramped 0→20 VUs       |     51.2 |      146 |        — |     57.1 |  870 |  0.00% |
 
 ## Source files
 

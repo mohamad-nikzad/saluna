@@ -18,7 +18,10 @@ import { ok } from '../lib/responses'
 function displayNameFor(user: User | undefined): string | null {
   if (!user) return null
   const handle = user.username ? `@${user.username}` : null
-  const name = [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
+  const name = [user.first_name, user.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
   return handle ?? (name.length > 0 ? name : null)
 }
 
@@ -42,7 +45,7 @@ function settingsDeepLinkMessage(): string {
 
 async function sendBotTextResult(
   chatId: string,
-  result: messagingCommands.BotTextResult
+  result: messagingCommands.BotTextResult,
 ): Promise<void> {
   for (const msg of result.messages) {
     await sendTelegramMessage({
@@ -66,12 +69,14 @@ function matchCommand(text: string): CommandKind | null {
   if (name === 'pending') return 'pending'
   if (name === 'today') return 'today'
   if (name === 'unlink') return 'unlink'
-  if (name === 'help' || name === 'start') return name === 'help' ? 'help' : null
+  if (name === 'help' || name === 'start')
+    return name === 'help' ? 'help' : null
   return null
 }
 
-export const messagingTelegramRoute = new Hono<AppEnv>()
-  .post('/webhook', async (c) => {
+export const messagingTelegramRoute = new Hono<AppEnv>().post(
+  '/webhook',
+  async (c) => {
     const config = getTelegramConfig()
     if (!config) {
       return ok(c, { ok: true })
@@ -217,7 +222,8 @@ export const messagingTelegramRoute = new Hono<AppEnv>()
     }
 
     return ok(c, { ok: true })
-  })
+  },
+)
 
 const CALLBACK_DATA_RE = /^(approve|reject|back):([0-9a-f-]{8,})$/i
 const ASSIGN_DATA_RE = /^asg:([0-9a-f-]{8,}):(\d+)$/i
@@ -230,11 +236,18 @@ function parseCallbackData(data: string | undefined): ParsedCallback | null {
   if (!data) return null
   const assign = data.match(ASSIGN_DATA_RE)
   if (assign) {
-    return { action: 'asg', requestId: assign[1]!, staffIndex: Number(assign[2]!) }
+    return {
+      action: 'asg',
+      requestId: assign[1]!,
+      staffIndex: Number(assign[2]!),
+    }
   }
   const m = data.match(CALLBACK_DATA_RE)
   if (!m) return null
-  return { action: m[1]!.toLowerCase() as 'approve' | 'reject' | 'back', requestId: m[2]! }
+  return {
+    action: m[1]!.toLowerCase() as 'approve' | 'reject' | 'back',
+    requestId: m[2]!,
+  }
 }
 
 export type MessagingTelegramRoute = typeof messagingTelegramRoute

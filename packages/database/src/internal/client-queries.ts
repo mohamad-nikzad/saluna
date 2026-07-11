@@ -3,7 +3,10 @@ import {
   clientBulkCreateItemSchema,
   type ClientBulkCreateItemPayload,
 } from '@repo/salon-core/forms/client'
-import { canonicalSalonPhone, phoneLookupVariants } from '@repo/salon-core/phone'
+import {
+  canonicalSalonPhone,
+  phoneLookupVariants,
+} from '@repo/salon-core/phone'
 import type { Client, ClientTag } from '@repo/salon-core/types'
 import { getDb } from '../client'
 import { clients, clientTags } from '../schema'
@@ -33,7 +36,9 @@ async function getExistingCanonicalPhones(
   const rows = await db
     .select({ phone: clients.phone })
     .from(clients)
-    .where(and(eq(clients.salonId, salonId), inArray(clients.phone, allVariants)))
+    .where(
+      and(eq(clients.salonId, salonId), inArray(clients.phone, allVariants)),
+    )
 
   const existing = new Set<string>()
   for (const row of rows) {
@@ -54,7 +59,7 @@ function mapTagsByClient(rows: ClientTag[]): Map<string, ClientTag[]> {
 
 export async function getAllClients(
   salonId: string,
-  options: { includePlaceholders?: boolean } = {}
+  options: { includePlaceholders?: boolean } = {},
 ): Promise<Client[]> {
   const db = getDb()
   const rows = await db
@@ -63,8 +68,10 @@ export async function getAllClients(
     .where(
       and(
         eq(clients.salonId, salonId),
-        options.includePlaceholders ? undefined : eq(clients.isPlaceholder, false)
-      )
+        options.includePlaceholders
+          ? undefined
+          : eq(clients.isPlaceholder, false),
+      ),
     )
     .orderBy(asc(clients.name))
   if (rows.length === 0) return []
@@ -72,7 +79,15 @@ export async function getAllClients(
   const tagRows = await db
     .select()
     .from(clientTags)
-    .where(and(eq(clientTags.salonId, salonId), inArray(clientTags.clientId, rows.map((r) => r.id))))
+    .where(
+      and(
+        eq(clientTags.salonId, salonId),
+        inArray(
+          clientTags.clientId,
+          rows.map((r) => r.id),
+        ),
+      ),
+    )
     .orderBy(asc(clientTags.label))
   const tagsByClient = mapTagsByClient(tagRows.map(rowToClientTag))
 
@@ -82,7 +97,10 @@ export async function getAllClients(
   }))
 }
 
-export async function getClientById(id: string, salonId: string): Promise<Client | undefined> {
+export async function getClientById(
+  id: string,
+  salonId: string,
+): Promise<Client | undefined> {
   const db = getDb()
   const rows = await db
     .select()
@@ -95,7 +113,7 @@ export async function getClientById(id: string, salonId: string): Promise<Client
 
 export async function getClientByPhone(
   phone: string,
-  salonId: string
+  salonId: string,
 ): Promise<Client | undefined> {
   const db = getDb()
   const variants = phoneLookupVariants(phone)
@@ -116,16 +134,14 @@ export function isClientProvidedEntityId(id: string | undefined): id is string {
   )
 }
 
-export async function createClient(
-  input: {
-    salonId: string
-    id?: string
-    name: string
-    phone?: string | null
-    notes?: string
-    isPlaceholder?: boolean
-  }
-): Promise<Client> {
+export async function createClient(input: {
+  salonId: string
+  id?: string
+  name: string
+  phone?: string | null
+  notes?: string
+  isPlaceholder?: boolean
+}): Promise<Client> {
   const db = getDb()
   const values: typeof clients.$inferInsert = {
     salonId: input.salonId,
@@ -193,12 +209,13 @@ export async function createClientsBulk(
 export async function updateClient(
   id: string,
   salonId: string,
-  data: Partial<Pick<Client, 'name' | 'phone' | 'notes' | 'isPlaceholder'>>
+  data: Partial<Pick<Client, 'name' | 'phone' | 'notes' | 'isPlaceholder'>>,
 ): Promise<Client | undefined> {
   const db = getDb()
   const patch: Partial<typeof clients.$inferInsert> = {}
   if (data.name !== undefined) patch.name = data.name
-  if (data.phone !== undefined) patch.phone = data.phone ? canonicalSalonPhone(data.phone) : null
+  if (data.phone !== undefined)
+    patch.phone = data.phone ? canonicalSalonPhone(data.phone) : null
   if (data.notes !== undefined) patch.notes = data.notes
   if (data.isPlaceholder !== undefined) patch.isPlaceholder = data.isPlaceholder
 
@@ -210,7 +227,10 @@ export async function updateClient(
   return row ? rowToClient(row) : undefined
 }
 
-export async function deleteClient(id: string, salonId: string): Promise<boolean> {
+export async function deleteClient(
+  id: string,
+  salonId: string,
+): Promise<boolean> {
   const db = getDb()
   const deleted = await db
     .delete(clients)
@@ -221,32 +241,42 @@ export async function deleteClient(id: string, salonId: string): Promise<boolean
 
 const tagColors: Record<string, string> = {
   VIP: 'bg-amber-100 text-amber-800 border-amber-200',
-  'حساسیت': 'bg-rose-100 text-rose-800 border-rose-200',
+  حساسیت: 'bg-rose-100 text-rose-800 border-rose-200',
   'رنگ خاص': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
   'نیاز به پیگیری': 'bg-cyan-100 text-cyan-800 border-cyan-200',
-  'بدقول': 'bg-orange-100 text-orange-800 border-orange-200',
+  بدقول: 'bg-orange-100 text-orange-800 border-orange-200',
 }
 
-export async function getClientTags(clientId: string, salonId: string): Promise<ClientTag[]> {
+export async function getClientTags(
+  clientId: string,
+  salonId: string,
+): Promise<ClientTag[]> {
   const db = getDb()
   const rows = await db
     .select()
     .from(clientTags)
-    .where(and(eq(clientTags.salonId, salonId), eq(clientTags.clientId, clientId)))
+    .where(
+      and(eq(clientTags.salonId, salonId), eq(clientTags.clientId, clientId)),
+    )
     .orderBy(asc(clientTags.label))
   return rows.map(rowToClientTag)
 }
 
 export async function getClientTagsForClients(
   clientIds: string[],
-  salonId: string
+  salonId: string,
 ): Promise<Map<string, ClientTag[]>> {
   if (clientIds.length === 0) return new Map()
   const db = getDb()
   const rows = await db
     .select()
     .from(clientTags)
-    .where(and(eq(clientTags.salonId, salonId), inArray(clientTags.clientId, clientIds)))
+    .where(
+      and(
+        eq(clientTags.salonId, salonId),
+        inArray(clientTags.clientId, clientIds),
+      ),
+    )
     .orderBy(asc(clientTags.label))
   return mapTagsByClient(rows.map(rowToClientTag))
 }
@@ -254,15 +284,19 @@ export async function getClientTagsForClients(
 export async function setClientTags(
   clientId: string,
   salonId: string,
-  labels: string[]
+  labels: string[],
 ): Promise<ClientTag[]> {
   const db = getDb()
-  const normalized = [...new Set(labels.map((l) => l.trim()).filter(Boolean))].slice(0, 8)
+  const normalized = [
+    ...new Set(labels.map((l) => l.trim()).filter(Boolean)),
+  ].slice(0, 8)
 
   await db.transaction(async (tx) => {
     await tx
       .delete(clientTags)
-      .where(and(eq(clientTags.salonId, salonId), eq(clientTags.clientId, clientId)))
+      .where(
+        and(eq(clientTags.salonId, salonId), eq(clientTags.clientId, clientId)),
+      )
 
     if (normalized.length > 0) {
       await tx.insert(clientTags).values(
@@ -271,7 +305,7 @@ export async function setClientTags(
           clientId,
           label,
           color: tagColors[label] ?? 'bg-muted text-foreground border-border',
-        }))
+        })),
       )
     }
   })

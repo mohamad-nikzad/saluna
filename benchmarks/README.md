@@ -5,14 +5,14 @@ Tagged baselines of the API so we can compare stacks before/after migration:
 
 ## Scenarios
 
-| File | Endpoint | Purpose |
-|---|---|---|
-| `01-cheap-read.js` | `GET /api/services` | Simple list read |
-| `02-heavy-read.js` | `GET /api/appointments` | Joined query, hot path |
-| `03-dashboard.js` | `GET /api/dashboard` | Aggregated dashboard data |
-| `04-today.js` | `GET /api/today` | Today view, common entry point |
-| `05-auth-me.js` | `GET /api/auth/me` | Auth middleware + JWT verify cost |
-| `06-mixed-load.js` | 7 endpoints in parallel | Realistic ramped load (0→20 VUs) |
+| File               | Endpoint                | Purpose                           |
+| ------------------ | ----------------------- | --------------------------------- |
+| `01-cheap-read.js` | `GET /api/services`     | Simple list read                  |
+| `02-heavy-read.js` | `GET /api/appointments` | Joined query, hot path            |
+| `03-dashboard.js`  | `GET /api/dashboard`    | Aggregated dashboard data         |
+| `04-today.js`      | `GET /api/today`        | Today view, common entry point    |
+| `05-auth-me.js`    | `GET /api/auth/me`      | Auth middleware + JWT verify cost |
+| `06-mixed-load.js` | 7 endpoints in parallel | Realistic ramped load (0→20 VUs)  |
 
 Reads only. Safe to run against production.
 
@@ -23,11 +23,13 @@ brew install k6
 ```
 
 Seeded credentials (`scripts/db-seed.ts`) are the defaults:
+
 - phone `09120000000`, password `admin123`. Override via `BENCH_PHONE` / `BENCH_PASSWORD`.
 
 ## How tagging works
 
 Every run takes a `STACK` env var (default: `nextjs-api-routes`). Reports land under:
+
 ```
 benchmarks/results/<env>/<stack>/<scenario>-<timestamp>.{html,json}
 benchmarks/results/<env>/<stack>/BASELINE.md   # auto-generated summary
@@ -67,6 +69,7 @@ The comparison shows `stackB − stackA` (negative = improvement) with both abso
 ## GitHub Actions (recommended for prod)
 
 Trigger manually: `Actions → API Benchmark → Run workflow`. Inputs:
+
 - **stack** — `nextjs-api-routes`, `hono-node`, etc.
 - **scenario** — `all` or a single scenario name
 
@@ -87,10 +90,10 @@ deltas. Three ways around it:
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `pnpm bench:local` | Run all scenarios against `localhost:3000`, default tag |
-| `pnpm bench:prod` | Run all scenarios against prod, default tag |
-| `pnpm bench:summary` | Re-build all `BASELINE.md` files from existing JSON |
-| `pnpm bench:compare <env> <stackA> <stackB>` | Diff two stacks |
-| `STACK=<tag> ./benchmarks/run.sh [scenario]` | Custom tag, one or all scenarios |
+| Command                                      | What it does                                            |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `pnpm bench:local`                           | Run all scenarios against `localhost:3000`, default tag |
+| `pnpm bench:prod`                            | Run all scenarios against prod, default tag             |
+| `pnpm bench:summary`                         | Re-build all `BASELINE.md` files from existing JSON     |
+| `pnpm bench:compare <env> <stackA> <stackB>` | Diff two stacks                                         |
+| `STACK=<tag> ./benchmarks/run.sh [scenario]` | Custom tag, one or all scenarios                        |

@@ -72,7 +72,10 @@ function SelectSalonPage() {
                 className="w-full justify-start gap-3 rounded-2xl border-line-soft text-right"
                 onClick={() => void selectSalon(salon)}
               >
-                <Building2 className="size-5 shrink-0 text-primary" strokeWidth={1.8} />
+                <Building2
+                  className="size-5 shrink-0 text-primary"
+                  strokeWidth={1.8}
+                />
                 <span className="min-w-0 flex-1 truncate font-bold text-foreground">
                   {salon.salonName}
                 </span>

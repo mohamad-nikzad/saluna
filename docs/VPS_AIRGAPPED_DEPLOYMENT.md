@@ -59,12 +59,12 @@ versioning is image-tag based.
 
 Source package versions now declared in the repo:
 
-| Package | Current `package.json` version | Deployment meaning |
-| --- | --- | --- |
-| root `saluna` | `0.1.0` | workspace/package metadata only |
-| `@repo/api` | `0.7.0` | current API app version |
-| `@repo/web` | `0.4.0` | current public web app version |
-| `@repo/pwa` | `0.7.0` | current manager PWA app version |
+| Package       | Current `package.json` version | Deployment meaning              |
+| ------------- | ------------------------------ | ------------------------------- |
+| root `saluna` | `0.1.0`                        | workspace/package metadata only |
+| `@repo/api`   | `0.7.0`                        | current API app version         |
+| `@repo/web`   | `0.4.0`                        | current public web app version  |
+| `@repo/pwa`   | `0.7.0`                        | current manager PWA app version |
 
 These are bootstrap SemVer baselines assigned on `2026-06-06` from the current
 feature maturity. They are not a reconstruction of historical release numbers;
@@ -72,11 +72,11 @@ they start the app-version history from this point forward.
 
 Current deploy/image versioning:
 
-| App | Current image name | Current local configured tag | Last audited VPS tag |
-| --- | --- | --- | --- |
-| API | `saluna-api` | `2026-06-05-1` | `2026-06-04-1304` |
-| Public web | `saluna-web` | `2026-06-05-1` | `2026-06-04-1304` |
-| Manager PWA | `saluna-pwa` | `2026-06-05-1` | `2026-06-04-1304` |
+| App         | Current image name | Current local configured tag | Last audited VPS tag |
+| ----------- | ------------------ | ---------------------------- | -------------------- |
+| API         | `saluna-api`       | `2026-06-05-1`               | `2026-06-04-1304`    |
+| Public web  | `saluna-web`       | `2026-06-05-1`               | `2026-06-04-1304`    |
+| Manager PWA | `saluna-pwa`       | `2026-06-05-1`               | `2026-06-04-1304`    |
 
 Where those values come from:
 
@@ -91,11 +91,11 @@ Where those values come from:
 
 Current artifact reality:
 
-| Artifact | Current size |
-| --- | ---: |
-| `deploy/releases/saluna-apps-2026-06-05-1.tar.gz` | `497M` |
-| `deploy/releases/saluna-apps-2026-06-04-1304.tar.gz` | `498M` |
-| `deploy/releases/saluna-infra-postgres16-nginx127.tar.gz` | `134M` |
+| Artifact                                                  | Current size |
+| --------------------------------------------------------- | -----------: |
+| `deploy/releases/saluna-apps-2026-06-05-1.tar.gz`         |       `497M` |
+| `deploy/releases/saluna-apps-2026-06-04-1304.tar.gz`      |       `498M` |
+| `deploy/releases/saluna-infra-postgres16-nginx127.tar.gz` |       `134M` |
 
 This is why the target CI/CD plan should move away from app tarballs as the
 normal path. A single changed app currently creates and ships a roughly 500 MB
@@ -106,11 +106,11 @@ Target app versioning:
 Use independent SemVer-style app versions for each deployable app, and use image
 tags as build identifiers derived from those versions.
 
-| App | Version source | Current version | Example next patch | Example next feature |
-| --- | --- | ---: | ---: | ---: |
-| API | `apps/api/package.json` | `0.7.0` | `0.7.1` | `0.8.0` |
-| Public web | `apps/web/package.json` | `0.4.0` | `0.4.1` | `0.5.0` |
-| Manager PWA | `apps/pwa/package.json` | `0.7.0` | `0.7.1` | `0.8.0` |
+| App         | Version source          | Current version | Example next patch | Example next feature |
+| ----------- | ----------------------- | --------------: | -----------------: | -------------------: |
+| API         | `apps/api/package.json` |         `0.7.0` |            `0.7.1` |              `0.8.0` |
+| Public web  | `apps/web/package.json` |         `0.4.0` |            `0.4.1` |              `0.5.0` |
+| Manager PWA | `apps/pwa/package.json` |         `0.7.0` |            `0.7.1` |              `0.8.0` |
 
 The root `package.json` can stay as workspace metadata, or become a product
 release version later. It should not block independent app releases.
@@ -215,11 +215,11 @@ push to HamGit
 
 Target behavior by app:
 
-| Changed app | Build | VPS action | Extra step |
-| --- | --- | --- | --- |
-| `api` | `saluna-api` | pull and restart `api`, then `gateway` if needed | backup + migrations + API smoke check |
-| `web` | `saluna-web` | pull and restart `web` | public site smoke check |
-| `pwa` | `saluna-pwa` | pull and restart `pwa` | manager PWA smoke check |
+| Changed app | Build        | VPS action                                       | Extra step                            |
+| ----------- | ------------ | ------------------------------------------------ | ------------------------------------- |
+| `api`       | `saluna-api` | pull and restart `api`, then `gateway` if needed | backup + migrations + API smoke check |
+| `web`       | `saluna-web` | pull and restart `web`                           | public site smoke check               |
+| `pwa`       | `saluna-pwa` | pull and restart `pwa`                           | manager PWA smoke check               |
 
 The resumable implementation slice for that target now exists:
 
@@ -272,14 +272,14 @@ Keep artifact retention boring:
 
 ## Production Stack
 
-| Host | Service | Container | Notes |
-| --- | --- | --- | --- |
-| `saluna.ir`, `www.saluna.ir` | Astro public and appointment-request site | `web` | `@repo/web`, port `3001` |
-| `app.saluna.ir` | Manager PWA | `pwa` | `@repo/pwa`, Nginx static build |
-| `api.saluna.ir` | Hono API | `api` | bundled Node server, port `3002` |
-| internal only | PostgreSQL | `postgres` | Postgres 16 named volume |
-| `80`, `443` | Gateway | `gateway` | Nginx host router |
-| `127.0.0.1:5000` | Optional local registry | `registry` | only with Compose profile `registry` |
+| Host                         | Service                                   | Container  | Notes                                |
+| ---------------------------- | ----------------------------------------- | ---------- | ------------------------------------ |
+| `saluna.ir`, `www.saluna.ir` | Astro public and appointment-request site | `web`      | `@repo/web`, port `3001`             |
+| `app.saluna.ir`              | Manager PWA                               | `pwa`      | `@repo/pwa`, Nginx static build      |
+| `api.saluna.ir`              | Hono API                                  | `api`      | bundled Node server, port `3002`     |
+| internal only                | PostgreSQL                                | `postgres` | Postgres 16 named volume             |
+| `80`, `443`                  | Gateway                                   | `gateway`  | Nginx host router                    |
+| `127.0.0.1:5000`             | Optional local registry                   | `registry` | only with Compose profile `registry` |
 
 The app must be client-facing HTTPS in production. ArvanCloud TLS termination is
 enough for browsers if public users access `https://...`; the origin may be HTTP
@@ -385,21 +385,21 @@ cp .env.production.example .env.production
 
 Fill in at minimum:
 
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `SALUNA_IMAGE_TAG` | yes | immutable tag; git SHA or dated release |
-| `DOCKER_PLATFORM` | yes | `linux/amd64` for the current VPS |
-| `POSTGRES_PASSWORD` | yes | keep aligned with `DATABASE_URL` values |
-| `DATABASE_URL` | yes | runtime URL, usually `postgres:5432` inside Compose |
-| `DATABASE_URL_DIRECT` | recommended | migrations/seeds prefer this, can match `DATABASE_URL` |
-| `JWT_SECRET` | yes | at least 32 random characters in production |
-| `BETTER_AUTH_SECRET` | yes | long random secret |
-| `BETTER_AUTH_URL` | yes | `https://api.saluna.ir` |
-| `PWA_ORIGIN` | yes | `https://app.saluna.ir` for Better Auth trusted origin |
-| `CORS_ORIGINS` | yes | include `https://app.saluna.ir` and public origins |
-| `SALUNA_IMAGE_REGISTRY` | optional | set to `127.0.0.1:5000/` for local registry flow, or `registry.hamdocker.ir/<namespace>/` for registry-first deploys |
-| `VITE_*`, `PUBLIC_*` | yes for builds | public origins baked into app images |
-| VAPID/SMS/Telegram secrets | optional | required only when enabling those providers |
+| Variable                   | Required       | Notes                                                                                                                |
+| -------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `SALUNA_IMAGE_TAG`         | yes            | immutable tag; git SHA or dated release                                                                              |
+| `DOCKER_PLATFORM`          | yes            | `linux/amd64` for the current VPS                                                                                    |
+| `POSTGRES_PASSWORD`        | yes            | keep aligned with `DATABASE_URL` values                                                                              |
+| `DATABASE_URL`             | yes            | runtime URL, usually `postgres:5432` inside Compose                                                                  |
+| `DATABASE_URL_DIRECT`      | recommended    | migrations/seeds prefer this, can match `DATABASE_URL`                                                               |
+| `JWT_SECRET`               | yes            | at least 32 random characters in production                                                                          |
+| `BETTER_AUTH_SECRET`       | yes            | long random secret                                                                                                   |
+| `BETTER_AUTH_URL`          | yes            | `https://api.saluna.ir`                                                                                              |
+| `PWA_ORIGIN`               | yes            | `https://app.saluna.ir` for Better Auth trusted origin                                                               |
+| `CORS_ORIGINS`             | yes            | include `https://app.saluna.ir` and public origins                                                                   |
+| `SALUNA_IMAGE_REGISTRY`    | optional       | set to `127.0.0.1:5000/` for local registry flow, or `registry.hamdocker.ir/<namespace>/` for registry-first deploys |
+| `VITE_*`, `PUBLIC_*`       | yes for builds | public origins baked into app images                                                                                 |
+| VAPID/SMS/Telegram secrets | optional       | required only when enabling those providers                                                                          |
 
 Generate long secrets with:
 
@@ -479,13 +479,13 @@ VPS_HOST=YOUR_VPS_ORIGIN_IP ./scripts/upload-airgap-release.sh
 
 Useful upload knobs:
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `SSH_USER` | `deploy` | remote SSH user |
-| `SSH_KEY` | empty | optional SSH key path |
-| `REMOTE_DIR` | `/opt/saluna` | remote app directory |
-| `UPLOAD_INFRA` | `0` | copy infra tarball and checksum |
-| `UPLOAD_ENV` | `1` | copy `.env.production` |
+| Variable       | Default       | Meaning                         |
+| -------------- | ------------- | ------------------------------- |
+| `SSH_USER`     | `deploy`      | remote SSH user                 |
+| `SSH_KEY`      | empty         | optional SSH key path           |
+| `REMOTE_DIR`   | `/opt/saluna` | remote app directory            |
+| `UPLOAD_INFRA` | `0`           | copy infra tarball and checksum |
+| `UPLOAD_ENV`   | `1`           | copy `.env.production`          |
 
 If SSH transfer is blocked, copy the same files by any available channel and put
 release bundles under `/opt/saluna/releases`.
@@ -683,15 +683,15 @@ pnpm --filter @repo/api cli:messaging-set-webhook -- --provider=bale
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| `./scripts/pwaly-airgap-release.sh: No such file` | stale docs or command | use `./scripts/apply-airgap-release.sh` |
-| `saluna-gateway` exits immediately | missing origin cert files | install `saluna-origin.crt` and `saluna-origin.key`, or change gateway to HTTP-only |
-| external `pwa.saluna.ir` fails | wrong hostname | use `app.saluna.ir` |
-| API CORS/auth fails from manager app | `PWA_ORIGIN` or `CORS_ORIGINS` missing `https://app.saluna.ir` | update env, restart API |
-| PWA points at old API/app URL | `VITE_*` values were baked into old image | bump `SALUNA_IMAGE_TAG`, rebuild, redeploy |
-| `docker pull` times out on VPS | international registry blocked | use infra tarball or HamDocker mirror |
-| rollback starts but data looks wrong | migration was not backward-compatible | restore the matching predeploy backup |
+| Symptom                                           | Likely cause                                                   | Fix                                                                                 |
+| ------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `./scripts/pwaly-airgap-release.sh: No such file` | stale docs or command                                          | use `./scripts/apply-airgap-release.sh`                                             |
+| `saluna-gateway` exits immediately                | missing origin cert files                                      | install `saluna-origin.crt` and `saluna-origin.key`, or change gateway to HTTP-only |
+| external `pwa.saluna.ir` fails                    | wrong hostname                                                 | use `app.saluna.ir`                                                                 |
+| API CORS/auth fails from manager app              | `PWA_ORIGIN` or `CORS_ORIGINS` missing `https://app.saluna.ir` | update env, restart API                                                             |
+| PWA points at old API/app URL                     | `VITE_*` values were baked into old image                      | bump `SALUNA_IMAGE_TAG`, rebuild, redeploy                                          |
+| `docker pull` times out on VPS                    | international registry blocked                                 | use infra tarball or HamDocker mirror                                               |
+| rollback starts but data looks wrong              | migration was not backward-compatible                          | restore the matching predeploy backup                                               |
 
 ## Recommended Follow-Ups
 

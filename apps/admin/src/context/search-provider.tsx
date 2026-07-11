@@ -1,4 +1,11 @@
-import { createContext, use, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  use,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 
 type SearchContextValue = {
   open: boolean

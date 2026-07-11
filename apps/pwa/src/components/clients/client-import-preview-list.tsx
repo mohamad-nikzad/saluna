@@ -120,7 +120,7 @@ export function ClientImportPreviewList({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 space-y-2 border-b border-line-soft px-4 py-3">
-      <div className="relative px-1 py-1.5">
+        <div className="relative px-1 py-1.5">
           <Input
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -156,8 +156,6 @@ export function ClientImportPreviewList({
             </button>
           ))}
         </div>
-
-
 
         {isEligibleView ? (
           <label className="flex min-h-8 items-center justify-start gap-2 text-sm">

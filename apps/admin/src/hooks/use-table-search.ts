@@ -27,7 +27,10 @@ export function useTableSearch(
 ) {
   const search = useSearch({ from }) as TableSearch
   const navigate = useNavigate({ from: TABLE_ROUTE_TO[from] })
-  const defaults = { page: DEFAULT_TABLE_SEARCH.page, pageSize: defaultPageSize }
+  const defaults = {
+    page: DEFAULT_TABLE_SEARCH.page,
+    pageSize: defaultPageSize,
+  }
 
   const state = {
     page: search.page ?? defaults.page,
@@ -46,10 +49,7 @@ export function useTableSearch(
               next.pageSize ?? current.pageSize ?? defaults.pageSize,
               defaults.pageSize,
             ),
-            q:
-              next.query !== undefined
-                ? next.query || undefined
-                : current.q,
+            q: next.query !== undefined ? next.query || undefined : current.q,
           },
           defaults,
         )

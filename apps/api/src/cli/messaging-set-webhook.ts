@@ -60,11 +60,15 @@ export function parseProviderArg(argv: string[]): Provider {
   }
 
   if (sawProviderArg && !value) {
-    throw new Error('Missing provider value. Use --provider=telegram or --provider=bale.')
+    throw new Error(
+      'Missing provider value. Use --provider=telegram or --provider=bale.',
+    )
   }
   if (!value) return 'telegram'
   if (value === 'telegram' || value === 'bale') return value
-  throw new Error(`Unsupported provider "${value}". Use --provider=telegram or --provider=bale.`)
+  throw new Error(
+    `Unsupported provider "${value}". Use --provider=telegram or --provider=bale.`,
+  )
 }
 
 async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
@@ -72,14 +76,14 @@ async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
   const url = env.TELEGRAM_WEBHOOK_URL?.trim()
   if (!config || !url) {
     console.error(
-      '[messaging-set-webhook] missing TELEGRAM_ENABLED config or TELEGRAM_WEBHOOK_URL'
+      '[messaging-set-webhook] missing TELEGRAM_ENABLED config or TELEGRAM_WEBHOOK_URL',
     )
     return 2
   }
   const secret = config.webhookSecret
   if (!isValidTelegramWebhookSecret(secret)) {
     console.error(
-      '[messaging-set-webhook] TELEGRAM_WEBHOOK_SECRET must be 1–256 chars using only A–Z, a–z, 0–9, underscore, or hyphen'
+      '[messaging-set-webhook] TELEGRAM_WEBHOOK_SECRET must be 1–256 chars using only A–Z, a–z, 0–9, underscore, or hyphen',
     )
     return 2
   }
@@ -94,7 +98,10 @@ async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
     })
     console.log('[messaging-set-webhook] setWebhook ok')
   } catch (err) {
-    console.error('[messaging-set-webhook] setWebhook failed:', describeError(err))
+    console.error(
+      '[messaging-set-webhook] setWebhook failed:',
+      describeError(err),
+    )
     return 1
   }
 
@@ -103,14 +110,19 @@ async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
     await api.setMyCommands(BOT_COMMANDS)
     console.log('[messaging-set-webhook] setMyCommands ok (fa + default)')
   } catch (err) {
-    console.error('[messaging-set-webhook] setMyCommands failed:', describeError(err))
+    console.error(
+      '[messaging-set-webhook] setMyCommands failed:',
+      describeError(err),
+    )
     return 1
   }
 
-  const webAppUrl = (env.MESSAGING_PWA_BASE_URL ?? env.PUBLIC_APP_BASE_URL)?.trim()
+  const webAppUrl = (
+    env.MESSAGING_PWA_BASE_URL ?? env.PUBLIC_APP_BASE_URL
+  )?.trim()
   if (webAppUrl && !webAppUrl.startsWith('https://')) {
     console.warn(
-      `[messaging-set-webhook] skipping menu button: Telegram requires HTTPS, got "${webAppUrl}". Set MESSAGING_PWA_BASE_URL to an HTTPS URL (e.g. tunnel your PWA) to enable.`
+      `[messaging-set-webhook] skipping menu button: Telegram requires HTTPS, got "${webAppUrl}". Set MESSAGING_PWA_BASE_URL to an HTTPS URL (e.g. tunnel your PWA) to enable.`,
     )
   } else if (webAppUrl) {
     try {
@@ -123,12 +135,15 @@ async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
       })
       console.log(`[messaging-set-webhook] setChatMenuButton ok (${webAppUrl})`)
     } catch (err) {
-      console.error('[messaging-set-webhook] setChatMenuButton failed:', describeError(err))
+      console.error(
+        '[messaging-set-webhook] setChatMenuButton failed:',
+        describeError(err),
+      )
       return 1
     }
   } else {
     console.warn(
-      '[messaging-set-webhook] MESSAGING_PWA_BASE_URL / PUBLIC_APP_BASE_URL not set; skipping menu button'
+      '[messaging-set-webhook] MESSAGING_PWA_BASE_URL / PUBLIC_APP_BASE_URL not set; skipping menu button',
     )
   }
 
@@ -138,14 +153,19 @@ async function setTelegramWebhookFromEnv(env: Env): Promise<number> {
 async function setBaleWebhookFromEnv(env: Env): Promise<number> {
   const resolved = resolveBaleWebhookInput(env)
   if (!resolved) {
-    console.error('[messaging-set-webhook] missing BALE_ENABLED config or BALE_WEBHOOK_URL')
+    console.error(
+      '[messaging-set-webhook] missing BALE_ENABLED config or BALE_WEBHOOK_URL',
+    )
     return 2
   }
 
   try {
     assertBaleWebhookUrl(resolved.url, resolved.config.webhookSecret)
   } catch (err) {
-    console.error('[messaging-set-webhook] invalid BALE_WEBHOOK_URL:', describeError(err))
+    console.error(
+      '[messaging-set-webhook] invalid BALE_WEBHOOK_URL:',
+      describeError(err),
+    )
     return 2
   }
 
@@ -154,7 +174,10 @@ async function setBaleWebhookFromEnv(env: Env): Promise<number> {
     console.log('[messaging-set-webhook] Bale setWebhook ok')
     return 0
   } catch (err) {
-    console.error('[messaging-set-webhook] Bale setWebhook failed:', describeError(err))
+    console.error(
+      '[messaging-set-webhook] Bale setWebhook failed:',
+      describeError(err),
+    )
     return 1
   }
 }
@@ -189,7 +212,9 @@ export function assertBaleWebhookUrl(url: string, secret: string): void {
     })
 
   if (!hasSecretSegment) {
-    throw new Error('BALE_WEBHOOK_URL must include BALE_WEBHOOK_SECRET as a path segment')
+    throw new Error(
+      'BALE_WEBHOOK_URL must include BALE_WEBHOOK_SECRET as a path segment',
+    )
   }
 }
 
@@ -213,9 +238,11 @@ export async function setBaleWebhook(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  const body = (await res.json().catch(() => null)) as
-    | { ok?: boolean; description?: string; error_code?: number }
-    | null
+  const body = (await res.json().catch(() => null)) as {
+    ok?: boolean
+    description?: string
+    error_code?: number
+  } | null
 
   if (!res.ok || body?.ok !== true) {
     const status = res.ok ? '' : `HTTP ${res.status}: `
@@ -230,7 +257,10 @@ function describeError(err: unknown): string {
   return String(err)
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main()
     .then((code) => {
       process.exitCode = code

@@ -6,7 +6,10 @@ import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+)
 
 function ensureDocker() {
   const check = spawnSync('docker', ['info'], {
@@ -53,7 +56,7 @@ function waitForPostgres(maxAttempts = 30) {
         '-d',
         'salon',
       ],
-      { cwd: repoRoot, encoding: 'utf8' }
+      { cwd: repoRoot, encoding: 'utf8' },
     )
     if (probe.status === 0) return
     spawnSync('sleep', ['1'], { cwd: repoRoot })

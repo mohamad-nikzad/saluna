@@ -16,7 +16,7 @@ export type PublicSubmitRateLimitResult =
  * window so the table stays small.
  */
 export async function checkAndRecordPublicSubmit(
-  ip: string
+  ip: string,
 ): Promise<PublicSubmitRateLimitResult> {
   const db = getDb()
   const now = new Date()
@@ -25,7 +25,12 @@ export async function checkAndRecordPublicSubmit(
   // Purge stale rows for this IP first to keep the count query honest.
   await db
     .delete(publicSubmitRateLimits)
-    .where(and(eq(publicSubmitRateLimits.ip, ip), lt(publicSubmitRateLimits.createdAt, windowStart)))
+    .where(
+      and(
+        eq(publicSubmitRateLimits.ip, ip),
+        lt(publicSubmitRateLimits.createdAt, windowStart),
+      ),
+    )
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -33,8 +38,8 @@ export async function checkAndRecordPublicSubmit(
     .where(
       and(
         eq(publicSubmitRateLimits.ip, ip),
-        gte(publicSubmitRateLimits.createdAt, windowStart)
-      )
+        gte(publicSubmitRateLimits.createdAt, windowStart),
+      ),
     )
 
   if (count >= PUBLIC_SUBMIT_MAX_PER_WINDOW) {
@@ -44,13 +49,16 @@ export async function checkAndRecordPublicSubmit(
       .where(
         and(
           eq(publicSubmitRateLimits.ip, ip),
-          gte(publicSubmitRateLimits.createdAt, windowStart)
-        )
+          gte(publicSubmitRateLimits.createdAt, windowStart),
+        ),
       )
       .orderBy(publicSubmitRateLimits.createdAt)
       .limit(1)
     const retryAfterMs = oldest
-      ? Math.max(0, oldest.createdAt.getTime() + PUBLIC_SUBMIT_WINDOW_MS - now.getTime())
+      ? Math.max(
+          0,
+          oldest.createdAt.getTime() + PUBLIC_SUBMIT_WINDOW_MS - now.getTime(),
+        )
       : PUBLIC_SUBMIT_WINDOW_MS
     return { allowed: false, retryAfterMs }
   }

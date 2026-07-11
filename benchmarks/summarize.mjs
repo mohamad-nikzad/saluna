@@ -6,7 +6,13 @@
 //   node benchmarks/summarize.mjs                       # every env × stack found
 //   node benchmarks/summarize.mjs prod                  # all stacks under prod
 //   node benchmarks/summarize.mjs prod hono-node        # one env × stack
-import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
+import {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  statSync,
+} from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
@@ -64,13 +70,21 @@ export function extract(jsonPath) {
 
 function gitInfo() {
   const safe = (cmd) => {
-    try { return execSync(cmd, { cwd: ROOT }).toString().trim() } catch { return 'unknown' }
+    try {
+      return execSync(cmd, { cwd: ROOT }).toString().trim()
+    } catch {
+      return 'unknown'
+    }
   }
-  return { commit: safe('git rev-parse --short HEAD'), branch: safe('git rev-parse --abbrev-ref HEAD') }
+  return {
+    commit: safe('git rev-parse --short HEAD'),
+    branch: safe('git rev-parse --abbrev-ref HEAD'),
+  }
 }
 
 function render(env, stack, byScenario) {
-  const baseUrl = env === 'prod' ? 'https://saluna.vercel.app' : 'http://localhost:3000'
+  const baseUrl =
+    env === 'prod' ? 'https://saluna.vercel.app' : 'http://localhost:3000'
   const { commit, branch } = gitInfo()
   const date = new Date().toISOString().split('T')[0]
   const rows = Object.keys(SCENARIO_LABELS).map((key) => {
@@ -80,9 +94,10 @@ function render(env, stack, byScenario) {
     return `| ${SCENARIO_LABELS[key]} | ${fmt(r.p50)} | ${fmt(r.p95)} | ${fmt(r.p99)} | ${fmt(r.avg)} | ${fmt(r.rps)} | ${fmt(r.errorRate, '%')} |`
   })
 
-  const sourceList = Object.entries(byScenario)
-    .map(([k, v]) => `- ${k}: \`${v.path.replace(ROOT + '/', '')}\``)
-    .join('\n') || '_no results yet_'
+  const sourceList =
+    Object.entries(byScenario)
+      .map(([k, v]) => `- ${k}: \`${v.path.replace(ROOT + '/', '')}\``)
+      .join('\n') || '_no results yet_'
 
   return `# Baseline — \`${stack}\` on ${env}
 
@@ -113,7 +128,9 @@ node benchmarks/compare.mjs ${env} ${stack} <other-stack>
 
 function listStacks(envDir) {
   if (!existsSync(envDir)) return []
-  return readdirSync(envDir).filter((f) => statSync(join(envDir, f)).isDirectory())
+  return readdirSync(envDir).filter((f) =>
+    statSync(join(envDir, f)).isDirectory(),
+  )
 }
 
 function summarize(env, stack) {
@@ -125,7 +142,9 @@ function summarize(env, stack) {
   }
   const out = join(dir, 'BASELINE.md')
   writeFileSync(out, render(env, stack, byScenario))
-  console.log(`Wrote ${out.replace(ROOT + '/', '')} (${Object.keys(byScenario).length} scenarios)`)
+  console.log(
+    `Wrote ${out.replace(ROOT + '/', '')} (${Object.keys(byScenario).length} scenarios)`,
+  )
 }
 
 const [envArg, stackArg] = process.argv.slice(2)
@@ -133,7 +152,8 @@ const [envArg, stackArg] = process.argv.slice(2)
 if (envArg && stackArg) {
   summarize(envArg, stackArg)
 } else if (envArg) {
-  for (const stack of listStacks(join(RESULTS, envArg))) summarize(envArg, stack)
+  for (const stack of listStacks(join(RESULTS, envArg)))
+    summarize(envArg, stack)
 } else {
   for (const env of ['local', 'prod']) {
     for (const stack of listStacks(join(RESULTS, env))) summarize(env, stack)

@@ -70,44 +70,44 @@ button-data encoding) to force into one shape.
 ```ts
 // packages/notifications/src/providers/types.ts
 
-export type MessagingProviderId = "telegram" | "whatsapp" | "bale" | "rubika";
+export type MessagingProviderId = 'telegram' | 'whatsapp' | 'bale' | 'rubika'
 
 export type MessagingButton = {
   /** Text shown in the chat. Keep under 30 chars (Telegram limit). */
-  label: string;
+  label: string
   /** Opaque string the provider echoes back on tap. Format: `<action>:<entityId>`. */
-  data: string;
-};
+  data: string
+}
 
 export type MessagingSendInput = {
-  notificationId: string;
-  externalId: string; // chatId / phone / waId — provider-specific
-  title: string;
-  body: string;
+  notificationId: string
+  externalId: string // chatId / phone / waId — provider-specific
+  title: string
+  body: string
   /** Optional inline keyboard. Providers without inline buttons IGNORE this and fall back
    *  to plain text + a deep link in the body. Never an error. */
-  buttons?: MessagingButton[][];
+  buttons?: MessagingButton[][]
   /** Provider-agnostic locale hint. */
-  locale?: string;
-};
+  locale?: string
+}
 
 export type MessagingDeliveryResult = {
-  status: "sent" | "failed" | "skipped";
-  providerMessageId?: string | null;
-  error?: string | null;
-};
+  status: 'sent' | 'failed' | 'skipped'
+  providerMessageId?: string | null
+  error?: string | null
+}
 
 export interface MessagingProvider {
-  readonly id: MessagingProviderId;
-  readonly displayName: string;
+  readonly id: MessagingProviderId
+  readonly displayName: string
   /** True when env config is sufficient for this provider to send. */
-  isConfigured(): boolean;
+  isConfigured(): boolean
   /** True when this provider supports inline tap-to-act buttons. */
-  readonly supportsInlineButtons: boolean;
+  readonly supportsInlineButtons: boolean
   /** True when this provider needs a separately registered webhook to function. */
-  readonly supportsInbound: boolean;
+  readonly supportsInbound: boolean
 
-  send(input: MessagingSendInput): Promise<MessagingDeliveryResult>;
+  send(input: MessagingSendInput): Promise<MessagingDeliveryResult>
 }
 ```
 
@@ -118,14 +118,14 @@ provider-agnostic `MessagingInboundEvent`s for the shared command dispatcher.
 ```ts
 // packages/notifications/src/providers/registry.ts
 
-const providers = new Map<MessagingProviderId, MessagingProvider>();
+const providers = new Map<MessagingProviderId, MessagingProvider>()
 
-export function registerMessagingProvider(p: MessagingProvider): void;
+export function registerMessagingProvider(p: MessagingProvider): void
 export function getMessagingProvider(
   id: MessagingProviderId,
-): MessagingProvider | undefined;
-export function listMessagingProviders(): MessagingProvider[];
-export function listConfiguredMessagingProviders(): MessagingProvider[];
+): MessagingProvider | undefined
+export function listMessagingProviders(): MessagingProvider[]
+export function listConfiguredMessagingProviders(): MessagingProvider[]
 ```
 
 Registration is **static at module load** in `providers/index.ts`. No DI container, no
@@ -175,25 +175,25 @@ We also extend two existing enums (string unions in Drizzle `.$type<...>()`):
 ```ts
 // packages/database/src/schema.ts
 // notifications.type:
-type: text("type").notNull().$type<
-  | "appointment_created"
-  | "appointment_request_pending" // NEW (Phase 1)
-  | "appointment_request_approved" // NEW (Phase 3)
-  | "appointment_request_rejected" // NEW (Phase 3)
-  | "appointment_reminder" // NEW (Phase 2/3, gated on job runner)
->();
+type: text('type').notNull().$type<
+  | 'appointment_created'
+  | 'appointment_request_pending' // NEW (Phase 1)
+  | 'appointment_request_approved' // NEW (Phase 3)
+  | 'appointment_request_rejected' // NEW (Phase 3)
+  | 'appointment_reminder' // NEW (Phase 2/3, gated on job runner)
+>()
 
 // notificationDeliveries.channel:
-channel: text("channel").notNull().$type<
-  | "in_app"
-  | "local_sync"
-  | "sms"
-  | "android_regional_push"
-  | "telegram" // NEW (Phase 1)
-  | "bale" // NEW (Phase 4)
-  | "rubika" // NEW (Phase 4)
-  | "whatsapp" // NEW (Phase 5)
->();
+channel: text('channel').notNull().$type<
+  | 'in_app'
+  | 'local_sync'
+  | 'sms'
+  | 'android_regional_push'
+  | 'telegram' // NEW (Phase 1)
+  | 'bale' // NEW (Phase 4)
+  | 'rubika' // NEW (Phase 4)
+  | 'whatsapp' // NEW (Phase 5)
+>()
 ```
 
 #### Why this schema shape
@@ -777,9 +777,7 @@ and T-2h before the appointment. **Introduces `pg-boss`** for relative-time sche
 5. Trigger wiring
    - In `approveAppointmentRequest` (`packages/database/src/internal/
 appointment-request-queries.ts:102-178`), **after** the conditional flip succeeds,
-     fire two side effects:
-     - `createNotificationForUser` (or its `forClient` sibling) for the client.
-     - Schedule the two reminder jobs.
+     fire two side effects: - `createNotificationForUser` (or its `forClient` sibling) for the client. - Schedule the two reminder jobs.
    - These side effects happen **outside the DB transaction** — log failures, never
      fail the approval because a notification couldn't send.
 

@@ -15,10 +15,9 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 
-const registry =
-  process.argv.includes('--registry')
-    ? process.argv[process.argv.indexOf('--registry') + 1]
-    : 'https://repo.hmirror.ir/npm'
+const registry = process.argv.includes('--registry')
+  ? process.argv[process.argv.indexOf('--registry') + 1]
+  : 'https://repo.hmirror.ir/npm'
 
 const concurrency = process.argv.includes('--concurrency')
   ? Number(process.argv[process.argv.indexOf('--concurrency') + 1])
@@ -194,14 +193,20 @@ const notable = new Set([
 ])
 
 console.log('\nNotable packages:')
-for (const r of results.filter((x) => notable.has(x.name)).sort((a, b) => a.name.localeCompare(b.name))) {
-  console.log(`  ${r.name}@${r.version}: ${r.status}${r.latest ? ` (mirror latest: ${r.latest})` : ''}${r.error ? ` — ${r.error}` : ''}`)
+for (const r of results
+  .filter((x) => notable.has(x.name))
+  .sort((a, b) => a.name.localeCompare(b.name))) {
+  console.log(
+    `  ${r.name}@${r.version}: ${r.status}${r.latest ? ` (mirror latest: ${r.latest})` : ''}${r.error ? ` — ${r.error}` : ''}`,
+  )
 }
 
 if (summary.missing_version.length) {
   console.log('\nFirst 40 missing versions:')
   for (const r of summary.missing_version.slice(0, 40)) {
-    console.log(`  ${r.name}@${r.version}${r.latest ? ` (mirror latest: ${r.latest})` : ''}`)
+    console.log(
+      `  ${r.name}@${r.version}${r.latest ? ` (mirror latest: ${r.latest})` : ''}`,
+    )
   }
 }
 
@@ -220,7 +225,9 @@ if (summary.error.length) {
 }
 
 process.exit(
-  summary.missing_package.length || summary.missing_version.length || summary.error.length
+  summary.missing_package.length ||
+    summary.missing_version.length ||
+    summary.error.length
     ? 1
     : 0,
 )

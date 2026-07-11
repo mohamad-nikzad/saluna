@@ -401,7 +401,10 @@ export async function revokeStaffProfileAccess(input: {
     now: input.now,
   })
   if (byUser.status === 'revoked') return byUser
-  if (byUser.reason !== 'profile_not_found' && byUser.reason !== 'access_not_found') {
+  if (
+    byUser.reason !== 'profile_not_found' &&
+    byUser.reason !== 'access_not_found'
+  ) {
     return byUser
   }
   return runRevocation({
@@ -442,7 +445,10 @@ export async function deactivateStaffProfileWithAccessRevocation(input: {
     now: input.now,
   })
   if (byUser.status === 'revoked') return byUser
-  if (byUser.reason !== 'profile_not_found' && byUser.reason !== 'access_not_found') {
+  if (
+    byUser.reason !== 'profile_not_found' &&
+    byUser.reason !== 'access_not_found'
+  ) {
     return byUser
   }
   return runRevocation({

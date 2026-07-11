@@ -25,7 +25,10 @@ vi.mock('@repo/database/support-tickets', () => ({
 }))
 
 import { auth } from '@repo/auth/server'
-import { getManagerMemberForUser, getMemberForUser } from '@repo/database/members'
+import {
+  getManagerMemberForUser,
+  getMemberForUser,
+} from '@repo/database/members'
 import { resolveStaffTenantContext } from '@repo/database/staff'
 import * as supportDb from '@repo/database/support-tickets'
 import { supportTicketsRoute } from './support-tickets'

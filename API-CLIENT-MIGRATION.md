@@ -10,28 +10,28 @@ Saluna monorepo — shared `@repo/api-client` migration using HeyAPI-generated S
 
 ## Progress
 
-| Phase | Status | Deliverables |
-|-------|--------|--------------|
-| 1. Legacy preservation | ✅ Done | `src/legacy/`, root re-exports legacy only, `./errors`, all 13 legacy subpaths |
-| 2. OpenAPI contract | ✅ Done | `packages/api-contract/`, clients routes in `apps/api/src/openapi/`, `pnpm generate:api-contract` |
-| 3. HeyAPI generated client | ✅ Done | `src/generated/`, `./sdk` / `./query` / `./types`, `pnpm generate:api-client` |
-| 4. Generated client config | ✅ Done | `configureGeneratedApiClient()` in `src/client.ts`, exported via `./generated-client`, error normalization + tests |
-| 5. React scaffold | ✅ Done | `src/react/index.ts` (empty), `./react` export |
-| 6. Documentation | ✅ Done | `packages/api-client/README.md` |
-| 7. App foundation | ✅ Done | `generated-api-client.ts` wired at PWA startup; dual-run with legacy |
-| 8. Clients (pilot) | ✅ Done | List/detail/CRUD on generated query/mutation options; online-only |
-| 9. Staff | ✅ Done | OpenAPI staff routes; PWA staff screens on generated query/mutation options |
-| 10. Services catalog | ✅ Done | OpenAPI services/categories/families/addons/catalog-presets; PWA catalog on generated options |
-| 11. Appointments & calendar | ✅ Done | OpenAPI appointments + availability; PWA calendar on generated options |
-| 12. Appointment requests | ✅ Done | OpenAPI appointment-requests; PWA requests inbox on generated options |
-| 13. Settings & public page | ✅ Done | OpenAPI settings/salon-profile/salon-public-settings; PWA settings + public page on generated options |
-| 14. Onboarding | ✅ Done | OpenAPI onboarding; PWA wizard on generated options |
-| 15. Dashboard, today & retention | ✅ Done | OpenAPI dashboard/today/retention; PWA on generated options |
-| 16. Messaging & notifications | ✅ Done | OpenAPI messaging/notifications/notification-preferences; PWA connect + prefs on generated options |
-| 17. data-client removal | ✅ Done | Removed `@repo/data-client`, offline UX, and IndexedDB sync layer |
-| 18. Web public API | ✅ Done | OpenAPI public booking; `apps/web` on generated SDK |
-| 19. Native app | ⏳ Deferred | Not in prod — migrate when scoped |
-| 20. Legacy cleanup | ⏳ Planned | Remove `src/legacy/` when no consumers remain |
+| Phase                            | Status      | Deliverables                                                                                                       |
+| -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1. Legacy preservation           | ✅ Done     | `src/legacy/`, root re-exports legacy only, `./errors`, all 13 legacy subpaths                                     |
+| 2. OpenAPI contract              | ✅ Done     | `packages/api-contract/`, clients routes in `apps/api/src/openapi/`, `pnpm generate:api-contract`                  |
+| 3. HeyAPI generated client       | ✅ Done     | `src/generated/`, `./sdk` / `./query` / `./types`, `pnpm generate:api-client`                                      |
+| 4. Generated client config       | ✅ Done     | `configureGeneratedApiClient()` in `src/client.ts`, exported via `./generated-client`, error normalization + tests |
+| 5. React scaffold                | ✅ Done     | `src/react/index.ts` (empty), `./react` export                                                                     |
+| 6. Documentation                 | ✅ Done     | `packages/api-client/README.md`                                                                                    |
+| 7. App foundation                | ✅ Done     | `generated-api-client.ts` wired at PWA startup; dual-run with legacy                                               |
+| 8. Clients (pilot)               | ✅ Done     | List/detail/CRUD on generated query/mutation options; online-only                                                  |
+| 9. Staff                         | ✅ Done     | OpenAPI staff routes; PWA staff screens on generated query/mutation options                                        |
+| 10. Services catalog             | ✅ Done     | OpenAPI services/categories/families/addons/catalog-presets; PWA catalog on generated options                      |
+| 11. Appointments & calendar      | ✅ Done     | OpenAPI appointments + availability; PWA calendar on generated options                                             |
+| 12. Appointment requests         | ✅ Done     | OpenAPI appointment-requests; PWA requests inbox on generated options                                              |
+| 13. Settings & public page       | ✅ Done     | OpenAPI settings/salon-profile/salon-public-settings; PWA settings + public page on generated options              |
+| 14. Onboarding                   | ✅ Done     | OpenAPI onboarding; PWA wizard on generated options                                                                |
+| 15. Dashboard, today & retention | ✅ Done     | OpenAPI dashboard/today/retention; PWA on generated options                                                        |
+| 16. Messaging & notifications    | ✅ Done     | OpenAPI messaging/notifications/notification-preferences; PWA connect + prefs on generated options                 |
+| 17. data-client removal          | ✅ Done     | Removed `@repo/data-client`, offline UX, and IndexedDB sync layer                                                  |
+| 18. Web public API               | ✅ Done     | OpenAPI public booking; `apps/web` on generated SDK                                                                |
+| 19. Native app                   | ⏳ Deferred | Not in prod — migrate when scoped                                                                                  |
+| 20. Legacy cleanup               | ⏳ Planned  | Remove `src/legacy/` when no consumers remain                                                                      |
 
 **Known gaps (non-blocking for Phase 7 start):**
 
@@ -188,16 +188,16 @@ Do **not** export `configureGeneratedApiClient()` from the root `@repo/api-clien
 
 ### Entrypoint purposes
 
-| Entrypoint | Purpose |
-|------------|---------|
-| `@repo/api-client` | Legacy public API only (`createApiClient`, `createXApi`, etc.) — unchanged since Phase 1 |
-| `@repo/api-client/legacy` | Explicit legacy access during migration |
+| Entrypoint                          | Purpose                                                                                                  |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `@repo/api-client`                  | Legacy public API only (`createApiClient`, `createXApi`, etc.) — unchanged since Phase 1                 |
+| `@repo/api-client/legacy`           | Explicit legacy access during migration                                                                  |
 | `@repo/api-client/generated-client` | Generated client setup only (`configureGeneratedApiClient`). Does not replace legacy `createApiClient()` |
-| `@repo/api-client/sdk` | Generated non-React SDK (Astro server, scripts) |
-| `@repo/api-client/query` | Generated TanStack Query options |
-| `@repo/api-client/types` | Generated API DTOs (request/response, params) |
-| `@repo/api-client/react` | Future shared domain hooks only — empty/minimal for now |
-| `@repo/api-client/errors` | Stable `ApiError` / `NetworkError` contract |
+| `@repo/api-client/sdk`              | Generated non-React SDK (Astro server, scripts)                                                          |
+| `@repo/api-client/query`            | Generated TanStack Query options                                                                         |
+| `@repo/api-client/types`            | Generated API DTOs (request/response, params)                                                            |
+| `@repo/api-client/react`            | Future shared domain hooks only — empty/minimal for now                                                  |
+| `@repo/api-client/errors`           | Stable `ApiError` / `NetworkError` contract                                                              |
 
 ---
 
@@ -493,11 +493,11 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 
 ### Apps and current HTTP layers
 
-| App | HTTP today | Scope |
-|-----|------------|-------|
-| **PWA** (`apps/pwa`) | Legacy `api` object (`#/lib/api-client.ts`) + `@repo/data-client` offline layer | Primary migration target |
-| **Web** (`apps/web`) | Generated SDK in `public-api.ts` | ✅ Phase 18 |
-| **Native** (`apps/native`) | Legacy `createApiClient` in `lib/api.ts` | Phase 19 (not in prod) |
+| App                        | HTTP today                                                                      | Scope                    |
+| -------------------------- | ------------------------------------------------------------------------------- | ------------------------ |
+| **PWA** (`apps/pwa`)       | Legacy `api` object (`#/lib/api-client.ts`) + `@repo/data-client` offline layer | Primary migration target |
+| **Web** (`apps/web`)       | Generated SDK in `public-api.ts`                                                | ✅ Phase 18              |
+| **Native** (`apps/native`) | Legacy `createApiClient` in `lib/api.ts`                                        | Phase 19 (not in prod)   |
 
 ### PWA: dual path today
 
@@ -522,21 +522,21 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 
 ### OpenAPI coverage today
 
-| Route group | OpenAPI | Legacy module | data-client module |
-|-------------|---------|---------------|-------------------|
-| clients | ✅ | `legacy/clients.ts` | `clients-module` |
-| staff | ✅ | `legacy/staff.ts` | `staff-module` |
-| services (+ categories, families, addons) | ✅ | `legacy/services.ts` | `services-module` |
-| appointments (+ availability) | ✅ | `legacy/appointments.ts` | `appointments-module` |
-| appointment-requests | ✅ | `legacy/appointment-requests.ts` | — |
-| business-settings | ✅ | `legacy/business-settings.ts` | `business-settings-module` |
-| salon-profile / salon-public-settings | ✅ | `legacy/salon-profile.ts`, `salon-public-settings.ts` | — |
-| onboarding | ✅ | `legacy/onboarding.ts` | — |
-| dashboard / today / retention | ✅ | `legacy/dashboard.ts`, `today.ts`, `retention.ts` | `today-module` (removed from today views) |
-| messaging / notifications | ✅ | `legacy/messaging.ts`, `notifications.ts` | — |
-| auth | ❌ (stay legacy) | `legacy/auth.ts` | `session-module` |
-| public booking | ✅ | — | — |
-| push / webhooks / health | ❌ (excluded) | — | — |
+| Route group                               | OpenAPI          | Legacy module                                         | data-client module                        |
+| ----------------------------------------- | ---------------- | ----------------------------------------------------- | ----------------------------------------- |
+| clients                                   | ✅               | `legacy/clients.ts`                                   | `clients-module`                          |
+| staff                                     | ✅               | `legacy/staff.ts`                                     | `staff-module`                            |
+| services (+ categories, families, addons) | ✅               | `legacy/services.ts`                                  | `services-module`                         |
+| appointments (+ availability)             | ✅               | `legacy/appointments.ts`                              | `appointments-module`                     |
+| appointment-requests                      | ✅               | `legacy/appointment-requests.ts`                      | —                                         |
+| business-settings                         | ✅               | `legacy/business-settings.ts`                         | `business-settings-module`                |
+| salon-profile / salon-public-settings     | ✅               | `legacy/salon-profile.ts`, `salon-public-settings.ts` | —                                         |
+| onboarding                                | ✅               | `legacy/onboarding.ts`                                | —                                         |
+| dashboard / today / retention             | ✅               | `legacy/dashboard.ts`, `today.ts`, `retention.ts`     | `today-module` (removed from today views) |
+| messaging / notifications                 | ✅               | `legacy/messaging.ts`, `notifications.ts`             | —                                         |
+| auth                                      | ❌ (stay legacy) | `legacy/auth.ts`                                      | `session-module`                          |
+| public booking                            | ✅               | —                                                     | —                                         |
+| push / webhooks / health                  | ❌ (excluded)    | —                                                     | —                                         |
 
 ### Per-slice migration pattern
 
@@ -623,13 +623,13 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 
 **App scope:**
 
-| Area | Current | Target |
-|------|---------|--------|
-| List | `useManagerClientsQuery` + IndexedDB | `getApiV1ClientsOptions` |
-| Detail/summary | `api.clients.summary` | `getApiV1ClientsByIdSummaryOptions` |
-| Drawer CRUD | data-client mutations | `postApiV1ClientsMutation`, `patchApiV1ClientsByIdMutation` |
-| Follow-ups | legacy `api.clients` | `postApiV1ClientsByIdFollowUpsMutation` |
-| Retention sidebar on clients page | `api.retention` | defer to Phase 15 or keep legacy call temporarily |
+| Area                              | Current                              | Target                                                      |
+| --------------------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| List                              | `useManagerClientsQuery` + IndexedDB | `getApiV1ClientsOptions`                                    |
+| Detail/summary                    | `api.clients.summary`                | `getApiV1ClientsByIdSummaryOptions`                         |
+| Drawer CRUD                       | data-client mutations                | `postApiV1ClientsMutation`, `patchApiV1ClientsByIdMutation` |
+| Follow-ups                        | legacy `api.clients`                 | `postApiV1ClientsByIdFollowUpsMutation`                     |
+| Retention sidebar on clients page | `api.retention`                      | defer to Phase 15 or keep legacy call temporarily           |
 
 **Key files:** `clients.tsx`, `clients.$id.tsx`, `client-drawer.tsx`, `manager-data-queries.ts` (clients hook), `use-clients-indexeddb.ts`, `query-keys.ts`.
 
@@ -981,16 +981,16 @@ Phase 20  Legacy cleanup
 
 ## Compatibility risks to watch
 
-| Risk | Mitigation |
-|------|------------|
-| Query key changes (Phase 7) | Migrate query + invalidation together per slice |
-| Error shape changes | Normalize to `ApiError` / `NetworkError` in generated client config |
-| Duplicate types (salon-core vs generated) | Generated DTOs at boundary; mappers only when needed |
-| data-client parallel HTTP layer | Migrate domain-by-domain in Phases 8–16; remove package in Phase 17 |
-| Clients uses both legacy + data-client | Phase 8 replaces both paths together (pilot slice) |
-| Onboarding cross-cuts staff/services | Phase 14 after Phases 9–10 |
-| Calendar depends on clients/staff/services | Phase 11 after Phases 8–10 |
-| Better Auth passthrough | Keep legacy `createAuthApi`; exclude from first OpenAPI pass |
+| Risk                                       | Mitigation                                                          |
+| ------------------------------------------ | ------------------------------------------------------------------- |
+| Query key changes (Phase 7)                | Migrate query + invalidation together per slice                     |
+| Error shape changes                        | Normalize to `ApiError` / `NetworkError` in generated client config |
+| Duplicate types (salon-core vs generated)  | Generated DTOs at boundary; mappers only when needed                |
+| data-client parallel HTTP layer            | Migrate domain-by-domain in Phases 8–16; remove package in Phase 17 |
+| Clients uses both legacy + data-client     | Phase 8 replaces both paths together (pilot slice)                  |
+| Onboarding cross-cuts staff/services       | Phase 14 after Phases 9–10                                          |
+| Calendar depends on clients/staff/services | Phase 11 after Phases 8–10                                          |
+| Better Auth passthrough                    | Keep legacy `createAuthApi`; exclude from first OpenAPI pass        |
 
 ---
 

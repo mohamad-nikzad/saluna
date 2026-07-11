@@ -31,12 +31,21 @@ export const messagingRoute = new Hono<AppEnv>()
     const limit = await checkMessagingLinkRateLimit(userId)
     if (!limit.allowed) {
       c.header('Retry-After', String(Math.ceil(limit.retryAfterMs / 1000)))
-      return error(c, 'تعداد درخواست‌های اتصال بیش از حد مجاز است. لطفاً بعداً تلاش کنید.', 429)
+      return error(
+        c,
+        'تعداد درخواست‌های اتصال بیش از حد مجاز است. لطفاً بعداً تلاش کنید.',
+        429,
+      )
     }
 
     const impl = getMessagingProvider(provider)
     if (!impl || !impl.isConfigured()) {
-      return error(c, 'این پیام‌رسان در دسترس نیست.', 400, 'provider_unavailable')
+      return error(
+        c,
+        'این پیام‌رسان در دسترس نیست.',
+        400,
+        'provider_unavailable',
+      )
     }
 
     const env = getEnv()
@@ -48,7 +57,12 @@ export const messagingRoute = new Hono<AppEnv>()
     })
     const deepLink = impl.buildAccountLinkUrl(token.token)
     if (!deepLink) {
-      return error(c, 'لینک اتصال برای این پیام‌رسان پیکربندی نشده است.', 500, 'deep_link_unavailable')
+      return error(
+        c,
+        'لینک اتصال برای این پیام‌رسان پیکربندی نشده است.',
+        500,
+        'deep_link_unavailable',
+      )
     }
     return ok(c, { deepLink, expiresAt: token.expiresAt.toISOString() }, 201)
   })

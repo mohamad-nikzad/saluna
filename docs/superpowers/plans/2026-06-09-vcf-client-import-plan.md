@@ -419,29 +419,29 @@ pnpm --filter @repo/pwa typecheck
 
 ## File manifest (new / modified)
 
-| File | Action |
-|------|--------|
-| `packages/salon-core/src/vcf.ts` | New |
-| `packages/salon-core/src/vcf.test.ts` | New |
-| `packages/salon-core/src/client-import.ts` | New |
-| `packages/salon-core/src/client-import.test.ts` | New |
-| `packages/salon-core/src/forms/client.ts` | Extend |
-| `packages/salon-core/src/forms/client.test.ts` | Extend |
-| `packages/database/src/internal/client-queries.ts` | Extend |
-| `packages/database/src/clients.ts` | Re-export |
-| `apps/api/src/openapi/schemas/clients.ts` | Extend |
-| `apps/api/src/openapi/routes/clients.ts` | Extend |
-| `apps/api/src/routes/clients.ts` | Extend |
-| `apps/api/src/openapi/contract-app.ts` | Extend |
-| `apps/api/src/routes/clients.test.ts` | Extend |
-| `packages/api-contract/openapi.json` | Generated |
-| `packages/api-client/src/generated/*` | Generated |
-| `apps/pwa/src/lib/client-import.ts` | New |
-| `apps/pwa/src/lib/client-import.test.ts` | New |
-| `apps/pwa/src/lib/client-import-toast.ts` | New |
-| `apps/pwa/src/lib/clients-queries.ts` | Extend |
-| `apps/pwa/src/components/clients/client-import-sheet.tsx` | New |
-| `apps/pwa/src/routes/_authed/clients.index.tsx` | Extend |
+| File                                                      | Action    |
+| --------------------------------------------------------- | --------- |
+| `packages/salon-core/src/vcf.ts`                          | New       |
+| `packages/salon-core/src/vcf.test.ts`                     | New       |
+| `packages/salon-core/src/client-import.ts`                | New       |
+| `packages/salon-core/src/client-import.test.ts`           | New       |
+| `packages/salon-core/src/forms/client.ts`                 | Extend    |
+| `packages/salon-core/src/forms/client.test.ts`            | Extend    |
+| `packages/database/src/internal/client-queries.ts`        | Extend    |
+| `packages/database/src/clients.ts`                        | Re-export |
+| `apps/api/src/openapi/schemas/clients.ts`                 | Extend    |
+| `apps/api/src/openapi/routes/clients.ts`                  | Extend    |
+| `apps/api/src/routes/clients.ts`                          | Extend    |
+| `apps/api/src/openapi/contract-app.ts`                    | Extend    |
+| `apps/api/src/routes/clients.test.ts`                     | Extend    |
+| `packages/api-contract/openapi.json`                      | Generated |
+| `packages/api-client/src/generated/*`                     | Generated |
+| `apps/pwa/src/lib/client-import.ts`                       | New       |
+| `apps/pwa/src/lib/client-import.test.ts`                  | New       |
+| `apps/pwa/src/lib/client-import-toast.ts`                 | New       |
+| `apps/pwa/src/lib/clients-queries.ts`                     | Extend    |
+| `apps/pwa/src/components/clients/client-import-sheet.tsx` | New       |
+| `apps/pwa/src/routes/_authed/clients.index.tsx`           | Extend    |
 
 ## PR strategy
 

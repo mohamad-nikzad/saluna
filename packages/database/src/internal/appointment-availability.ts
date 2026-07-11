@@ -6,9 +6,17 @@ import {
   type AvailabilityResponse,
   type AvailabilityStaffDay,
 } from '@repo/salon-core/availability'
-import { addDaysYmd, salonCurrentHm, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import {
+  addDaysYmd,
+  salonCurrentHm,
+  salonTodayYmd,
+} from '@repo/salon-core/salon-local-time'
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
-import { dayOfWeekFromDate, isSalonOpenOnDate, resolveStaffWorkingHoursForDay } from '@repo/salon-core/staff-availability'
+import {
+  dayOfWeekFromDate,
+  isSalonOpenOnDate,
+  resolveStaffWorkingHoursForDay,
+} from '@repo/salon-core/staff-availability'
 import type { Appointment, StaffSchedule, User } from '@repo/salon-core/types'
 import { getAppointmentsByDateRange } from './appointment-queries'
 import { getBusinessSettings } from './settings-queries'
@@ -27,7 +35,10 @@ type LookupParams = {
   staffId?: string
 }
 
-function fail(status: number, error: string): ManagerAppointmentAvailabilityLookupResult {
+function fail(
+  status: number,
+  error: string,
+): ManagerAppointmentAvailabilityLookupResult {
   return { ok: false, status, error }
 }
 
@@ -39,12 +50,13 @@ function searchDatesFor(mode: AvailabilityMode, date: string): string[] {
 }
 
 function buildAppointmentsByStaffAndDate(
-  appointments: Appointment[]
+  appointments: Appointment[],
 ): Map<string, Map<string, Appointment[]>> {
   const byStaff = new Map<string, Map<string, Appointment[]>>()
 
   for (const appointment of appointments) {
-    const byDate = byStaff.get(appointment.staffId) ?? new Map<string, Appointment[]>()
+    const byDate =
+      byStaff.get(appointment.staffId) ?? new Map<string, Appointment[]>()
     const list = byDate.get(appointment.date) ?? []
     list.push(appointment)
     byDate.set(appointment.date, list)
@@ -69,7 +81,9 @@ function buildStaffDayForDate(input: {
     businessHours: input.businessHours,
   })
   const appointments =
-    input.appointmentsByStaffAndDate.get(input.staffMember.id)?.get(input.date) ?? []
+    input.appointmentsByStaffAndDate
+      .get(input.staffMember.id)
+      ?.get(input.date) ?? []
 
   return {
     staffId: input.staffMember.id,
@@ -85,7 +99,7 @@ function buildStaffDayForDate(input: {
 }
 
 export async function getManagerAppointmentAvailability(
-  params: LookupParams
+  params: LookupParams,
 ): Promise<ManagerAppointmentAvailabilityLookupResult> {
   const [service, businessHours, allStaff] = await Promise.all([
     getServiceById(params.serviceId, params.salonId),
@@ -100,14 +114,17 @@ export async function getManagerAppointmentAvailability(
   const activeStaff = allStaff.filter((member) => member.role === 'staff')
 
   if (params.staffId) {
-    const selectedStaff = activeStaff.find((member) => member.id === params.staffId)
+    const selectedStaff = activeStaff.find(
+      (member) => member.id === params.staffId,
+    )
     if (!selectedStaff) {
       return fail(404, 'پرسنل یافت نشد')
     }
 
-    const eligibleSelectedStaff = eligibleStaffForService(activeStaff, service.id).some(
-      (member) => member.id === params.staffId
-    )
+    const eligibleSelectedStaff = eligibleStaffForService(
+      activeStaff,
+      service.id,
+    ).some((member) => member.id === params.staffId)
     if (!eligibleSelectedStaff) {
       return fail(400, 'این پرسنل برای خدمت انتخاب‌شده تعریف نشده است.')
     }
@@ -139,7 +156,10 @@ export async function getManagerAppointmentAvailability(
     }
   }
 
-  if (params.mode === 'day' && !isSalonOpenOnDate(businessHours.workingDays, params.date)) {
+  if (
+    params.mode === 'day' &&
+    !isSalonOpenOnDate(businessHours.workingDays, params.date)
+  ) {
     return {
       ok: true,
       response: {
@@ -151,7 +171,7 @@ export async function getManagerAppointmentAvailability(
   }
 
   const searchDates = searchDatesFor(params.mode, params.date).filter((date) =>
-    isSalonOpenOnDate(businessHours.workingDays, date)
+    isSalonOpenOnDate(businessHours.workingDays, date),
   )
 
   if (searchDates.length === 0) {
@@ -176,15 +196,24 @@ export async function getManagerAppointmentAvailability(
     getAppointmentsByDateRange(
       params.salonId,
       searchDates[0]!,
-      searchDates[searchDates.length - 1]!
+      searchDates[searchDates.length - 1]!,
     ),
     Promise.all(
-      eligibleStaff.map(async (member) => [member.id, await getStaffSchedules(params.salonId, member.id)] as const)
+      eligibleStaff.map(
+        async (member) =>
+          [
+            member.id,
+            await getStaffSchedules(params.salonId, member.id),
+          ] as const,
+      ),
     ),
   ])
 
-  const appointmentsByStaffAndDate = buildAppointmentsByStaffAndDate(appointments)
-  const schedulesByStaff = new Map<string, StaffSchedule[]>(schedulesByStaffEntries)
+  const appointmentsByStaffAndDate =
+    buildAppointmentsByStaffAndDate(appointments)
+  const schedulesByStaff = new Map<string, StaffSchedule[]>(
+    schedulesByStaffEntries,
+  )
   const todayDate = salonTodayYmd()
   const nowTime = salonCurrentHm()
   const searchMode = params.staffId ? 'specific' : 'any'
@@ -197,7 +226,7 @@ export async function getManagerAppointmentAvailability(
         schedules: schedulesByStaff.get(staffMember.id) ?? [],
         businessHours,
         appointmentsByStaffAndDate,
-      })
+      }),
     )
 
   if (params.mode === 'day') {

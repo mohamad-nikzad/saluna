@@ -47,7 +47,11 @@ export const catalogPresets = new Hono<AppEnv>()
           return error(c, 'حداقل یک خدمت برای افزودن انتخاب کنید', 400)
         }
         if (msg.includes('unique') || msg.includes('duplicate')) {
-          return error(c, 'برخی از خدمات این قالب در سالن قبلاً ثبت شده‌اند', 409)
+          return error(
+            c,
+            'برخی از خدمات این قالب در سالن قبلاً ثبت شده‌اند',
+            409,
+          )
         }
         throw err
       }

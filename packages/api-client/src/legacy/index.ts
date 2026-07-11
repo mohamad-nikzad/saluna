@@ -1,5 +1,10 @@
 export { createApiClient } from './client'
-export type { ApiClient, ApiClientOptions, RequestOptions, TokenProvider } from './client'
+export type {
+  ApiClient,
+  ApiClientOptions,
+  RequestOptions,
+  TokenProvider,
+} from './client'
 export { createAuthApi } from './auth'
 export type {
   AuthApi,

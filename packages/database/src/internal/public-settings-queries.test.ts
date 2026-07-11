@@ -17,14 +17,16 @@ describe('buildManagerPublicSettingsUpsertFields', () => {
         depositPolicy: null,
         enabledMessagingProviders: ['telegram'],
         updatedAt: new Date('2026-01-01'),
-      }
+      },
     )
     expect(next.enabledMessagingProviders).toEqual(['telegram'])
     expect(next.enabled).toBe(true)
   })
 
   it('defaults enabledMessagingProviders to empty when no row exists', () => {
-    const next = buildManagerPublicSettingsUpsertFields('salon-1', { enabled: true })
+    const next = buildManagerPublicSettingsUpsertFields('salon-1', {
+      enabled: true,
+    })
     expect(next.enabledMessagingProviders).toEqual([])
   })
 })

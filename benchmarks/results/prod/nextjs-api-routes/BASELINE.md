@@ -9,14 +9,14 @@ _Auto-generated. Re-run: `STACK=nextjs-api-routes BASE_URL=https://aravira-saloo
 
 ## Results
 
-| Scenario | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) | RPS | Errors |
-|---|---:|---:|---:|---:|---:|---:|
-| GET /api/services (cheap read) | 1060 | 2129 | — | 1229 | 7.19 | 0.00% |
-| GET /api/appointments (heavy read) | 562 | 1124 | — | 611 | 15.5 | 99.8% |
-| GET /api/dashboard | 1527 | 2027 | — | 1453 | 6.41 | 0.00% |
-| GET /api/today | 1754 | 2747 | — | 1798 | 5.19 | 0.00% |
-| GET /api/auth/me | 512 | 1125 | — | 588 | 30.6 | 0.00% |
-| 7 endpoints, ramped 0→20 VUs | 1219 | 5452 | — | 1921 | 26.9 | 14.3% |
+| Scenario                           | p50 (ms) | p95 (ms) | p99 (ms) | avg (ms) |  RPS | Errors |
+| ---------------------------------- | -------: | -------: | -------: | -------: | ---: | -----: |
+| GET /api/services (cheap read)     |     1060 |     2129 |        — |     1229 | 7.19 |  0.00% |
+| GET /api/appointments (heavy read) |      562 |     1124 |        — |      611 | 15.5 |  99.8% |
+| GET /api/dashboard                 |     1527 |     2027 |        — |     1453 | 6.41 |  0.00% |
+| GET /api/today                     |     1754 |     2747 |        — |     1798 | 5.19 |  0.00% |
+| GET /api/auth/me                   |      512 |     1125 |        — |      588 | 30.6 |  0.00% |
+| 7 endpoints, ramped 0→20 VUs       |     1219 |     5452 |        — |     1921 | 26.9 |  14.3% |
 
 ## Source files
 

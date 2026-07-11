@@ -38,12 +38,20 @@ function WheelColumn({
   const scrollTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const suppressUpdate = useRef(false)
 
-  const scrollToIndex = useCallback((index: number, behavior: ScrollBehavior = 'instant') => {
-    if (!scrollRef.current) return
-    suppressUpdate.current = true
-    scrollRef.current.scrollTo({ top: index * ITEM_HEIGHT, behavior })
-    setTimeout(() => { suppressUpdate.current = false }, behavior === 'smooth' ? 300 : 50)
-  }, [])
+  const scrollToIndex = useCallback(
+    (index: number, behavior: ScrollBehavior = 'instant') => {
+      if (!scrollRef.current) return
+      suppressUpdate.current = true
+      scrollRef.current.scrollTo({ top: index * ITEM_HEIGHT, behavior })
+      setTimeout(
+        () => {
+          suppressUpdate.current = false
+        },
+        behavior === 'smooth' ? 300 : 50,
+      )
+    },
+    [],
+  )
 
   useEffect(() => {
     const idx = items.indexOf(value)
@@ -147,13 +155,15 @@ export function TimePicker({ value, onChange, id, label }: TimePickerProps) {
     if (isOpen) {
       const [ch, cm] = value.split(':').map(Number)
       setTempHour(ch)
-      setTempMinute(Math.round(cm / 5) * 5 % 60)
+      setTempMinute((Math.round(cm / 5) * 5) % 60)
     }
     setOpen(isOpen)
   }
 
   const handleConfirm = () => {
-    onChange(`${String(tempHour).padStart(2, '0')}:${String(tempMinute).padStart(2, '0')}`)
+    onChange(
+      `${String(tempHour).padStart(2, '0')}:${String(tempMinute).padStart(2, '0')}`,
+    )
     setOpen(false)
   }
 
@@ -191,7 +201,9 @@ export function TimePicker({ value, onChange, id, label }: TimePickerProps) {
               formatItem={(v) => persianDigits(v)}
             />
 
-            <span className="text-3xl font-bold text-muted-foreground pb-1">:</span>
+            <span className="text-3xl font-bold text-muted-foreground pb-1">
+              :
+            </span>
 
             <WheelColumn
               items={MINUTES}
