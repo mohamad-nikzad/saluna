@@ -1,12 +1,12 @@
 ---
 id: BL-0031
 title: Assisted Salon Setup and handoff
-status: inbox
+status: done
 type: feature
 priority: high
 size: large
 created: 2026-06-23
-updated: 2026-06-23
+updated: 2026-07-11
 ---
 
 ## Problem Statement
@@ -115,9 +115,22 @@ The public salon page remains disabled unless the admin explicitly enables it at
 - Automated SMS delivery of the handoff link; the admin may copy and send the link through the team's existing communication channel. OTP delivery continues to use the existing authentication provider behavior.
 - Formal training, onboarding appointments, or customer-success project management inside Saluna.
 
+## Child Implementation Slices
+
+1. [BL-0032 Create and recognize a Setup Salon](BL-0032-create-and-recognize-setup-salon.md)
+2. [BL-0033 Configure Setup Salon hours and Presence](BL-0033-configure-setup-salon-hours-and-presence.md)
+3. [BL-0034 Configure the Setup Salon service catalog](BL-0034-configure-setup-salon-service-catalog.md)
+4. [BL-0035 Create and claim unclaimed Staff Profiles](BL-0035-create-and-claim-unclaimed-staff-profiles.md)
+5. [BL-0036 Transfer verified staff access between salons](BL-0036-transfer-verified-staff-access-between-salons.md)
+6. [BL-0037 Add and import Setup Salon Clients](BL-0037-add-and-import-setup-salon-clients.md)
+7. [BL-0038 Hand a Setup Salon to a new owner](BL-0038-hand-off-setup-salon-to-new-owner.md)
+8. [BL-0039 Harden Salon Handoff for existing identities and retries](BL-0039-harden-salon-handoff-existing-identities-and-retries.md)
+9. [BL-0040 Add audited Platform Owner Override](BL-0040-add-audited-platform-owner-override.md)
+
 ## Further Notes
 
 - This feature deliberately serves a small, high-touch team. The product object is the Setup Salon itself; there is no parallel setup-workflow aggregate.
 - The existing admin app, platform RBAC, admin audit log, salon onboarding operations, CatalogPreset support, OTP signup, and Client Import behavior provide substantial prior art.
 - Assisted onboarding in comparable salon products commonly combines configuration, migration, and handoff to the business; Saluna's first version keeps only the parts needed by its current team.
 - Domain language and architectural boundaries are recorded in `CONTEXT.md` and ADRs 0006–0008.
+- Closed 2026-07-11: all child slices BL-0032 through BL-0040 are done. Parent tracker closed after verifying no open children remain.

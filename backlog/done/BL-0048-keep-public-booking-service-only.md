@@ -11,7 +11,7 @@ updated: 2026-07-08
 
 ## Parent
 
-[BL-0041 Service catalog big-bang migration](../ready/BL-0041-service-catalog-big-bang-migration.md)
+[BL-0041 Service catalog big-bang migration](BL-0041-service-catalog-big-bang-migration.md)
 
 ## What to build
 

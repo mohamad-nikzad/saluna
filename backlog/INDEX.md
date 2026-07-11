@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-11 (BL-0016 multi-salon staff invites marked done)
+Last organized: 2026-07-11 (BL-0031 and BL-0041 parent trackers closed)
 
 ## Now
 
@@ -12,11 +12,9 @@ No active backlog items.
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
-- [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
 
 ## Inbox
 
-- [BL-0031 Assisted Salon Setup and handoff](inbox/BL-0031-assisted-salon-setup-and-handoff.md)
 - [BL-0011 Campaign support](inbox/BL-0011-campaign-support.md)
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
@@ -30,6 +28,8 @@ No active backlog items.
 
 ## Done
 
+- [BL-0041 Service catalog big-bang migration](done/BL-0041-service-catalog-big-bang-migration.md)
+- [BL-0031 Assisted Salon Setup and handoff](done/BL-0031-assisted-salon-setup-and-handoff.md)
 - [BL-0016 Staff can join multiple salons through invites](done/BL-0016-staff-can-join-multiple-salons.md)
 - [BL-0040 Add audited Platform Owner Override](done/BL-0040-add-audited-platform-owner-override.md)
 - [BL-0051 Finish service catalog cutover verification](done/BL-0051-finish-service-catalog-cutover-verification.md)
