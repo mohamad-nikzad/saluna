@@ -19,6 +19,8 @@ export const endpoints = {
     signOut: '/api/v1/auth/sign-out',
     me: '/api/v1/auth/me',
     staffSalons: '/api/v1/auth/staff-salons',
+    staffInvites: '/api/v1/auth/staff-invites',
+    staffAccess: '/api/v1/auth/staff-access',
   },
   salonHandoff: '/api/v1/salon-handoff',
   staffInvites: '/api/v1/staff-invites',

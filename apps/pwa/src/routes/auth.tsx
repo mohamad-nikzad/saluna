@@ -70,7 +70,7 @@ export const Route = createFileRoute('/auth')({
       queryKey: authQueryKey,
     })
     if (session?.status === 'needs_salon_selection') {
-      throw redirect({ to: '/select-salon' })
+      throw redirect({ to: '/staff-invites' })
     }
     if (
       session &&
@@ -80,6 +80,7 @@ export const Route = createFileRoute('/auth')({
       const { user } = session
       const safe = safeInternalRedirect(search.redirect)
       if (safe) throw redirect({ href: safe })
+      if (user.role === 'staff') throw redirect({ to: '/staff-invites' })
       throw redirect({ to: homePathForRole(user.role) })
     }
   },
@@ -148,7 +149,7 @@ function AuthPage() {
       }
       if (session.status === 'needs_salon_selection') {
         setSession(session)
-        await navigate({ to: '/select-salon' })
+        await navigate({ to: '/staff-invites' })
         return
       }
       setUser(session.user)
@@ -157,7 +158,9 @@ function AuthPage() {
       }
       const safe = safeInternalRedirect(redirectTo)
       if (safe) await navigate({ href: safe })
-      else await navigate({ to: homePathForRole(session.user.role) })
+      else if (session.user.role === 'staff') {
+        await navigate({ to: '/staff-invites' })
+      } else await navigate({ to: homePathForRole(session.user.role) })
     },
   })
 
@@ -234,16 +237,21 @@ function AuthPage() {
       }
       if (session?.status === 'needs_salon_selection') {
         setSession(session)
-        await navigate({ to: '/select-salon', replace: true })
+        await navigate({ to: '/staff-invites', replace: true })
         return
       }
-      if (session?.status === 'ready' || session?.status === undefined) {
+      if (
+        session &&
+        (session.status === 'ready' || session.status === undefined)
+      ) {
         if (session.user.role === 'staff' && session.user.salonId) {
           setPersistedActiveSalonId(session.user.salonId)
         }
         setUser(session.user)
         if (safe) await navigate({ href: safe })
-        else await navigate({ to: homePathForRole(session.user.role) })
+        else if (session.user.role === 'staff') {
+          await navigate({ to: '/staff-invites' })
+        } else await navigate({ to: homePathForRole(session.user.role) })
         return
       }
       setOtpError('ورود انجام نشد. دوباره تلاش کنید.')
@@ -299,10 +307,13 @@ function AuthPage() {
       const session = await refresh()
       if (session?.status === 'needs_salon_selection') {
         setSession(session)
-        await navigate({ to: '/select-salon' })
+        await navigate({ to: '/staff-invites' })
         return
       }
-      if (!session || (session.status !== 'ready' && session.status !== undefined)) {
+      if (
+        !session ||
+        (session.status !== 'ready' && session.status !== undefined)
+      ) {
         setRecoveryError('تکمیل حساب انجام نشد. دوباره تلاش کنید.')
         return
       }
@@ -312,7 +323,9 @@ function AuthPage() {
       setUser(session.user)
       const safe = safeInternalRedirect(redirectTo)
       if (safe) await navigate({ href: safe })
-      else await navigate({ to: homePathForRole(session.user.role) })
+      else if (session.user.role === 'staff') {
+        await navigate({ to: '/staff-invites' })
+      } else await navigate({ to: homePathForRole(session.user.role) })
     },
   })
 

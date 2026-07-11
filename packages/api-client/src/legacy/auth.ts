@@ -32,6 +32,17 @@ export type StaffSalonOption = {
   staffProfileId: string
 }
 
+export type PendingStaffInvite = {
+  id: string
+  salonId: string
+  salonName: string
+  staffProfileId: string
+  staffName: string
+  phone: string
+  expiresAt: string
+  createdAt: string
+}
+
 export type LoginResponse = { user: User }
 
 export type SignupInput = SignupFormPayload
@@ -124,6 +135,30 @@ export function createAuthApi(client: ApiClient) {
       return client.request<{ salons: StaffSalonOption[] }>(
         endpoints.auth.staffSalons,
         { signal: opts.signal },
+      )
+    },
+    listStaffInvites(opts: { signal?: AbortSignal } = {}) {
+      return client.request<{ invites: PendingStaffInvite[] }>(
+        endpoints.auth.staffInvites,
+        { signal: opts.signal },
+      )
+    },
+    acceptStaffInvite(inviteId: string) {
+      return client.request(
+        `${endpoints.auth.staffInvites}/${encodeURIComponent(inviteId)}/accept`,
+        { method: 'POST', body: {} },
+      )
+    },
+    declineStaffInvite(inviteId: string) {
+      return client.request(
+        `${endpoints.auth.staffInvites}/${encodeURIComponent(inviteId)}/decline`,
+        { method: 'POST', body: {} },
+      )
+    },
+    leaveStaffSalon(salonId: string) {
+      return client.request<{ success: boolean }>(
+        `${endpoints.auth.staffAccess}/leave`,
+        { method: 'POST', body: { salonId } },
       )
     },
     // Better Auth phone sign-in sets the session cookie; we then resolve the

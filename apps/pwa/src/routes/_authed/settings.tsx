@@ -54,6 +54,7 @@ import { SettingsRow, ToggleRow } from '#/components/settings/settings-rows'
 import { StaffDrawer } from '#/components/staff/staff-drawer'
 import { StaffSalonSwitcher } from '#/components/staff/staff-salon-switcher'
 import { clearPersistedActiveSalonId } from '#/lib/active-salon'
+import { api } from '#/lib/api-client'
 
 type DashboardMetrics = {
   monthRevenue: number
@@ -159,6 +160,7 @@ function SettingsPage() {
   const queryClient = useQueryClient()
   const { theme, setTheme } = useTheme()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [leavingSalon, setLeavingSalon] = useState(false)
   const [localAlerts, setLocalAlerts] = useState<boolean | null>(null)
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   const isManager = user?.role === 'manager'
@@ -217,6 +219,19 @@ function SettingsPage() {
     clearPersistedActiveSalonId()
     await logout()
     await navigate({ to: '/auth', replace: true })
+  }
+
+  const handleLeaveSalon = async () => {
+    if (!window.confirm('دسترسی شما به این سالن لغو شود؟')) return
+    setLeavingSalon(true)
+    try {
+      await api.auth.leaveStaffSalon(user!.salonId)
+      clearPersistedActiveSalonId()
+      await refreshAuth()
+      await navigate({ to: '/staff-invites', replace: true })
+    } finally {
+      setLeavingSalon(false)
+    }
   }
 
   const toggleDarkMode = (enabled: boolean) => {
@@ -434,6 +449,17 @@ function SettingsPage() {
           </SettingsGroup>
 
           <SettingsGroup label="حساب">
+            {!isManager ? (
+              <SettingsRow
+                icon={LogOut}
+                label={leavingSalon ? 'در حال ترک سالن…' : 'ترک این سالن'}
+                hint="فقط دسترسی ورود شما لغو می‌شود"
+                onClick={() => void handleLeaveSalon()}
+                danger
+                loading={leavingSalon}
+                disabled={leavingSalon}
+              />
+            ) : null}
             <SettingsRow
               icon={LogOut}
               label={loggingOut ? 'در حال خروج…' : 'خروج از حساب'}

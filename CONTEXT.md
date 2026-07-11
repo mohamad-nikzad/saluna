@@ -133,13 +133,17 @@ _Avoid_: contact info, social block
 A salon-owned record for a person who provides services, including their display identity, schedule, and capabilities. A Staff Profile may exist without login access.
 _Avoid_: staff account, employee user
 
-**Staff Account Claim**:
-The act by which a staff member verifies their own identity and connects their login access to an existing `Staff Profile`. Neither a salon manager nor platform staff may claim an account on the staff member's behalf.
-_Avoid_: staff activation, admin-created login
+**Staff Invite**:
+A salon manager's phone-bound invitation to connect a verified staff identity to one salon-owned `Staff Profile`. It grants no access until the invited person explicitly accepts it.
+_Avoid_: staff claim, manager-created account, access transfer
 
-**Staff Access Transfer**:
-A staff member's verified move of their login access from one salon's `Staff Profile` to another's. The previous salon retains its Staff Profile and operational history without the person's login access; one staff identity may be claimed by only one salon at a time.
-_Avoid_: staff migration, profile transfer, admin reassignment
+**Staff Profile Access**:
+The revocable permission link between one verified staff identity and one salon-owned `Staff Profile`. One identity may hold active Staff Profile Access in several salons, with at most one active link per salon.
+_Avoid_: staff membership, profile ownership, shared staff account
+
+**Staff Access Revocation**:
+Ending one Staff Profile Access link without deleting or deactivating the salon-owned `Staff Profile`, its appointments, schedule, capabilities, or history. A manager may revoke access and staff may leave a salon themselves.
+_Avoid_: delete staff, transfer staff, deactivate profile
 
 ### Product Support
 

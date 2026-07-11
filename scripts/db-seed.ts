@@ -35,6 +35,8 @@ import {
   services,
   staffSchedules,
   staffServices,
+  staffProfileAccesses,
+  staffProfiles,
   user,
 } from '@repo/database/schema'
 import { seedCatalogPresets } from '@repo/database/seed/catalog-presets'
@@ -129,7 +131,8 @@ async function ensureOrg({
     const created = await auth.api.createOrganization({
       body: { name, slug, userId: ownerUserId },
     })
-    if (!created) throw new Error(`createOrganization returned empty for ${slug}`)
+    if (!created)
+      throw new Error(`createOrganization returned empty for ${slug}`)
     orgId = created.id
   }
 
@@ -195,6 +198,56 @@ async function ensureSalonMember({
       target: [salonMember.userId, salonMember.organizationId],
       set: { displayName, color, active },
     })
+}
+
+/** Keep demo staff on the invite/access model while preserving legacy staff IDs. */
+async function ensureStaffProfileAccess({
+  userId,
+  organizationId,
+  name,
+  phone,
+  color,
+}: {
+  userId: string
+  organizationId: string
+  name: string
+  phone: string
+  color: string
+}): Promise<void> {
+  await db
+    .insert(staffProfiles)
+    .values({
+      id: userId,
+      salonId: organizationId,
+      userId,
+      name,
+      phone,
+      color,
+      claimedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: staffProfiles.id,
+      set: { name, phone, color, active: true, accessDetachedAt: null },
+    })
+
+  const [existingAccess] = await db
+    .select({ id: staffProfileAccesses.id })
+    .from(staffProfileAccesses)
+    .where(
+      and(
+        eq(staffProfileAccesses.userId, userId),
+        eq(staffProfileAccesses.salonId, organizationId),
+      ),
+    )
+    .limit(1)
+  if (!existingAccess) {
+    await db.insert(staffProfileAccesses).values({
+      salonId: organizationId,
+      staffProfileId: userId,
+      userId,
+      acceptedAt: new Date(),
+    })
+  }
 }
 
 /**
@@ -771,14 +824,18 @@ async function seedServiceCombos(salonId: string, rows: SeedComboRow[]) {
     .from(services)
     .where(eq(services.salonId, salonId))
 
-  const categoryByName = new Map(categories.map((category) => [category.name, category]))
+  const categoryByName = new Map(
+    categories.map((category) => [category.name, category]),
+  )
   const familyByPath = new Map<string, (typeof families)[number]>(
     families.map((family) => {
       const category = categories.find((item) => item.id === family.categoryId)
       return [`${category?.name ?? ''}/${family.name}`, family] as const
     }),
   )
-  const serviceByName = new Map(serviceRows.map((service) => [service.name, service]))
+  const serviceByName = new Map(
+    serviceRows.map((service) => [service.name, service]),
+  )
 
   for (const row of rows) {
     let category = categoryByName.get(row.category)
@@ -821,7 +878,9 @@ async function seedServiceCombos(salonId: string, rows: SeedComboRow[]) {
 
     const components = row.componentNames
       .map((name) => serviceByName.get(name))
-      .filter((service): service is NonNullable<typeof service> => Boolean(service))
+      .filter((service): service is NonNullable<typeof service> =>
+        Boolean(service),
+      )
 
     if (components.length !== row.componentNames.length) {
       console.warn(`Skip combo seed: missing components for ${row.name}.`)
@@ -886,20 +945,29 @@ async function seedServiceAddons(salonId: string, rows: SeedAddonRow[]) {
     .from(services)
     .where(eq(services.salonId, salonId))
 
-  const categoryByName = new Map(categories.map((category) => [category.name, category]))
+  const categoryByName = new Map(
+    categories.map((category) => [category.name, category]),
+  )
   const familyByPath = new Map(
     families.map((family) => {
       const category = categories.find((item) => item.id === family.categoryId)
       return [`${category?.name ?? ''}/${family.name}`, family] as const
     }),
   )
-  const serviceByName = new Map(serviceRows.map((service) => [service.name, service]))
+  const serviceByName = new Map(
+    serviceRows.map((service) => [service.name, service]),
+  )
 
   for (const row of rows) {
     const [existing] = await db
       .select()
       .from(serviceAddons)
-      .where(and(eq(serviceAddons.salonId, salonId), eq(serviceAddons.name, row.name)))
+      .where(
+        and(
+          eq(serviceAddons.salonId, salonId),
+          eq(serviceAddons.name, row.name),
+        ),
+      )
       .limit(1)
 
     const [addon] = existing
@@ -930,16 +998,27 @@ async function seedServiceAddons(salonId: string, rows: SeedAddonRow[]) {
           })
           .returning()
 
-    await db.delete(serviceAddonCategoryScopes).where(eq(serviceAddonCategoryScopes.addonId, addon.id))
-    await db.delete(serviceAddonFamilyScopes).where(eq(serviceAddonFamilyScopes.addonId, addon.id))
-    await db.delete(serviceAddonServiceScopes).where(eq(serviceAddonServiceScopes.addonId, addon.id))
+    await db
+      .delete(serviceAddonCategoryScopes)
+      .where(eq(serviceAddonCategoryScopes.addonId, addon.id))
+    await db
+      .delete(serviceAddonFamilyScopes)
+      .where(eq(serviceAddonFamilyScopes.addonId, addon.id))
+    await db
+      .delete(serviceAddonServiceScopes)
+      .where(eq(serviceAddonServiceScopes.addonId, addon.id))
 
     const categoryScopes = (row.categoryScopes ?? [])
       .map((name) => categoryByName.get(name))
-      .filter((category): category is NonNullable<typeof category> => Boolean(category))
+      .filter((category): category is NonNullable<typeof category> =>
+        Boolean(category),
+      )
       .map((category) => ({ salonId, addonId: addon.id, scopeId: category.id }))
     if (categoryScopes.length > 0) {
-      await db.insert(serviceAddonCategoryScopes).values(categoryScopes).onConflictDoNothing()
+      await db
+        .insert(serviceAddonCategoryScopes)
+        .values(categoryScopes)
+        .onConflictDoNothing()
     }
 
     const familyScopes = (row.familyScopes ?? [])
@@ -947,15 +1026,23 @@ async function seedServiceAddons(salonId: string, rows: SeedAddonRow[]) {
       .filter((family): family is NonNullable<typeof family> => Boolean(family))
       .map((family) => ({ salonId, addonId: addon.id, scopeId: family.id }))
     if (familyScopes.length > 0) {
-      await db.insert(serviceAddonFamilyScopes).values(familyScopes).onConflictDoNothing()
+      await db
+        .insert(serviceAddonFamilyScopes)
+        .values(familyScopes)
+        .onConflictDoNothing()
     }
 
     const serviceScopes = (row.serviceScopes ?? [])
       .map((name) => serviceByName.get(name))
-      .filter((service): service is NonNullable<typeof service> => Boolean(service))
+      .filter((service): service is NonNullable<typeof service> =>
+        Boolean(service),
+      )
       .map((service) => ({ salonId, addonId: addon.id, scopeId: service.id }))
     if (serviceScopes.length > 0) {
-      await db.insert(serviceAddonServiceScopes).values(serviceScopes).onConflictDoNothing()
+      await db
+        .insert(serviceAddonServiceScopes)
+        .values(serviceScopes)
+        .onConflictDoNothing()
     }
   }
 }
@@ -1140,8 +1227,11 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
   const aptRows: Array<
     Omit<
       typeof appointments.$inferInsert,
-      'bookedServiceName' | 'bookedServiceDuration' | 'bookedServicePrice'
-      | 'bookedTotalDuration' | 'bookedTotalPrice'
+      | 'bookedServiceName'
+      | 'bookedServiceDuration'
+      | 'bookedServicePrice'
+      | 'bookedTotalDuration'
+      | 'bookedTotalPrice'
     >
   > = [
     {
@@ -1373,7 +1463,11 @@ const PRIMARY_STAFF = [
   { phone: '09120000003', name: 'سارا محمودی', color: 'violet' },
   { phone: '09120000004', name: 'الهام رضایی', color: 'mint' },
 ] as const
-const SECOND_OWNER = { phone: '09130000000', name: 'مدیر نیلوفر', color: 'gold' }
+const SECOND_OWNER = {
+  phone: '09130000000',
+  name: 'مدیر نیلوفر',
+  color: 'gold',
+}
 
 async function main() {
   // --- Primary salon: owner user + organization + sidecars ---
@@ -1404,6 +1498,13 @@ async function main() {
       displayName: s.name,
       color: s.color,
       active: true,
+    })
+    await ensureStaffProfileAccess({
+      userId: staffId,
+      organizationId: primarySalon.id,
+      name: s.name,
+      phone: s.phone,
+      color: s.color,
     })
   }
 

@@ -94,7 +94,9 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
     role: 'staff' as const,
     color: row.color,
     createdAt: row.createdAt,
-    inviteStatus: pendingInviteProfileIds.has(row.id) ? ('pending' as const) : null,
+    inviteStatus: pendingInviteProfileIds.has(row.id)
+      ? ('pending' as const)
+      : null,
   }))
   const rows = [...legacyRows, ...preparedRows].sort((a, b) =>
     a.name.localeCompare(b.name, 'fa'),
@@ -357,44 +359,7 @@ export async function getUserWithServiceIds(
   id: string,
   salonId: string,
 ): Promise<User | undefined> {
-  const db = getDb()
-  const rows = await db
-    .select(staffUserSelect)
-    .from(user)
-    .innerJoin(
-      member,
-      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
-    )
-    .leftJoin(
-      salonMember,
-      and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
-      ),
-    )
-    .where(
-      and(
-        eq(user.id, id),
-        or(isNull(salonMember.active), eq(salonMember.active, true)),
-      ),
-    )
-    .limit(1)
-  const base = rows[0] ? rowToUser(rows[0]) : undefined
-  if (!base) return undefined
-  const links = await db
-    .select({ serviceId: staffServices.serviceId })
-    .from(staffServices)
-    .where(
-      and(
-        eq(staffServices.salonId, salonId),
-        eq(staffServices.staffUserId, base.id),
-      ),
-    )
-  if (links.length === 0) {
-    return { ...base, serviceIds: null as string[] | null }
-  }
-  const unique = [...new Set(links.map((r) => r.serviceId))].sort()
-  return { ...base, serviceIds: unique }
+  return (await getAllStaff(salonId)).find((staff) => staff.id === id)
 }
 
 /** `null` or empty after delete = unrestricted (همه خدمات فعال). */

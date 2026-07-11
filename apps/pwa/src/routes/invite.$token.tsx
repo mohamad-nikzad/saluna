@@ -113,13 +113,13 @@ function StaffInviteLinkPage() {
           دعوت به {invite.salonName}
         </h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          شماره شما با این دعوت هم‌خوان است. پذیرش دعوت فقط بعد از تایید شماره
-          و انتخاب صریح شما انجام می‌شود.
+          شماره شما با این دعوت هم‌خوان است. پذیرش دعوت فقط بعد از تایید شماره و
+          انتخاب صریح شما انجام می‌شود.
         </p>
         <Button
           className="mt-6 w-full"
           onClick={() => {
-            void navigate({ to: '/dashboard', replace: true })
+            void navigate({ to: '/staff-invites', replace: true })
           }}
         >
           ادامه

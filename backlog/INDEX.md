@@ -12,7 +12,7 @@ No active backlog items.
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
-- [BL-0016 Staff can join multiple salons through invites](ready/BL-0016-staff-can-join-multiple-salons.md)
+- [BL-0016 Staff can join multiple salons through invites](done/BL-0016-staff-can-join-multiple-salons.md)
 - [BL-0041 Service catalog big-bang migration](ready/BL-0041-service-catalog-big-bang-migration.md)
 
 ## Inbox

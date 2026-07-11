@@ -1,12 +1,12 @@
 ---
 id: BL-0016
 title: Staff can join multiple salons through invites
-status: ready
+status: done
 type: feature
 priority: medium
 size: large
 created: 2026-06-13
-updated: 2026-07-09
+updated: 2026-07-11
 ---
 
 ## Problem Statement

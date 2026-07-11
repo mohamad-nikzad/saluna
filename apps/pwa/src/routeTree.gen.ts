@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StaffInvitesRouteImport } from './routes/staff-invites'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SelectSalonRouteImport } from './routes/select-salon'
 import { Route as LoginRouteImport } from './routes/login'
@@ -47,6 +48,11 @@ import { Route as AuthedOnboardingDoneRouteImport } from './routes/_authed/onboa
 import { Route as AuthedClientsImportRouteImport } from './routes/_authed/clients.import'
 import { Route as AuthedClientsIdRouteImport } from './routes/_authed/clients.$id'
 
+const StaffInvitesRoute = StaffInvitesRouteImport.update({
+  id: '/staff-invites',
+  path: '/staff-invites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
+  '/staff-invites': typeof StaffInvitesRoute
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
+  '/staff-invites': typeof StaffInvitesRoute
   '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/public-page': typeof AuthedPublicPageRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
+  '/staff-invites': typeof StaffInvitesRoute
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/select-salon'
     | '/signup'
+    | '/staff-invites'
     | '/calendar'
     | '/clients'
     | '/dashboard'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/select-salon'
     | '/signup'
+    | '/staff-invites'
     | '/calendar'
     | '/dashboard'
     | '/public-page'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/select-salon'
     | '/signup'
+    | '/staff-invites'
     | '/_authed/calendar'
     | '/_authed/clients'
     | '/_authed/dashboard'
@@ -468,12 +480,20 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SelectSalonRoute: typeof SelectSalonRoute
   SignupRoute: typeof SignupRoute
+  StaffInvitesRoute: typeof StaffInvitesRoute
   HandoffTokenRoute: typeof HandoffTokenRoute
   InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/staff-invites': {
+      id: '/staff-invites'
+      path: '/staff-invites'
+      fullPath: '/staff-invites'
+      preLoaderRoute: typeof StaffInvitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -849,6 +869,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SelectSalonRoute: SelectSalonRoute,
   SignupRoute: SignupRoute,
+  StaffInvitesRoute: StaffInvitesRoute,
   HandoffTokenRoute: HandoffTokenRoute,
   InviteTokenRoute: InviteTokenRoute,
 }

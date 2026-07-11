@@ -64,7 +64,12 @@ const app = new Hono<AppEnv>()
       origin: corsOrigin,
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+      allowHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Accept',
+        'X-Saluna-Salon-Id',
+      ],
       maxAge: 86400,
     }),
   )

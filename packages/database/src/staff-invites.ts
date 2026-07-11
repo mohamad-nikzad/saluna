@@ -340,7 +340,7 @@ export function evaluateResendManagerStaffInvite(input: {
 
 type StaffInviteTx = Parameters<
   Parameters<ReturnType<typeof getDb>['transaction']>[0]
->
+>[0]
 
 async function lockProfileAndPendingInvite(
   tx: StaffInviteTx,
@@ -386,7 +386,10 @@ export async function cancelManagerStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const { profile, pendingInvite } = await lockProfileAndPendingInvite(tx, input)
+    const { profile, pendingInvite } = await lockProfileAndPendingInvite(
+      tx,
+      input,
+    )
     const decision = evaluateCancelManagerStaffInvite({
       profile,
       pendingInvite,
@@ -431,7 +434,10 @@ export async function resendManagerStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const { profile, pendingInvite } = await lockProfileAndPendingInvite(tx, input)
+    const { profile, pendingInvite } = await lockProfileAndPendingInvite(
+      tx,
+      input,
+    )
     const decision = evaluateResendManagerStaffInvite({
       profile,
       pendingInvite,
@@ -563,10 +569,7 @@ export async function resolveStaffInviteByToken(input: {
     })
     .from(staffInvites)
     .innerJoin(organization, eq(organization.id, staffInvites.salonId))
-    .innerJoin(
-      staffProfiles,
-      eq(staffProfiles.id, staffInvites.staffProfileId),
-    )
+    .innerJoin(staffProfiles, eq(staffProfiles.id, staffInvites.staffProfileId))
     .where(eq(staffInvites.tokenHash, tokenHash))
     .limit(1)
 
@@ -673,9 +676,7 @@ export function evaluateStaffInviteLinkRouting(input: {
     return { action: 'unavailable', reason: 'not_pending' }
   }
   if (!input.sessionPresent) {
-    return input.phoneRegistered
-      ? { action: 'login' }
-      : { action: 'register' }
+    return input.phoneRegistered ? { action: 'login' } : { action: 'register' }
   }
   if (input.phonesMatch === false) {
     return { action: 'switch_account' }
@@ -711,6 +712,9 @@ export async function listPendingStaffInvitesForSalon(salonId: string) {
     .select()
     .from(staffInvites)
     .where(
-      and(eq(staffInvites.salonId, salonId), eq(staffInvites.status, 'pending')),
+      and(
+        eq(staffInvites.salonId, salonId),
+        eq(staffInvites.status, 'pending'),
+      ),
     )
 }
