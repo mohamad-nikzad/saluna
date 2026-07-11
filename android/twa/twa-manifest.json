@@ -13,33 +13,33 @@
   "backgroundColor": "#F8EFF0",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://app.saluna.ir/icons/icon-512x512.png?v=0.10.0-5934158",
-  "maskableIconUrl": "https://app.saluna.ir/icons/icon-maskable-512x512.png?v=0.10.0-5934158",
+  "iconUrl": "https://app.saluna.ir/icons/icon-512x512.png?v=0.11.0-7b519cf",
+  "maskableIconUrl": "https://app.saluna.ir/icons/icon-maskable-512x512.png?v=0.11.0-7b519cf",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "/Users/mohamad/Projects/saluna/android/signing/saluna-manager-release.jks",
     "alias": "saluna-manager"
   },
-  "appVersionName": "0.10.0",
-  "appVersionCode": 10,
+  "appVersionName": "0.11.0",
+  "appVersionCode": 11,
   "shortcuts": [
     {
       "name": "تقویم",
       "shortName": "تقویم",
       "url": "https://app.saluna.ir/calendar",
-      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.11.0-7b519cf"
     },
     {
       "name": "مشتریان",
       "shortName": "مشتریان",
       "url": "https://app.saluna.ir/clients",
-      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.11.0-7b519cf"
     },
     {
       "name": "امروز",
       "shortName": "امروز",
       "url": "https://app.saluna.ir/today",
-      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.10.0-5934158"
+      "chosenIconUrl": "https://app.saluna.ir/icons/icon-96x96.png?v=0.11.0-7b519cf"
     }
   ],
   "generatorApp": "bubblewrap-cli",
@@ -62,5 +62,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": ["standalone", "minimal-ui", "browser"],
-  "appVersion": "0.10.0"
+  "appVersion": "0.11.0"
 }
