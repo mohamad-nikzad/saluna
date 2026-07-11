@@ -62,9 +62,9 @@ Source package versions now declared in the repo:
 | Package       | Current `package.json` version | Deployment meaning              |
 | ------------- | ------------------------------ | ------------------------------- |
 | root `saluna` | `0.1.0`                        | workspace/package metadata only |
-| `@repo/api`   | `0.7.0`                        | current API app version         |
-| `@repo/web`   | `0.4.0`                        | current public web app version  |
-| `@repo/pwa`   | `0.7.0`                        | current manager PWA app version |
+| `@repo/api`   | `0.10.0`                       | current API app version         |
+| `@repo/web`   | `0.6.0`                        | current public web app version  |
+| `@repo/pwa`   | `0.11.0`                       | current manager PWA app version |
 
 These are bootstrap SemVer baselines assigned on `2026-06-06` from the current
 feature maturity. They are not a reconstruction of historical release numbers;
@@ -108,9 +108,9 @@ tags as build identifiers derived from those versions.
 
 | App         | Version source          | Current version | Example next patch | Example next feature |
 | ----------- | ----------------------- | --------------: | -----------------: | -------------------: |
-| API         | `apps/api/package.json` |         `0.7.0` |            `0.7.1` |              `0.8.0` |
-| Public web  | `apps/web/package.json` |         `0.4.0` |            `0.4.1` |              `0.5.0` |
-| Manager PWA | `apps/pwa/package.json` |         `0.7.0` |            `0.7.1` |              `0.8.0` |
+| API         | `apps/api/package.json` |        `0.10.0` |           `0.10.1` |             `0.11.0` |
+| Public web  | `apps/web/package.json` |         `0.6.0` |            `0.6.1` |              `0.7.0` |
+| Manager PWA | `apps/pwa/package.json` |        `0.11.0` |           `0.11.1` |             `0.12.0` |
 
 The root `package.json` can stay as workspace metadata, or become a product
 release version later. It should not block independent app releases.

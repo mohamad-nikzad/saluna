@@ -130,4 +130,6 @@ Replace the user-facing "claim or transfer staff access" model with an invite-ba
 
 - Original note: "Add support for staffs be able to join multiple salons".
 - This spec supersedes the old one-identity-one-salon assumption in ADR-0006.
-- BL-0016 is the shaped parent spec. Split implementation into smaller ready tickets before assigning build work.
+- Implementation ticket sequence and checklist: `tickets.md` (all closed 2026-07-11).
+- Shipped as invite create/accept/decline, Staff Profile Access auth, salon picker, revoke/leave, invite lifecycle, cross-salon notification fanout, and domain/ADR language retirement.
+- Admin Setup Salon unclaimed-profile + OTP attach paths remain for assisted setup (BL-0035 / BL-0036); manager/staff product flows use Staff Invite only.

@@ -1,8 +1,8 @@
 # Tickets: Multi-salon staff invites
 
-Build invite-based Staff Profile Access so one verified staff identity can work in multiple salons. Source spec: `backlog/ready/BL-0016-staff-can-join-multiple-salons.md`.
+Build invite-based Staff Profile Access so one verified staff identity can work in multiple salons. Source spec: `backlog/done/BL-0016-staff-can-join-multiple-salons.md`.
 
-Work the **frontier**: any ticket whose blockers are all done.
+All tickets below are closed (2026-07-11).
 
 ## Create manager Staff Invites
 
@@ -116,15 +116,19 @@ Work the **frontier**: any ticket whose blockers are all done.
 - [x] Current salon selection does not suppress notifications from other accepted salons.
 - [x] Notification tests cover multi-salon staff fanout and revoked-access exclusion.
 
+> Closed: Fan-out from all active Staff Profile Access; salon context on notifications; revoked/pending excluded
+
 ## Retire claim/transfer language and harden compatibility
 
 **What to build:** Domain language and docs move from Staff Account Claim and Staff Access Transfer to Staff Invite, Staff Invite Acceptance, Staff Profile Access, and Staff Access Revocation. Old claim/transfer paths are removed or kept only as temporary compatibility where necessary.
 
 **Blocked by:** Add staff salon picker and active salon context; Revoke and leave Staff Profile Access; Handle invite lifecycle and invite links; Send staff notifications across accepted salons.
 
-- [ ] Domain glossary describes Staff Invite, Staff Invite Acceptance, Staff Profile Access, and Staff Access Revocation.
-- [ ] The ADR for Staff Profiles and login identities is updated to allow one identity across many salon Staff Profiles.
-- [ ] User-facing copy no longer presents staff movement as claim or transfer.
-- [ ] Legacy claim/transfer internals are removed where safe or documented as compatibility-only.
-- [ ] The parent BL-0016 spec links to the implementation tickets or notes the final ticket sequence.
-- [ ] Final verification covers invite creation, acceptance, salon switching, revocation, notification fanout, and single-salon compatibility.
+- [x] Domain glossary describes Staff Invite, Staff Invite Acceptance, Staff Profile Access, and Staff Access Revocation.
+- [x] The ADR for Staff Profiles and login identities is updated to allow one identity across many salon Staff Profiles.
+- [x] User-facing copy no longer presents staff movement as claim or transfer.
+- [x] Legacy claim/transfer internals are removed where safe or documented as compatibility-only.
+- [x] The parent BL-0016 spec links to the implementation tickets or notes the final ticket sequence.
+- [x] Final verification covers invite creation, acceptance, salon switching, revocation, notification fanout, and single-salon compatibility.
+
+> Closed: CONTEXT.md + ADR-0006 updated; PWA manager/staff copy is invite-based; admin Setup Salon unclaimed-profile OTP attach kept as assisted-setup compatibility (BL-0035/BL-0036); parent spec points at this ticket sequence

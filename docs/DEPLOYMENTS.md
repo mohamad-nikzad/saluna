@@ -145,9 +145,9 @@ Each deployable app owns its version:
 
 | App         | Version source          | Current baseline |
 | ----------- | ----------------------- | ---------------: |
-| API         | `apps/api/package.json` |          `0.8.0` |
-| Public web  | `apps/web/package.json` |          `0.4.0` |
-| Manager PWA | `apps/pwa/package.json` |          `0.9.0` |
+| API         | `apps/api/package.json` |         `0.10.0` |
+| Public web  | `apps/web/package.json` |          `0.6.0` |
+| Manager PWA | `apps/pwa/package.json` |         `0.11.0` |
 
 Image tags are:
 
