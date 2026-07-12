@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-12 (BL-0052 split into per-file subtasks)
+Last organized: 2026-07-12 (BL-0052 and subtasks closed)
 
 ## Now
 
@@ -8,9 +8,6 @@ No active backlog items.
 
 ## Ready
 
-- [BL-0052 Allow managers to set an Appointment price within a 24-hour window](ready/BL-0052-appointment-price-editing-window.md)
-  - [BL-0053 Let managers set the final Appointment price on creation](ready/BL-0053-set-appointment-price-on-creation.md) — unblocked
-  - [BL-0054 Let managers edit an Appointment price for 24 hours after its scheduled end](ready/BL-0054-edit-appointment-price-for-24-hours.md) — blocked by BL-0053
 - [BL-0003 Unify search components and inputs](ready/BL-0003-unify-search-components-and-inputs.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
@@ -31,6 +28,9 @@ No active backlog items.
 
 ## Done
 
+- [BL-0052 Allow managers to set an Appointment price within a 24-hour window](done/BL-0052-appointment-price-editing-window.md)
+  - [BL-0053 Let managers set the final Appointment price on creation](done/BL-0053-set-appointment-price-on-creation.md)
+  - [BL-0054 Let managers edit an Appointment price for 24 hours after its scheduled end](done/BL-0054-edit-appointment-price-for-24-hours.md)
 - [BL-0041 Service catalog big-bang migration](done/BL-0041-service-catalog-big-bang-migration.md)
 - [BL-0031 Assisted Salon Setup and handoff](done/BL-0031-assisted-salon-setup-and-handoff.md)
 - [BL-0016 Staff can join multiple salons through invites](done/BL-0016-staff-can-join-multiple-salons.md)

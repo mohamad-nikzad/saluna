@@ -1,9 +1,8 @@
 ---
 id: BL-0052
 title: Allow managers to set an Appointment price within a 24-hour window
-status: ready
+status: done
 type: feature
-triage: ready-for-agent
 priority: medium
 size: medium
 created: 2026-07-12
@@ -56,14 +55,14 @@ Let managers set the final Appointment price while creating an Appointment and e
 
 ## Acceptance Criteria
 
-- [ ] Appointment creation shows the calculated ServiceVariant and add-on total as an editable final-price field for managers.
-- [ ] A manager-entered creation price is stored and returned as the Appointment's booked total price.
-- [ ] Managers can edit the stored final price until 24 hours after the Appointment's scheduled end time.
-- [ ] The price control is read-only after the deadline and explains that the editing window has closed.
-- [ ] The API rejects price updates after the deadline, including direct requests that bypass the PWA.
-- [ ] Existing staff permissions are unchanged and staff cannot edit Appointment prices.
-- [ ] Existing Appointments require no data migration and retain their stored booked total price.
-- [ ] Automated tests cover price creation, allowed edits, the time boundary, expired edits, validation, and authorization.
+- [x] Appointment creation shows the calculated ServiceVariant and add-on total as an editable final-price field for managers.
+- [x] A manager-entered creation price is stored and returned as the Appointment's booked total price.
+- [x] Managers can edit the stored final price until 24 hours after the Appointment's scheduled end time.
+- [x] The price control is read-only after the deadline and explains that the editing window has closed.
+- [x] The API rejects price updates after the deadline, including direct requests that bypass the PWA.
+- [x] Existing staff permissions are unchanged and staff cannot edit Appointment prices.
+- [x] Existing Appointments require no data migration and retain their stored booked total price.
+- [x] Automated tests cover price creation, allowed edits, the time boundary, expired edits, validation, and authorization.
 
 ## Out of Scope
 
@@ -77,3 +76,4 @@ Let managers set the final Appointment price while creating an Appointment and e
 
 - Source: feedback from a test user asking for Appointment price corrections up to 24 hours after the due time.
 - Current behavior only displays a calculated price preview; the editable numeric field in the Appointment form controls duration.
+- Closed 2026-07-12: BL-0053 and BL-0054 are done. Parent tracker closed after both subtasks shipped (`02450f5`, `804dd52`).
