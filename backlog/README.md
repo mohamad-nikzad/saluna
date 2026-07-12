@@ -21,6 +21,17 @@ Move an item by changing its `status` frontmatter and moving the file to the mat
 - Use project language from `CONTEXT.md`, especially `Appointment`, `AppointmentRequest`, `Client`, `Salon Presence`, and `ServiceVariant`.
 - Do not move more than one item into `now` unless the user explicitly asks.
 
+## Parent Features and Subtasks
+
+Large features may be split into independently executable subtasks. Every parent and subtask remains a separate backlog file; do not create a shared `tickets.md`.
+
+- A subtask declares `parent: BL-NNNN` in frontmatter.
+- A subtask declares `blocked_by: []` or a list of blocking backlog IDs.
+- A ready subtask uses `type: task` and `triage: ready-for-agent` when an agent can implement it without more context.
+- The parent links its children under a `## Subtasks` section.
+- `backlog/INDEX.md` nests subtask links beneath the parent instead of listing them as unrelated top-level work.
+- A subtask may start when every ID in `blocked_by` is `done`. Work the unblocked frontier one ticket at a time.
+
 ## Item Template
 
 ```md
@@ -29,8 +40,11 @@ id: BL-0000
 title: Short title
 status: inbox
 type: feature
+triage: needs-triage
 priority: medium
 size: medium
+parent: BL-0000
+blocked_by: []
 created: 2026-06-13
 updated: 2026-06-13
 ---
@@ -51,3 +65,5 @@ What is the smallest version worth shipping?
 
 - Original note or supporting context.
 ```
+
+Omit `parent` for top-level items. For subtasks, replace the placeholder with the real parent ID and use `type: task`.

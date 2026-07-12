@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-11 (BL-0031 and BL-0041 parent trackers closed)
+Last organized: 2026-07-12 (BL-0052 split into per-file subtasks)
 
 ## Now
 
@@ -8,6 +8,9 @@ No active backlog items.
 
 ## Ready
 
+- [BL-0052 Allow managers to set an Appointment price within a 24-hour window](ready/BL-0052-appointment-price-editing-window.md)
+  - [BL-0053 Let managers set the final Appointment price on creation](ready/BL-0053-set-appointment-price-on-creation.md) — unblocked
+  - [BL-0054 Let managers edit an Appointment price for 24 hours after its scheduled end](ready/BL-0054-edit-appointment-price-for-24-hours.md) — blocked by BL-0053
 - [BL-0003 Unify search components and inputs](ready/BL-0003-unify-search-components-and-inputs.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)

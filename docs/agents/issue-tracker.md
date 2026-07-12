@@ -11,10 +11,14 @@ GitHub Issues (`origin` → `github.com/mohamad-nikzad/saluna`) is a secondary s
 - **Status**: YAML frontmatter `status` field (`inbox` | `ready` | `now` | `done` | `archive`) — move the file when status changes
 - **Index**: `backlog/INDEX.md` lists items; update when adding or moving items
 - **Language**: use terms from `CONTEXT.md` (`Appointment`, `AppointmentRequest`, `Client`, etc.)
+- **Parent/subtask relationships**: each parent and subtask is its own backlog file; subtasks declare `parent` and `blocked_by` IDs in frontmatter
+- **Publishing ticket breakdowns**: create per-ticket backlog files and nest them under their parent in `backlog/INDEX.md`; do not create a shared root `tickets.md`
 
 ## When a skill says "publish to the issue tracker"
 
 Create a new file under `backlog/inbox/` (or `backlog/ready/` if already shaped), using the template in `backlog/README.md`. Assign the next `BL-NNNN` id.
+
+When publishing subtasks from a spec, keep the spec as the parent item. Create each approved vertical slice as a separate `type: task` file with `parent: BL-NNNN`, `blocked_by`, and the `ready-for-agent` triage role. Add a `## Subtasks` section to the parent and nest the ticket links beneath it in the index. Do not close or replace the parent.
 
 ## When a skill says "fetch the relevant ticket"
 
