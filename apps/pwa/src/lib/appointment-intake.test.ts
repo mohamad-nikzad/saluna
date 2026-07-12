@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Service, ServiceAddon, User } from '@repo/salon-core/types'
+import { appointmentFormSchema } from '@repo/salon-core/forms/appointment'
 
 import {
   appointmentCreateFormDefaults,
@@ -58,7 +59,23 @@ describe('appointmentCreateFormDefaults', () => {
       endTime: '10:45',
       durationMinutes: 45,
       serviceId: 'svc1',
+      finalPrice: 100_000,
     })
+  })
+
+  it('lets a manager replace the calculated final price before creation', () => {
+    const defaults = appointmentCreateFormDefaults({
+      initialDate: '2026-06-02',
+      initialTime: '10:00',
+      initialServiceId: 'svc1',
+      initialClientId: 'client-1',
+      initialStaffId: 's1',
+      services: [service],
+    })
+
+    expect(
+      appointmentFormSchema.parse({ ...defaults, finalPrice: '۸۵۰۰۰' }),
+    ).toMatchObject({ finalPrice: 85_000 })
   })
 })
 

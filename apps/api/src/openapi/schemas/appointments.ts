@@ -50,6 +50,7 @@ export const appointmentCreateBodySchema = bodyFromCoreSchema(
     startTime: z.string().openapi({ example: '10:00' }),
     endTime: z.string().optional().openapi({ example: '11:00' }),
     durationMinutes: z.number().optional(),
+    finalPrice: z.number().optional(),
     notes: z.string().optional(),
   },
   appointmentCreateSchema,

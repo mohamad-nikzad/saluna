@@ -4181,6 +4181,9 @@
           "durationMinutes": {
             "type": "number"
           },
+          "finalPrice": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           }

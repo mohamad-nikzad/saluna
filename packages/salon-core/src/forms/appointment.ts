@@ -16,6 +16,7 @@ import {
   phoneSchema,
   optionalTrimmedTextSchema,
   requiredTextSchema,
+  nonNegativeMoneySchema,
   timeOfDaySchema,
 } from './primitives'
 
@@ -35,6 +36,7 @@ const appointmentBaseSchema = z.object({
   startTime: timeOfDaySchema,
   endTime: timeOfDaySchema.optional(),
   durationMinutes: durationMinutesSchema.optional(),
+  finalPrice: nonNegativeMoneySchema.optional(),
   notes: optionalTrimmedTextSchema,
 })
 
@@ -141,6 +143,7 @@ export const appointmentFormSchema = z
     startTime: timeOfDaySchema,
     endTime: timeOfDaySchema,
     durationMinutes: durationMinutesSchema,
+    finalPrice: nonNegativeMoneySchema.optional(),
     notes: optionalTrimmedTextSchema,
   })
   .superRefine((values, ctx) => {
@@ -192,6 +195,7 @@ export const appointmentFormSchema = z
       startTime: values.startTime,
       endTime: values.endTime,
       durationMinutes: values.durationMinutes,
+      finalPrice: values.finalPrice,
       notes: values.notes,
     })
     if (!payload.success) {

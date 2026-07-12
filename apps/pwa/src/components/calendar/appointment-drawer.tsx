@@ -34,6 +34,7 @@ import {
 import { AppointmentClientField } from '#/components/calendar/appointment-client-field'
 import {
   appointmentCreateFormDefaults,
+  calculatedAppointmentPrice,
   applyTemporaryClientModePatch,
   buildAppointmentCreateViewModel,
   clampAppointmentDuration,
@@ -100,6 +101,7 @@ export function AppointmentDrawer({
 }: AppointmentDrawerProps) {
   const [localClients, setLocalClients] = useState<Client[]>(clients)
   const [mode, setMode] = useState<BookingMode>('single')
+  const finalPriceOverriddenRef = useRef(false)
   const form = useForm<AppointmentFormInput>({
     resolver: zodResolver(appointmentFormSchema, undefined, { raw: true }),
     defaultValues: {
@@ -111,6 +113,10 @@ export function AppointmentDrawer({
       startTime: formatTimeHm(parseTimeHm(initialTime)),
       endTime: endTimeFromDuration(formatTimeHm(parseTimeHm(initialTime)), 45),
       durationMinutes: 45,
+      finalPrice: calculatedAppointmentPrice(
+        services.find((service) => service.id === initialServiceId),
+        [],
+      ),
       notes: '',
       temporaryClientName: '',
       temporaryClientNotes: '',
@@ -136,6 +142,7 @@ export function AppointmentDrawer({
   const date = watch('date')
   const startTime = watch('startTime')
   const durationInput = watch('durationMinutes')
+  const finalPriceInput = watch('finalPrice')
   const durationMinutes = parseOptionalLocalizedInteger(durationInput) ?? 45
   const endTime =
     watch('endTime') || endTimeFromDuration(startTime, durationMinutes)
@@ -194,6 +201,7 @@ export function AppointmentDrawer({
   }, [clients])
 
   const resetFormForInitialSlot = useCallback(() => {
+    finalPriceOverriddenRef.current = false
     reset(
       appointmentCreateFormDefaults({
         initialDate,
@@ -228,6 +236,16 @@ export function AppointmentDrawer({
     const clamped = clampAppointmentDuration(mins)
     setValue('durationMinutes', clamped, { shouldDirty: true })
     setValue('endTime', endTimeFromDuration(startTime, clamped), {
+      shouldDirty: true,
+    })
+  }
+
+  const applyCalculatedFinalPrice = (
+    service: Service | undefined,
+    addons: ServiceAddon[] = [],
+  ) => {
+    if (finalPriceOverriddenRef.current) return
+    setValue('finalPrice', calculatedAppointmentPrice(service, addons), {
       shouldDirty: true,
     })
   }
@@ -311,11 +329,15 @@ export function AppointmentDrawer({
       shouldValidate: true,
     })
     applyDuration(next.durationMinutes)
+    applyCalculatedFinalPrice(
+      services.find((service) => service.id === next.serviceId),
+    )
   }
 
   const clearService = () => {
     setValue('serviceId', '', { shouldDirty: true, shouldValidate: true })
     setValue('addonIds', [], { shouldDirty: true, shouldValidate: true })
+    applyCalculatedFinalPrice(undefined)
   }
 
   const toggleAddon = (addon: ServiceAddon) => {
@@ -331,6 +353,10 @@ export function AppointmentDrawer({
       shouldValidate: true,
     })
     applyDuration(next.durationMinutes)
+    const nextAddons = availableAddons.filter((item) =>
+      next.addonIds.includes(item.id),
+    )
+    applyCalculatedFinalPrice(selectedService, nextAddons)
   }
 
   const handleStaffChange = (id: string) => {
@@ -346,6 +372,9 @@ export function AppointmentDrawer({
         shouldDirty: true,
         shouldValidate: true,
       })
+      applyCalculatedFinalPrice(
+        services.find((service) => service.id === next.serviceId),
+      )
     }
     if (next.durationMinutes != null) {
       applyDuration(next.durationMinutes)
@@ -628,6 +657,27 @@ export function AppointmentDrawer({
                     )}
                   </Field>
                 </div>
+
+                <Field>
+                  <FieldLabel htmlFor="final-price">
+                    قیمت نهایی (تومان)
+                  </FieldLabel>
+                  <LocalizedNumberInput
+                    id="final-price"
+                    value={finalPriceInput}
+                    onValueChange={(value) => {
+                      finalPriceOverriddenRef.current = true
+                      setValue('finalPrice', value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }}
+                    onBlur={() => void trigger('finalPrice')}
+                  />
+                  {errors.finalPrice && (
+                    <FieldError>{errors.finalPrice.message}</FieldError>
+                  )}
+                </Field>
 
                 <Field>
                   <FieldLabel htmlFor="notes">یادداشت (اختیاری)</FieldLabel>

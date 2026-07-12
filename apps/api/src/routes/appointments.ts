@@ -115,6 +115,7 @@ export const appointments = new Hono<AppEnv>()
         startTime,
         endTime: endTimeRaw,
         durationMinutes,
+        finalPrice,
         notes,
         id: requestedAppointmentId,
       } = c.req.valid('json')
@@ -161,11 +162,10 @@ export const appointments = new Hono<AppEnv>()
           )
         }
 
-        const appointment = await createAppointment(
-          intake.command,
-          salonId,
-          userId,
-        )
+        const appointment = await createAppointment(intake.command, salonId, {
+          createdByUserId: userId,
+          finalPrice,
+        })
 
         const staffNotification = await notifyStaffOfAppointmentCreated({
           salonId,

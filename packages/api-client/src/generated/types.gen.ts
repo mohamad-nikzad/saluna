@@ -1241,6 +1241,7 @@ export type AppointmentCreateRequest = {
   startTime: string
   endTime?: string
   durationMinutes?: number
+  finalPrice?: number
   notes?: string
 }
 

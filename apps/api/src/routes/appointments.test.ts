@@ -262,7 +262,53 @@ describe('appointments router', () => {
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
       detail: true,
+      bookedTotalPrice: 275000,
     } as never)
+    const res = await app.request('/api/v1/appointments', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        clientId: 'c1',
+        staffId: 'u1',
+        serviceId: 'svc1',
+        date: '2026-06-01',
+        startTime: '10:00',
+        durationMinutes: 30,
+        finalPrice: 275000,
+      }),
+    })
+    expect(res.status).toBe(200)
+    expect(appts.createAppointment).toHaveBeenCalledWith(
+      expect.anything(),
+      's1',
+      { createdByUserId: 'u1', finalPrice: 275000 },
+    )
+    expect(await res.json()).toEqual({
+      appointment: { id: 'a1', detail: true, bookedTotalPrice: 275000 },
+    })
+  })
+
+  it('POST / leaves calculated pricing in place when finalPrice is omitted', async () => {
+    vi.mocked(appts.validateCreateAppointmentIntake).mockResolvedValue({
+      ok: true,
+      command: {} as never,
+      client: { id: 'c1', name: 'Ali' },
+      staff: { id: 'u1', name: 'M' },
+      service: { id: 'svc1', name: 'Cut' },
+    } as never)
+    vi.mocked(appts.createAppointment).mockResolvedValue({
+      id: 'a1',
+      date: '2026-06-01',
+      startTime: '10:00',
+      clientId: 'c1',
+      staffId: 'u1',
+      serviceId: 'svc1',
+    } as never)
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
+      id: 'a1',
+      bookedTotalPrice: 120000,
+    } as never)
+
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
       headers: jsonHeaders,
@@ -275,10 +321,34 @@ describe('appointments router', () => {
         durationMinutes: 30,
       }),
     })
+
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
-      appointment: { id: 'a1', detail: true },
+      appointment: { id: 'a1', bookedTotalPrice: 120000 },
     })
+    expect(appts.createAppointment).toHaveBeenCalledWith(
+      expect.anything(),
+      's1',
+      { createdByUserId: 'u1', finalPrice: undefined },
+    )
+  })
+
+  it('POST / rejects an invalid finalPrice', async () => {
+    const res = await app.request('/api/v1/appointments', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        clientId: 'c1',
+        staffId: 'u1',
+        serviceId: 'svc1',
+        date: '2026-06-01',
+        startTime: '10:00',
+        durationMinutes: 30,
+        finalPrice: -1,
+      }),
+    })
+    expect(res.status).toBe(400)
+    expect(appts.createAppointment).not.toHaveBeenCalled()
   })
 
   it('POST / notifies assigned staff via active Staff Profile Access with salon context', async () => {

@@ -399,6 +399,7 @@ export async function getAppointmentById(
 
 export type CreateAppointmentOptions = {
   createdByUserId?: string
+  finalPrice?: number
   /**
    * Overrides the live service snapshot at insert time. Used by
    * `AppointmentRequest` approval so the customer is honored at the terms
@@ -429,6 +430,8 @@ export async function createAppointment(
     snapshotSource,
     selectedAddons,
   )
+  if (options.finalPrice !== undefined)
+    totals.bookedTotalPrice = options.finalPrice
   const bookedTotalDuration = durationMinutesFromRange(
     apt.startTime,
     apt.endTime,

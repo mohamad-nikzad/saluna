@@ -67,6 +67,16 @@ export type AppointmentCreateViewModel = {
   ) => { disabled: true; reason: string } | undefined
 }
 
+export function calculatedAppointmentPrice(
+  service: Service | undefined,
+  addons: ServiceAddon[],
+): number {
+  return (
+    (service?.price ?? 0) +
+    addons.reduce((sum, addon) => sum + addon.priceDelta, 0)
+  )
+}
+
 /** Service ids that have at least one eligible staff member. */
 export function serviceIdsWithStaffSet(
   staffRoleOnly: User[],
@@ -111,6 +121,7 @@ export function appointmentCreateFormDefaults({
     startTime,
     endTime: endTimeFromDuration(startTime, defaultDuration),
     durationMinutes: defaultDuration,
+    finalPrice: calculatedAppointmentPrice(initialService, []),
     notes: '',
     temporaryClientName: '',
     temporaryClientNotes: '',
@@ -149,9 +160,10 @@ export function buildAppointmentCreateViewModel({
   const previewDuration =
     (selectedService?.duration ?? durationMinutes) +
     selectedAddons.reduce((sum, addon) => sum + addon.durationDelta, 0)
-  const previewPrice =
-    (selectedService?.price ?? 0) +
-    selectedAddons.reduce((sum, addon) => sum + addon.priceDelta, 0)
+  const previewPrice = calculatedAppointmentPrice(
+    selectedService,
+    selectedAddons,
+  )
 
   const serviceIdsWithStaff = serviceIdsWithStaffSet(
     staffRoleOnly,

@@ -54,6 +54,23 @@ describe('appointmentCreateSchema', () => {
     ).toBe(false)
   })
 
+  it('accepts localized non-negative final prices and rejects invalid values', () => {
+    expect(
+      appointmentCreateSchema.parse({
+        ...base,
+        clientId: 'client-1',
+        finalPrice: '۲۷۵۰۰۰',
+      }).finalPrice,
+    ).toBe(275000)
+    expect(
+      appointmentCreateSchema.safeParse({
+        ...base,
+        clientId: 'client-1',
+        finalPrice: -1,
+      }).success,
+    ).toBe(false)
+  })
+
   it('rejects end before start and invalid dates', () => {
     expect(
       appointmentCreateSchema.safeParse({
@@ -117,6 +134,7 @@ describe('appointmentFormSchema', () => {
       ...base,
       useTemporaryClient: false,
       clientId: 'client-1',
+      finalPrice: '۲۷۵۰۰۰',
       notes: '   ',
     })
 
@@ -128,9 +146,9 @@ describe('appointmentFormSchema', () => {
       startTime: '09:30',
       endTime: '10:15',
       durationMinutes: 45,
+      finalPrice: 275000,
       notes: undefined,
-      id: undefined,
-      placeholderClient: undefined,
+      addonIds: undefined,
     })
   })
 
