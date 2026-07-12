@@ -4343,6 +4343,9 @@
           "durationMinutes": {
             "type": "number"
           },
+          "finalPrice": {
+            "type": "number"
+          },
           "status": {
             "type": "string",
             "enum": [

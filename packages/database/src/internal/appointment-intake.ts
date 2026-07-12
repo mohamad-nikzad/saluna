@@ -46,6 +46,7 @@ type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
+  finalPrice?: number
 }
 
 type AppointmentIntakeFailure = {
@@ -347,6 +348,7 @@ export async function validateUpdateAppointmentIntake(input: {
     startTime?: unknown
     endTime?: unknown
     durationMinutes?: unknown
+    finalPrice?: unknown
     addonIds?: unknown
     status?: unknown
     notes?: unknown
@@ -483,6 +485,8 @@ export async function validateUpdateAppointmentIntake(input: {
   if (body.status !== undefined)
     patch.status = body.status as Appointment['status']
   if (body.notes !== undefined) patch.notes = body.notes as string | undefined
+  if (body.finalPrice !== undefined)
+    patch.finalPrice = body.finalPrice as number
 
   return {
     ok: true,

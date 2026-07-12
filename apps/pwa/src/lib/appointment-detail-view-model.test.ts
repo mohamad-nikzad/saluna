@@ -152,6 +152,7 @@ describe('appointmentEditFormDefaults', () => {
       startTime: '10:00',
       endTime: '10:45',
       durationMinutes: 45,
+      finalPrice: 100_000,
       notes: '',
       addonIds: ['addon-a'],
     })

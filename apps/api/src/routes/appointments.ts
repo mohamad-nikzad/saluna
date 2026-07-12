@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { Appointment } from '@repo/salon-core/types'
 import type { AvailabilityMode } from '@repo/salon-core/availability'
 import { dayOfWeekFromDate } from '@repo/salon-core/staff-availability'
+import { canEditAppointmentPrice } from '@repo/salon-core/salon-local-time'
 import {
   createAppointment,
   deleteAppointment,
@@ -299,6 +300,13 @@ export const appointments = new Hono<AppEnv>()
         if (!staffCanPatchOwnStatus) {
           return error(c, 'دسترسی غیرمجاز', 403)
         }
+      }
+
+      if (
+        body.finalPrice !== undefined &&
+        !canEditAppointmentPrice(existing.date, existing.endTime)
+      ) {
+        return error(c, 'مهلت ویرایش مبلغ این نوبت به پایان رسیده است', 409)
       }
 
       let createdPlaceholderId: string | null = null

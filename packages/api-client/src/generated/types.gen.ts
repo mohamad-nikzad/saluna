@@ -1300,6 +1300,7 @@ export type AppointmentUpdateRequest = {
   startTime?: string
   endTime?: string
   durationMinutes?: number
+  finalPrice?: number
   status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
   notes?: string
 }

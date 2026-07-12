@@ -113,6 +113,7 @@ export const appointmentUpdateSchema = z.object({
   startTime: timeOfDaySchema.optional(),
   endTime: timeOfDaySchema.optional(),
   durationMinutes: durationMinutesSchema.optional(),
+  finalPrice: nonNegativeMoneySchema.optional(),
   status: appointmentStatusSchema.optional(),
   notes: optionalTrimmedTextSchema,
 })

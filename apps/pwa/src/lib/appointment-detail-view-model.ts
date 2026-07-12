@@ -129,6 +129,7 @@ export function appointmentEditFormDefaults(
       appointment.startTime,
       appointment.endTime,
     ),
+    finalPrice: appointment.bookedTotalPrice,
     notes: appointment.notes || '',
     addonIds:
       appointment.bookedAddons?.map((addon) => addon.serviceAddonId) ?? [],

@@ -73,6 +73,7 @@ export const appointmentUpdateBodySchema = bodyFromCoreSchema(
     startTime: z.string().optional(),
     endTime: z.string().optional(),
     durationMinutes: z.number().optional(),
+    finalPrice: z.number().optional(),
     status: z
       .enum(['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show'])
       .optional(),

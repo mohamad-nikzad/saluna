@@ -31,3 +31,21 @@ export function addDaysYmd(ymd: string, deltaDays: number): string {
   date.setUTCDate(date.getUTCDate() + deltaDays)
   return date.toISOString().slice(0, 10)
 }
+
+/** Converts a Tehran wall-clock date/time to its UTC instant. */
+export function salonDateTimeInstant(ymd: string, hm: string): Date {
+  const [year, month, day] = ymd.split('-').map(Number)
+  const [hour, minute] = hm.split(':').map(Number)
+  // Iran has observed permanent UTC+03:30 since 2022.
+  return new Date(Date.UTC(year, month - 1, day, hour, minute) - 210 * 60_000)
+}
+
+export function canEditAppointmentPrice(
+  date: string,
+  endTime: string,
+  now: Date = new Date(),
+): boolean {
+  const deadline =
+    salonDateTimeInstant(date, endTime).getTime() + 24 * 60 * 60_000
+  return now.getTime() <= deadline
+}

@@ -54,6 +54,8 @@ interface AppointmentDetailEditFormProps {
   durationMinutes: number
   endTime: string | undefined
   addonIds: string[]
+  finalPrice: string | number | undefined
+  priceEditable: boolean
   staffRoleOnly: User[]
   editableServices: Service[]
   selectedEditService: Service | undefined
@@ -93,6 +95,8 @@ export function AppointmentDetailEditForm({
   durationMinutes,
   endTime,
   addonIds,
+  finalPrice,
+  priceEditable,
   staffRoleOnly,
   editableServices,
   selectedEditService,
@@ -298,6 +302,30 @@ export function AppointmentDetailEditForm({
           />
           {editErrors.durationMinutes && (
             <FieldError>{editErrors.durationMinutes.message}</FieldError>
+          )}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="edit-final-price">قیمت نهایی (تومان)</FieldLabel>
+          <LocalizedNumberInput
+            id="edit-final-price"
+            value={finalPrice}
+            disabled={!priceEditable}
+            onValueChange={(value) =>
+              setEditValue('finalPrice', value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onBlur={() => void triggerEdit('finalPrice')}
+          />
+          {!priceEditable ? (
+            <p className="text-xs text-muted-foreground">
+              مهلت ۲۴ ساعته ویرایش مبلغ به پایان رسیده است.
+            </p>
+          ) : null}
+          {editErrors.finalPrice && (
+            <FieldError>{editErrors.finalPrice.message}</FieldError>
           )}
         </Field>
 

@@ -560,6 +560,39 @@ describe('appointments router', () => {
     expect(res.status).toBe(403)
   })
 
+  it('PATCH /:id rejects a staff price change', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(appts.getAppointmentById).mockResolvedValue({
+      id: 'a1',
+      staffId: 'profile-u2',
+      clientId: 'c1',
+      date: '2026-06-01',
+      endTime: '10:00',
+    } as never)
+    vi.mocked(clientsDb.getClientById).mockResolvedValue({
+      id: 'c1',
+      isPlaceholder: false,
+    } as never)
+
+    const res = await app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ finalPrice: 125_000 }),
+    })
+
+    expect(res.status).toBe(403)
+    expect(appts.validateUpdateAppointmentIntake).not.toHaveBeenCalled()
+  })
+
   it('PATCH /:id allows staff status-only update on own appointment', async () => {
     vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
     vi.mocked(resolveStaffTenantContext).mockResolvedValue({
@@ -632,6 +665,72 @@ describe('appointments router', () => {
       removedAppointmentId: 'a1',
       cleanup: true,
     })
+  })
+
+  it.each([
+    ['before the scheduled end', '2026-06-01T06:29:00.000Z'],
+    ['at the 24-hour boundary', '2026-06-02T06:30:00.000Z'],
+  ])('PATCH /:id allows a manager price change %s', async (_, now) => {
+    vi.setSystemTime(now)
+    vi.mocked(appts.getAppointmentById).mockResolvedValue({
+      id: 'a1',
+      staffId: 'u1',
+      clientId: 'c1',
+      date: '2026-06-01',
+      endTime: '10:00',
+      bookedTotalPrice: 100_000,
+    } as never)
+    vi.mocked(clientsDb.getClientById).mockResolvedValue({
+      id: 'c1',
+      isPlaceholder: false,
+    } as never)
+    vi.mocked(appts.validateUpdateAppointmentIntake).mockResolvedValue({
+      ok: true,
+      patch: { bookedTotalPrice: 125_000 },
+      client: { id: 'c1' },
+      staff: { id: 'u1' },
+      service: { id: 'svc1' },
+    } as never)
+    vi.mocked(appts.updateAppointment).mockResolvedValue({
+      id: 'a1',
+      clientId: 'c1',
+    } as never)
+
+    const res = await app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ finalPrice: 125_000 }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(appts.validateUpdateAppointmentIntake).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { finalPrice: 125_000 } }),
+    )
+  })
+
+  it('PATCH /:id rejects a manager price change after the 24-hour boundary', async () => {
+    vi.setSystemTime('2026-06-02T06:30:00.001Z')
+    vi.mocked(appts.getAppointmentById).mockResolvedValue({
+      id: 'a1',
+      staffId: 'u1',
+      clientId: 'c1',
+      date: '2026-06-01',
+      endTime: '10:00',
+      bookedTotalPrice: 100_000,
+    } as never)
+    vi.mocked(clientsDb.getClientById).mockResolvedValue({
+      id: 'c1',
+      isPlaceholder: false,
+    } as never)
+
+    const res = await app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ finalPrice: 125_000 }),
+    })
+
+    expect(res.status).toBe(409)
+    expect(appts.validateUpdateAppointmentIntake).not.toHaveBeenCalled()
   })
 
   it('DELETE /:id returns 403 for staff', async () => {

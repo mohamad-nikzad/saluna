@@ -53,6 +53,7 @@ type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
+  finalPrice?: number
 }
 
 function snapshotFromService(service: {
@@ -546,6 +547,11 @@ export async function updateAppointment(
   }
   if (data.status !== undefined) patch.status = data.status
   if (data.notes !== undefined) patch.notes = data.notes
+  if (data.finalPrice !== undefined) {
+    patch.bookedTotalPrice = data.finalPrice
+  } else if (serviceOrAddonsChanged) {
+    patch.bookedTotalPrice = existing.bookedTotalPrice
+  }
 
   const [row] = await db.transaction(async (tx) => {
     const [updated] = await tx

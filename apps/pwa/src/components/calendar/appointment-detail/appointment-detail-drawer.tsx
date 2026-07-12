@@ -93,6 +93,8 @@ export function AppointmentDetailDrawer({
             durationMinutes={drawer.durationMinutes}
             endTime={drawer.endTime}
             addonIds={drawer.addonIds}
+            finalPrice={drawer.finalPrice}
+            priceEditable={drawer.priceEditable}
             staffRoleOnly={drawer.staffRoleOnly}
             editableServices={drawer.editableServices}
             selectedEditService={drawer.selectedEditService}

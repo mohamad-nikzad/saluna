@@ -9,6 +9,7 @@ import type {
   AppointmentWithDetails,
 } from '@repo/salon-core/types'
 import { endTimeFromDuration } from '@repo/salon-core/appointment-time'
+import { canEditAppointmentPrice } from '@repo/salon-core/salon-local-time'
 import {
   appointmentFormSchema,
   completePlaceholderClientSchema,
@@ -105,7 +106,7 @@ export function useAppointmentDetailDrawer({
     setValue: setEditValue,
     trigger: triggerEdit,
     watch: watchEdit,
-    formState: { isSubmitting: isEditSubmitting },
+    formState: { dirtyFields, isSubmitting: isEditSubmitting },
   } = editForm
   const clientId = watchEdit('clientId') ?? ''
   const useTemporaryClient = Boolean(watchEdit('useTemporaryClient'))
@@ -119,6 +120,10 @@ export function useAppointmentDetailDrawer({
   const durationMinutes = parseOptionalLocalizedInteger(durationInput) ?? 45
   const endTime = watchEdit('endTime')
   const addonIds = watchEdit('addonIds') ?? []
+  const finalPrice = watchEdit('finalPrice')
+  const priceEditable = appointment
+    ? canEditAppointmentPrice(appointment.date, appointment.endTime)
+    : false
 
   const completeForm = useForm<CompletePlaceholderClientInput>({
     resolver: zodResolver(completePlaceholderClientSchema),
@@ -423,7 +428,10 @@ export function useAppointmentDetailDrawer({
     try {
       const change = await updateAppointment.mutateAsync({
         appointmentId: appointment.id,
-        values,
+        values: {
+          ...values,
+          finalPrice: dirtyFields.finalPrice ? values.finalPrice : undefined,
+        },
         nextStatus: status as AppointmentWithDetails['status'],
       })
       onSuccess(
@@ -549,6 +557,8 @@ export function useAppointmentDetailDrawer({
     durationMinutes,
     endTime,
     addonIds,
+    finalPrice,
+    priceEditable,
     staffRoleOnly,
     editableServices,
     selectedEditService,
