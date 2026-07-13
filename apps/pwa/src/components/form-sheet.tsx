@@ -1,9 +1,11 @@
 import * as React from 'react'
-import { Drawer as DrawerPrimitive } from 'vaul'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { XIcon } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
 import { useKeyboardInset } from '#/lib/use-keyboard-inset'
 import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
+
+const FormSheetOpenContext = React.createContext(false)
 
 function FormSheet({
   open,
@@ -16,15 +18,17 @@ function FormSheet({
 }) {
   useKeyboardInset(open)
   return (
-    <DrawerPrimitive.Root
-      open={open}
-      onOpenChange={onOpenChange}
-      dismissible={false}
-      repositionInputs={false}
-      data-slot="form-sheet"
-    >
-      {children}
-    </DrawerPrimitive.Root>
+    <FormSheetOpenContext.Provider value={open}>
+      <DialogPrimitive.Root
+        modal={open}
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) onOpenChange(true)
+        }}
+      >
+        {children}
+      </DialogPrimitive.Root>
+    </FormSheetOpenContext.Provider>
   )
 }
 
@@ -32,37 +36,52 @@ function FormSheetContent({
   className,
   children,
   onRequestClose,
+  onOpenAutoFocus,
+  forceMount,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content> & {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
   onRequestClose: () => void
 }) {
+  const open = React.useContext(FormSheetOpenContext)
+
   return (
-    <DrawerPrimitive.Portal>
-      <DrawerPrimitive.Overlay
+    <DialogPrimitive.Portal forceMount={forceMount}>
+      <DialogPrimitive.Overlay
+        forceMount={forceMount}
         data-slot="form-sheet-overlay"
-        className="fixed inset-0 z-50 bg-foreground/35 backdrop-blur-[3px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        style={{ pointerEvents: open ? undefined : 'none' }}
+        className="fixed inset-0 z-50 bg-foreground/35 duration-200 data-[state=open]:animate-in data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
       />
-      <DrawerPrimitive.Content
+      <DialogPrimitive.Content
+        forceMount={forceMount}
         data-slot="form-sheet-content"
         className={cn(
           'fixed inset-x-0 bottom-0 top-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden bg-card',
           'overscroll-contain',
-          'pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-150',
+          'pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-200',
+          'data-[state=open]:animate-in data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom-full data-[state=closed]:slide-out-to-bottom-full',
+          'motion-reduce:animate-none motion-reduce:transition-none',
           className,
         )}
+        onOpenAutoFocus={(event) => {
+          onOpenAutoFocus?.(event)
+          event.preventDefault()
+        }}
         {...props}
+        aria-hidden={open ? undefined : true}
+        inert={open ? undefined : true}
       >
         <button
           type="button"
           onClick={onRequestClose}
           aria-label="بستن"
-          className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] inset-e-3 z-10 flex size-10 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] inset-e-3 z-10 flex size-9 touch:size-11 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <XIcon className="size-4" />
         </button>
         {children}
-      </DrawerPrimitive.Content>
-    </DrawerPrimitive.Portal>
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
   )
 }
 
@@ -83,9 +102,9 @@ function FormSheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
 function FormSheetTitle({
   className,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Title>) {
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
-    <DrawerPrimitive.Title
+    <DialogPrimitive.Title
       data-slot="form-sheet-title"
       className={cn('text-foreground text-lg font-bold', className)}
       {...props}
@@ -96,9 +115,9 @@ function FormSheetTitle({
 function FormSheetDescription({
   className,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Description>) {
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
-    <DrawerPrimitive.Description
+    <DialogPrimitive.Description
       data-slot="form-sheet-description"
       className={cn('text-muted-foreground text-[13px]', className)}
       {...props}

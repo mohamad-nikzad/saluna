@@ -175,6 +175,14 @@ function CalendarPage() {
     defaultDate: format(navDate, 'yyyy-MM-dd'),
     defaultTime: businessWorkingStart,
   })
+  const {
+    closeCreateAfterSuccess,
+    closeDetail,
+    openCreate,
+    openCreateIntent,
+    openDetail,
+    setAvailabilityOpen,
+  } = appointmentFlow.actions
 
   const filterableServices = useMemo(() => {
     const byId = new Map(services.map((service) => [service.id, service]))
@@ -276,7 +284,7 @@ function CalendarPage() {
   useEffect(() => {
     if (!isManager || !search.clientId || clients.length === 0) return
     if (!clients.some((c) => c.id === search.clientId)) return
-    appointmentFlow.actions.openCreateIntent({
+    openCreateIntent({
       date: format(navDate, 'yyyy-MM-dd'),
       time: businessWorkingStart,
       clientId: search.clientId,
@@ -293,20 +301,20 @@ function CalendarPage() {
     navDate,
     businessWorkingStart,
     navigate,
-    appointmentFlow.actions,
+    openCreateIntent,
   ])
 
   useEffect(() => {
     if (!search.appointmentId) return
     const target = appointments.find((a) => a.id === search.appointmentId)
     if (!target) return
-    appointmentFlow.actions.openDetail(target)
+    openDetail(target)
     navigate({
       to: '/calendar',
       search: ({ date }) => ({ date }),
       replace: true,
     })
-  }, [search.appointmentId, appointments, navigate, appointmentFlow.actions])
+  }, [search.appointmentId, appointments, navigate, openDetail])
 
   const handleVisibleRangeChange = useCallback(
     (start: string, endInclusive: string, activeStart: Date) => {
@@ -332,18 +340,15 @@ function CalendarPage() {
 
   const handleAddAppointment = useCallback(() => {
     if (!isManager) return
-    appointmentFlow.actions.openCreate(
-      format(navDate, 'yyyy-MM-dd'),
-      businessWorkingStart,
-    )
-  }, [appointmentFlow.actions, businessWorkingStart, isManager, navDate])
+    openCreate(format(navDate, 'yyyy-MM-dd'), businessWorkingStart)
+  }, [businessWorkingStart, isManager, navDate, openCreate])
 
   const handleSlotSelect = useCallback(
     (dateStr: string, timeStr: string) => {
       if (!isManager) return
-      appointmentFlow.actions.openCreate(dateStr, timeStr)
+      openCreate(dateStr, timeStr)
     },
-    [appointmentFlow.actions, isManager],
+    [isManager, openCreate],
   )
 
   const handleOpenDaySummary = useCallback((dateStr: string) => {
@@ -359,17 +364,17 @@ function CalendarPage() {
     (dateStr: string) => {
       setSummaryDate(null)
       if (!isManager) return
-      appointmentFlow.actions.openCreate(dateStr, businessWorkingStart)
+      openCreate(dateStr, businessWorkingStart)
     },
-    [appointmentFlow.actions, businessWorkingStart, isManager],
+    [businessWorkingStart, isManager, openCreate],
   )
 
   const handleOpenAppointmentFromSummary = useCallback(
     (appointment: AppointmentWithDetails) => {
       setSummaryDate(null)
-      appointmentFlow.actions.openDetail(appointment)
+      openDetail(appointment)
     },
-    [appointmentFlow.actions],
+    [openDetail],
   )
 
   const handleJumpToFilteredAppointment = useCallback(() => {
@@ -411,12 +416,12 @@ function CalendarPage() {
   const handleAppointmentCreated = useCallback(
     (appointment: AppointmentWithDetails) => {
       upsertAppointmentInCache(appointment)
-      appointmentFlow.actions.closeCreateAfterSuccess()
+      closeCreateAfterSuccess()
       void queryClient.invalidateQueries({
         queryKey: appointmentsRangeInvalidationKeys()[0],
       })
     },
-    [appointmentFlow.actions, queryClient, upsertAppointmentInCache],
+    [closeCreateAfterSuccess, queryClient, upsertAppointmentInCache],
   )
 
   const handlePackageBooked = useCallback(() => {
@@ -427,25 +432,28 @@ function CalendarPage() {
 
   const handleOpenAvailability = useCallback(() => {
     if (!isManager) return
-    appointmentFlow.actions.setAvailabilityOpen(true)
-  }, [appointmentFlow.actions, isManager])
+    setAvailabilityOpen(true)
+  }, [isManager, setAvailabilityOpen])
 
-  const handleAppointmentClick = (appointment: AppointmentWithDetails) => {
-    const supportsCluster = view === 'day' || view === 'week'
-    const cluster = clustersById.get(appointment.id)
-    if (supportsCluster && cluster && cluster.length > 1) {
-      setConcurrentCluster(cluster)
-      return
-    }
-    appointmentFlow.actions.openDetail(appointment)
-  }
+  const handleAppointmentClick = useCallback(
+    (appointment: AppointmentWithDetails) => {
+      const supportsCluster = view === 'day' || view === 'week'
+      const cluster = clustersById.get(appointment.id)
+      if (supportsCluster && cluster && cluster.length > 1) {
+        setConcurrentCluster(cluster)
+        return
+      }
+      openDetail(appointment)
+    },
+    [clustersById, openDetail, view],
+  )
 
   const handleConcurrentSelect = useCallback(
     (appointment: AppointmentWithDetails) => {
       setConcurrentCluster(null)
-      appointmentFlow.actions.openDetail(appointment)
+      openDetail(appointment)
     },
-    [appointmentFlow.actions],
+    [openDetail],
   )
 
   const handleDetailChange = useCallback(
@@ -457,13 +465,13 @@ function CalendarPage() {
           }),
           (current) => current?.filter((a) => a.id !== change.id),
         )
-        appointmentFlow.actions.closeDetail()
+        closeDetail()
       } else {
         upsertAppointmentInCache(change.appointment)
         if (change.source === 'edit') {
-          appointmentFlow.actions.closeDetail()
+          closeDetail()
         } else {
-          appointmentFlow.actions.openDetail(change.appointment)
+          openDetail(change.appointment)
         }
       }
       void queryClient.invalidateQueries({
@@ -471,7 +479,8 @@ function CalendarPage() {
       })
     },
     [
-      appointmentFlow.actions,
+      closeDetail,
+      openDetail,
       queryClient,
       startDate,
       endDate,

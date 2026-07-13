@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { startTransition, useCallback, useState } from 'react'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
 import type {
@@ -12,6 +12,7 @@ import {
 
 export type AppointmentFlowState = {
   createOpen: boolean
+  createSession: number
   availabilityOpen: boolean
   detailAppointment: AppointmentWithDetails | null
   createIntent: AppointmentCreateIntent
@@ -22,6 +23,7 @@ export function useAppointmentFlow(defaults?: {
   defaultTime?: string
 }) {
   const [createOpen, setCreateOpen] = useState(false)
+  const [createSession, setCreateSession] = useState(0)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [detailAppointment, setDetailAppointment] =
     useState<AppointmentWithDetails | null>(null)
@@ -37,23 +39,31 @@ export function useAppointmentFlow(defaults?: {
     setCreateIntent(emptyCreateIntent(date, time))
   }, [])
 
-  const openCreateIntent = useCallback((intent: AppointmentCreateIntent) => {
+  const prepareCreate = useCallback((intent: AppointmentCreateIntent) => {
     setCreateIntent(intent)
-    setCreateOpen(true)
+    setCreateSession((current) => current + 1)
+    requestAnimationFrame(() => {
+      startTransition(() => setCreateOpen(true))
+    })
   }, [])
 
-  const openCreate = useCallback((date: string, time: string) => {
-    setCreateIntent(emptyCreateIntent(date, time))
-    setCreateOpen(true)
-  }, [])
+  const openCreateIntent = useCallback(
+    (intent: AppointmentCreateIntent) => prepareCreate(intent),
+    [prepareCreate],
+  )
+
+  const openCreate = useCallback(
+    (date: string, time: string) =>
+      prepareCreate(emptyCreateIntent(date, time)),
+    [prepareCreate],
+  )
 
   const openCreateFromAvailability = useCallback(
     (selection: AppointmentAvailabilitySelection) => {
       setAvailabilityOpen(false)
-      setCreateIntent(availabilitySelectionToCreateIntent(selection))
-      requestAnimationFrame(() => setCreateOpen(true))
+      prepareCreate(availabilitySelectionToCreateIntent(selection))
     },
-    [],
+    [prepareCreate],
   )
 
   const openDetail = useCallback((appointment: AppointmentWithDetails) => {
@@ -89,6 +99,7 @@ export function useAppointmentFlow(defaults?: {
   return {
     state: {
       createOpen,
+      createSession,
       availabilityOpen,
       detailAppointment,
       createIntent,

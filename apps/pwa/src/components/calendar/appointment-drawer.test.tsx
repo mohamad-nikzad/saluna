@@ -126,4 +126,49 @@ describe('AppointmentDrawer final price', () => {
       ),
     )
   })
+
+  it('prepares fresh defaults while closed before a new form session opens', async () => {
+    const service = {
+      id: 'service-1',
+      name: 'کوتاهی',
+      category: 'hair',
+      categoryId: 'category-1',
+      color: 'rose',
+      duration: 60,
+      price: 120_000,
+      active: true,
+    } as Service
+    const staff = {
+      id: 'staff-1',
+      role: 'staff',
+      name: 'پرسنل',
+      serviceIds: ['service-1'],
+    } as User
+    const client = { id: 'client-1', name: 'سارا' } as Client
+    const props = {
+      open: false,
+      onOpenChange: vi.fn(),
+      initialDate: '2026-06-02',
+      initialTime: '10:00',
+      initialStaffId: staff.id,
+      initialServiceId: service.id,
+      initialClientId: client.id,
+      staff: [staff],
+      services: [service],
+      clients: [client],
+      onSuccess: vi.fn(),
+    }
+    const view = render(<AppointmentDrawer {...props} formSession={0} />)
+
+    fireEvent.change(screen.getByLabelText('قیمت نهایی (تومان)'), {
+      target: { value: '۸۵۰۰۰' },
+    })
+    view.rerender(<AppointmentDrawer {...props} formSession={1} />)
+
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText('قیمت نهایی (تومان)') as HTMLInputElement).value,
+      ).toBe('۱۲۰۰۰۰'),
+    )
+  })
 })

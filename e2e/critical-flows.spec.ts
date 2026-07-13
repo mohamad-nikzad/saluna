@@ -6,7 +6,6 @@ import {
   loginStaffExpectsToday,
   logoutFromSettings,
   SEEDED_MANAGER,
-  SEEDED_STAFF,
   signupNewSalon,
 } from './helpers/auth'
 import { LoginPage } from './pages/login.page'
@@ -253,7 +252,7 @@ test.describe('Critical salon journeys', () => {
     })
     await test.step('Drawer title', async () => {
       await expect(
-        page.getByRole('heading', { name: 'نوبت جدید' }),
+        page.getByRole('heading', { name: 'ثبت نوبت' }),
       ).toBeVisible()
     })
     await test.step('Dismiss', async () => {
@@ -275,7 +274,7 @@ test.describe('Critical salon journeys', () => {
     await test.step('Open new-visit drawer from FAB', async () => {
       await page.getByLabel('نوبت جدید').click()
       await expect(
-        page.getByRole('heading', { name: 'نوبت جدید' }),
+        page.getByRole('heading', { name: 'ثبت نوبت' }),
       ).toBeVisible()
     })
 
@@ -316,7 +315,7 @@ test.describe('Critical salon journeys', () => {
 
     await test.step('Drawer closes', async () => {
       await expect(
-        page.getByRole('heading', { name: 'نوبت جدید' }),
+        page.getByRole('heading', { name: 'ثبت نوبت' }),
       ).not.toBeVisible({ timeout: 20_000 })
     })
   })
@@ -385,9 +384,9 @@ test.describe('Critical salon journeys', () => {
     })
     await test.step('Pre-filled create drawer', async () => {
       await expect(page).toHaveURL(/\/calendar/)
-      await expect(
-        page.getByRole('heading', { name: 'نوبت جدید' }),
-      ).toBeVisible({ timeout: 20_000 })
+      await expect(page.getByRole('heading', { name: 'ثبت نوبت' })).toBeVisible(
+        { timeout: 20_000 },
+      )
     })
     await page.getByRole('button', { name: 'انصراف' }).click()
   })

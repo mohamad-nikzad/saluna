@@ -45,7 +45,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-foreground/35 backdrop-blur-[3px]',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-foreground/35 duration-200 motion-reduce:animate-none',
         className,
       )}
       {...props}
@@ -67,7 +67,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          'group/drawer-content bg-card fixed z-50 flex h-auto min-h-0 flex-col overflow-hidden',
+          'group/drawer-content bg-card fixed z-50 flex h-auto min-h-0 flex-col overflow-hidden motion-reduce:!transition-none',
           'overscroll-contain',
           'data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80dvh] data-[vaul-drawer-direction=top]:rounded-b-[28px] data-[vaul-drawer-direction=top]:shadow-[0_12px_48px_-16px_rgba(42,20,25,0.28)]',
           'data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-[28px] data-[vaul-drawer-direction=bottom]:shadow-[0_-12px_48px_-16px_rgba(42,20,25,0.28)]',

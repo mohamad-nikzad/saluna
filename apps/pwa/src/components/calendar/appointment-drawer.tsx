@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -26,11 +26,7 @@ import type {
   AppointmentWithDetails,
   ServicePackage,
 } from '@repo/salon-core/types'
-import {
-  endTimeFromDuration,
-  formatTimeHm,
-  parseTimeHm,
-} from '@repo/salon-core/appointment-time'
+import { endTimeFromDuration } from '@repo/salon-core/appointment-time'
 import { AppointmentClientField } from '#/components/calendar/appointment-client-field'
 import {
   appointmentCreateFormDefaults,
@@ -67,6 +63,7 @@ const DURATION_PRESETS = [30, 45, 60, 90, 120]
 type BookingMode = 'single' | 'package'
 
 interface AppointmentDrawerProps {
+  formSession?: number
   open: boolean
   onOpenChange: (open: boolean) => void
   initialDate: string
@@ -84,6 +81,7 @@ interface AppointmentDrawerProps {
 }
 
 export function AppointmentDrawer({
+  formSession = 0,
   open,
   onOpenChange,
   initialDate,
@@ -101,27 +99,18 @@ export function AppointmentDrawer({
 }: AppointmentDrawerProps) {
   const [localClients, setLocalClients] = useState<Client[]>(clients)
   const [mode, setMode] = useState<BookingMode>('single')
+  const [hasOpened, setHasOpened] = useState(open)
   const finalPriceOverriddenRef = useRef(false)
   const form = useForm<AppointmentFormInput>({
     resolver: zodResolver(appointmentFormSchema, undefined, { raw: true }),
-    defaultValues: {
-      useTemporaryClient: false,
-      clientId: '',
-      staffId: initialStaffId ?? '',
-      serviceId: initialServiceId ?? '',
-      date: initialDate,
-      startTime: formatTimeHm(parseTimeHm(initialTime)),
-      endTime: endTimeFromDuration(formatTimeHm(parseTimeHm(initialTime)), 45),
-      durationMinutes: 45,
-      finalPrice: calculatedAppointmentPrice(
-        services.find((service) => service.id === initialServiceId),
-        [],
-      ),
-      notes: '',
-      temporaryClientName: '',
-      temporaryClientNotes: '',
-      addonIds: [],
-    },
+    defaultValues: appointmentCreateFormDefaults({
+      initialDate,
+      initialTime,
+      initialStaffId,
+      initialServiceId,
+      initialClientId,
+      services,
+    }),
   })
   const {
     control,
@@ -200,7 +189,14 @@ export function AppointmentDrawer({
     setLocalClients(clients)
   }, [clients])
 
-  const resetFormForInitialSlot = useCallback(() => {
+  useEffect(() => {
+    if (open) setHasOpened(true)
+  }, [open])
+
+  const formSessionRef = useRef(formSession)
+  useLayoutEffect(() => {
+    if (formSessionRef.current === formSession) return
+    formSessionRef.current = formSession
     finalPriceOverriddenRef.current = false
     reset(
       appointmentCreateFormDefaults({
@@ -213,8 +209,10 @@ export function AppointmentDrawer({
       }),
     )
     setLocalClients(clients)
+    setMode('single')
   }, [
     clients,
+    formSession,
     initialClientId,
     initialDate,
     initialServiceId,
@@ -223,14 +221,6 @@ export function AppointmentDrawer({
     reset,
     services,
   ])
-  const initialIntentKey = [
-    initialDate,
-    initialTime,
-    initialStaffId ?? '',
-    initialServiceId ?? '',
-    initialClientId ?? '',
-  ].join('|')
-  const initialIntentKeyRef = useRef(initialIntentKey)
 
   const applyDuration = (mins: number) => {
     const clamped = clampAppointmentDuration(mins)
@@ -276,32 +266,11 @@ export function AppointmentDrawer({
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
       setMode('single')
-      resetFormForInitialSlot()
       onOpenChange(true)
       return
     }
     requestClose(false)
   }
-
-  const wasOpenRef = useRef(open)
-
-  useEffect(() => {
-    if (open && !wasOpenRef.current) {
-      setMode('single')
-      resetFormForInitialSlot()
-    }
-    wasOpenRef.current = open
-  }, [open, resetFormForInitialSlot])
-
-  useEffect(() => {
-    if (!open) {
-      initialIntentKeyRef.current = initialIntentKey
-      return
-    }
-    if (initialIntentKeyRef.current === initialIntentKey) return
-    initialIntentKeyRef.current = initialIntentKey
-    resetFormForInitialSlot()
-  }, [initialIntentKey, open, resetFormForInitialSlot])
 
   useEffect(() => {
     if (open && useTemporaryClient) {
@@ -443,7 +412,10 @@ export function AppointmentDrawer({
 
   return (
     <FormSheet open={open} onOpenChange={handleOpenChange}>
-      <FormSheetContent onRequestClose={closeActiveMode}>
+      <FormSheetContent
+        forceMount={hasOpened || open ? true : undefined}
+        onRequestClose={closeActiveMode}
+      >
         <FormSheetHeader className="gap-2 pb-2">
           <FormSheetTitle className="text-base">
             {mode === 'single' ? 'ثبت نوبت' : 'ثبت پکیج'}

@@ -47,8 +47,13 @@ export function AppointmentFlowDrawers({
   intakeEnabled = true,
 }: AppointmentFlowDrawersProps) {
   const { state, actions } = flow
-  const { createIntent, createOpen, availabilityOpen, detailAppointment } =
-    state
+  const {
+    createIntent,
+    createOpen,
+    createSession,
+    availabilityOpen,
+    detailAppointment,
+  } = state
 
   return (
     <>
@@ -78,6 +83,7 @@ export function AppointmentFlowDrawers({
           />
 
           <AppointmentDrawer
+            formSession={createSession}
             open={createOpen}
             onOpenChange={actions.handleCreateOpenChange}
             initialDate={createIntent.date}

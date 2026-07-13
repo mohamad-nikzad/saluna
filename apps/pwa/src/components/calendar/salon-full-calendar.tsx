@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import type {
   DateSelectArg,
@@ -151,7 +151,7 @@ export interface SalonFullCalendarProps {
   isRefreshing?: boolean
 }
 
-export function SalonFullCalendar({
+export const SalonFullCalendar = memo(function SalonFullCalendar({
   className,
   appointments,
   view,
@@ -587,4 +587,4 @@ export function SalonFullCalendar({
       />
     </div>
   )
-}
+})
