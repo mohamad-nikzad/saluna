@@ -36,8 +36,8 @@ function FormSheetContent({
   className,
   children,
   onRequestClose,
+  onEscapeKeyDown,
   onOpenAutoFocus,
-  forceMount,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   onRequestClose: () => void
@@ -46,15 +46,13 @@ function FormSheetContent({
   const closeButtonRef = React.useRef<HTMLButtonElement>(null)
 
   return (
-    <DialogPrimitive.Portal forceMount={forceMount}>
+    <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
-        forceMount={forceMount}
         data-slot="form-sheet-overlay"
         style={{ pointerEvents: open ? undefined : 'none' }}
         className="fixed inset-0 z-50 bg-foreground/35 duration-200 will-change-[opacity] data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none"
       />
       <DialogPrimitive.Content
-        forceMount={forceMount}
         data-slot="form-sheet-content"
         className={cn(
           'fixed inset-x-0 bottom-0 top-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden bg-card will-change-transform',
@@ -63,6 +61,12 @@ function FormSheetContent({
           'motion-reduce:animate-none motion-reduce:transition-none',
           className,
         )}
+        onEscapeKeyDown={(event) => {
+          onEscapeKeyDown?.(event)
+          if (event.defaultPrevented) return
+          event.preventDefault()
+          onRequestClose()
+        }}
         onOpenAutoFocus={(event) => {
           onOpenAutoFocus?.(event)
           if (event.defaultPrevented) return

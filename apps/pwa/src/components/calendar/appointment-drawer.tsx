@@ -446,7 +446,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
 
   return (
     <>
-      <FormSheetContent forceMount onRequestClose={closeActiveMode}>
+      <FormSheetContent onRequestClose={closeActiveMode}>
         <TemporaryClientFocus
           enabled={useTemporaryClient}
           focus={() => setFocus('temporaryClientName')}

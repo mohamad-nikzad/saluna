@@ -217,11 +217,11 @@ test.describe('Critical salon journeys', () => {
       ).toBeVisible()
     })
     await test.step('Close drawer', async () => {
-      await page
-        .getByRole('dialog', { name: 'جزئیات نوبت' })
-        .getByRole('button', { name: 'بستن' })
-        .first()
-        .click()
+      const drawer = page.getByRole('dialog', { name: 'جزئیات نوبت' })
+      await drawer.getByRole('button', { name: 'بستن' }).first().click()
+      await expect(drawer).toBeHidden()
+      await page.waitForTimeout(500)
+      await expect(drawer).toBeHidden()
     })
   })
 

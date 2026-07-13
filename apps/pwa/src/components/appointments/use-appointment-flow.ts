@@ -31,6 +31,7 @@ export function useAppointmentFlow(defaults?: {
   const [createOpen, setCreateOpen] = useState(false)
   const [createFormRevision, setCreateFormRevision] = useState(0)
   const openedFormRevisionRef = useRef(0)
+  const shouldOpenCreateRef = useRef(false)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [detailAppointment, setDetailAppointment] =
     useState<AppointmentWithDetails | null>(null)
@@ -47,6 +48,7 @@ export function useAppointmentFlow(defaults?: {
   }, [])
 
   const prepareCreate = useCallback((intent: AppointmentCreateIntent) => {
+    shouldOpenCreateRef.current = true
     startTransition(() => {
       setCreateIntent(intent)
       setCreateFormRevision((current) => current + 1)
@@ -60,6 +62,7 @@ export function useAppointmentFlow(defaults?: {
     )
       return
     const frame = requestAnimationFrame(() => {
+      if (!shouldOpenCreateRef.current) return
       openedFormRevisionRef.current = createFormRevision
       startTransition(() => setCreateOpen(true))
     })
@@ -94,6 +97,7 @@ export function useAppointmentFlow(defaults?: {
   }, [])
 
   const handleCreateOpenChange = useCallback((open: boolean) => {
+    shouldOpenCreateRef.current = open
     setCreateOpen(open)
     if (!open) {
       setCreateIntent((current) => ({
@@ -106,6 +110,7 @@ export function useAppointmentFlow(defaults?: {
   }, [])
 
   const closeCreateAfterSuccess = useCallback(() => {
+    shouldOpenCreateRef.current = false
     setCreateOpen(false)
     setCreateIntent((current) => ({
       ...current,

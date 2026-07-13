@@ -76,10 +76,11 @@ describe('FormSheet', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
 
     expect(onOpenChange).not.toHaveBeenCalled()
+    expect(onRequestClose).toHaveBeenCalledOnce()
 
     fireEvent.click(screen.getByRole('button', { name: 'بستن' }))
 
-    expect(onRequestClose).toHaveBeenCalledOnce()
+    expect(onRequestClose).toHaveBeenCalledTimes(2)
   })
 
   it('prompts before discarding a dirty form', () => {

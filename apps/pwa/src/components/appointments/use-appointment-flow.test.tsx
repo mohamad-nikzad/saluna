@@ -79,4 +79,24 @@ describe('useAppointmentFlow', () => {
     expect(result.current.state.createFormRevision).toBe(2)
     expect(result.current.state.createOpen).toBe(true)
   })
+
+  it('does not reopen after closing while another open frame is pending', () => {
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback)
+      return frames.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    const { result } = renderHook(() => useAppointmentFlow())
+
+    act(() => result.current.actions.openCreate('2026-07-14', '10:30'))
+    act(() => frames.shift()?.(0))
+    expect(result.current.state.createOpen).toBe(true)
+
+    act(() => result.current.actions.openCreate('2026-07-14', '10:30'))
+    act(() => result.current.actions.handleCreateOpenChange(false))
+    act(() => frames.shift()?.(16))
+
+    expect(result.current.state.createOpen).toBe(false)
+  })
 })
