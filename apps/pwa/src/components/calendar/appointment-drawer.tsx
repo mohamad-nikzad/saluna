@@ -1,4 +1,14 @@
-import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
+import {
+  memo,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useMemo,
+  type ComponentProps,
+} from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -63,7 +73,7 @@ const DURATION_PRESETS = [30, 45, 60, 90, 120]
 type BookingMode = 'single' | 'package'
 
 interface AppointmentDrawerProps {
-  formSession?: number
+  formRevision?: number
   open: boolean
   onOpenChange: (open: boolean) => void
   initialDate: string
@@ -80,9 +90,40 @@ interface AppointmentDrawerProps {
   onClientsChanged?: () => void
 }
 
-export function AppointmentDrawer({
-  formSession = 0,
-  open,
+const AppointmentDrawerActiveContext = createContext(false)
+
+function ActiveAppointmentClientField({
+  ...props
+}: Omit<ComponentProps<typeof AppointmentClientField>, 'hostActive'>) {
+  const active = useContext(AppointmentDrawerActiveContext)
+  return <AppointmentClientField {...props} hostActive={active} />
+}
+
+function ActivePackageBookingForm({
+  ...props
+}: Omit<ComponentProps<typeof PackageBookingForm>, 'active'>) {
+  const active = useContext(AppointmentDrawerActiveContext)
+  return <PackageBookingForm {...props} active={active} />
+}
+
+function TemporaryClientFocus({
+  enabled,
+  focus,
+}: {
+  enabled: boolean
+  focus: () => void
+}) {
+  const active = useContext(AppointmentDrawerActiveContext)
+
+  useEffect(() => {
+    if (active && enabled) requestAnimationFrame(focus)
+  }, [active, enabled, focus])
+
+  return null
+}
+
+const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
+  formRevision = 0,
   onOpenChange,
   initialDate,
   initialTime,
@@ -96,10 +137,9 @@ export function AppointmentDrawer({
   onSuccess,
   onPackageBooked,
   onClientsChanged,
-}: AppointmentDrawerProps) {
+}: Omit<AppointmentDrawerProps, 'open'>) {
   const [localClients, setLocalClients] = useState<Client[]>(clients)
   const [mode, setMode] = useState<BookingMode>('single')
-  const [hasOpened, setHasOpened] = useState(open)
   const finalPriceOverriddenRef = useRef(false)
   const form = useForm<AppointmentFormInput>({
     resolver: zodResolver(appointmentFormSchema, undefined, { raw: true }),
@@ -114,6 +154,7 @@ export function AppointmentDrawer({
   })
   const {
     control,
+    getValues,
     handleSubmit,
     register,
     reset,
@@ -122,7 +163,7 @@ export function AppointmentDrawer({
     setValue,
     trigger,
     watch,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isDirty, isSubmitted, isSubmitting, touchedFields },
   } = form
 
   const clientId = watch('clientId')
@@ -140,13 +181,13 @@ export function AppointmentDrawer({
   const temporaryClientNotes = watch('temporaryClientNotes') ?? ''
   const addonIds = watch('addonIds') ?? []
   const staffSlotOk = useStaffBookingAvailability(
-    open,
+    true,
     date,
     startTime,
     endTime,
   )
   const { data: availableAddons = [], isPending: addonsLoading } =
-    useServiceAddons(serviceId ?? '', open && !!serviceId)
+    useServiceAddons(serviceId ?? '', !!serviceId)
   const createViewModel = useMemo(
     () =>
       buildAppointmentCreateViewModel({
@@ -189,37 +230,45 @@ export function AppointmentDrawer({
     setLocalClients(clients)
   }, [clients])
 
-  useEffect(() => {
-    if (open) setHasOpened(true)
-  }, [open])
-
-  const formSessionRef = useRef(formSession)
+  const formRevisionRef = useRef(formRevision)
   useLayoutEffect(() => {
-    if (formSessionRef.current === formSession) return
-    formSessionRef.current = formSession
+    if (formRevisionRef.current === formRevision) return
+    formRevisionRef.current = formRevision
     finalPriceOverriddenRef.current = false
-    reset(
-      appointmentCreateFormDefaults({
-        initialDate,
-        initialTime,
-        initialStaffId,
-        initialServiceId,
-        initialClientId,
-        services,
-      }),
-    )
+    const nextDefaults = appointmentCreateFormDefaults({
+      initialDate,
+      initialTime,
+      initialStaffId,
+      initialServiceId,
+      initialClientId,
+      services,
+    })
+    const needsReset =
+      isDirty ||
+      isSubmitted ||
+      Object.keys(errors).length > 0 ||
+      Object.keys(touchedFields).length > 0 ||
+      JSON.stringify(getValues()) !== JSON.stringify(nextDefaults)
+    if (needsReset) {
+      reset(nextDefaults)
+    }
     setLocalClients(clients)
     setMode('single')
   }, [
     clients,
-    formSession,
+    errors,
+    formRevision,
+    getValues,
     initialClientId,
     initialDate,
     initialServiceId,
     initialStaffId,
     initialTime,
+    isDirty,
+    isSubmitted,
     reset,
     services,
+    touchedFields,
   ])
 
   const applyDuration = (mins: number) => {
@@ -262,21 +311,6 @@ export function AppointmentDrawer({
     isDirty: isDirty && !isSubmitting,
     onClose: () => onOpenChange(false),
   })
-
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
-      setMode('single')
-      onOpenChange(true)
-      return
-    }
-    requestClose(false)
-  }
-
-  useEffect(() => {
-    if (open && useTemporaryClient) {
-      requestAnimationFrame(() => setFocus('temporaryClientName'))
-    }
-  }, [open, setFocus, useTemporaryClient])
 
   const handleServiceChange = (id: string) => {
     const next = resolveIntakeServiceChange({
@@ -411,11 +445,12 @@ export function AppointmentDrawer({
     )
 
   return (
-    <FormSheet open={open} onOpenChange={handleOpenChange}>
-      <FormSheetContent
-        forceMount={hasOpened || open ? true : undefined}
-        onRequestClose={closeActiveMode}
-      >
+    <>
+      <FormSheetContent forceMount onRequestClose={closeActiveMode}>
+        <TemporaryClientFocus
+          enabled={useTemporaryClient}
+          focus={() => setFocus('temporaryClientName')}
+        />
         <FormSheetHeader className="gap-2 pb-2">
           <FormSheetTitle className="text-base">
             {mode === 'single' ? 'ثبت نوبت' : 'ثبت پکیج'}
@@ -455,7 +490,7 @@ export function AppointmentDrawer({
                   <FieldLabel>
                     مشتری <span className="text-destructive">*</span>
                   </FieldLabel>
-                  <AppointmentClientField
+                  <ActiveAppointmentClientField
                     checkboxId="temporary-client-mode"
                     useTemporaryClient={useTemporaryClient}
                     onTemporaryClientModeChange={
@@ -465,7 +500,6 @@ export function AppointmentDrawer({
                     toggleVariant="subtle"
                     clients={localClients}
                     clientId={clientId ?? ''}
-                    hostActive={open}
                     contactActionPlacement="beside"
                     onClientChange={(id) =>
                       setValue('clientId', id, {
@@ -759,8 +793,7 @@ export function AppointmentDrawer({
             </FormSheetFooter>
           </>
         ) : (
-          <PackageBookingForm
-            active={open && mode === 'package'}
+          <ActivePackageBookingForm
             initialDate={initialDate}
             initialTime={initialTime}
             packages={packages}
@@ -776,6 +809,22 @@ export function AppointmentDrawer({
         )}
       </FormSheetContent>
       {confirmDialog}
-    </FormSheet>
+    </>
+  )
+})
+
+export function AppointmentDrawer({ open, ...props }: AppointmentDrawerProps) {
+  const [hasOpened, setHasOpened] = useState(open)
+
+  useEffect(() => {
+    if (open) setHasOpened(true)
+  }, [open])
+
+  return (
+    <AppointmentDrawerActiveContext.Provider value={open}>
+      <FormSheet open={open} onOpenChange={props.onOpenChange}>
+        {hasOpened ? <AppointmentDrawerForm {...props} /> : null}
+      </FormSheet>
+    </AppointmentDrawerActiveContext.Provider>
   )
 }

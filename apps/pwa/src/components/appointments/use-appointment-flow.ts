@@ -1,4 +1,10 @@
-import { startTransition, useCallback, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
 import type {
@@ -12,7 +18,7 @@ import {
 
 export type AppointmentFlowState = {
   createOpen: boolean
-  createSession: number
+  createFormRevision: number
   availabilityOpen: boolean
   detailAppointment: AppointmentWithDetails | null
   createIntent: AppointmentCreateIntent
@@ -23,7 +29,8 @@ export function useAppointmentFlow(defaults?: {
   defaultTime?: string
 }) {
   const [createOpen, setCreateOpen] = useState(false)
-  const [createSession, setCreateSession] = useState(0)
+  const [createFormRevision, setCreateFormRevision] = useState(0)
+  const openedFormRevisionRef = useRef(0)
   const [availabilityOpen, setAvailabilityOpen] = useState(false)
   const [detailAppointment, setDetailAppointment] =
     useState<AppointmentWithDetails | null>(null)
@@ -40,12 +47,24 @@ export function useAppointmentFlow(defaults?: {
   }, [])
 
   const prepareCreate = useCallback((intent: AppointmentCreateIntent) => {
-    setCreateIntent(intent)
-    setCreateSession((current) => current + 1)
-    requestAnimationFrame(() => {
-      startTransition(() => setCreateOpen(true))
+    startTransition(() => {
+      setCreateIntent(intent)
+      setCreateFormRevision((current) => current + 1)
     })
   }, [])
+
+  useEffect(() => {
+    if (
+      createFormRevision === 0 ||
+      createFormRevision === openedFormRevisionRef.current
+    )
+      return
+    const frame = requestAnimationFrame(() => {
+      openedFormRevisionRef.current = createFormRevision
+      startTransition(() => setCreateOpen(true))
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [createFormRevision])
 
   const openCreateIntent = useCallback(
     (intent: AppointmentCreateIntent) => prepareCreate(intent),
@@ -99,7 +118,7 @@ export function useAppointmentFlow(defaults?: {
   return {
     state: {
       createOpen,
-      createSession,
+      createFormRevision,
       availabilityOpen,
       detailAppointment,
       createIntent,

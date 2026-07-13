@@ -66,10 +66,9 @@ async function armProbe(
         const longTasksMs = []
         const recordLongTasks = (entries) => {
           for (const entry of entries) {
-            const attributableDuration =
-              entry.duration - Math.max(0, startedAt - entry.startTime)
-            if (attributableDuration > 0) {
-              longTasksMs.push(attributableDuration)
+            // Ignore the browser input-dispatch task that began before capture.
+            if (entry.startTime >= startedAt) {
+              longTasksMs.push(entry.duration)
             }
           }
         }
@@ -91,10 +90,15 @@ async function armProbe(
           const content = surfaces.find(
             (surface) => surface.getAttribute('data-slot') === 'form-sheet-content',
           )
+          const contentRect =
+            content instanceof HTMLElement
+              ? content.getBoundingClientRect()
+              : null
           const visible =
-            content instanceof HTMLElement &&
+            contentRect !== null &&
             content.dataset.state === 'open' &&
-            content.getBoundingClientRect().height > 0
+            contentRect.bottom > 0 &&
+            contentRect.top < window.innerHeight
           const visuallyClosed =
             surfaces.length === 0 ||
             surfaces.every(

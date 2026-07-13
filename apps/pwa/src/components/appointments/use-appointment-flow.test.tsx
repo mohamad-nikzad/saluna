@@ -21,7 +21,7 @@ describe('useAppointmentFlow', () => {
 
     act(() => result.current.actions.openCreate('2026-07-14', '10:30'))
 
-    expect(result.current.state.createSession).toBe(1)
+    expect(result.current.state.createFormRevision).toBe(1)
     expect(result.current.state.createIntent).toEqual({
       date: '2026-07-14',
       time: '10:30',
@@ -30,7 +30,7 @@ describe('useAppointmentFlow', () => {
     act(() => result.current.actions.handleCreateOpenChange(false))
     act(() => result.current.actions.openCreate('2026-07-14', '10:30'))
 
-    expect(result.current.state.createSession).toBe(2)
+    expect(result.current.state.createFormRevision).toBe(2)
   })
 
   it('preserves prefilled and availability intent values in a fresh session', () => {
@@ -57,7 +57,7 @@ describe('useAppointmentFlow', () => {
       serviceId: 'service-1',
       clientId: 'client-1',
     })
-    expect(result.current.state.createSession).toBe(1)
+    expect(result.current.state.createFormRevision).toBe(1)
 
     act(() =>
       result.current.actions.openCreateFromAvailability({
@@ -76,7 +76,7 @@ describe('useAppointmentFlow', () => {
       staffId: 'staff-2',
       serviceId: 'service-2',
     })
-    expect(result.current.state.createSession).toBe(2)
+    expect(result.current.state.createFormRevision).toBe(2)
     expect(result.current.state.createOpen).toBe(true)
   })
 })

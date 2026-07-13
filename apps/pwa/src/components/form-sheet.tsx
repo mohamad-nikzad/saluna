@@ -43,6 +43,7 @@ function FormSheetContent({
   onRequestClose: () => void
 }) {
   const open = React.useContext(FormSheetOpenContext)
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null)
 
   return (
     <DialogPrimitive.Portal forceMount={forceMount}>
@@ -50,28 +51,36 @@ function FormSheetContent({
         forceMount={forceMount}
         data-slot="form-sheet-overlay"
         style={{ pointerEvents: open ? undefined : 'none' }}
-        className="fixed inset-0 z-50 bg-foreground/35 duration-200 data-[state=open]:animate-in data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
+        className="fixed inset-0 z-50 bg-foreground/35 duration-200 will-change-[opacity] data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none"
       />
       <DialogPrimitive.Content
         forceMount={forceMount}
         data-slot="form-sheet-content"
         className={cn(
-          'fixed inset-x-0 bottom-0 top-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden bg-card',
+          'fixed inset-x-0 bottom-0 top-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden bg-card will-change-transform',
           'overscroll-contain',
-          'pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-200',
-          'data-[state=open]:animate-in data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom-full data-[state=closed]:slide-out-to-bottom-full',
+          'pb-[var(--keyboard-inset,0px)] transition-[padding-bottom] duration-200 data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-full',
           'motion-reduce:animate-none motion-reduce:transition-none',
           className,
         )}
         onOpenAutoFocus={(event) => {
           onOpenAutoFocus?.(event)
+          if (event.defaultPrevented) return
           event.preventDefault()
+          // Let the sheet paint before focus work on lower-end devices.
+          window.setTimeout(() => {
+            const closeButton = closeButtonRef.current
+            if (closeButton?.closest('[data-state="open"]')) {
+              closeButton.focus()
+            }
+          }, 100)
         }}
         {...props}
         aria-hidden={open ? undefined : true}
         inert={open ? undefined : true}
       >
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onRequestClose}
           aria-label="بستن"

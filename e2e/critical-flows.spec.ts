@@ -255,6 +255,16 @@ test.describe('Critical salon journeys', () => {
         page.getByRole('heading', { name: 'ثبت نوبت' }),
       ).toBeVisible()
     })
+    await test.step('Keyboard focus remains contained', async () => {
+      const dialog = page.getByRole('dialog', { name: 'ثبت نوبت' })
+      await expect(dialog.getByRole('button', { name: 'بستن' })).toBeFocused()
+      await page.keyboard.press('Tab')
+      expect(
+        await dialog.evaluate((element) =>
+          element.contains(document.activeElement),
+        ),
+      ).toBe(true)
+    })
     await test.step('Dismiss', async () => {
       await page.getByRole('button', { name: 'انصراف' }).click()
     })

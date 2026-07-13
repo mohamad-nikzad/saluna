@@ -28,19 +28,33 @@ vi.mock('#/components/form-sheet', () => ({
   ),
 }))
 vi.mock('#/components/calendar/appointment-client-field', () => ({
-  AppointmentClientField: () => null,
+  AppointmentClientField: ({ clientId }: { clientId: string }) => (
+    <output data-testid="client-id">{clientId}</output>
+  ),
 }))
 vi.mock('#/components/calendar/staff-picker', () => ({
-  StaffPicker: () => null,
+  StaffPicker: ({ value }: { value?: string }) => (
+    <output data-testid="staff-id">{value}</output>
+  ),
 }))
 vi.mock('#/components/services/service-picker', () => ({
-  ServicePicker: () => null,
+  ServicePicker: ({ value }: { value?: string }) => (
+    <output data-testid="service-id">{value}</output>
+  ),
 }))
 vi.mock('#/components/calendar/package-booking-form', () => ({
   PackageBookingForm: () => null,
 }))
-vi.mock('@repo/ui/jalali-date-picker', () => ({ JalaliDatePicker: () => null }))
-vi.mock('@repo/ui/time-picker', () => ({ TimePicker: () => null }))
+vi.mock('@repo/ui/jalali-date-picker', () => ({
+  JalaliDatePicker: ({ value }: { value: string }) => (
+    <output data-testid="date">{value}</output>
+  ),
+}))
+vi.mock('@repo/ui/time-picker', () => ({
+  TimePicker: ({ id, value }: { id?: string; value: string }) => (
+    <output data-testid={`time-${id}`}>{value}</output>
+  ),
+}))
 vi.mock('#/lib/use-dismiss-guard', () => ({
   useDismissGuard: ({ onClose }: { onClose: () => void }) => ({
     requestClose: onClose,
@@ -158,17 +172,23 @@ describe('AppointmentDrawer final price', () => {
       clients: [client],
       onSuccess: vi.fn(),
     }
-    const view = render(<AppointmentDrawer {...props} formSession={0} />)
+    const view = render(<AppointmentDrawer {...props} open formRevision={0} />)
+    view.rerender(<AppointmentDrawer {...props} formRevision={0} />)
 
     fireEvent.change(screen.getByLabelText('قیمت نهایی (تومان)'), {
       target: { value: '۸۵۰۰۰' },
     })
-    view.rerender(<AppointmentDrawer {...props} formSession={1} />)
+    view.rerender(<AppointmentDrawer {...props} formRevision={1} />)
 
     await waitFor(() =>
       expect(
         (screen.getByLabelText('قیمت نهایی (تومان)') as HTMLInputElement).value,
       ).toBe('۱۲۰۰۰۰'),
     )
+    expect(screen.getByTestId('client-id').textContent).toBe(client.id)
+    expect(screen.getByTestId('staff-id').textContent).toBe(staff.id)
+    expect(screen.getByTestId('service-id').textContent).toBe(service.id)
+    expect(screen.getByTestId('date').textContent).toBe(props.initialDate)
+    expect(screen.getByTestId('time-time').textContent).toBe(props.initialTime)
   })
 })

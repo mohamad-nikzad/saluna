@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -42,7 +48,7 @@ function GuardedFormSheet({
 }
 
 describe('FormSheet', () => {
-  it('exposes an accessible dialog and keeps dismissal on the explicit close control', () => {
+  it('exposes an accessible dialog and keeps dismissal on the explicit close control', async () => {
     const onOpenChange = vi.fn()
     const onRequestClose = vi.fn()
 
@@ -60,6 +66,11 @@ describe('FormSheet', () => {
     expect(descriptionId).toBeTruthy()
     expect(document.getElementById(descriptionId!)?.textContent).toBe(
       'مشخصات نوبت را وارد کنید.',
+    )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'بستن' }),
+      ),
     )
 
     fireEvent.keyDown(document, { key: 'Escape' })
