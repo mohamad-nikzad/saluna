@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Banknote, Clock3, Pencil, Plus, Search, Sparkles } from 'lucide-react'
+import { Banknote, Clock3, Pencil, Plus, Sparkles } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { Card, CardTitle } from '@repo/ui/card'
-import { Input } from '@repo/ui/input'
+import { SearchInput } from '@repo/ui/search-input'
 import { Spinner } from '@repo/ui/spinner'
 import type {
   Service,
@@ -130,15 +130,12 @@ export function ServiceAddonManager({
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:gap-4">
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="جستجوی افزودنی…"
-                className="h-9 bg-blush-soft pr-9 text-sm"
-              />
-            </div>
+            <SearchInput
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="جستجوی افزودنی…"
+              className="text-sm"
+            />
             <Button
               size="sm"
               className="justify-center gap-1 touch-manipulation"

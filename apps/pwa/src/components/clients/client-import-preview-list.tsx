@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { Search } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Card } from '@repo/ui/card'
 import { Checkbox } from '@repo/ui/checkbox'
 import { Input } from '@repo/ui/input'
+import { SearchInput } from '@repo/ui/search-input'
 import { cn } from '@repo/ui/utils'
 import {
   MAX_BULK_CLIENTS,
@@ -120,15 +120,12 @@ export function ClientImportPreviewList({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 space-y-2 border-b border-line-soft px-4 py-3">
-        <div className="relative px-1 py-1.5">
-          <Input
+        <div className="px-1 py-1.5">
+          <SearchInput
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="جستجو نام یا شماره…"
-            className="ps-9"
-            type="search"
           />
-          <Search className="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
         <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {pills.map((pill) => (

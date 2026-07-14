@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Crown, Phone, Plus, Search, Sparkles } from 'lucide-react'
+import { Crown, Phone, Plus, Sparkles } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
-import { Input } from '@repo/ui/input'
 import { SakuraMark } from '@repo/ui/sakura-mark'
+import { SearchInput } from '@repo/ui/search-input'
 import { cn } from '@repo/ui/utils'
 import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
@@ -216,18 +216,13 @@ function ClientsPage() {
           </Button>
         </div>
 
-        <div className="relative mt-3.5">
-          <Search
-            className="pointer-events-none absolute inset-y-0 my-auto size-4 text-muted-foreground"
-            style={{ insetInlineStart: '0.875rem' }}
-          />
-          <Input
-            placeholder="جستجوی نام یا شماره…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-11 rounded-2xl border-line-soft bg-blush-soft ps-10 pe-4 text-sm shadow-none"
-          />
-        </div>
+        <SearchInput
+          placeholder="جستجوی نام یا شماره…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          containerClassName="mt-3.5 rounded-2xl border-line-soft shadow-none"
+          className="text-sm"
+        />
 
         <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5 scrollbar-hide">
           {chips.map((chip) => {

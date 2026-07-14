@@ -1,7 +1,7 @@
 import { Skeleton } from '@repo/ui/skeleton'
 import { Button } from '@repo/ui/button'
-import { Plus, Search } from 'lucide-react'
-import { Input } from '@repo/ui/input'
+import { Plus } from 'lucide-react'
+import { SearchInput } from '@repo/ui/search-input'
 
 function ClientRowSkeleton() {
   return (
@@ -28,14 +28,11 @@ export function ClientsSkeleton() {
       </header>
 
       <div className="bg-card px-4 pb-3">
-        <div className="relative">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="جستجوی مشتری…"
-            disabled
-            className="pr-9 h-10 bg-muted/50 border-0"
-          />
-        </div>
+        <SearchInput
+          placeholder="جستجوی مشتری…"
+          disabled
+          containerClassName="border-0 bg-muted/50 shadow-none"
+        />
       </div>
 
       <div className="flex-1 overflow-auto">

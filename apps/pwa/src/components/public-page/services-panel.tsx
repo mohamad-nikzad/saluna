@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Eye, EyeOff, Search, X } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
-import { Input } from '@repo/ui/input'
+import { SearchInput } from '@repo/ui/search-input'
 import { cn } from '@repo/ui/utils'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
@@ -42,25 +42,13 @@ export function ServicesPanel({
   return (
     <div className="pb-5">
       <div className="sticky top-0 z-10 flex flex-col gap-2.5 bg-background/95 px-5 py-3 backdrop-blur">
-        <div className="relative">
-          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="جستجوی خدمت…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pr-10"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              className="absolute left-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-              aria-label="پاک کردن"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          placeholder="جستجوی خدمت…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          clearable
+          clearLabel="پاک کردن"
+        />
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-2 rounded-lg bg-muted p-0.5 text-xs">
             {(['all', 'visible', 'hidden'] as const).map((f) => (

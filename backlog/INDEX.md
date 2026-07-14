@@ -8,7 +8,6 @@ No active backlog items.
 
 ## Ready
 
-- [BL-0003 Unify search components and inputs](ready/BL-0003-unify-search-components-and-inputs.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
@@ -28,6 +27,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0003 Unify search components and inputs](done/BL-0003-unify-search-components-and-inputs.md)
 - [BL-0052 Allow managers to set an Appointment price within a 24-hour window](done/BL-0052-appointment-price-editing-window.md)
   - [BL-0053 Let managers set the final Appointment price on creation](done/BL-0053-set-appointment-price-on-creation.md)
   - [BL-0054 Let managers edit an Appointment price for 24 hours after its scheduled end](done/BL-0054-edit-appointment-price-for-24-hours.md)

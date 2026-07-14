@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
-import { AlertTriangle, ChevronLeft, FileUp, Search } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, FileUp } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
-import { Input } from '@repo/ui/input'
+import { SearchInput } from '@repo/ui/search-input'
 import { cn } from '@repo/ui/utils'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
@@ -65,18 +65,13 @@ function GuideSearchHeader({
 }) {
   return (
     <div className="shrink-0 px-4 pt-3">
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute inset-y-0 my-auto size-4 text-muted-foreground"
-          style={{ insetInlineStart: '0.875rem' }}
-        />
-        <Input
-          placeholder="جستجوی برند یا سیستم…"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          className="h-11 rounded-2xl border-line-soft bg-blush-soft ps-10 pe-4 text-sm shadow-none"
-        />
-      </div>
+      <SearchInput
+        placeholder="جستجوی برند یا سیستم…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        containerClassName="rounded-2xl border-line-soft shadow-none"
+        className="text-sm"
+      />
       <p className="mt-2 text-[12px] text-muted-foreground">
         یک راهنما را باز کنید، مراحل را روی گوشی انجام دهید، بعد فایل را انتخاب
         کنید.
