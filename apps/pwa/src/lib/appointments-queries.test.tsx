@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
 
 import {
+  appointmentsRangeInvalidationKeys,
   appointmentsRangeQueryOptions,
   getApiV1AppointmentsQueryKey,
 } from '#/lib/appointments-queries'
@@ -25,6 +26,17 @@ describe('appointments-queries', () => {
         query: { startDate: '2026-01-01', endDate: '2026-01-31' },
       })[0]._id,
     ).toBe('getApiV1Appointments')
+  })
+
+  it('invalidates commission reports when an appointment changes', () => {
+    expect(
+      appointmentsRangeInvalidationKeys().map((key) => key[0]?._id),
+    ).toEqual([
+      'getApiV1Appointments',
+      'getApiV1CommissionsStaffByIdReport',
+      'getApiV1CommissionsMe',
+      'getApiV1CommissionsSalon',
+    ])
   })
 
   it('selects appointments from the generated list response', async () => {

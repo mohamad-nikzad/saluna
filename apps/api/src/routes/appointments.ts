@@ -346,6 +346,7 @@ export const appointments = new Hono<AppEnv>()
         if (
           isManagerRole(role) &&
           status === 'cancelled' &&
+          existing.status !== 'completed' &&
           existingClient.isPlaceholder
         ) {
           const cancelled = await cancelIncompletePlaceholderAppointment({

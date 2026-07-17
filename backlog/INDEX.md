@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-12 (BL-0052 and subtasks closed)
+Last organized: 2026-07-17 (BL-0019 Staff Commission work completed)
 
 ## Now
 
@@ -20,13 +20,19 @@ No active backlog items.
 - [BL-0014 Payment plans and feature gates](inbox/BL-0014-payment-plans-and-feature-gates.md)
 - [BL-0017 Accounting features](inbox/BL-0017-accounting-features.md)
 - [BL-0018 Customer-facing Telegram and Bale bot](inbox/BL-0018-customer-facing-telegram-and-bale-bot.md)
-- [BL-0019 Staff and salon income cuts](inbox/BL-0019-staff-and-salon-income-cuts.md)
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
 
 ## Done
 
+- [BL-0019 Configure and report Staff Commissions](done/BL-0019-configure-and-report-staff-commissions.md)
+  - [BL-0055 Activate Staff Commission for a regular Appointment](done/BL-0055-activate-staff-commission.md)
+  - [BL-0056 Keep Staff Commission correct through changes and deletion](done/BL-0056-correct-staff-commission-lifecycle.md)
+  - [BL-0057 Add period-based per-staff commission reporting](done/BL-0057-add-per-staff-commission-reporting.md)
+  - [BL-0058 Add salon-wide commission reporting](done/BL-0058-add-salon-wide-commission-reporting.md)
+  - [BL-0059 Allocate Service Package revenue to Staff Commissions](done/BL-0059-allocate-package-revenue-to-commissions.md)
+  - [BL-0060 Preserve commissions through Staff Profile Access changes](done/BL-0060-preserve-commissions-through-staff-access.md)
 - [BL-0003 Unify search components and inputs](done/BL-0003-unify-search-components-and-inputs.md)
 - [BL-0052 Allow managers to set an Appointment price within a 24-hour window](done/BL-0052-appointment-price-editing-window.md)
   - [BL-0053 Let managers set the final Appointment price on creation](done/BL-0053-set-appointment-price-on-creation.md)

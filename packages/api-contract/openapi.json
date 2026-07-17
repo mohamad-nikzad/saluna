@@ -4417,6 +4417,270 @@
         },
         "required": ["name", "phone"]
       },
+      "CommissionAgreementResponse": {
+        "type": "object",
+        "properties": {
+          "agreement": {
+            "$ref": "#/components/schemas/CommissionAgreement"
+          }
+        },
+        "required": ["agreement"]
+      },
+      "CommissionAgreement": {
+        "type": "object",
+        "properties": {
+          "staffProfileId": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "number"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "activatedAt": {
+            "type": "string"
+          },
+          "disabledAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "staffProfileId",
+          "percentage",
+          "active",
+          "activatedAt",
+          "disabledAt"
+        ]
+      },
+      "CommissionAgreementRequest": {
+        "type": "object",
+        "properties": {
+          "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 100,
+            "example": 20,
+            "multipleOf": 0.01
+          }
+        },
+        "required": ["percentage"]
+      },
+      "StaffCommissionReportResponse": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/StaffCommissionReport"
+          }
+        },
+        "required": ["report"]
+      },
+      "StaffCommissionReport": {
+        "type": "object",
+        "properties": {
+          "staffProfileId": {
+            "type": "string"
+          },
+          "staffName": {
+            "type": "string"
+          },
+          "agreement": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "staffProfileId": {
+                "type": "string"
+              },
+              "percentage": {
+                "type": "number"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "activatedAt": {
+                "type": "string"
+              },
+              "disabledAt": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "staffProfileId",
+              "percentage",
+              "active",
+              "activatedAt",
+              "disabledAt"
+            ]
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "completedCount": {
+                "type": "integer"
+              },
+              "grossAppointmentRevenue": {
+                "type": "integer"
+              },
+              "staffCommissionTotal": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "completedCount",
+              "grossAppointmentRevenue",
+              "staffCommissionTotal"
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffCommissionReportRow"
+            }
+          }
+        },
+        "required": [
+          "staffProfileId",
+          "staffName",
+          "agreement",
+          "startDate",
+          "endDate",
+          "summary",
+          "rows"
+        ]
+      },
+      "StaffCommissionReportRow": {
+        "type": "object",
+        "properties": {
+          "appointmentId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "basis": {
+            "type": "integer"
+          },
+          "percentage": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "appointmentId",
+          "date",
+          "clientName",
+          "serviceName",
+          "basis",
+          "percentage",
+          "amount"
+        ]
+      },
+      "SalonCommissionReportResponse": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/SalonCommissionReport"
+          }
+        },
+        "required": ["report"]
+      },
+      "SalonCommissionReport": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "grossAppointmentRevenue": {
+                "type": "integer"
+              },
+              "staffCommissionTotal": {
+                "type": "integer"
+              },
+              "salonRetainedAmount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "grossAppointmentRevenue",
+              "staffCommissionTotal",
+              "salonRetainedAmount"
+            ]
+          },
+          "staff": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "staffProfileId": {
+                  "type": "string"
+                },
+                "staffName": {
+                  "type": "string"
+                },
+                "completedCount": {
+                  "type": "integer"
+                },
+                "grossAppointmentRevenue": {
+                  "type": "integer"
+                },
+                "staffCommissionTotal": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "staffProfileId",
+                "staffName",
+                "completedCount",
+                "grossAppointmentRevenue",
+                "staffCommissionTotal"
+              ]
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/StaffCommissionReportRow"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "staffProfileId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["staffProfileId"]
+                }
+              ]
+            }
+          }
+        },
+        "required": ["startDate", "endDate", "summary", "staff", "rows"]
+      },
       "AppointmentRequestsListResponse": {
         "type": "object",
         "properties": {
@@ -14466,6 +14730,486 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DuplicateClientError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commissions/staff/{id}/agreement": {
+      "put": {
+        "tags": ["Staff Commissions"],
+        "summary": "Activate or change a Staff Profile Commission Agreement",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommissionAgreementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active Commission Agreement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionAgreementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid percentage or report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report or write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Staff Commissions"],
+        "summary": "Disable a Staff Profile Commission Agreement",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disabled Commission Agreement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionAgreementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid percentage or report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report or write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commissions/staff/{id}/report": {
+      "get": {
+        "tags": ["Staff Commissions"],
+        "summary": "Get a manager-visible Staff Profile commission report",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["today", "week", "month", "custom"],
+              "default": "today"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "staffProfileId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-staff Commission report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCommissionReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid percentage or report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report or write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commissions/me": {
+      "get": {
+        "tags": ["Staff Commissions"],
+        "summary": "Get the active staff identity own Commission report",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["today", "week", "month", "custom"],
+              "default": "today"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "staffProfileId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private self Commission report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCommissionReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid percentage or report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report or write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commissions/salon": {
+      "get": {
+        "tags": ["Staff Commissions"],
+        "summary": "Get the manager-only salon Commission report",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["today", "week", "month", "custom"],
+              "default": "today"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "staffProfileId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Salon-wide Commission report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalonCommissionReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid percentage or report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report or write",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }

@@ -132,6 +132,7 @@ export function AppointmentDetailDrawer({
           readOnly={readOnly}
           isEditing={drawer.isEditingCurrentAppointment}
           showDeleteConfirm={drawer.showDeleteConfirm}
+          deletingCompletedAppointment={appointment.status === 'completed'}
           isMutating={drawer.isMutating}
           isEditSubmitting={drawer.isEditSubmitting}
           useTemporaryClient={drawer.useTemporaryClient}

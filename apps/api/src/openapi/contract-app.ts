@@ -50,6 +50,13 @@ import {
   updateAppointmentRoute,
 } from './routes/appointments'
 import {
+  deleteCommissionAgreementRoute,
+  getMyCommissionReportRoute,
+  getSalonCommissionReportRoute,
+  getStaffCommissionReportRoute,
+  putCommissionAgreementRoute,
+} from './routes/commissions'
+import {
   approveAppointmentRequestRoute,
   listAppointmentRequestsRoute,
   rejectAppointmentRequestRoute,
@@ -781,6 +788,59 @@ const completePlaceholderClientStub: RouteHandler<
     200,
   )
 
+const stubCommissionAgreement = {
+  staffProfileId: 'stub',
+  percentage: 20,
+  active: true,
+  activatedAt: new Date().toISOString(),
+  disabledAt: null,
+}
+const stubStaffCommissionReport = {
+  staffProfileId: 'stub',
+  staffName: 'stub',
+  agreement: stubCommissionAgreement,
+  startDate: '2026-01-01',
+  endDate: '2026-01-01',
+  summary: {
+    completedCount: 0,
+    grossAppointmentRevenue: 0,
+    staffCommissionTotal: 0,
+  },
+  rows: [],
+}
+const putCommissionAgreementStub: RouteHandler<
+  typeof putCommissionAgreementRoute
+> = (c) => c.json({ agreement: stubCommissionAgreement }, 200)
+const deleteCommissionAgreementStub: RouteHandler<
+  typeof deleteCommissionAgreementRoute
+> = (c) =>
+  c.json({ agreement: { ...stubCommissionAgreement, active: false } }, 200)
+const getStaffCommissionReportStub: RouteHandler<
+  typeof getStaffCommissionReportRoute
+> = (c) => c.json({ report: stubStaffCommissionReport }, 200)
+const getMyCommissionReportStub: RouteHandler<
+  typeof getMyCommissionReportRoute
+> = (c) => c.json({ report: stubStaffCommissionReport }, 200)
+const getSalonCommissionReportStub: RouteHandler<
+  typeof getSalonCommissionReportRoute
+> = (c) =>
+  c.json(
+    {
+      report: {
+        startDate: '2026-01-01',
+        endDate: '2026-01-01',
+        summary: {
+          grossAppointmentRevenue: 0,
+          staffCommissionTotal: 0,
+          salonRetainedAmount: 0,
+        },
+        staff: [],
+        rows: [],
+      },
+    },
+    200,
+  )
+
 const stubAppointmentRequest = {
   id: 'stub',
   salonId: 'stub',
@@ -1411,6 +1471,15 @@ export const contractApp = new OpenAPIHono()
       .openapi(updateAppointmentRoute, updateAppointmentStub)
       .openapi(deleteAppointmentRoute, deleteAppointmentStub)
       .openapi(completePlaceholderClientRoute, completePlaceholderClientStub),
+  )
+  .route(
+    '/api/v1/commissions',
+    new OpenAPIHono()
+      .openapi(putCommissionAgreementRoute, putCommissionAgreementStub)
+      .openapi(deleteCommissionAgreementRoute, deleteCommissionAgreementStub)
+      .openapi(getStaffCommissionReportRoute, getStaffCommissionReportStub)
+      .openapi(getMyCommissionReportRoute, getMyCommissionReportStub)
+      .openapi(getSalonCommissionReportRoute, getSalonCommissionReportStub),
   )
   .route(
     '/api/v1/appointment-requests',

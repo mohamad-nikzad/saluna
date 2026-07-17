@@ -361,6 +361,12 @@ function SettingsPage() {
                 to="/dashboard"
               />
               <SettingsRow
+                icon={Banknote}
+                label="گزارش کمیسیون"
+                hint="کمیسیون پرسنل و مبلغ باقی‌مانده سالن"
+                to="/commissions"
+              />
+              <SettingsRow
                 icon={UserRoundSearch}
                 label="پیگیری مشتریان"
                 hint="مشتریانی که نیاز به پیگیری دارند"

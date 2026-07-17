@@ -1,6 +1,7 @@
 export * from './appointments'
 export * from './auth-users'
 export * from './clients'
+export * from './commissions'
 export * from './dashboard'
 export * from './onboarding'
 export * from './push'

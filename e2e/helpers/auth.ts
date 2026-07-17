@@ -5,7 +5,12 @@ export const SEEDED_MANAGER = { phone: '09120000000', password: 'admin123' }
 export const SEEDED_STAFF = { phone: '09120000001', password: 'admin123' }
 const OTP_BYPASS_CODE = '123456'
 
-export async function login(page: Page, phone: string, password: string) {
+export async function login(
+  page: Page,
+  phone: string,
+  password: string,
+  salonName?: string,
+) {
   await page.goto('/auth')
   await expect(
     page.getByRole('heading', { name: /سالونا|آراویرا/ }),
@@ -19,7 +24,16 @@ export async function login(page: Page, phone: string, password: string) {
   await passBox.click()
   await passBox.fill(password)
   await page.getByRole('button', { name: 'ورود', exact: true }).click()
-  await page.waitForURL(/\/(today|dashboard|calendar)/, { timeout: 30_000 })
+  await page.waitForURL(/\/(today|dashboard|calendar|select-salon)/, {
+    timeout: 30_000,
+  })
+  if (page.url().includes('/select-salon')) {
+    await page
+      .getByRole('button', { name: salonName ?? /سالن/ })
+      .first()
+      .click()
+    await page.waitForURL(/\/(today|dashboard|calendar)/, { timeout: 30_000 })
+  }
 }
 
 export async function loginManagerExpectsToday(page: Page) {
@@ -39,7 +53,7 @@ export async function loginManagerExpectsCalendar(page: Page) {
 }
 
 export async function loginStaffExpectsToday(page: Page) {
-  await login(page, SEEDED_STAFF.phone, SEEDED_STAFF.password)
+  await login(page, SEEDED_STAFF.phone, SEEDED_STAFF.password, 'سالن آراویرا')
   await expect(page).toHaveURL(/\/today/)
   await expect(page.getByText('الان و بعدی')).toBeVisible()
 }

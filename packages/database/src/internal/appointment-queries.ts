@@ -32,6 +32,7 @@ import {
   getActiveServiceAddonsForService,
   getServiceById,
 } from './service-queries'
+import { syncAppointmentCommission } from './commission-queries'
 
 type SnapshotKeys =
   | 'bookedServiceName'
@@ -457,6 +458,7 @@ export async function createAppointment(
   }
   const [row] = await db.transaction(async (tx) => {
     const [created] = await tx.insert(appointments).values(values).returning()
+    if (!created) throw new Error('appointment creation failed')
     if (selectedAddons.length > 0) {
       await tx.insert(appointmentAddonLines).values(
         addonLineValues({
@@ -466,6 +468,7 @@ export async function createAppointment(
         }),
       )
     }
+    await syncAppointmentCommission(tx, null, created)
     return [created]
   })
   const [appointment] = attachAddonDetails(
@@ -578,6 +581,7 @@ export async function updateAppointment(
         )
       }
     }
+    if (updated) await syncAppointmentCommission(tx, existing, updated)
     return [updated]
   })
   if (!row) return undefined

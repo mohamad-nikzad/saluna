@@ -8,6 +8,7 @@
     "./auth-users": "./src/auth-users.ts",
     "./members": "./src/internal/member-queries.ts",
     "./clients": "./src/clients.ts",
+    "./commissions": "./src/commissions.ts",
     "./dashboard": "./src/dashboard.ts",
     "./onboarding": "./src/onboarding.ts",
     "./notifications": "./src/notifications.ts",

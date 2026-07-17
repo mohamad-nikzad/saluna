@@ -145,6 +145,35 @@ _Avoid_: staff membership, profile ownership, shared staff account
 Ending one Staff Profile Access link without deleting or deactivating the salon-owned `Staff Profile`, its appointments, schedule, capabilities, or history. A manager may revoke access and staff may leave a salon themselves.
 _Avoid_: delete staff, transfer staff, deactivate profile
 
+**Staff Commission**:
+The share of a completed `Appointment`'s Eligible Commission Basis earned by its assigned `Staff Profile` under the applicable commission agreement.
+_Avoid_: staff cut, salary, wage
+
+**Eligible Commission Basis**:
+The value used to calculate a `Staff Commission`: a regular `Appointment`'s authoritative total, or a `Service Package` task's deterministic proportional allocation of the booked package price.
+_Avoid_: collected revenue, task price, package component price
+
+**Commission Agreement**:
+A salon-specific percentage agreed for one `Staff Profile` and applied to all of that profile's eligible appointments.
+_Avoid_: commission rule, service commission, appointment commission
+
+**Salon Retained Amount**:
+The remainder of an eligible completed `Appointment`'s Eligible Commission Basis after its `Staff Commission`, without implying payment collection or profit.
+_Avoid_: salon profit, salon commission, salon income
+
+A completed **Appointment** may produce one **Staff Commission** for its assigned **Staff Profile**.
+Each **Commission Agreement** belongs to exactly one salon and one **Staff Profile**.
+One salon and **Staff Profile** may have at most one active **Commission Agreement**.
+A **Commission Agreement** applies only to appointments completed while it is active; activation does not backfill earlier completions.
+A **Staff Commission** retains the percentage that produced it when the agreement later changes, and disabling the agreement preserves existing commissions.
+Active **Staff Profile Access** reveals only that profile's own commission history; it is not required for the profile to earn commissions.
+
+**Example dialogue**:
+
+> **Manager:** “I activated a 20% Commission Agreement for Mina today.”
+>
+> **Developer:** “Her appointments completed from now on can earn Staff Commission. Earlier completions are not backfilled, and a later rate change will not rewrite these earnings.”
+
 ### Product Support
 
 **Support Ticket**:
@@ -176,3 +205,8 @@ _Avoid_: ticket type, department
 - Use `Service Package` for sellable bundles, especially when included services span categories.
 - Treat existing combo tables and fields as migration/history names only; new workflows should use `Service Package`, package components, and package tasks.
 - Require explicit staff capability on the `Service Package`; do not infer it from components.
+
+## Flagged ambiguities
+
+- “staff cut” could mean either **Staff Commission** or **Salon Retained Amount** — use the exact term.
+- “income” could mean an appointment total, an earned **Staff Commission**, collected payment, or profit — Saluna must not use it alone in financial labels.

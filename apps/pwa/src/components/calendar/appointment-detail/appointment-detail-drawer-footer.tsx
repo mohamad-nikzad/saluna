@@ -7,6 +7,7 @@ interface AppointmentDetailDrawerFooterProps {
   readOnly: boolean
   isEditing: boolean
   showDeleteConfirm: boolean
+  deletingCompletedAppointment: boolean
   isMutating: boolean
   isEditSubmitting: boolean
   useTemporaryClient: boolean
@@ -24,6 +25,7 @@ export function AppointmentDetailDrawerFooter({
   readOnly,
   isEditing,
   showDeleteConfirm,
+  deletingCompletedAppointment,
   isMutating,
   isEditSubmitting,
   useTemporaryClient,
@@ -64,7 +66,9 @@ export function AppointmentDetailDrawerFooter({
       ) : showDeleteConfirm ? (
         <>
           <p className="text-sm text-center text-muted-foreground mb-2">
-            آیا از حذف این نوبت مطمئن هستید؟
+            {deletingCompletedAppointment
+              ? 'این نوبت انجام‌شده و سابقه کمیسیون وابسته به آن برای همیشه حذف می‌شود. مطمئن هستید؟'
+              : 'آیا از حذف این نوبت مطمئن هستید؟'}
           </p>
           <Button
             variant="destructive"

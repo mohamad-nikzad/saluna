@@ -51,7 +51,7 @@ export default defineConfig({
   webServer: process.env.E2E_SKIP_SERVER
     ? undefined
     : {
-        command: 'pnpm --filter @repo/pwa dev',
+        command: 'pnpm dev:pwa',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

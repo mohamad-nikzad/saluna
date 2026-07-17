@@ -24,6 +24,7 @@ import {
   staffServiceCount,
 } from '#/components/staff/staff-utils'
 import { staffAccentVar } from '#/lib/roster-visuals'
+import { ManagerStaffCommissionPanel } from '#/components/commissions/manager-staff-commission-panel'
 
 export interface StaffDetailViewProps {
   member: User
@@ -166,13 +167,16 @@ export function StaffDetailView({
         ) : null}
 
         {isStaffRole ? (
-          <StaffSchedulePreview
-            member={member}
-            scheduleBundle={scheduleBundle}
-            services={services}
-            onOpenSchedule={() => onOpenSchedule(member)}
-            onOpenServices={() => onOpenServices(member)}
-          />
+          <>
+            <StaffSchedulePreview
+              member={member}
+              scheduleBundle={scheduleBundle}
+              services={services}
+              onOpenSchedule={() => onOpenSchedule(member)}
+              onOpenServices={() => onOpenServices(member)}
+            />
+            <ManagerStaffCommissionPanel staffId={member.id} />
+          </>
         ) : null}
 
         {!isSelf ? (

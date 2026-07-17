@@ -20,6 +20,9 @@ import type {
   DeleteApiV1AppointmentsByIdData,
   DeleteApiV1AppointmentsByIdErrors,
   DeleteApiV1AppointmentsByIdResponses,
+  DeleteApiV1CommissionsStaffByIdAgreementData,
+  DeleteApiV1CommissionsStaffByIdAgreementErrors,
+  DeleteApiV1CommissionsStaffByIdAgreementResponses,
   DeleteApiV1MessagingAccountsByIdData,
   DeleteApiV1MessagingAccountsByIdErrors,
   DeleteApiV1MessagingAccountsByIdResponses,
@@ -131,6 +134,15 @@ import type {
   GetApiV1ClientsData,
   GetApiV1ClientsErrors,
   GetApiV1ClientsResponses,
+  GetApiV1CommissionsMeData,
+  GetApiV1CommissionsMeErrors,
+  GetApiV1CommissionsMeResponses,
+  GetApiV1CommissionsSalonData,
+  GetApiV1CommissionsSalonErrors,
+  GetApiV1CommissionsSalonResponses,
+  GetApiV1CommissionsStaffByIdReportData,
+  GetApiV1CommissionsStaffByIdReportErrors,
+  GetApiV1CommissionsStaffByIdReportResponses,
   GetApiV1DashboardData,
   GetApiV1DashboardErrors,
   GetApiV1DashboardResponses,
@@ -410,6 +422,9 @@ import type {
   PostApiV1StaffData,
   PostApiV1StaffErrors,
   PostApiV1StaffResponses,
+  PutApiV1CommissionsStaffByIdAgreementData,
+  PutApiV1CommissionsStaffByIdAgreementErrors,
+  PutApiV1CommissionsStaffByIdAgreementResponses,
   PutApiV1SalonPublicSettingsData,
   PutApiV1SalonPublicSettingsErrors,
   PutApiV1SalonPublicSettingsResponses,
@@ -2451,6 +2466,99 @@ export const postApiV1AppointmentsByIdCompleteClient = <
       ...options.headers,
     },
   })
+
+/**
+ * Disable a Staff Profile Commission Agreement
+ */
+export const deleteApiV1CommissionsStaffByIdAgreement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1CommissionsStaffByIdAgreementData, ThrowOnError>,
+): RequestResult<
+  DeleteApiV1CommissionsStaffByIdAgreementResponses,
+  DeleteApiV1CommissionsStaffByIdAgreementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteApiV1CommissionsStaffByIdAgreementResponses,
+    DeleteApiV1CommissionsStaffByIdAgreementErrors,
+    ThrowOnError
+  >({ url: '/api/v1/commissions/staff/{id}/agreement', ...options })
+
+/**
+ * Activate or change a Staff Profile Commission Agreement
+ */
+export const putApiV1CommissionsStaffByIdAgreement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PutApiV1CommissionsStaffByIdAgreementData, ThrowOnError>,
+): RequestResult<
+  PutApiV1CommissionsStaffByIdAgreementResponses,
+  PutApiV1CommissionsStaffByIdAgreementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).put<
+    PutApiV1CommissionsStaffByIdAgreementResponses,
+    PutApiV1CommissionsStaffByIdAgreementErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/commissions/staff/{id}/agreement',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Get a manager-visible Staff Profile commission report
+ */
+export const getApiV1CommissionsStaffByIdReport = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1CommissionsStaffByIdReportData, ThrowOnError>,
+): RequestResult<
+  GetApiV1CommissionsStaffByIdReportResponses,
+  GetApiV1CommissionsStaffByIdReportErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetApiV1CommissionsStaffByIdReportResponses,
+    GetApiV1CommissionsStaffByIdReportErrors,
+    ThrowOnError
+  >({ url: '/api/v1/commissions/staff/{id}/report', ...options })
+
+/**
+ * Get the active staff identity own Commission report
+ */
+export const getApiV1CommissionsMe = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1CommissionsMeData, ThrowOnError>,
+): RequestResult<
+  GetApiV1CommissionsMeResponses,
+  GetApiV1CommissionsMeErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetApiV1CommissionsMeResponses,
+    GetApiV1CommissionsMeErrors,
+    ThrowOnError
+  >({ url: '/api/v1/commissions/me', ...options })
+
+/**
+ * Get the manager-only salon Commission report
+ */
+export const getApiV1CommissionsSalon = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1CommissionsSalonData, ThrowOnError>,
+): RequestResult<
+  GetApiV1CommissionsSalonResponses,
+  GetApiV1CommissionsSalonErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetApiV1CommissionsSalonResponses,
+    GetApiV1CommissionsSalonErrors,
+    ThrowOnError
+  >({ url: '/api/v1/commissions/salon', ...options })
 
 /**
  * List appointment requests

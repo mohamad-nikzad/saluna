@@ -12,6 +12,7 @@ import {
   index,
   uniqueIndex,
   primaryKey,
+  check,
 } from 'drizzle-orm/pg-core'
 
 import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
@@ -1289,7 +1290,7 @@ export const servicePackageTasks = pgTable(
       .references(() => services.id, { onDelete: 'restrict' }),
     appointmentId: uuid('appointment_id')
       .notNull()
-      .references(() => appointments.id, { onDelete: 'restrict' }),
+      .references(() => appointments.id, { onDelete: 'cascade' }),
     staffId: uuid('staff_id').notNull(),
     startTime: text('start_time').notNull(),
     endTime: text('end_time').notNull(),
@@ -1353,6 +1354,78 @@ export const appointmentAddonLines = pgTable(
     index('appointment_addon_lines_salon_id_addon_idx').on(
       t.salonId,
       t.serviceAddonId,
+    ),
+  ],
+)
+
+export const commissionAgreements = pgTable(
+  'commission_agreements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    staffProfileId: uuid('staff_profile_id')
+      .notNull()
+      .references(() => staffProfiles.id, { onDelete: 'cascade' }),
+    percentageBasisPoints: integer('percentage_basis_points').notNull(),
+    active: boolean('active').notNull().default(true),
+    activatedAt: timestamp('activated_at', { withTimezone: true }).notNull(),
+    disabledAt: timestamp('disabled_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('commission_agreements_salon_profile_unique').on(
+      t.salonId,
+      t.staffProfileId,
+    ),
+    check(
+      'commission_agreements_percentage_check',
+      sql`${t.percentageBasisPoints} > 0 and ${t.percentageBasisPoints} <= 10000`,
+    ),
+  ],
+)
+
+export const staffCommissions = pgTable(
+  'staff_commissions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    staffProfileId: uuid('staff_profile_id')
+      .notNull()
+      .references(() => staffProfiles.id, { onDelete: 'cascade' }),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    basis: integer('basis').notNull(),
+    percentageBasisPoints: integer('percentage_basis_points').notNull(),
+    amount: integer('amount').notNull(),
+    voidedAt: timestamp('voided_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('staff_commissions_appointment_unique').on(t.appointmentId),
+    index('staff_commissions_salon_profile_idx').on(
+      t.salonId,
+      t.staffProfileId,
+    ),
+    check('staff_commissions_basis_check', sql`${t.basis} >= 0`),
+    check('staff_commissions_amount_check', sql`${t.amount} >= 0`),
+    check(
+      'staff_commissions_percentage_check',
+      sql`${t.percentageBasisPoints} > 0 and ${t.percentageBasisPoints} <= 10000`,
     ),
   ],
 )

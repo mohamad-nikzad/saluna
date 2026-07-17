@@ -1327,6 +1327,82 @@ export type CompletePlaceholderClientRequest = {
   reassignToExistingClientId?: string
 }
 
+export type CommissionAgreementResponse = {
+  agreement: CommissionAgreement
+}
+
+export type CommissionAgreement = {
+  staffProfileId: string
+  percentage: number
+  active: boolean
+  activatedAt: string
+  disabledAt: string | null
+}
+
+export type CommissionAgreementRequest = {
+  percentage: number
+}
+
+export type StaffCommissionReportResponse = {
+  report: StaffCommissionReport
+}
+
+export type StaffCommissionReport = {
+  staffProfileId: string
+  staffName: string
+  agreement: {
+    staffProfileId: string
+    percentage: number
+    active: boolean
+    activatedAt: string
+    disabledAt: string | null
+  } | null
+  startDate: string
+  endDate: string
+  summary: {
+    completedCount: number
+    grossAppointmentRevenue: number
+    staffCommissionTotal: number
+  }
+  rows: Array<StaffCommissionReportRow>
+}
+
+export type StaffCommissionReportRow = {
+  appointmentId: string
+  date: string
+  clientName: string
+  serviceName: string
+  basis: number
+  percentage: number
+  amount: number
+}
+
+export type SalonCommissionReportResponse = {
+  report: SalonCommissionReport
+}
+
+export type SalonCommissionReport = {
+  startDate: string
+  endDate: string
+  summary: {
+    grossAppointmentRevenue: number
+    staffCommissionTotal: number
+    salonRetainedAmount: number
+  }
+  staff: Array<{
+    staffProfileId: string
+    staffName: string
+    completedCount: number
+    grossAppointmentRevenue: number
+    staffCommissionTotal: number
+  }>
+  rows: Array<
+    StaffCommissionReportRow & {
+      staffProfileId: string
+    }
+  >
+}
+
 export type AppointmentRequestsListResponse = {
   requests: Array<AppointmentRequestListItem>
 }
@@ -5805,6 +5881,222 @@ export type PostApiV1AppointmentsByIdCompleteClientResponses = {
 
 export type PostApiV1AppointmentsByIdCompleteClientResponse =
   PostApiV1AppointmentsByIdCompleteClientResponses[keyof PostApiV1AppointmentsByIdCompleteClientResponses]
+
+export type DeleteApiV1CommissionsStaffByIdAgreementData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/commissions/staff/{id}/agreement'
+}
+
+export type DeleteApiV1CommissionsStaffByIdAgreementErrors = {
+  /**
+   * Invalid percentage or report period
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but not authorized for this report or write
+   */
+  403: ApiError
+  /**
+   * Staff Profile or Commission Agreement not found in salon
+   */
+  404: ApiError
+}
+
+export type DeleteApiV1CommissionsStaffByIdAgreementError =
+  DeleteApiV1CommissionsStaffByIdAgreementErrors[keyof DeleteApiV1CommissionsStaffByIdAgreementErrors]
+
+export type DeleteApiV1CommissionsStaffByIdAgreementResponses = {
+  /**
+   * Disabled Commission Agreement
+   */
+  200: CommissionAgreementResponse
+}
+
+export type DeleteApiV1CommissionsStaffByIdAgreementResponse =
+  DeleteApiV1CommissionsStaffByIdAgreementResponses[keyof DeleteApiV1CommissionsStaffByIdAgreementResponses]
+
+export type PutApiV1CommissionsStaffByIdAgreementData = {
+  body: CommissionAgreementRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/commissions/staff/{id}/agreement'
+}
+
+export type PutApiV1CommissionsStaffByIdAgreementErrors = {
+  /**
+   * Invalid percentage or report period
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but not authorized for this report or write
+   */
+  403: ApiError
+  /**
+   * Staff Profile or Commission Agreement not found in salon
+   */
+  404: ApiError
+}
+
+export type PutApiV1CommissionsStaffByIdAgreementError =
+  PutApiV1CommissionsStaffByIdAgreementErrors[keyof PutApiV1CommissionsStaffByIdAgreementErrors]
+
+export type PutApiV1CommissionsStaffByIdAgreementResponses = {
+  /**
+   * Active Commission Agreement
+   */
+  200: CommissionAgreementResponse
+}
+
+export type PutApiV1CommissionsStaffByIdAgreementResponse =
+  PutApiV1CommissionsStaffByIdAgreementResponses[keyof PutApiV1CommissionsStaffByIdAgreementResponses]
+
+export type GetApiV1CommissionsStaffByIdReportData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: {
+    period?: 'today' | 'week' | 'month' | 'custom'
+    startDate?: string
+    endDate?: string
+    staffProfileId?: string
+  }
+  url: '/api/v1/commissions/staff/{id}/report'
+}
+
+export type GetApiV1CommissionsStaffByIdReportErrors = {
+  /**
+   * Invalid percentage or report period
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but not authorized for this report or write
+   */
+  403: ApiError
+  /**
+   * Staff Profile or Commission Agreement not found in salon
+   */
+  404: ApiError
+}
+
+export type GetApiV1CommissionsStaffByIdReportError =
+  GetApiV1CommissionsStaffByIdReportErrors[keyof GetApiV1CommissionsStaffByIdReportErrors]
+
+export type GetApiV1CommissionsStaffByIdReportResponses = {
+  /**
+   * Per-staff Commission report
+   */
+  200: StaffCommissionReportResponse
+}
+
+export type GetApiV1CommissionsStaffByIdReportResponse =
+  GetApiV1CommissionsStaffByIdReportResponses[keyof GetApiV1CommissionsStaffByIdReportResponses]
+
+export type GetApiV1CommissionsMeData = {
+  body?: never
+  path?: never
+  query?: {
+    period?: 'today' | 'week' | 'month' | 'custom'
+    startDate?: string
+    endDate?: string
+    staffProfileId?: string
+  }
+  url: '/api/v1/commissions/me'
+}
+
+export type GetApiV1CommissionsMeErrors = {
+  /**
+   * Invalid percentage or report period
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but not authorized for this report or write
+   */
+  403: ApiError
+  /**
+   * Staff Profile or Commission Agreement not found in salon
+   */
+  404: ApiError
+}
+
+export type GetApiV1CommissionsMeError =
+  GetApiV1CommissionsMeErrors[keyof GetApiV1CommissionsMeErrors]
+
+export type GetApiV1CommissionsMeResponses = {
+  /**
+   * Private self Commission report
+   */
+  200: StaffCommissionReportResponse
+}
+
+export type GetApiV1CommissionsMeResponse =
+  GetApiV1CommissionsMeResponses[keyof GetApiV1CommissionsMeResponses]
+
+export type GetApiV1CommissionsSalonData = {
+  body?: never
+  path?: never
+  query?: {
+    period?: 'today' | 'week' | 'month' | 'custom'
+    startDate?: string
+    endDate?: string
+    staffProfileId?: string
+  }
+  url: '/api/v1/commissions/salon'
+}
+
+export type GetApiV1CommissionsSalonErrors = {
+  /**
+   * Invalid percentage or report period
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but not authorized for this report or write
+   */
+  403: ApiError
+  /**
+   * Staff Profile or Commission Agreement not found in salon
+   */
+  404: ApiError
+}
+
+export type GetApiV1CommissionsSalonError =
+  GetApiV1CommissionsSalonErrors[keyof GetApiV1CommissionsSalonErrors]
+
+export type GetApiV1CommissionsSalonResponses = {
+  /**
+   * Salon-wide Commission report
+   */
+  200: SalonCommissionReportResponse
+}
+
+export type GetApiV1CommissionsSalonResponse =
+  GetApiV1CommissionsSalonResponses[keyof GetApiV1CommissionsSalonResponses]
 
 export type GetApiV1AppointmentRequestsData = {
   body?: never

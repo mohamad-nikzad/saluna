@@ -13,6 +13,7 @@ import {
   createManagerSupportMessage,
   createManagerSupportTicket,
   deleteApiV1AppointmentsById,
+  deleteApiV1CommissionsStaffByIdAgreement,
   deleteApiV1MessagingAccountsById,
   deleteApiV1StaffById,
   getAdminSupportTicket,
@@ -50,6 +51,9 @@ import {
   getApiV1Clients,
   getApiV1ClientsById,
   getApiV1ClientsByIdSummary,
+  getApiV1CommissionsMe,
+  getApiV1CommissionsSalon,
+  getApiV1CommissionsStaffByIdReport,
   getApiV1Dashboard,
   getApiV1MessagingAccounts,
   getApiV1NotificationPreferences,
@@ -144,6 +148,7 @@ import {
   postApiV1Staff,
   postApiV1StaffByIdInviteCancel,
   postApiV1StaffByIdInviteResend,
+  putApiV1CommissionsStaffByIdAgreement,
   putApiV1SalonPublicSettings,
   putApiV1ServicePackagesByIdComponents,
   putApiV1ServicePackagesByIdStaff,
@@ -163,6 +168,9 @@ import type {
   DeleteApiV1AppointmentsByIdData,
   DeleteApiV1AppointmentsByIdError,
   DeleteApiV1AppointmentsByIdResponse,
+  DeleteApiV1CommissionsStaffByIdAgreementData,
+  DeleteApiV1CommissionsStaffByIdAgreementError,
+  DeleteApiV1CommissionsStaffByIdAgreementResponse,
   DeleteApiV1MessagingAccountsByIdData,
   DeleteApiV1MessagingAccountsByIdError,
   DeleteApiV1MessagingAccountsByIdResponse,
@@ -274,6 +282,15 @@ import type {
   GetApiV1ClientsData,
   GetApiV1ClientsError,
   GetApiV1ClientsResponse,
+  GetApiV1CommissionsMeData,
+  GetApiV1CommissionsMeError,
+  GetApiV1CommissionsMeResponse,
+  GetApiV1CommissionsSalonData,
+  GetApiV1CommissionsSalonError,
+  GetApiV1CommissionsSalonResponse,
+  GetApiV1CommissionsStaffByIdReportData,
+  GetApiV1CommissionsStaffByIdReportError,
+  GetApiV1CommissionsStaffByIdReportResponse,
   GetApiV1DashboardData,
   GetApiV1DashboardError,
   GetApiV1DashboardResponse,
@@ -553,6 +570,9 @@ import type {
   PostApiV1StaffData,
   PostApiV1StaffError,
   PostApiV1StaffResponse,
+  PutApiV1CommissionsStaffByIdAgreementData,
+  PutApiV1CommissionsStaffByIdAgreementError,
+  PutApiV1CommissionsStaffByIdAgreementResponse,
   PutApiV1SalonPublicSettingsData,
   PutApiV1SalonPublicSettingsError,
   PutApiV1SalonPublicSettingsResponse,
@@ -3932,6 +3952,144 @@ export const postApiV1AppointmentsByIdCompleteClientMutation = (
   }
   return mutationOptions
 }
+
+/**
+ * Disable a Staff Profile Commission Agreement
+ */
+export const deleteApiV1CommissionsStaffByIdAgreementMutation = (
+  options?: Partial<Options<DeleteApiV1CommissionsStaffByIdAgreementData>>,
+): UseMutationOptions<
+  DeleteApiV1CommissionsStaffByIdAgreementResponse,
+  DeleteApiV1CommissionsStaffByIdAgreementError,
+  Options<DeleteApiV1CommissionsStaffByIdAgreementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1CommissionsStaffByIdAgreementResponse,
+    DeleteApiV1CommissionsStaffByIdAgreementError,
+    Options<DeleteApiV1CommissionsStaffByIdAgreementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1CommissionsStaffByIdAgreement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Activate or change a Staff Profile Commission Agreement
+ */
+export const putApiV1CommissionsStaffByIdAgreementMutation = (
+  options?: Partial<Options<PutApiV1CommissionsStaffByIdAgreementData>>,
+): UseMutationOptions<
+  PutApiV1CommissionsStaffByIdAgreementResponse,
+  PutApiV1CommissionsStaffByIdAgreementError,
+  Options<PutApiV1CommissionsStaffByIdAgreementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PutApiV1CommissionsStaffByIdAgreementResponse,
+    PutApiV1CommissionsStaffByIdAgreementError,
+    Options<PutApiV1CommissionsStaffByIdAgreementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await putApiV1CommissionsStaffByIdAgreement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1CommissionsStaffByIdReportQueryKey = (
+  options: Options<GetApiV1CommissionsStaffByIdReportData>,
+) => createQueryKey('getApiV1CommissionsStaffByIdReport', options)
+
+/**
+ * Get a manager-visible Staff Profile commission report
+ */
+export const getApiV1CommissionsStaffByIdReportOptions = (
+  options: Options<GetApiV1CommissionsStaffByIdReportData>,
+) =>
+  queryOptions<
+    GetApiV1CommissionsStaffByIdReportResponse,
+    GetApiV1CommissionsStaffByIdReportError,
+    GetApiV1CommissionsStaffByIdReportResponse,
+    ReturnType<typeof getApiV1CommissionsStaffByIdReportQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1CommissionsStaffByIdReport({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1CommissionsStaffByIdReportQueryKey(options),
+  })
+
+export const getApiV1CommissionsMeQueryKey = (
+  options?: Options<GetApiV1CommissionsMeData>,
+) => createQueryKey('getApiV1CommissionsMe', options)
+
+/**
+ * Get the active staff identity own Commission report
+ */
+export const getApiV1CommissionsMeOptions = (
+  options?: Options<GetApiV1CommissionsMeData>,
+) =>
+  queryOptions<
+    GetApiV1CommissionsMeResponse,
+    GetApiV1CommissionsMeError,
+    GetApiV1CommissionsMeResponse,
+    ReturnType<typeof getApiV1CommissionsMeQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1CommissionsMe({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1CommissionsMeQueryKey(options),
+  })
+
+export const getApiV1CommissionsSalonQueryKey = (
+  options?: Options<GetApiV1CommissionsSalonData>,
+) => createQueryKey('getApiV1CommissionsSalon', options)
+
+/**
+ * Get the manager-only salon Commission report
+ */
+export const getApiV1CommissionsSalonOptions = (
+  options?: Options<GetApiV1CommissionsSalonData>,
+) =>
+  queryOptions<
+    GetApiV1CommissionsSalonResponse,
+    GetApiV1CommissionsSalonError,
+    GetApiV1CommissionsSalonResponse,
+    ReturnType<typeof getApiV1CommissionsSalonQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1CommissionsSalon({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1CommissionsSalonQueryKey(options),
+  })
 
 export const getApiV1AppointmentRequestsQueryKey = (
   options?: Options<GetApiV1AppointmentRequestsData>,

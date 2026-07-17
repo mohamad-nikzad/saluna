@@ -1,6 +1,13 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarDays, CalendarRange, Inbox, Menu, Users } from 'lucide-react'
+import {
+  Banknote,
+  CalendarDays,
+  CalendarRange,
+  Inbox,
+  Menu,
+  Users,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
 
@@ -32,6 +39,7 @@ const managerItems: ReadonlyArray<NavItem> = [
       '/services',
       '/staff',
       '/support',
+      '/commissions',
     ],
   },
 ]
@@ -39,6 +47,7 @@ const managerItems: ReadonlyArray<NavItem> = [
 const staffItems: ReadonlyArray<NavItem> = [
   { to: '/today', label: 'امروز', icon: CalendarDays },
   { to: '/calendar', label: 'تقویم', icon: CalendarRange },
+  { to: '/earnings', label: 'کمیسیون من', icon: Banknote },
   { to: '/settings', label: 'تنظیمات', icon: Menu },
 ]
 

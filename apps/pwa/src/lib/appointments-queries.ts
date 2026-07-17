@@ -30,6 +30,7 @@ import type {
   ServicePackageBookingCreateRequest,
 } from '@repo/api-client/types'
 
+import { commissionReportInvalidationKeys } from '#/lib/commission-queries'
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
 export {
@@ -86,7 +87,10 @@ export function appointmentsRangeQueryOptions(
 }
 
 export function appointmentsRangeInvalidationKeys() {
-  return [[{ _id: 'getApiV1Appointments' }]] as const
+  return [
+    [{ _id: 'getApiV1Appointments' }],
+    ...commissionReportInvalidationKeys(),
+  ] as const
 }
 
 export async function fetchAppointmentAvailability(

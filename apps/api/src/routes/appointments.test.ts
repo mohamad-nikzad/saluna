@@ -667,6 +667,47 @@ describe('appointments router', () => {
     })
   })
 
+  it('PATCH /:id preserves a completed placeholder appointment when cancelling it', async () => {
+    vi.mocked(appts.getAppointmentById).mockResolvedValue({
+      id: 'a1',
+      staffId: 'u1',
+      clientId: 'c1',
+      status: 'completed',
+    } as never)
+    vi.mocked(clientsDb.getClientById).mockResolvedValue({
+      id: 'c1',
+      isPlaceholder: true,
+    } as never)
+    vi.mocked(appts.validateUpdateAppointmentIntake).mockResolvedValue({
+      ok: true,
+      patch: { status: 'cancelled' },
+      client: { id: 'c1', name: 'Placeholder' },
+      staff: { id: 'u1', name: 'Manager' },
+      service: { id: 'svc1', name: 'Cut' },
+    } as never)
+    vi.mocked(appts.updateAppointment).mockResolvedValue({
+      id: 'a1',
+      clientId: 'c1',
+      status: 'cancelled',
+    } as never)
+
+    const res = await app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ status: 'cancelled' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(
+      clientsDb.cancelIncompletePlaceholderAppointment,
+    ).not.toHaveBeenCalled()
+    expect(appts.updateAppointment).toHaveBeenCalledWith(
+      'a1',
+      's1',
+      expect.objectContaining({ status: 'cancelled' }),
+    )
+  })
+
   it.each([
     ['before the scheduled end', '2026-06-01T06:29:00.000Z'],
     ['at the 24-hour boundary', '2026-06-02T06:30:00.000Z'],
