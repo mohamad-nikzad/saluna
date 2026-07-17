@@ -3,6 +3,7 @@ import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { appointments, clients, member, salonMember, user } from './schema'
 import { getDb } from './client'
+import { getSalonFinancialSummary } from './internal/commission-queries'
 import { getTodayData } from './internal/today-queries'
 
 const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
@@ -53,7 +54,7 @@ export async function getDashboardData(salonId: string) {
     monthStatusBreakdown,
     popularServices,
     staffLoad,
-    monthRevenue,
+    monthFinancialSummary,
     newClientsThisMonth,
   ] = await Promise.all([
     db
@@ -185,19 +186,11 @@ export async function getDashboardData(salonId: string) {
       .groupBy(appointments.staffId, user.name, salonMember.color)
       .orderBy(sql`count(*) desc`),
 
-    db
-      .select({
-        value: sql<number>`coalesce(sum(${appointments.bookedServicePrice}), 0)`,
-      })
-      .from(appointments)
-      .where(
-        and(
-          eq(appointments.salonId, salonId),
-          gte(appointments.date, month.start),
-          lte(appointments.date, month.end),
-          eq(appointments.status, 'completed'),
-        ),
-      ),
+    getSalonFinancialSummary({
+      salonId,
+      startDate: month.start,
+      endDate: month.end,
+    }),
 
     db
       .select({ value: count() })
@@ -234,7 +227,8 @@ export async function getDashboardData(salonId: string) {
       color: row.staffColor ?? DEFAULT_STAFF_COLOR,
       count: row.count,
     })),
-    monthRevenue: Number(monthRevenue[0]?.value ?? 0),
+    monthRevenue: monthFinancialSummary.grossAppointmentRevenue,
+    monthSalonRetainedAmount: monthFinancialSummary.salonRetainedAmount,
     newClientsThisMonth: newClientsThisMonth[0]?.value ?? 0,
   }
 }

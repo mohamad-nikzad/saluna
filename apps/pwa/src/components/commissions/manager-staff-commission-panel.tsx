@@ -4,6 +4,10 @@ import { Banknote, Percent } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 
+import {
+  formatLocalizedNumberInput,
+  normalizeLocalizedDecimalInput,
+} from '#/components/localized-number-input'
 import { StaffDetailSection } from '#/components/staff/staff-detail-section'
 import {
   staffCommissionReportQueryOptions,
@@ -28,7 +32,9 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const percentage = Number(
-      new FormData(event.currentTarget).get('percentage'),
+      normalizeLocalizedDecimalInput(
+        String(new FormData(event.currentTarget).get('percentage') ?? ''),
+      ),
     )
     if (Number.isFinite(percentage)) {
       saveAgreement.mutate({ staffId, percentage })
@@ -48,13 +54,16 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
             <div className="relative mt-1.5">
               <Input
                 name="percentage"
-                type="number"
-                min="0.01"
-                max="100"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 required
-                defaultValue={agreement?.percentage}
-                className="pl-10"
+                defaultValue={formatLocalizedNumberInput(agreement?.percentage)}
+                onChange={(event) => {
+                  event.currentTarget.value = formatLocalizedNumberInput(
+                    normalizeLocalizedDecimalInput(event.currentTarget.value),
+                  )
+                }}
+                className="pl-10 text-right tabular-nums"
                 aria-label="درصد کمیسیون"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">

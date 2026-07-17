@@ -1593,6 +1593,7 @@ export type DashboardData = {
   popularServices: Array<PopularServiceCount>
   staffLoad: Array<StaffLoadItem>
   monthRevenue: number
+  monthSalonRetainedAmount: number
   newClientsThisMonth: number
 }
 

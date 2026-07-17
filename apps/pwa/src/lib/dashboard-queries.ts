@@ -10,7 +10,10 @@ export type { DashboardData }
 
 export function dashboardQueryOptions() {
   return queryOptions({
-    queryKey: getApiV1DashboardQueryKey(),
+    queryKey: [
+      ...getApiV1DashboardQueryKey(),
+      { schema: 'financial-summary-v1' },
+    ] as const,
     staleTime: HEAVY_QUERY_STALE_TIME_MS,
     queryFn: async ({ signal }): Promise<DashboardData> => {
       const { data } = await getApiV1Dashboard({

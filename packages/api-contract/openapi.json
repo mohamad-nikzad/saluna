@@ -5284,6 +5284,9 @@
           "monthRevenue": {
             "type": "number"
           },
+          "monthSalonRetainedAmount": {
+            "type": "number"
+          },
           "newClientsThisMonth": {
             "type": "number"
           }
@@ -5299,6 +5302,7 @@
           "popularServices",
           "staffLoad",
           "monthRevenue",
+          "monthSalonRetainedAmount",
           "newClientsThisMonth"
         ]
       },

@@ -33,6 +33,7 @@ describe('appointments-queries', () => {
       appointmentsRangeInvalidationKeys().map((key) => key[0]?._id),
     ).toEqual([
       'getApiV1Appointments',
+      'getApiV1Dashboard',
       'getApiV1CommissionsStaffByIdReport',
       'getApiV1CommissionsMe',
       'getApiV1CommissionsSalon',

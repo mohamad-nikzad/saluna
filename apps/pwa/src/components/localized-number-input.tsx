@@ -23,6 +23,14 @@ export function normalizeLocalizedIntegerInput(value: string): string {
   return toLatinDigits(value).replace(/[^\d]/g, '')
 }
 
+export function normalizeLocalizedDecimalInput(value: string): string {
+  const [whole = '', ...fraction] = toLatinDigits(value)
+    .replace(/[٫,]/g, '.')
+    .replace(/[^\d.]/g, '')
+    .split('.')
+  return fraction.length > 0 ? `${whole}.${fraction.join('')}` : whole
+}
+
 export function parseOptionalLocalizedInteger(
   value: string | number | null | undefined,
 ): number | null {
@@ -48,7 +56,11 @@ export function LocalizedNumberInput({
       inputMode={inputMode}
       value={formatLocalizedNumberInput(value)}
       onChange={(event) =>
-        onValueChange(normalizeLocalizedIntegerInput(event.target.value))
+        onValueChange(
+          inputMode === 'decimal'
+            ? normalizeLocalizedDecimalInput(event.target.value)
+            : normalizeLocalizedIntegerInput(event.target.value),
+        )
       }
       dir="rtl"
       className={className ?? 'text-right tabular-nums'}

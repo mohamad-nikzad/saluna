@@ -38,6 +38,7 @@ export const dashboardDataSchema = z
     popularServices: z.array(popularServiceCountSchema),
     staffLoad: z.array(staffLoadItemSchema),
     monthRevenue: z.number(),
+    monthSalonRetainedAmount: z.number(),
     newClientsThisMonth: z.number(),
   })
   .openapi('DashboardData')

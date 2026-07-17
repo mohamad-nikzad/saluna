@@ -241,6 +241,17 @@ describe.skipIf(!runIntegration)(
         staffCommissionTotal: 151,
         salonRetainedAmount: 250,
       })
+      await expect(
+        commissions.getSalonFinancialSummary({
+          salonId: ids.salon,
+          startDate: '2026-07-01',
+          endDate: '2026-07-31',
+        }),
+      ).resolves.toEqual({
+        grossAppointmentRevenue: 1201,
+        staffCommissionTotal: 151,
+        salonRetainedAmount: 1050,
+      })
 
       await appointmentQueries.deleteAppointment(first, ids.salon)
       expect(
@@ -359,6 +370,13 @@ describe.skipIf(!runIntegration)(
         staffCommissionTotal: 66,
         salonRetainedAmount: 434,
       })
+      await expect(
+        commissions.getSalonFinancialSummary({
+          salonId: ids.salon,
+          startDate: '2026-08-01',
+          endDate: '2026-08-01',
+        }),
+      ).resolves.toEqual(salon?.summary)
 
       await expect(
         appointmentQueries.deleteAppointment(appointmentIds[0]!, ids.salon),
@@ -372,6 +390,17 @@ describe.skipIf(!runIntegration)(
           })
         )?.summary,
       ).toEqual({
+        grossAppointmentRevenue: 416,
+        staffCommissionTotal: 58,
+        salonRetainedAmount: 358,
+      })
+      await expect(
+        commissions.getSalonFinancialSummary({
+          salonId: ids.salon,
+          startDate: '2026-08-01',
+          endDate: '2026-08-01',
+        }),
+      ).resolves.toEqual({
         grossAppointmentRevenue: 416,
         staffCommissionTotal: 58,
         salonRetainedAmount: 358,

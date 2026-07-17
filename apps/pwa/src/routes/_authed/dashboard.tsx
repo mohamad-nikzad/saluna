@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CalendarClock,
   CalendarDays,
+  PiggyBank,
   Scissors,
   TrendingUp,
   UserPlus,
@@ -17,6 +18,7 @@ import { Spinner } from '@repo/ui/spinner'
 import { APPOINTMENT_STATUS } from '@repo/salon-core/types'
 
 import { dashboardQueryOptions } from '#/lib/dashboard-queries'
+import { formatTomans } from '#/lib/appointment-detail-view-model'
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 
 export const Route = createFileRoute('/_authed/dashboard')({
@@ -52,10 +54,6 @@ function DashboardError({ error }: { error: Error }) {
 
 function formatNumber(n: number) {
   return new Intl.NumberFormat('fa-IR').format(n)
-}
-
-function formatPrice(n: number) {
-  return `${new Intl.NumberFormat('fa-IR').format(n)} تومان`
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -162,6 +160,39 @@ function DashboardPage() {
       </header>
 
       <div className="flex-1 space-y-4 overflow-auto p-4 pb-6">
+        <Card className="overflow-hidden border-primary/20 bg-gradient-to-bl from-primary/[0.07] via-card to-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-bold">
+              <Banknote className="h-4 w-4 text-primary" />
+              خلاصه مالی این ماه
+            </CardTitle>
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              مبلغ نوبت‌های انجام‌شده است؛ نه مبلغ وصول‌شده یا سود.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid overflow-hidden rounded-2xl border border-border/60 bg-card sm:grid-cols-2">
+              <div className="p-4">
+                <dt className="text-xs font-medium text-muted-foreground">
+                  جمع مبلغ نوبت‌های انجام‌شده
+                </dt>
+                <dd className="mt-2 text-xl font-black tracking-tight text-foreground">
+                  {formatTomans(data.monthRevenue)}
+                </dd>
+              </div>
+              <div className="border-t border-primary/15 bg-primary/[0.08] p-4 sm:border-r sm:border-t-0">
+                <dt className="flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <PiggyBank className="h-4 w-4" />
+                  سهم سالن پس از کسر کمیسیون
+                </dt>
+                <dd className="mt-2 text-xl font-black tracking-tight text-primary">
+                  {formatTomans(data.monthSalonRetainedAmount)}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <StatCard
             title="نوبت‌های امروز"
@@ -177,12 +208,6 @@ function DashboardPage() {
             title="نوبت‌های ماه"
             value={formatNumber(data.monthAppointments)}
             icon={CalendarDays}
-          />
-          <StatCard
-            title="درآمد ماه"
-            value={formatPrice(data.monthRevenue)}
-            icon={Banknote}
-            subtitle="نوبت‌های انجام‌شده"
           />
           <StatCard
             title="کل مشتریان"

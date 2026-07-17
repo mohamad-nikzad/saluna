@@ -89,6 +89,7 @@ export function appointmentsRangeQueryOptions(
 export function appointmentsRangeInvalidationKeys() {
   return [
     [{ _id: 'getApiV1Appointments' }],
+    [{ _id: 'getApiV1Dashboard' }],
     ...commissionReportInvalidationKeys(),
   ] as const
 }

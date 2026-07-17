@@ -232,6 +232,11 @@ describe('formatTomans', () => {
   it('appends the currency suffix', () => {
     expect(formatTomans(1200)).toContain('تومان')
   })
+
+  it('never renders localized NaN for a missing amount', () => {
+    expect(formatTomans(undefined)).toBe('—')
+    expect(formatTomans(Number.NaN)).toBe('—')
+  })
 })
 
 describe('historicalAddonsFromAppointment', () => {

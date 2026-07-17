@@ -199,6 +199,56 @@ async function appointmentCommissionBasis(
   return allocations[index]!
 }
 
+export async function getSalonFinancialSummary(input: {
+  salonId: string
+  startDate: string
+  endDate: string
+}) {
+  return getDb().transaction(async (tx) => {
+    const rows = await tx
+      .select({
+        appointment: appointments,
+        commissionBasis: staffCommissions.basis,
+        commissionAmount: staffCommissions.amount,
+      })
+      .from(appointments)
+      .leftJoin(
+        staffCommissions,
+        and(
+          eq(staffCommissions.appointmentId, appointments.id),
+          isNull(staffCommissions.voidedAt),
+        ),
+      )
+      .where(
+        and(
+          eq(appointments.salonId, input.salonId),
+          eq(appointments.status, 'completed'),
+          gte(appointments.date, input.startDate),
+          lte(appointments.date, input.endDate),
+        ),
+      )
+
+    // ponytail: monthly volumes are small; batch package lookups if this is measured as slow.
+    const bases = await Promise.all(
+      rows.map(({ appointment, commissionBasis }) =>
+        commissionBasis == null
+          ? appointmentCommissionBasis(tx, appointment)
+          : commissionBasis,
+      ),
+    )
+    const grossAppointmentRevenue = bases.reduce((sum, basis) => sum + basis, 0)
+    const staffCommissionTotal = rows.reduce(
+      (sum, row) => sum + (row.commissionAmount ?? 0),
+      0,
+    )
+    return {
+      grossAppointmentRevenue,
+      staffCommissionTotal,
+      salonRetainedAmount: grossAppointmentRevenue - staffCommissionTotal,
+    }
+  })
+}
+
 export async function syncAppointmentCommission(
   tx: DbTx,
   before: Pick<AppointmentRow, 'status' | 'bookedTotalPrice'> | null,

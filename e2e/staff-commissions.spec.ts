@@ -33,10 +33,11 @@ test('manager configures a commission and both roles see the completed visit', a
       .filter({ has: page.getByText(staff!.name, { exact: true }) })
       .first()
       .click()
-    const percentage = page.getByRole('spinbutton', {
+    const percentage = page.getByRole('textbox', {
       name: 'درصد کمیسیون',
     })
     await percentage.fill('12.5')
+    await expect(percentage).toHaveValue('۱۲.۵')
     const saved = page.waitForResponse(
       (response) =>
         response.url().includes(`/commissions/staff/${staff!.id}/agreement`) &&
@@ -94,6 +95,29 @@ test('manager configures a commission and both roles see the completed visit', a
     await expect(
       page.getByText('دمو VIP امروز', { exact: false }),
     ).toBeVisible()
+  })
+
+  await test.step('Dashboard separates completed value from the salon share', async () => {
+    const response = await page.request.get('/api/v1/dashboard')
+    expect(response.ok(), await response.text()).toBeTruthy()
+    const dashboard = (await response.json()) as {
+      monthSalonRetainedAmount?: number
+    }
+    expect(Number.isFinite(dashboard.monthSalonRetainedAmount)).toBeTruthy()
+
+    await page.goto('/dashboard')
+    await expect(
+      page.getByText('جمع مبلغ نوبت‌های انجام‌شده', { exact: true }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('سهم سالن پس از کسر کمیسیون', { exact: true }),
+    ).toBeVisible()
+    await expect(
+      page
+        .getByText('سهم سالن پس از کسر کمیسیون', { exact: true })
+        .locator('..'),
+    ).toContainText(/[۰-۹][۰-۹٬]* تومان/)
+    await expect(page.getByText(/ناعدد/)).toHaveCount(0)
   })
 
   await test.step('Staff sees only the private self-service report', async () => {

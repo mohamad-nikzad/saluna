@@ -333,7 +333,7 @@ function SettingsPage() {
             <div className="flex gap-2.5">
               <MetricTile
                 icon={Banknote}
-                label="درآمد ماه"
+                label="مبلغ نوبت‌های ماه"
                 value={formatRevenueCompact(metrics.monthRevenue)}
                 accent="text-mint"
               />

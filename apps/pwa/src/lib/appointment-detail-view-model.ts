@@ -12,7 +12,8 @@ import type { AppointmentFormInput } from '@repo/salon-core/forms/appointment'
 
 export const tomansFormatter = new Intl.NumberFormat('fa-IR')
 
-export function formatTomans(price: number) {
+export function formatTomans(price: number | null | undefined) {
+  if (typeof price !== 'number' || !Number.isFinite(price)) return '—'
   return `${tomansFormatter.format(price)} تومان`
 }
 

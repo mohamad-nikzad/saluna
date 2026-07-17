@@ -7,7 +7,7 @@
     ".": "./src/app.ts"
   },
   "scripts": {
-    "dev": "node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/notifications/src src/index.ts",
+    "dev": "node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/database/src --include ../../packages/notifications/src src/index.ts",
     "build": "tsc --project tsconfig.json --noEmit",
     "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.cjs --sourcemap --log-level=warning && esbuild src/cli/migrate.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/migrate.cjs --sourcemap --log-level=warning && esbuild src/cli/seed-catalog-presets.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/seed-catalog-presets.cjs --sourcemap --log-level=warning",
     "start": "node ../../scripts/with-root-env.mjs tsx src/index.ts",

@@ -969,6 +969,7 @@ const stubDashboardData = {
   popularServices: [] as Array<{ name: string; count: number }>,
   staffLoad: [] as Array<{ name: string; color: string; count: number }>,
   monthRevenue: 0,
+  monthSalonRetainedAmount: 0,
   newClientsThisMonth: 0,
 }
 
