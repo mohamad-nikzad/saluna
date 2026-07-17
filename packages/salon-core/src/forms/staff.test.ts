@@ -3,13 +3,11 @@ import { describe, expect, it } from 'vitest'
 import {
   staffCreateRequestSchema,
   staffCreateSchema,
-  staffPasswordRequestSchema,
   staffScheduleDaySchema,
   staffScheduleRequestSchema,
   staffScheduleSchema,
   staffServiceIdsSchema,
 } from './staff'
-import { formMessages } from './messages'
 
 describe('staffCreateSchema', () => {
   it('normalizes phone, trims name, defaults role to staff', () => {
@@ -57,27 +55,6 @@ describe('staffCreateSchema', () => {
       phone: '09123456789',
       role: 'staff',
     })
-  })
-})
-
-describe('staffPasswordRequestSchema', () => {
-  it('rejects short password', () => {
-    const result = staffPasswordRequestSchema.safeParse({
-      password: '123',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rejects non-Latin password characters', () => {
-    const result = staffPasswordRequestSchema.safeParse({
-      password: 'secret۱۲۳',
-    })
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        formMessages.passwordLatinOnly,
-      )
-    }
   })
 })
 
@@ -164,18 +141,6 @@ describe('staffCreateRequestSchema', () => {
 })
 
 describe('staff server schemas', () => {
-  it('rejects non-Latin password updates', () => {
-    const result = staffPasswordRequestSchema.safeParse({
-      password: 'secret۱۲۳',
-    })
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        formMessages.passwordLatinOnly,
-      )
-    }
-  })
-
   it('requires a non-empty schedule request', () => {
     expect(staffScheduleRequestSchema.safeParse({ schedule: [] }).success).toBe(
       false,

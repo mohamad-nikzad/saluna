@@ -119,7 +119,6 @@ function StaffDetailContent({
       scheduleBundle={scheduleBundle}
       isSelf={member.id === user!.id}
       onOpenProfile={actions.openEditProfile}
-      onOpenPassword={actions.openPassword}
       onOpenSchedule={actions.openSchedule}
       onOpenServices={actions.openServices}
       onDelete={actions.openDeleteDialog}

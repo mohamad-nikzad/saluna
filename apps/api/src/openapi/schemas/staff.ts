@@ -1,7 +1,6 @@
 import { z } from '@hono/zod-openapi'
 import {
   staffCreateRequestSchema,
-  staffPasswordRequestSchema,
   staffScheduleRequestSchema,
   staffServiceIdsSchema,
   staffUpdateSchema,
@@ -71,14 +70,6 @@ export const staffUpdateBodySchema = bodyFromCoreSchema(
     color: z.string().optional().openapi({ example: 'plum' }),
   },
   staffUpdateSchema,
-)
-
-export const staffPasswordBodySchema = bodyFromCoreSchema(
-  'StaffPasswordUpdateRequest',
-  {
-    password: z.string().openapi({ example: 'newsecure1' }),
-  },
-  staffPasswordRequestSchema,
 )
 
 export const staffServiceIdsBodySchema = bodyFromCoreSchema(

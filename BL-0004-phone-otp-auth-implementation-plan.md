@@ -111,11 +111,6 @@ References:
   - `PATCH /api/v1/staff/:id` keeps `username/displayUsername`,
     placeholder email, `phoneNumber`, and `phoneNumberVerified=true` in sync
     when a manager changes a staff phone.
-  - `PATCH /api/v1/staff/:id/password` must stop writing a local password hash
-    directly unless the app configures Better Auth to use exactly that shared
-    hasher. Prefer a server-side Better Auth password-setting helper for the
-    target user or a small internal credential writer built from Better Auth's
-    configured password hash function.
   - Staff login must work through both the old username/password endpoint during
     rollout and the new phone-number/password endpoint after backfill.
   - Deactivated staff remain unable to access tenant routes because membership
@@ -135,8 +130,7 @@ References:
    - [x] Add/verify server rate limits for OTP send requests before broad UI
          rollout.
    - [x] Keep old username/password endpoint operational during transition.
-   - [x] Add a single credential password-writing strategy; remove or replace local
-         ad-hoc password hashing for staff password updates.
+   - [x] Add a single credential password-writing strategy for shared auth flows.
 
 3. **API State + Workspace**
    - [x] Rework `/me` to resolve Better Auth session first, then optional
@@ -144,8 +138,8 @@ References:
    - [x] Add session-only account/password and workspace creation endpoints.
 
 4. **Staff + Legacy Compatibility**
-   - [x] Update staff create/update/password flows to sync phone fields and keep
-         staff loginable.
+   - [x] Update staff create/update flows to sync phone fields and keep staff
+         loginable.
    - [x] Update legacy signup, seed scripts, tests, row mappers, tenant context, and
          generated API/OpenAPI contracts as needed.
    - [x] Do not update native callers; native is deprecated and excluded from this
@@ -265,8 +259,6 @@ Completed:
 - Configured Better Auth `emailAndPassword.password.hash/verify` to use that
   helper explicitly, so credential account writes and Better Auth sign-in verify
   share the same strategy.
-- Updated `updateStaffPassword` to use the shared helper instead of its private
-  local scrypt implementation.
 - Exported the helper as `@repo/database/auth-password`.
 - Added a focused unit test for hash format, successful verification, and failed
   verification.
@@ -520,8 +512,6 @@ Remaining notes for the next agent:
   - Staff creation populates username, displayUsername, phoneNumber, and
     phoneNumberVerified, then staff can log in with phone/password.
   - Staff phone update keeps username/email/phoneNumber in sync.
-  - Staff password update produces a credential account accepted by Better Auth
-    phone-number sign-in.
   - Deactivated staff cannot access tenant routes after login/session refresh.
   - Legacy username/password endpoint remains operational during rollout.
 

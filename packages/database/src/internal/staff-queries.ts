@@ -13,7 +13,6 @@ import {
 } from '@repo/salon-core/staff-availability'
 import { getDb } from '../client'
 import {
-  account,
   member,
   salonMember,
   staffInvites,
@@ -25,7 +24,6 @@ import {
 import { deactivateStaffProfileWithAccessRevocation } from '../staff-access-revocation'
 import { rowToStaffSchedule, rowToUser, staffUserSelect } from './row-mappers'
 import { getBusinessSettings } from './settings-queries'
-import { hashCredentialPassword } from '../auth-password'
 
 export type UpdateStaffInput = {
   name: string
@@ -243,46 +241,6 @@ export async function deactivateStaffMember(
       target: [salonMember.userId, salonMember.organizationId],
       set: { active: false },
     })
-
-  return true
-}
-
-export async function updateStaffPassword(
-  salonId: string,
-  staffUserId: string,
-  password: string,
-): Promise<boolean> {
-  const db = getDb()
-  const rows = await db
-    .select({ userId: member.userId })
-    .from(member)
-    .where(
-      and(eq(member.organizationId, salonId), eq(member.userId, staffUserId)),
-    )
-    .limit(1)
-
-  if (!rows[0]) return false
-
-  const passwordHash = await hashCredentialPassword(password)
-  const updated = await db
-    .update(account)
-    .set({ password: passwordHash, updatedAt: new Date() })
-    .where(
-      and(
-        eq(account.userId, staffUserId),
-        eq(account.providerId, 'credential'),
-      ),
-    )
-    .returning({ id: account.id })
-
-  if (updated.length > 0) return true
-
-  await db.insert(account).values({
-    userId: staffUserId,
-    accountId: staffUserId,
-    providerId: 'credential',
-    password: passwordHash,
-  })
 
   return true
 }

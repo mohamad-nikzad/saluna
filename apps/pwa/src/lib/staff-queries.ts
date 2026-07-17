@@ -2,7 +2,6 @@ import { queryOptions, useMutation } from '@tanstack/react-query'
 import type {
   StaffCreateFormInput,
   StaffCreateRequestPayload,
-  StaffPasswordRequestPayload,
   StaffScheduleFormInput,
   StaffServiceIdsPayload,
   StaffUpdateFormPayload,
@@ -19,7 +18,6 @@ import {
   getApiV1StaffByIdScheduleQueryKey,
   getApiV1StaffQueryKey,
   patchApiV1StaffByIdMutation,
-  patchApiV1StaffByIdPasswordMutation,
   patchApiV1StaffByIdServicesMutation,
   postApiV1StaffByIdInviteCancelMutation,
   postApiV1StaffByIdInviteResendMutation,
@@ -161,25 +159,6 @@ export function useUpdateStaffMutation(staffId: string) {
     meta: {
       errorMessage: 'ذخیره اطلاعات انجام نشد',
       invalidatesQuery: getApiV1StaffQueryKey(),
-    },
-  })
-}
-
-export function useUpdateStaffPasswordMutation(staffId: string) {
-  const generated = patchApiV1StaffByIdPasswordMutation()
-
-  return useMutation<void, unknown, StaffPasswordRequestPayload>({
-    mutationFn: async (values, mutationContext) => {
-      await generated.mutationFn!(
-        {
-          path: { id: staffId },
-          body: values,
-        },
-        mutationContext,
-      )
-    },
-    meta: {
-      errorMessage: 'تغییر رمز عبور انجام نشد',
     },
   })
 }

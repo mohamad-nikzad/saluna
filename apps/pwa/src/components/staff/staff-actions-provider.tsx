@@ -3,7 +3,6 @@ import type { Service, User } from '@repo/salon-core/types'
 
 import { StaffDeleteDialog } from '#/components/staff/staff-delete-dialog'
 import { StaffDrawer } from '#/components/staff/staff-drawer'
-import { StaffPasswordDrawer } from '#/components/staff/staff-password-drawer'
 import { StaffScheduleDrawer } from '#/components/staff/staff-schedule-drawer'
 import { StaffServicesDrawer } from '#/components/staff/staff-services-drawer'
 import { useStaffPageController } from '#/components/staff/use-staff-page-controller'
@@ -12,7 +11,6 @@ interface StaffActionsContextValue {
   services: Service[]
   openCreateProfile: () => void
   openEditProfile: (member: User) => void
-  openPassword: (member: User) => void
   openServices: (member: User) => void
   openSchedule: (member: User) => void
   openDeleteDialog: (member: User) => void
@@ -38,7 +36,6 @@ export function StaffActionsProvider({
       services,
       openCreateProfile: controller.openCreateProfile,
       openEditProfile: controller.openEditProfile,
-      openPassword: controller.openPassword,
       openServices: controller.openServices,
       openSchedule: controller.openSchedule,
       openDeleteDialog: controller.openDeleteDialog,
@@ -47,7 +44,6 @@ export function StaffActionsProvider({
       services,
       controller.openCreateProfile,
       controller.openEditProfile,
-      controller.openPassword,
       controller.openServices,
       controller.openSchedule,
       controller.openDeleteDialog,
@@ -97,13 +93,6 @@ function StaffActionsDrawers({
         staff={controller.servicesStaff}
         services={services}
         onSuccess={controller.handleServicesSuccess}
-      />
-
-      <StaffPasswordDrawer
-        open={!!controller.passwordStaff}
-        onOpenChange={(open) => !open && controller.setPasswordStaff(null)}
-        staff={controller.passwordStaff}
-        onSuccess={controller.handlePasswordSuccess}
       />
 
       <StaffScheduleDrawer

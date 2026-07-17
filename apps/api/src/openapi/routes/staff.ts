@@ -13,7 +13,6 @@ import {
   staffCreateResponseSchema,
   staffListResponseSchema,
   staffMemberResponseSchema,
-  staffPasswordBodySchema,
   staffScheduleBodySchema,
   staffScheduleBundleResponseSchema,
   staffScheduleUpdateResponseSchema,
@@ -166,31 +165,6 @@ export const updateStaffRoute = createRoute({
     403: forbiddenResponse,
     404: notFoundResponse,
     409: duplicatePhoneResponse,
-  },
-})
-
-export const updateStaffPasswordRoute = createRoute({
-  method: 'patch',
-  path: '/{id}/password',
-  tags: ['Staff'],
-  summary: 'Update staff password',
-  security: tenantSecurity,
-  request: {
-    params: idParamSchema,
-    body: {
-      required: true,
-      content: { 'application/json': { schema: staffPasswordBodySchema } },
-    },
-  },
-  responses: {
-    200: {
-      description: 'Password updated',
-      content: { 'application/json': { schema: successResponseSchema } },
-    },
-    400: validationErrorResponse,
-    401: unauthorizedResponse,
-    403: forbiddenResponse,
-    404: notFoundResponse,
   },
 })
 

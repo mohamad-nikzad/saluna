@@ -6,7 +6,6 @@ import { z } from 'zod'
 
 import { normalizeCalendarColorId } from '../calendar-colors'
 import { STAFF_COLORS } from '../types'
-import { newPasswordSchema } from './auth'
 import { formMessages } from './messages'
 import {
   phoneSchema,
@@ -59,40 +58,6 @@ export const staffUpdateSchema = z.object({
 
 export type StaffUpdateFormInput = z.input<typeof staffUpdateSchema>
 export type StaffUpdateFormPayload = z.output<typeof staffUpdateSchema>
-
-export const staffPasswordRequestSchema = z.object({
-  password: newPasswordSchema,
-})
-
-export type StaffPasswordRequestInput = z.input<
-  typeof staffPasswordRequestSchema
->
-export type StaffPasswordRequestPayload = z.output<
-  typeof staffPasswordRequestSchema
->
-
-export const staffPasswordUpdateSchema = z
-  .object({
-    password: newPasswordSchema,
-    confirmPassword: z.string({ error: formMessages.required }),
-  })
-  .superRefine((value, ctx) => {
-    if (value.password !== value.confirmPassword) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['confirmPassword'],
-        message: formMessages.passwordMismatch,
-      })
-    }
-  })
-  .transform(({ confirmPassword: _confirmPassword, password }) => ({
-    password,
-  }))
-
-export type StaffPasswordUpdateInput = z.input<typeof staffPasswordUpdateSchema>
-export type StaffPasswordUpdatePayload = z.output<
-  typeof staffPasswordUpdateSchema
->
 
 export const staffScheduleDaySchema = z
   .object({

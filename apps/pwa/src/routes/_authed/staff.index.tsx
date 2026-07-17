@@ -51,13 +51,8 @@ function StaffListContent({
   servicesList: ManagerServicesList
 }) {
   const { user } = useAuth()
-  const {
-    openCreateProfile,
-    openPassword,
-    openServices,
-    openSchedule,
-    openDeleteDialog,
-  } = useStaffActions()
+  const { openCreateProfile, openServices, openSchedule, openDeleteDialog } =
+    useStaffActions()
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -107,7 +102,6 @@ function StaffListContent({
                 member={member}
                 currentUserId={user!.id}
                 serviceCount={staffServiceCount(member, servicesList)}
-                onEditPassword={() => openPassword(member)}
                 onEditServices={() => openServices(member)}
                 onEditSchedule={() => openSchedule(member)}
                 onDelete={() => openDeleteDialog(member)}

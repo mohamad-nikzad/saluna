@@ -1,4 +1,4 @@
-import { KeyRound, Trash2, User as UserIcon } from 'lucide-react'
+import { Trash2, User as UserIcon } from 'lucide-react'
 import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -36,7 +36,6 @@ export interface StaffDetailViewProps {
   }
   isSelf: boolean
   onOpenProfile: (member: User) => void
-  onOpenPassword: (member: User) => void
   onOpenSchedule: (member: User) => void
   onOpenServices: (member: User) => void
   onDelete: (member: User) => void
@@ -48,7 +47,6 @@ export function StaffDetailView({
   scheduleBundle,
   isSelf,
   onOpenProfile,
-  onOpenPassword,
   onOpenSchedule,
   onOpenServices,
   onDelete,
@@ -141,30 +139,6 @@ export function StaffDetailView({
             />
           </div>
         </StaffDetailSection>
-
-        {!isSelf ? (
-          <StaffDetailSection title="رمز عبور" icon={KeyRound}>
-            <div className="flex items-center gap-3 rounded-[14px] border border-line bg-paper px-3.5 py-3">
-              <div className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-blush-soft text-primary">
-                <KeyRound className="size-[17px]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-bold text-foreground">
-                  رمز ورود
-                </div>
-                <div
-                  className="mt-0.5 text-xs tracking-[0.18em] text-muted-foreground"
-                  aria-hidden
-                >
-                  ••••••••
-                </div>
-              </div>
-              <StaffSectionAction onClick={() => onOpenPassword(member)}>
-                تغییر
-              </StaffSectionAction>
-            </div>
-          </StaffDetailSection>
-        ) : null}
 
         {isStaffRole ? (
           <>

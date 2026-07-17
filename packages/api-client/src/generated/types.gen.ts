@@ -805,10 +805,6 @@ export type SuccessResponse = {
   success: true
 }
 
-export type StaffPasswordUpdateRequest = {
-  password: string
-}
-
 export type StaffScheduleBundleResponse = {
   schedule: Array<StaffSchedule>
   businessHours: BusinessHours
@@ -4509,47 +4505,6 @@ export type PatchApiV1StaffByIdResponses = {
 
 export type PatchApiV1StaffByIdResponse =
   PatchApiV1StaffByIdResponses[keyof PatchApiV1StaffByIdResponses]
-
-export type PatchApiV1StaffByIdPasswordData = {
-  body: StaffPasswordUpdateRequest
-  path: {
-    id: string
-  }
-  query?: never
-  url: '/api/v1/staff/{id}/password'
-}
-
-export type PatchApiV1StaffByIdPasswordErrors = {
-  /**
-   * Invalid request body or parameters
-   */
-  400: ApiError
-  /**
-   * Missing or invalid session
-   */
-  401: ApiError
-  /**
-   * Authenticated but missing manage_settings permission
-   */
-  403: ApiError
-  /**
-   * Staff member not found
-   */
-  404: ApiError
-}
-
-export type PatchApiV1StaffByIdPasswordError =
-  PatchApiV1StaffByIdPasswordErrors[keyof PatchApiV1StaffByIdPasswordErrors]
-
-export type PatchApiV1StaffByIdPasswordResponses = {
-  /**
-   * Password updated
-   */
-  200: SuccessResponse
-}
-
-export type PatchApiV1StaffByIdPasswordResponse =
-  PatchApiV1StaffByIdPasswordResponses[keyof PatchApiV1StaffByIdPasswordResponses]
 
 export type GetApiV1StaffByIdScheduleData = {
   body?: never

@@ -90,7 +90,6 @@ import {
   getStaffScheduleRoute,
   listStaffRoute,
   resendStaffInviteRoute,
-  updateStaffPasswordRoute,
   updateStaffRoute,
   updateStaffScheduleRoute,
   updateStaffServicesRoute,
@@ -274,10 +273,6 @@ const createStaffStub: RouteHandler<typeof createStaffRoute> = (c) =>
 
 const updateStaffStub: RouteHandler<typeof updateStaffRoute> = (c) =>
   c.json({ staff: stubStaffUser }, 200)
-
-const updateStaffPasswordStub: RouteHandler<typeof updateStaffPasswordRoute> = (
-  c,
-) => c.json({ success: true as const }, 200)
 
 const deleteStaffStub: RouteHandler<typeof deleteStaffRoute> = (c) =>
   c.json({ success: true as const }, 200)
@@ -1402,7 +1397,6 @@ export const contractApp = new OpenAPIHono()
         getStaffBookingAvailabilityStub,
       )
       .openapi(updateStaffRoute, updateStaffStub)
-      .openapi(updateStaffPasswordRoute, updateStaffPasswordStub)
       .openapi(deleteStaffRoute, deleteStaffStub)
       .openapi(getStaffScheduleRoute, getStaffScheduleStub)
       .openapi(updateStaffScheduleRoute, updateStaffScheduleStub)

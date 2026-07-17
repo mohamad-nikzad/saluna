@@ -20,7 +20,6 @@ export function useStaffPageController(
 
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileStaff, setProfileStaff] = useState<User | null>(null)
-  const [passwordStaff, setPasswordStaff] = useState<User | null>(null)
   const [servicesStaff, setServicesStaff] = useState<User | null>(null)
   const [scheduleStaff, setScheduleStaff] = useState<User | null>(null)
   const [deletingStaff, setDeletingStaff] = useState<User | null>(null)
@@ -55,14 +54,6 @@ export function useStaffPageController(
     setProfileStaff(null)
     refreshRoster()
   }, [refreshRoster])
-
-  const openPassword = useCallback((member: User) => {
-    setPasswordStaff(member)
-  }, [])
-
-  const handlePasswordSuccess = useCallback(() => {
-    setPasswordStaff(null)
-  }, [])
 
   const openServices = useCallback((member: User) => {
     setServicesStaff(member)
@@ -106,10 +97,6 @@ export function useStaffPageController(
     setProfileOpen,
     setProfileStaff,
     handleProfileSuccess,
-    passwordStaff,
-    openPassword,
-    setPasswordStaff,
-    handlePasswordSuccess,
     servicesStaff,
     openServices,
     setServicesStaff,

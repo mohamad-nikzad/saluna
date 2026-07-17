@@ -17,7 +17,6 @@ vi.mock('@repo/database/staff', () => ({
   getStaffBookingAvailabilityForSlot: vi.fn(),
   getBusinessSettings: vi.fn(),
   updateStaffMember: vi.fn(),
-  updateStaffPassword: vi.fn(),
   validateActiveServiceIds: vi.fn(),
   countManagers: vi.fn(),
 }))
@@ -195,8 +194,6 @@ describe('staff router', () => {
       phone: '09121234567',
       invitedByUserId: 'u1',
     })
-    // Pending invites must not mint manager-controlled credentials.
-    expect(db.updateStaffPassword).not.toHaveBeenCalled()
   })
 
   it('cancels a pending invite without deleting the Staff Profile', async () => {
@@ -314,29 +311,6 @@ describe('staff router', () => {
     })
   })
 
-  it('404 when password update target has no tenant membership', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
-      id: 'profile-1',
-      salonId: 's1',
-      role: 'staff',
-      inviteStatus: 'pending',
-    } as never)
-    vi.mocked(db.updateStaffPassword).mockResolvedValue(false as never)
-    const res = await app.request('/api/v1/staff/profile-1/password', {
-      method: 'PATCH',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        password: 'newsecret123',
-      }),
-    })
-    expect(res.status).toBe(404)
-    expect(db.updateStaffPassword).toHaveBeenCalledWith(
-      's1',
-      'profile-1',
-      'newsecret123',
-    )
-  })
-
   it('200 on GET includes pending inviteStatus for invited staff', async () => {
     vi.mocked(db.getAllStaff).mockResolvedValue([
       {
@@ -426,41 +400,6 @@ describe('staff router', () => {
     expect(await res.json()).toEqual({
       error: 'تاریخ و ساعت شروع و پایان الزامی است',
     })
-  })
-
-  it('200 on PATCH /:id/password', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
-      id: 'u2',
-      salonId: 's1',
-      role: 'staff',
-    } as never)
-    vi.mocked(db.updateStaffPassword).mockResolvedValue(true as never)
-    const res = await app.request('/api/v1/staff/u2/password', {
-      method: 'PATCH',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        password: 'newsecret123',
-        confirmPassword: 'newsecret123',
-      }),
-    })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ success: true })
-    expect(db.updateStaffPassword).toHaveBeenCalledWith(
-      's1',
-      'u2',
-      'newsecret123',
-    )
-  })
-
-  it('400 on PATCH /:id/password short password', async () => {
-    const res = await app.request('/api/v1/staff/u2/password', {
-      method: 'PATCH',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        password: '123',
-      }),
-    })
-    expect(res.status).toBe(400)
   })
 
   it('200 on DELETE /:id soft deletes staff', async () => {

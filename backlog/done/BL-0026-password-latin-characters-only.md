@@ -30,4 +30,4 @@ Validate password inputs client- and server-side so only Latin letters, digits, 
 - Shared schemas live in `packages/salon-core/src/forms/auth.ts` (`loginSchema`, `signupSchema`, `preWorkspaceAccountSchema`).
 - UI touchpoints include `apps/pwa/src/routes/signup.tsx`, `apps/pwa/src/routes/auth.tsx` (recovery password), and `PasswordInput`.
 - Consider reusing or extending `packages/salon-core/src/forms/messages.ts` for the error copy.
-- Fixed by adding `newPasswordSchema` with ASCII printable character validation, reusing it across signup, password reset, staff create, and staff password update flows. Login remains unchanged so existing passwords are not invalidated retroactively.
+- Fixed by adding `newPasswordSchema` with ASCII printable character validation, reusing it across signup, password reset, and staff credential establishment. Login remains unchanged so existing passwords are not invalidated retroactively.

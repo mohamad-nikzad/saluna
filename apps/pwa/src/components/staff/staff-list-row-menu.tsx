@@ -1,6 +1,5 @@
 import {
   Clock3,
-  KeyRound,
   ListChecks,
   MoreVertical,
   Pencil,
@@ -22,7 +21,6 @@ interface StaffListRowMenuProps {
   member: User
   currentUserId: string
   onEditProfile: () => void
-  onEditPassword: () => void
   onEditServices: () => void
   onEditSchedule: () => void
   onResendInvite?: () => void
@@ -34,7 +32,6 @@ export function StaffListRowMenu({
   member,
   currentUserId,
   onEditProfile,
-  onEditPassword,
   onEditServices,
   onEditSchedule,
   onResendInvite,
@@ -69,18 +66,6 @@ export function StaffListRowMenu({
           <Pencil className="h-4 w-4" />
           ویرایش پروفایل
         </DropdownMenuItem>
-
-        {!isSelf && !isPendingInvite ? (
-          <DropdownMenuItem
-            className="gap-2"
-            onSelect={() => {
-              onEditPassword()
-            }}
-          >
-            <KeyRound className="h-4 w-4" />
-            تغییر رمز عبور
-          </DropdownMenuItem>
-        ) : null}
 
         {isStaffRole ? (
           <>

@@ -301,9 +301,6 @@ import type {
   PatchApiV1SettingsBusinessResponses,
   PatchApiV1StaffByIdData,
   PatchApiV1StaffByIdErrors,
-  PatchApiV1StaffByIdPasswordData,
-  PatchApiV1StaffByIdPasswordErrors,
-  PatchApiV1StaffByIdPasswordResponses,
   PatchApiV1StaffByIdResponses,
   PatchApiV1StaffByIdServicesData,
   PatchApiV1StaffByIdServicesErrors,
@@ -1730,31 +1727,6 @@ export const patchApiV1StaffById = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: '/api/v1/staff/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  })
-
-/**
- * Update staff password
- */
-export const patchApiV1StaffByIdPassword = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PatchApiV1StaffByIdPasswordData, ThrowOnError>,
-): RequestResult<
-  PatchApiV1StaffByIdPasswordResponses,
-  PatchApiV1StaffByIdPasswordErrors,
-  ThrowOnError
-> =>
-  (options.client ?? client).patch<
-    PatchApiV1StaffByIdPasswordResponses,
-    PatchApiV1StaffByIdPasswordErrors,
-    ThrowOnError
-  >({
-    url: '/api/v1/staff/{id}/password',
     ...options,
     headers: {
       'Content-Type': 'application/json',

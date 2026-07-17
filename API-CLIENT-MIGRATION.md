@@ -506,7 +506,7 @@ Phase 5: create `src/react/index.ts` only. **No `useCurrentUser()` or other doma
 - Auth/session: `auth.tsx`, `login.tsx`, `signup.tsx`
 - Onboarding: `_authed/onboarding/*`, `-steps.ts`
 - Clients detail: `clients.$id.tsx` (`api.clients.summary`)
-- Staff CRUD (partial): `staff-drawer`, `staff-password-drawer`, `use-staff-page-controller`, onboarding staff step
+- Staff CRUD (partial): `staff-drawer`, `use-staff-page-controller`, onboarding staff step
 - Calendar/availability: `calendar.tsx`, `availability-drawer.tsx`
 - Reads/aggregates: `dashboard`, `retention`, `requests`, `public-page`, `settings` (partial)
 - Today: `manager-today-provider`, `staff-today-provider`, `use-staff-today-status-mutation`
@@ -647,20 +647,20 @@ Migrated domains are **online-only**. When a slice moves to the generated client
 
 **Goal:** Staff management off data-client and legacy staff API.
 
-**OpenAPI:** add `apps/api/src/openapi/routes/staff.ts` (+ schemas) — list, create, update, delete, password, schedule bundle, booking availability, service assignments.
+**OpenAPI:** add `apps/api/src/openapi/routes/staff.ts` (+ schemas) — list, create, update, delete, schedule bundle, booking availability, service assignments.
 
 **App scope:**
 
 - `staff.index.tsx`, `staff.$id.tsx`, staff drawers/modals, `use-staff-page-controller`
 - `useManagerStaffQuery`, schedule bundle query
 - Onboarding staff step (`onboarding/staff.tsx`) — partial legacy today
-- `api.staff.*` in staff-password-drawer, staff-drawer
+- `api.staff.*` in staff-drawer
 
 **Acceptance criteria:**
 
-- Staff list, CRUD, schedule, password, services assignment on generated options.
+- Staff list, CRUD, schedule, services assignment on generated options.
 - No `dc.staff.*` or `api.staff.*` in migrated files.
-- Offline cleanup per slice: no `useManagerWriteMutation` for staff on migrated screens; remove `staff.create` / `staff.update` / `staff.updatePassword` / `staff.delete` from write policy when migrated; no `assertOnlineForWrite` or offline UI on staff screens.
+- Offline cleanup per slice: no `useManagerWriteMutation` for staff on migrated screens; remove `staff.create` / `staff.update` / `staff.delete` from write policy when migrated; no `assertOnlineForWrite` or offline UI on staff screens.
 
 ---
 

@@ -17,7 +17,6 @@ import {
   setStaffSchedules,
   setStaffServiceIds,
   updateStaffMember,
-  updateStaffPassword,
   validateActiveServiceIds,
   type ReactivateStaffProfileResult,
   type StaffAccessRevocationRejectionReason,
@@ -27,7 +26,6 @@ import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { validateAppointmentWindow } from '@repo/salon-core/appointment-time'
 import {
   staffCreateRequestSchema,
-  staffPasswordRequestSchema,
   staffScheduleRequestSchema,
   staffServiceIdsSchema,
   staffUpdateSchema,
@@ -259,24 +257,6 @@ export const staff = new Hono<AppEnv>()
       }
       if (!updated) return error(c, 'کاربر یافت نشد', 404)
       return ok(c, { staff: updated })
-    },
-  )
-  .patch(
-    '/:id/password',
-    requireTenant('manage_settings'),
-    zValidator('param', idParamSchema),
-    zValidator('json', staffPasswordRequestSchema),
-    async (c) => {
-      const { salonId } = c.var.tenant
-      const { id } = c.req.valid('param')
-      const { password } = c.req.valid('json')
-      const target = await getUserById(id)
-      if (!target || target.salonId !== salonId) {
-        return error(c, 'کاربر یافت نشد', 404)
-      }
-      const updated = await updateStaffPassword(salonId, id, password)
-      if (!updated) return error(c, 'کاربر یافت نشد', 404)
-      return ok(c, { success: true })
     },
   )
   .post(

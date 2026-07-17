@@ -108,7 +108,6 @@ import {
   patchApiV1ServicesById,
   patchApiV1SettingsBusiness,
   patchApiV1StaffById,
-  patchApiV1StaffByIdPassword,
   patchApiV1StaffByIdServices,
   postApiV1AdminCatalogPresets,
   postApiV1AdminPlatformAdmins,
@@ -449,9 +448,6 @@ import type {
   PatchApiV1SettingsBusinessResponse,
   PatchApiV1StaffByIdData,
   PatchApiV1StaffByIdError,
-  PatchApiV1StaffByIdPasswordData,
-  PatchApiV1StaffByIdPasswordError,
-  PatchApiV1StaffByIdPasswordResponse,
   PatchApiV1StaffByIdResponse,
   PatchApiV1StaffByIdServicesData,
   PatchApiV1StaffByIdServicesError,
@@ -2979,33 +2975,6 @@ export const patchApiV1StaffByIdMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await patchApiV1StaffById({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      })
-      return data
-    },
-  }
-  return mutationOptions
-}
-
-/**
- * Update staff password
- */
-export const patchApiV1StaffByIdPasswordMutation = (
-  options?: Partial<Options<PatchApiV1StaffByIdPasswordData>>,
-): UseMutationOptions<
-  PatchApiV1StaffByIdPasswordResponse,
-  PatchApiV1StaffByIdPasswordError,
-  Options<PatchApiV1StaffByIdPasswordData>
-> => {
-  const mutationOptions: UseMutationOptions<
-    PatchApiV1StaffByIdPasswordResponse,
-    PatchApiV1StaffByIdPasswordError,
-    Options<PatchApiV1StaffByIdPasswordData>
-  > = {
-    mutationFn: async (fnOptions) => {
-      const { data } = await patchApiV1StaffByIdPassword({
         ...options,
         ...fnOptions,
         throwOnError: true,

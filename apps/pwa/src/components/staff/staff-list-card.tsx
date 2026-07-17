@@ -17,7 +17,6 @@ interface StaffListCardProps {
   member: User
   currentUserId: string
   serviceCount: number
-  onEditPassword: () => void
   onEditServices: () => void
   onEditSchedule: () => void
   onDelete: () => void
@@ -27,7 +26,6 @@ export function StaffListCard({
   member,
   currentUserId,
   serviceCount,
-  onEditPassword,
   onEditServices,
   onEditSchedule,
   onDelete,
@@ -89,7 +87,6 @@ export function StaffListCard({
         onEditProfile={() =>
           navigate({ to: '/staff/$id', params: { id: member.id } })
         }
-        onEditPassword={onEditPassword}
         onEditServices={onEditServices}
         onEditSchedule={onEditSchedule}
         onResendInvite={
