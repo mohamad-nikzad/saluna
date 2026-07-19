@@ -1196,6 +1196,9 @@ export const appointments = pgTable(
     createdByUserId: uuid('created_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    commissionExcludedAt: timestamp('commission_excluded_at', {
+      withTimezone: true,
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

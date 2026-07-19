@@ -1,10 +1,11 @@
-import { and, asc, eq, gte, isNull, lte, or } from 'drizzle-orm'
+import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm'
 import {
   allocatePackagePrice,
   commissionAmount,
 } from '@repo/salon-core/commissions'
 
 import { getDb } from '../client'
+import { resolveAppointmentAssignmentStaffProfileId } from '../staff-profile-access'
 import {
   appointments,
   clients,
@@ -81,14 +82,14 @@ function agreementView(
   }
 }
 
-async function resolveStaffProfile(salonId: string, staffRef: string) {
+async function getStaffProfile(salonId: string, staffProfileId: string) {
   const rows = await getDb()
     .select()
     .from(staffProfiles)
     .where(
       and(
         eq(staffProfiles.salonId, salonId),
-        or(eq(staffProfiles.id, staffRef), eq(staffProfiles.userId, staffRef)),
+        eq(staffProfiles.id, staffProfileId),
       ),
     )
     .limit(1)
@@ -97,11 +98,11 @@ async function resolveStaffProfile(salonId: string, staffRef: string) {
 
 export async function setCommissionAgreement(input: {
   salonId: string
-  staffRef: string
+  staffProfileId: string
   percentageBasisPoints: number
   now?: Date
 }): Promise<CommissionAgreementView | null> {
-  const profile = await resolveStaffProfile(input.salonId, input.staffRef)
+  const profile = await getStaffProfile(input.salonId, input.staffProfileId)
   if (!profile) return null
   const now = input.now ?? new Date()
   const [row] = await getDb()
@@ -135,10 +136,10 @@ export async function setCommissionAgreement(input: {
 
 export async function disableCommissionAgreement(input: {
   salonId: string
-  staffRef: string
+  staffProfileId: string
   now?: Date
 }): Promise<CommissionAgreementView | null> {
-  const profile = await resolveStaffProfile(input.salonId, input.staffRef)
+  const profile = await getStaffProfile(input.salonId, input.staffProfileId)
   if (!profile) return null
   const now = input.now ?? new Date()
   const [row] = await getDb()
@@ -296,39 +297,44 @@ export async function syncAppointmentCommission(
     return
   }
 
-  const [profile] = await tx
-    .select({ id: staffProfiles.id })
-    .from(staffProfiles)
-    .where(
-      and(
-        eq(staffProfiles.salonId, after.salonId),
-        or(
-          eq(staffProfiles.id, after.staffId),
-          eq(staffProfiles.userId, after.staffId),
-        ),
-      ),
-    )
-    .limit(1)
-  if (!profile) return
+  if (after.commissionExcludedAt) return
 
-  const [agreement] = await tx
-    .select()
-    .from(commissionAgreements)
-    .where(
-      and(
-        eq(commissionAgreements.salonId, after.salonId),
-        eq(commissionAgreements.staffProfileId, profile.id),
-        eq(commissionAgreements.active, true),
-      ),
-    )
-    .limit(1)
-  if (!agreement) return
+  const staffProfileId = await resolveAppointmentAssignmentStaffProfileId(
+    { salonId: after.salonId, staffId: after.staffId },
+    tx,
+  )
+
+  const [agreement] = staffProfileId
+    ? await tx
+        .select()
+        .from(commissionAgreements)
+        .where(
+          and(
+            eq(commissionAgreements.salonId, after.salonId),
+            eq(commissionAgreements.staffProfileId, staffProfileId),
+            eq(commissionAgreements.active, true),
+          ),
+        )
+        .limit(1)
+    : []
+  if (!staffProfileId || !agreement) {
+    await tx
+      .update(appointments)
+      .set({ commissionExcludedAt: new Date() })
+      .where(
+        and(
+          eq(appointments.id, after.id),
+          isNull(appointments.commissionExcludedAt),
+        ),
+      )
+    return
+  }
 
   await tx
     .insert(staffCommissions)
     .values({
       salonId: after.salonId,
-      staffProfileId: profile.id,
+      staffProfileId,
       appointmentId: after.id,
       basis,
       percentageBasisPoints: agreement.percentageBasisPoints,
@@ -394,11 +400,11 @@ function mapReportRow(row: Awaited<ReturnType<typeof reportRows>>[number]) {
 
 export async function getStaffCommissionReport(input: {
   salonId: string
-  staffRef: string
+  staffProfileId: string
   startDate: string
   endDate: string
 }): Promise<StaffCommissionReport | null> {
-  const profile = await resolveStaffProfile(input.salonId, input.staffRef)
+  const profile = await getStaffProfile(input.salonId, input.staffProfileId)
   if (!profile) return null
   const [agreementRows, rows] = await Promise.all([
     getDb()
@@ -439,12 +445,12 @@ export async function getSalonCommissionReport(input: {
   salonId: string
   startDate: string
   endDate: string
-  staffRef?: string
+  staffProfileId?: string
 }): Promise<SalonCommissionReport | null> {
-  const profile = input.staffRef
-    ? await resolveStaffProfile(input.salonId, input.staffRef)
+  const profile = input.staffProfileId
+    ? await getStaffProfile(input.salonId, input.staffProfileId)
     : null
-  if (input.staffRef && !profile) return null
+  if (input.staffProfileId && !profile) return null
   const [rows, profiles] = await Promise.all([
     reportRows({ ...input, staffProfileId: profile?.id }),
     getDb()

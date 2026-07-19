@@ -38,7 +38,7 @@ export function CommissionPeriodControls({
               }
             }}
             className={cn(
-              'min-h-9 rounded-[10px] px-1 text-[11px] font-bold transition-colors touch-manipulation',
+              'h-9 rounded-[10px] px-1 text-[11px] font-bold transition-colors touch:h-11 touch-manipulation',
               value.period === period
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground',

@@ -150,7 +150,7 @@ describe.skipIf(!runIntegration)(
 
       await commissions.setCommissionAgreement({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
         percentageBasisPoints: 5000,
       })
       await appointmentQueries.updateAppointment(historical, ids.salon, {
@@ -165,7 +165,7 @@ describe.skipIf(!runIntegration)(
 
       await commissions.setCommissionAgreement({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
         percentageBasisPoints: 2500,
       })
       await appointmentQueries.updateAppointment(second, ids.salon, {
@@ -180,7 +180,7 @@ describe.skipIf(!runIntegration)(
 
       let report = await commissions.getStaffCommissionReport({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
         startDate: '2026-07-01',
         endDate: '2026-07-31',
       })
@@ -198,7 +198,7 @@ describe.skipIf(!runIntegration)(
       })
       await commissions.disableCommissionAgreement({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
       })
       await appointmentQueries.updateAppointment(disabled, ids.salon, {
         status: 'completed',
@@ -206,7 +206,7 @@ describe.skipIf(!runIntegration)(
 
       report = await commissions.getStaffCommissionReport({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
         startDate: '2026-07-01',
         endDate: '2026-07-31',
       })
@@ -258,7 +258,7 @@ describe.skipIf(!runIntegration)(
         (
           await commissions.getStaffCommissionReport({
             salonId: ids.salon,
-            staffRef: ids.profileA,
+            staffProfileId: ids.profileA,
             startDate: '2026-07-01',
             endDate: '2026-07-31',
           })
@@ -266,15 +266,102 @@ describe.skipIf(!runIntegration)(
       ).toBe(1)
     })
 
+    it('persists commission exclusion across every later status sequence', async () => {
+      const historicalNoShow = await insertAppointment({
+        date: '2026-07-20',
+        price: 500,
+      })
+      const historicalScheduled = await insertAppointment({
+        date: '2026-07-20',
+        price: 600,
+      })
+      const completedWhileDisabled = await insertAppointment({
+        date: '2026-07-20',
+        price: 700,
+      })
+      const eligible = await insertAppointment({
+        date: '2026-07-20',
+        price: 800,
+      })
+      await appointmentQueries.updateAppointment(historicalNoShow, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(
+        historicalScheduled,
+        ids.salon,
+        { status: 'completed' },
+      )
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+
+      await appointmentQueries.updateAppointment(historicalNoShow, ids.salon, {
+        status: 'no-show',
+      })
+      await appointmentQueries.updateAppointment(historicalNoShow, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(
+        historicalScheduled,
+        ids.salon,
+        { status: 'scheduled' },
+      )
+      await appointmentQueries.updateAppointment(
+        historicalScheduled,
+        ids.salon,
+        { status: 'completed' },
+      )
+      await commissions.disableCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+      })
+      await appointmentQueries.updateAppointment(
+        completedWhileDisabled,
+        ids.salon,
+        { status: 'completed' },
+      )
+      await appointmentQueries.updateAppointment(
+        completedWhileDisabled,
+        ids.salon,
+        { status: 'scheduled' },
+      )
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+      await appointmentQueries.updateAppointment(
+        completedWhileDisabled,
+        ids.salon,
+        { status: 'completed' },
+      )
+      await appointmentQueries.updateAppointment(eligible, ids.salon, {
+        status: 'completed',
+      })
+
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileA,
+            startDate: '2026-07-20',
+            endDate: '2026-07-20',
+          })
+        )?.rows.map((row) => row.appointmentId),
+      ).toEqual([eligible])
+    })
+
     it('allocates an overridden package price exactly across unequal tasks and multiple Staff Profiles', async () => {
       await commissions.setCommissionAgreement({
         salonId: ids.salon,
-        staffRef: ids.profileA,
+        staffProfileId: ids.profileA,
         percentageBasisPoints: 1000,
       })
       await commissions.setCommissionAgreement({
         salonId: ids.salon,
-        staffRef: ids.profileB,
+        staffProfileId: ids.profileB,
         percentageBasisPoints: 2000,
       })
       const packageId = randomUUID()
@@ -421,25 +508,53 @@ describe.skipIf(!runIntegration)(
         ${accessId}, ${ids.salon}, ${ids.profileA}, ${ids.staffUser}, now()
       )
     `
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 1500,
+      })
+      const identityAssignedAppointment = await insertAppointment({
+        staffId: ids.staffUser,
+        date: '2026-08-02',
+        price: 400,
+      })
+      await appointmentQueries.updateAppointment(
+        identityAssignedAppointment,
+        ids.salon,
+        { status: 'completed' },
+      )
+      await expect(
+        commissions.getStaffCommissionReport({
+          salonId: ids.salon,
+          staffProfileId: ids.staffUser,
+          startDate: '2026-08-01',
+          endDate: '2026-08-02',
+        }),
+      ).resolves.toBeNull()
       const claimed = await commissions.getStaffCommissionReport({
         salonId: ids.salon,
-        staffRef: ids.staffUser,
+        staffProfileId: ids.profileA,
         startDate: '2026-08-01',
-        endDate: '2026-08-01',
+        endDate: '2026-08-02',
       })
+      expect(
+        claimed?.rows.some(
+          (row) => row.appointmentId === identityAssignedAppointment,
+        ),
+      ).toBe(true)
       await testSql!`
       update staff_profile_accesses set revoked_at = now() where id = ${accessId}
     `
       const managerAfterRevocation = await commissions.getStaffCommissionReport(
         {
           salonId: ids.salon,
-          staffRef: ids.profileA,
+          staffProfileId: ids.profileA,
           startDate: '2026-08-01',
-          endDate: '2026-08-01',
+          endDate: '2026-08-02',
         },
       )
       expect(claimed?.summary).toEqual(managerAfterRevocation?.summary)
-      expect(managerAfterRevocation?.summary.completedCount).toBe(1)
+      expect(managerAfterRevocation?.summary.completedCount).toBe(2)
     })
   },
 )

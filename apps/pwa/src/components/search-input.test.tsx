@@ -61,12 +61,8 @@ describe('SearchInput', () => {
   })
 
   it('hides the clear control by default', () => {
-    render(
-      <ControlledSearchInput initialValue="مینا" aria-label="جستجو" />,
-    )
+    render(<ControlledSearchInput initialValue="مینا" aria-label="جستجو" />)
 
-    expect(
-      screen.queryByRole('button', { name: 'پاک کردن جستجو' }),
-    ).toBeNull()
+    expect(screen.queryByRole('button', { name: 'پاک کردن جستجو' })).toBeNull()
   })
 })

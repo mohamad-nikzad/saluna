@@ -310,6 +310,47 @@ export type StaffNotificationRecipient = {
   salonName: string
 }
 
+type StaffProfileAssignmentReader = Pick<ReturnType<typeof getDb>, 'select'>
+
+/**
+ * Resolve an Appointment's operational assignee to its owning Staff Profile.
+ * New assignments use the Staff Profile id directly; accepted legacy
+ * assignments may still carry the linked login identity id.
+ */
+export async function resolveAppointmentAssignmentStaffProfileId(
+  input: { salonId: string; staffId: string },
+  database: StaffProfileAssignmentReader = getDb(),
+): Promise<string | null> {
+  const [profile] = await database
+    .select({ staffProfileId: staffProfiles.id })
+    .from(staffProfiles)
+    .where(
+      and(
+        eq(staffProfiles.salonId, input.salonId),
+        eq(staffProfiles.id, input.staffId),
+      ),
+    )
+    .limit(1)
+  if (profile) return profile.staffProfileId
+
+  const [access] = await database
+    .select({ staffProfileId: staffProfileAccesses.staffProfileId })
+    .from(staffProfileAccesses)
+    .innerJoin(
+      staffProfiles,
+      eq(staffProfiles.id, staffProfileAccesses.staffProfileId),
+    )
+    .where(
+      and(
+        eq(staffProfileAccesses.salonId, input.salonId),
+        eq(staffProfileAccesses.userId, input.staffId),
+        isNull(staffProfileAccesses.revokedAt),
+      ),
+    )
+    .limit(1)
+  return access?.staffProfileId ?? null
+}
+
 /**
  * Resolve the verified identity that should receive a staff notification for
  * an appointment assigned to `staffId` (user id or Staff Profile id) in a salon.

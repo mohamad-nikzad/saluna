@@ -183,7 +183,7 @@ function DashboardPage() {
               <div className="border-t border-primary/15 bg-primary/[0.08] p-4 sm:border-r sm:border-t-0">
                 <dt className="flex items-center gap-1.5 text-xs font-bold text-primary">
                   <PiggyBank className="h-4 w-4" />
-                  سهم سالن پس از کسر کمیسیون
+                  مبلغ باقی‌مانده سالن
                 </dt>
                 <dd className="mt-2 text-xl font-black tracking-tight text-primary">
                   {formatTomans(data.monthSalonRetainedAmount)}

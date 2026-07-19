@@ -110,12 +110,10 @@ test('manager configures a commission and both roles see the completed visit', a
       page.getByText('جمع مبلغ نوبت‌های انجام‌شده', { exact: true }),
     ).toBeVisible()
     await expect(
-      page.getByText('سهم سالن پس از کسر کمیسیون', { exact: true }),
+      page.getByText('مبلغ باقی‌مانده سالن', { exact: true }),
     ).toBeVisible()
     await expect(
-      page
-        .getByText('سهم سالن پس از کسر کمیسیون', { exact: true })
-        .locator('..'),
+      page.getByText('مبلغ باقی‌مانده سالن', { exact: true }).locator('..'),
     ).toContainText(/[۰-۹][۰-۹٬]* تومان/)
     await expect(page.getByText(/ناعدد/)).toHaveCount(0)
   })

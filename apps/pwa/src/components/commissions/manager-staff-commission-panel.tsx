@@ -74,14 +74,13 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
           <p className="text-[11px] leading-5 text-muted-foreground">
             تغییر درصد فقط روی نوبت‌هایی اثر دارد که بعد از ذخیره انجام شوند.
           </p>
-          <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={saveAgreement.isPending}>
+          <div className="flex flex-col items-start gap-2">
+            <Button type="submit" size="lg" disabled={saveAgreement.isPending}>
               {agreement?.active ? 'ذخیره درصد جدید' : 'فعال‌کردن توافق'}
             </Button>
             {agreement?.active ? (
               <Button
                 type="button"
-                size="sm"
                 variant="outline"
                 disabled={disableAgreement.isPending}
                 onClick={() => disableAgreement.mutate(staffId)}

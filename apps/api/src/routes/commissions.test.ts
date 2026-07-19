@@ -75,7 +75,7 @@ describe('Staff Commission routes', () => {
     expect(response.status).toBe(200)
     expect(commissionsDb.setCommissionAgreement).toHaveBeenCalledWith({
       salonId: 'salon-1',
-      staffRef: 'profile-1',
+      staffProfileId: 'profile-1',
       percentageBasisPoints: 1234,
     })
   })
@@ -125,9 +125,72 @@ describe('Staff Commission routes', () => {
     expect(response.status).toBe(200)
     expect(commissionsDb.getStaffCommissionReport).toHaveBeenCalledWith({
       salonId: 'salon-1',
-      staffRef: 'profile-1',
+      staffProfileId: 'profile-1',
       startDate: '2026-07-01',
       endDate: '2026-07-31',
+    })
+  })
+
+  it('preserves earlier earnings when the agreement is disabled', async () => {
+    useStaffSession()
+    vi.mocked(commissionsDb.getStaffCommissionReport).mockResolvedValue({
+      agreement: { active: false },
+      rows: [{ appointmentId: 'appointment-1', amount: 200 }],
+    } as never)
+
+    const response = await app.request('/api/v1/commissions/me?period=today', {
+      headers,
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      report: {
+        agreement: { active: false },
+        rows: [{ appointmentId: 'appointment-1', amount: 200 }],
+      },
+    })
+  })
+
+  it('rejects private reports after Staff Profile Access is revoked', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'rejected',
+    } as never)
+
+    const response = await app.request('/api/v1/commissions/me?period=today', {
+      headers,
+    })
+
+    expect(response.status).toBe(403)
+    expect(commissionsDb.getStaffCommissionReport).not.toHaveBeenCalled()
+  })
+
+  it('uses the selected salon Staff Profile for a cross-salon identity', async () => {
+    useStaffSession()
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'staff-user-1',
+      salonId: 'salon-2',
+      staffProfileId: 'profile-2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(commissionsDb.getStaffCommissionReport).mockResolvedValue({
+      staffProfileId: 'profile-2',
+      rows: [],
+    } as never)
+
+    const response = await app.request('/api/v1/commissions/me?period=today', {
+      headers: { ...headers, 'X-Saluna-Salon-Id': 'salon-2' },
+    })
+
+    expect(response.status).toBe(200)
+    expect(commissionsDb.getStaffCommissionReport).toHaveBeenCalledWith({
+      salonId: 'salon-2',
+      staffProfileId: 'profile-2',
+      startDate: expect.any(String),
+      endDate: expect.any(String),
     })
   })
 

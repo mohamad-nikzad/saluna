@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
 import {
   disableCommissionAgreement,
   getSalonCommissionReport,
@@ -15,40 +14,25 @@ import type { AppEnv } from '../factory'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
 import { requireTenant } from '../middleware/auth'
-
-const idParamSchema = z.object({ id: z.string().min(1) })
-const agreementSchema = z.object({
-  percentage: z.number().superRefine((value, ctx) => {
-    try {
-      percentageToBasisPoints(value)
-    } catch {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'درصد باید بیشتر از صفر و حداکثر ۱۰۰ با دو رقم اعشار باشد',
-      })
-    }
-  }),
-})
-const periodQuerySchema = z.object({
-  period: z.enum(['today', 'week', 'month', 'custom']).default('today'),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  staffProfileId: z.string().optional(),
-})
+import { idParamSchema } from '../openapi/schemas/common'
+import {
+  commissionAgreementBodySchema,
+  commissionPeriodQuerySchema,
+} from '../openapi/schemas/commissions'
 
 export const commissions = new Hono<AppEnv>()
   .put(
     '/staff/:id/agreement',
     requireTenant('manage_settings'),
     zValidator('param', idParamSchema),
-    zValidator('json', agreementSchema),
+    zValidator('json', commissionAgreementBodySchema),
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
       const { percentage } = c.req.valid('json')
       const agreement = await setCommissionAgreement({
         salonId,
-        staffRef: id,
+        staffProfileId: id,
         percentageBasisPoints: percentageToBasisPoints(percentage),
       })
       if (!agreement) return error(c, 'پروفایل پرسنل یافت نشد', 404)
@@ -64,7 +48,7 @@ export const commissions = new Hono<AppEnv>()
       const { id } = c.req.valid('param')
       const agreement = await disableCommissionAgreement({
         salonId,
-        staffRef: id,
+        staffProfileId: id,
       })
       if (!agreement) return error(c, 'توافق کمیسیون یافت نشد', 404)
       return ok(c, { agreement })
@@ -74,7 +58,7 @@ export const commissions = new Hono<AppEnv>()
     '/staff/:id/report',
     requireTenant('manage_settings'),
     zValidator('param', idParamSchema),
-    zValidator('query', periodQuerySchema),
+    zValidator('query', commissionPeriodQuerySchema),
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
@@ -86,7 +70,7 @@ export const commissions = new Hono<AppEnv>()
       }
       const report = await getStaffCommissionReport({
         salonId,
-        staffRef: id,
+        staffProfileId: id,
         ...range,
       })
       if (!report) return error(c, 'پروفایل پرسنل یافت نشد', 404)
@@ -96,7 +80,7 @@ export const commissions = new Hono<AppEnv>()
   .get(
     '/me',
     requireTenant(),
-    zValidator('query', periodQuerySchema),
+    zValidator('query', commissionPeriodQuerySchema),
     async (c) => {
       const tenant = c.var.tenant
       if (tenant.role !== 'staff' || !tenant.staffProfileId) {
@@ -110,7 +94,7 @@ export const commissions = new Hono<AppEnv>()
       }
       const report = await getStaffCommissionReport({
         salonId: tenant.salonId,
-        staffRef: tenant.staffProfileId,
+        staffProfileId: tenant.staffProfileId,
         ...range,
       })
       if (!report) return error(c, 'پروفایل پرسنل یافت نشد', 404)
@@ -120,7 +104,7 @@ export const commissions = new Hono<AppEnv>()
   .get(
     '/salon',
     requireTenant('manage_settings'),
-    zValidator('query', periodQuerySchema),
+    zValidator('query', commissionPeriodQuerySchema),
     async (c) => {
       const { salonId } = c.var.tenant
       const query = c.req.valid('query')
@@ -132,7 +116,7 @@ export const commissions = new Hono<AppEnv>()
       }
       const report = await getSalonCommissionReport({
         salonId,
-        staffRef: query.staffProfileId,
+        staffProfileId: query.staffProfileId,
         ...range,
       })
       if (!report) return error(c, 'پروفایل پرسنل یافت نشد', 404)

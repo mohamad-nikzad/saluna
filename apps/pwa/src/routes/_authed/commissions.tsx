@@ -56,7 +56,7 @@ function SalonCommissionsPage() {
                 staffProfileId: event.target.value || undefined,
               }))
             }
-            className="mt-1 h-11 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            className="mt-1 h-9 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 touch:h-11"
           >
             <option value="">همه پرسنل</option>
             {(staffQuery.data ?? [])

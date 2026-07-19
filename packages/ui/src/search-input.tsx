@@ -39,7 +39,7 @@ function SearchInput({
     () => defaultValue?.toString() ?? '',
   )
   const currentValue = isControlled
-    ? value?.toString() ?? ''
+    ? (value?.toString() ?? '')
     : uncontrolledValue
   const showClear = clearable && currentValue.length > 0 && !disabled
 

@@ -169,6 +169,13 @@
       "when": 1784282010233,
       "tag": "0023_package_task_appointment_cascade",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784460640604,
+      "tag": "0024_appointment_commission_exclusion",
+      "breakpoints": true
     }
   ]
 }
