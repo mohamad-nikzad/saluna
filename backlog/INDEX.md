@@ -17,7 +17,7 @@ No active backlog items.
   - [BL-0064 Convert a Draft into an Appointment](done/BL-0064-convert-draft-to-appointment.md)
   - [BL-0065 Close Drafts accurately](done/BL-0065-close-drafts-accurately.md)
   - [BL-0066 Expire and renew terminal Drafts](done/BL-0066-expire-renew-terminal-drafts.md)
-  - [BL-0067 Prove the complete Draft journey](ready/BL-0067-prove-complete-draft-journey.md)
+  - [BL-0067 Prove the complete Draft journey](done/BL-0067-prove-complete-draft-journey.md)
 
 ## Inbox
 

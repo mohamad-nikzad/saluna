@@ -531,8 +531,15 @@ function DraftsPanel() {
         </div>
       ) : (
         sections.map((section) => (
-          <section key={section.id} className="space-y-2">
-            <h2 className="px-1 text-sm font-bold">
+          <section
+            key={section.id}
+            aria-labelledby={`draft-section-${section.id}`}
+            className="space-y-2"
+          >
+            <h2
+              id={`draft-section-${section.id}`}
+              className="px-1 text-sm font-bold"
+            >
               {DRAFT_GROUP_LABELS[section.id]}
             </h2>
             {section.drafts.map((draft) => (
@@ -621,7 +628,10 @@ function DraftCard({
     )
   }
   return (
-    <div className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm">
+    <article
+      aria-label={`پیش‌نویس ${clientName}`}
+      className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm"
+    >
       <div className="flex items-center gap-3">
         <ClientAvatar name={clientName} accent="var(--mint)" />
         <div className="min-w-0 flex-1">
@@ -731,7 +741,7 @@ function DraftCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </article>
   )
 }
 
@@ -822,8 +832,8 @@ function NewDraftSheet({
           </FormSheetTitle>
         </FormSheetHeader>
         <FormSheetBody className="space-y-5 px-5 py-4">
-          <label className="block space-y-2 text-sm font-medium">
-            مشتری
+          <div className="block space-y-2 text-sm font-medium">
+            <span>مشتری</span>
             {lockedClient ? (
               <div className="flex h-11 items-center rounded-xl border border-line-soft bg-blush-soft px-3 text-sm">
                 {lockedClient.name}
@@ -840,18 +850,20 @@ function NewDraftSheet({
                   })
                 }}
                 hostActive={open}
+                ariaLabel="مشتری"
               />
             )}
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            خدمت
+          </div>
+          <div className="block space-y-2 text-sm font-medium">
+            <span>خدمت</span>
             <ServicePicker
               services={services}
               value={serviceId}
               onChange={setServiceId}
               disabled={Boolean(lockedService)}
+              ariaLabel="خدمت"
             />
-          </label>
+          </div>
           <DraftTimingFields
             dates={dates}
             onDatesChange={setDates}

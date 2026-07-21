@@ -17,6 +17,7 @@ import {
 
 const useHttps = process.env.VITE_DEV_HTTPS === '1'
 const PWA_PORT = 3000
+const API_PORT = Number(process.env.API_PORT ?? 3002)
 
 function pwaAssetVersionPlugin(version: string): Plugin {
   let outDir = ''
@@ -65,7 +66,7 @@ const config = defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:3002',
+          target: `http://127.0.0.1:${API_PORT}`,
           changeOrigin: true,
         },
       },

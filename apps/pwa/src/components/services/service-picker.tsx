@@ -35,6 +35,7 @@ interface ServicePickerProps {
   showPrice?: boolean
   getDisabledReason?: (service: Service) => string | null | undefined
   getStatusReason?: (service: Service) => string | null | undefined
+  ariaLabel?: string
 }
 
 function formatTomans(price: number) {
@@ -90,6 +91,7 @@ export function ServicePicker({
   showPrice = true,
   getDisabledReason,
   getStatusReason,
+  ariaLabel,
 }: ServicePickerProps) {
   const [open, setOpen] = useState(false)
   const isTouch = useIsTouch()
@@ -104,6 +106,7 @@ export function ServicePicker({
       type="button"
       variant="outline"
       role="combobox"
+      aria-label={ariaLabel}
       aria-expanded={open}
       disabled={disabled}
       dir="rtl"
