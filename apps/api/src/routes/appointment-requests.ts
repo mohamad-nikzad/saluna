@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import {
   approveAppointmentRequest,
+  cancelAppointmentRequest,
   createFlexibleAppointmentRequest,
   listAppointmentRequests,
   rejectAppointmentRequest,
@@ -11,7 +12,10 @@ import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
-import { createFlexibleAppointmentRequestBodySchema } from '../openapi/schemas/appointment-requests'
+import {
+  cancelAppointmentRequestBodySchema,
+  createFlexibleAppointmentRequestBodySchema,
+} from '../openapi/schemas/appointment-requests'
 
 const idParamSchema = z.object({ id: z.string().guid() })
 
@@ -87,6 +91,24 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
         salonId,
         reviewedByUserId: userId,
         ...(reason ? { reason } : {}),
+      })
+      if (!result.ok) return error(c, result.error, result.status as 404)
+      return ok(c, { ok: true })
+    },
+  )
+  .post(
+    '/:id/cancel',
+    zValidator('param', idParamSchema),
+    zValidator('json', cancelAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId, userId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const { closureNote } = c.req.valid('json')
+      const result = await cancelAppointmentRequest({
+        id,
+        salonId,
+        reviewedByUserId: userId,
+        ...(closureNote ? { closureNote } : {}),
       })
       if (!result.ok) return error(c, result.error, result.status as 404)
       return ok(c, { ok: true })

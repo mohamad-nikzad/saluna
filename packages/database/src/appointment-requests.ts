@@ -4,6 +4,7 @@ export {
   lookupClientByPhone,
   approveAppointmentRequest,
   rejectAppointmentRequest,
+  cancelAppointmentRequest,
   expirePastDueAppointmentRequests,
   getAppointmentRequestNotificationContext,
   getAppointmentRequestForCallback,
@@ -20,6 +21,8 @@ export type {
   ApproveAppointmentRequestResult,
   RejectAppointmentRequestInput,
   RejectAppointmentRequestResult,
+  ManagerCancelAppointmentRequestInput,
+  ManagerCancelAppointmentRequestResult,
   AppointmentRequestNotificationContext,
   AppointmentRequestCallbackContext,
 } from './internal/appointment-request-queries'

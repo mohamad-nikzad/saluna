@@ -10,6 +10,7 @@ import {
   Clock,
   Inbox,
   MessageCircle,
+  MoreVertical,
   Phone,
   Plus,
   Scissors,
@@ -37,6 +38,12 @@ import {
 } from '@repo/ui/dialog'
 import { Textarea } from '@repo/ui/textarea'
 import { Input } from '@repo/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/dropdown-menu'
 import { scrollFocusedInputIntoView } from '#/lib/scroll-focused-input-into-view'
 import {
   toPersianDigits,
@@ -53,6 +60,7 @@ import {
   pendingDraftsQueryOptions,
   useCreateDraftMutation,
   useApproveAppointmentRequestMutation,
+  useCancelAppointmentRequestMutation,
   useRejectAppointmentRequestMutation,
   type AppointmentRequestStatus,
   type ExactAppointmentRequestListItem,
@@ -325,7 +333,10 @@ function RequestsList({
   const navigate = useNavigate()
 
   const { data, error, isLoading } = useQuery(
-    appointmentRequestsListQueryOptions(status),
+    appointmentRequestsListQueryOptions(
+      status,
+      status === 'pending' ? 'exact' : undefined,
+    ),
   )
 
   const { data: staffData } = useQuery({
@@ -421,7 +432,7 @@ function RequestsList({
   return (
     <div className="flex flex-col gap-3">
       {requests.map((req) =>
-        req.timingMode !== 'exact' ? null : status === 'pending' ? (
+        status === 'pending' && req.timingMode === 'exact' ? (
           <PendingCard
             key={req.id}
             request={req}
@@ -429,9 +440,9 @@ function RequestsList({
             services={servicesData ?? []}
             onChanged={onChanged}
           />
-        ) : (
+        ) : status !== 'pending' ? (
           <DecidedCard key={req.id} request={req} status={status} />
-        ),
+        ) : null,
       )}
     </div>
   )
@@ -490,7 +501,42 @@ function DraftsPanel() {
 }
 
 function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
+  const [outcome, setOutcome] = useState<'rejected' | 'cancelled' | null>(null)
+  const [closureNote, setClosureNote] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const rejectDraft = useRejectAppointmentRequestMutation()
+  const cancelDraft = useCancelAppointmentRequestMutation()
   const clientName = draft.existingClient?.name ?? draft.customerName
+  const submitting = rejectDraft.isPending || cancelDraft.isPending
+  const rejecting = outcome === 'rejected'
+
+  const closeDialog = () => {
+    setOutcome(null)
+    setClosureNote('')
+    setErrorMessage('')
+  }
+
+  const closeDraft = () => {
+    if (!outcome) return
+    const input = {
+      requestId: draft.id,
+      ...(closureNote.trim() ? { closureNote: closureNote.trim() } : {}),
+    }
+    const mutation = rejecting ? rejectDraft : cancelDraft
+    mutation.mutate(
+      rejecting
+        ? { requestId: input.requestId, reason: input.closureNote }
+        : input,
+      {
+        onSuccess: closeDialog,
+        onError: (error: unknown) =>
+          setErrorMessage(
+            error instanceof Error ? error.message : 'بستن پیش‌نویس انجام نشد',
+          ),
+      },
+    )
+  }
+
   return (
     <div className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm">
       <div className="flex items-center gap-3">
@@ -505,6 +551,29 @@ function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
           </p>
         </div>
         <Badge variant="neutral">پیش‌نویس</Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`اقدامات بیشتر برای پیش‌نویس ${clientName}`}
+            >
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setOutcome('rejected')}
+            >
+              رد توسط سالن
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setOutcome('cancelled')}>
+              انصراف مشتری
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="space-y-2 rounded-2xl bg-background p-3 text-xs">
         <p className="flex items-center gap-2">
@@ -521,6 +590,43 @@ function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
           </p>
         )}
       </div>
+      <Dialog
+        open={outcome != null}
+        onOpenChange={(open) => !open && closeDialog()}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {rejecting ? 'رد پیش‌نویس' : 'ثبت انصراف مشتری'}
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={closureNote}
+            onChange={(event) => setClosureNote(event.target.value)}
+            placeholder="یادداشت پایانی (اختیاری)"
+            rows={3}
+          />
+          {errorMessage && (
+            <p className="text-xs text-destructive">{errorMessage}</p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeDialog}
+              disabled={submitting}
+            >
+              انصراف
+            </Button>
+            <Button
+              variant={rejecting ? 'destructive' : 'default'}
+              onClick={closeDraft}
+              disabled={submitting}
+            >
+              ثبت نتیجه
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -943,12 +1049,16 @@ function DecidedCard({
   request,
   status,
 }: {
-  request: ExactAppointmentRequestListItem
+  request: ExactAppointmentRequestListItem | FlexibleAppointmentRequestListItem
   status: Exclude<StatusTab, 'pending'>
 }) {
   const meta = DECIDED[status]
   const Icon = meta.icon
   const name = request.existingClient?.name ?? request.customerName
+  const closureNote =
+    request.timingMode === 'flexible'
+      ? request.closureNote
+      : request.rejectionReason
 
   return (
     <div
@@ -971,16 +1081,19 @@ function DecidedCard({
           <Badge variant={meta.tone}>{meta.label}</Badge>
         </div>
         <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-          {request.bookedServiceName} ·{' '}
-          {formatJalaliFullDate(request.requestedDate)} ·{' '}
-          <span className="tabular-nums">
-            {formatPersianTime(request.requestedStartTime)}
-          </span>
+          {request.bookedServiceName}
+          {request.timingMode === 'exact' && (
+            <>
+              {' · '}
+              {formatJalaliFullDate(request.requestedDate)} ·{' '}
+              <span className="tabular-nums">
+                {formatPersianTime(request.requestedStartTime)}
+              </span>
+            </>
+          )}
         </p>
-        {status === 'rejected' && request.rejectionReason && (
-          <p className="mt-0.5 text-[11px] text-destructive">
-            {request.rejectionReason}
-          </p>
+        {closureNote && (
+          <p className="mt-0.5 text-[11px] text-destructive">{closureNote}</p>
         )}
       </div>
     </div>

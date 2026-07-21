@@ -3,6 +3,7 @@ import { getApiV1AppointmentRequests } from '@repo/api-client/sdk'
 import {
   getApiV1AppointmentRequestsQueryKey,
   postApiV1AppointmentRequestsByIdApproveMutation,
+  postApiV1AppointmentRequestsByIdCancelMutation,
   postApiV1AppointmentRequestsByIdRejectMutation,
   postApiV1AppointmentRequestsMutation,
 } from '@repo/api-client/query'
@@ -32,16 +33,15 @@ export function appointmentRequestsInvalidationKeys() {
 
 export function appointmentRequestsListQueryOptions(
   status: AppointmentRequestStatus,
-  timingMode: 'exact' | 'flexible' = 'exact',
+  timingMode?: 'exact' | 'flexible',
 ) {
+  const query = { status, ...(timingMode ? { timingMode } : {}) }
   return queryOptions({
-    queryKey: getApiV1AppointmentRequestsQueryKey({
-      query: { status, timingMode },
-    }),
+    queryKey: getApiV1AppointmentRequestsQueryKey({ query }),
     staleTime: HEAVY_QUERY_STALE_TIME_MS,
     queryFn: async ({ signal }): Promise<AppointmentRequestsListResponse> => {
       const { data } = await getApiV1AppointmentRequests({
-        query: { status, timingMode },
+        query,
         signal,
         throwOnError: true,
       })
@@ -51,7 +51,7 @@ export function appointmentRequestsListQueryOptions(
 }
 
 export function pendingAppointmentRequestsQueryOptions() {
-  return appointmentRequestsListQueryOptions('pending')
+  return appointmentRequestsListQueryOptions('pending', 'exact')
 }
 
 export function pendingDraftsQueryOptions() {
@@ -106,11 +106,33 @@ export function useRejectAppointmentRequestMutation() {
       return generated.mutationFn!(
         {
           path: { id: requestId },
-          ...(reason?.trim() ? { body: { reason: reason.trim() } } : {}),
+          body: reason?.trim() ? { reason: reason.trim() } : {},
         },
         mutationContext,
       )
     },
+    meta: {
+      skipToast: true,
+      invalidatesQuery: appointmentRequestsInvalidationKeys(),
+    },
+  })
+}
+
+export function useCancelAppointmentRequestMutation() {
+  const generated = postApiV1AppointmentRequestsByIdCancelMutation()
+
+  return useMutation({
+    mutationFn: async (
+      { requestId, closureNote }: { requestId: string; closureNote?: string },
+      mutationContext,
+    ) =>
+      generated.mutationFn!(
+        {
+          path: { id: requestId },
+          body: closureNote?.trim() ? { closureNote: closureNote.trim() } : {},
+        },
+        mutationContext,
+      ),
     meta: {
       skipToast: true,
       invalidatesQuery: appointmentRequestsInvalidationKeys(),

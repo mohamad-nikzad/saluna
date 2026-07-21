@@ -45,7 +45,7 @@ describe('appointment-requests-queries', () => {
     })
 
     const data = await queryClient.fetchQuery(
-      appointmentRequestsListQueryOptions('pending'),
+      appointmentRequestsListQueryOptions('pending', 'exact'),
     )
 
     expect(data).toEqual({
@@ -57,5 +57,20 @@ describe('appointment-requests-queries', () => {
         },
       ],
     })
+  })
+
+  it('loads both request origins for terminal lifecycle tabs', async () => {
+    getApiV1AppointmentRequests.mockResolvedValue({ data: { requests: [] } })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    await queryClient.fetchQuery(
+      appointmentRequestsListQueryOptions('cancelled', undefined),
+    )
+
+    expect(getApiV1AppointmentRequests).toHaveBeenCalledWith(
+      expect.objectContaining({ query: { status: 'cancelled' } }),
+    )
   })
 })

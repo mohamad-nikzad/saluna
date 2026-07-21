@@ -58,6 +58,7 @@ import {
 } from './routes/commissions'
 import {
   approveAppointmentRequestRoute,
+  cancelAppointmentRequestRoute,
   createFlexibleAppointmentRequestRoute,
   listAppointmentRequestsRoute,
   rejectAppointmentRequestRoute,
@@ -886,6 +887,7 @@ const createFlexibleAppointmentRequestStub: RouteHandler<
         requestedEndTime: null,
         acceptableDates: ['2026-06-07'],
         timePreference: 'any' as const,
+        closureNote: null,
         existingClient: { id: stubClient.id, name: stubClient.name },
       },
     },
@@ -899,6 +901,10 @@ const approveAppointmentRequestStub: RouteHandler<
 
 const rejectAppointmentRequestStub: RouteHandler<
   typeof rejectAppointmentRequestRoute
+> = (c) => c.json({ ok: true as const }, 200)
+
+const cancelAppointmentRequestStub: RouteHandler<
+  typeof cancelAppointmentRequestRoute
 > = (c) => c.json({ ok: true as const }, 200)
 
 const stubSalonPresence = {
@@ -1510,7 +1516,8 @@ export const contractApp = new OpenAPIHono()
         createFlexibleAppointmentRequestStub,
       )
       .openapi(approveAppointmentRequestRoute, approveAppointmentRequestStub)
-      .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub),
+      .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub)
+      .openapi(cancelAppointmentRequestRoute, cancelAppointmentRequestStub),
   )
   .route(
     '/api/v1/settings',

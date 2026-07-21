@@ -125,6 +125,7 @@ import {
   postApiV1AdminUsersByIdNotes,
   postApiV1AppointmentRequests,
   postApiV1AppointmentRequestsByIdApprove,
+  postApiV1AppointmentRequestsByIdCancel,
   postApiV1AppointmentRequestsByIdReject,
   postApiV1Appointments,
   postApiV1AppointmentsByIdCompleteClient,
@@ -498,6 +499,9 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveError,
   PostApiV1AppointmentRequestsByIdApproveResponse,
+  PostApiV1AppointmentRequestsByIdCancelData,
+  PostApiV1AppointmentRequestsByIdCancelError,
+  PostApiV1AppointmentRequestsByIdCancelResponse,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectError,
   PostApiV1AppointmentRequestsByIdRejectResponse,
@@ -4165,6 +4169,33 @@ export const postApiV1AppointmentRequestsByIdRejectMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1AppointmentRequestsByIdReject({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Record customer withdrawal from a manager Draft
+ */
+export const postApiV1AppointmentRequestsByIdCancelMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsByIdCancelData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsByIdCancelResponse,
+  PostApiV1AppointmentRequestsByIdCancelError,
+  Options<PostApiV1AppointmentRequestsByIdCancelData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsByIdCancelResponse,
+    PostApiV1AppointmentRequestsByIdCancelError,
+    Options<PostApiV1AppointmentRequestsByIdCancelData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequestsByIdCancel({
         ...options,
         ...fnOptions,
         throwOnError: true,

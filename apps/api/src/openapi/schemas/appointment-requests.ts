@@ -69,6 +69,7 @@ const flexibleAppointmentRequestListItemSchema =
       requestedEndTime: z.null(),
       acceptableDates: z.array(z.string()).min(1),
       timePreference: timePreferenceSchema,
+      closureNote: z.string().nullable(),
       existingClient: z.object({ id: z.string(), name: z.string() }),
     })
     .openapi('FlexibleAppointmentRequestListItem')
@@ -169,3 +170,15 @@ export const rejectAppointmentRequestResponseSchema = z
     ok: z.literal(true),
   })
   .openapi('RejectAppointmentRequestResponse')
+
+export const cancelAppointmentRequestBodySchema = z
+  .object({
+    closureNote: z.string().trim().min(1).optional().openapi({
+      description: 'Optional note explaining the customer withdrawal',
+    }),
+  })
+  .openapi('CancelAppointmentRequestRequest')
+
+export const cancelAppointmentRequestResponseSchema = z
+  .object({ ok: z.literal(true) })
+  .openapi('CancelAppointmentRequestResponse')
