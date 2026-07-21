@@ -10,6 +10,7 @@ import {
   Clock,
   Inbox,
   MessageCircle,
+  MoreVertical,
   Phone,
   Pencil,
   Plus,
@@ -37,6 +38,12 @@ import {
   DialogTitle,
 } from '@repo/ui/dialog'
 import { Textarea } from '@repo/ui/textarea'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/dropdown-menu'
 import { scrollFocusedInputIntoView } from '#/lib/scroll-focused-input-into-view'
 import {
   toPersianDigits,
@@ -55,7 +62,9 @@ import {
   pendingDraftsQueryOptions,
   useCreateDraftMutation,
   useApproveAppointmentRequestMutation,
+  useCancelAppointmentRequestMutation,
   useRejectAppointmentRequestMutation,
+  useRenewTerminalRequestMutation,
   type AppointmentRequestStatus,
   type ExactAppointmentRequestListItem,
   type FlexibleAppointmentRequestListItem,
@@ -332,18 +341,27 @@ function RequestsList({
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [renewingRequest, setRenewingRequest] = useState<
+    ExactAppointmentRequestListItem | FlexibleAppointmentRequestListItem | null
+  >(null)
 
   const { data, error, isLoading } = useQuery(
-    appointmentRequestsListQueryOptions(status),
+    appointmentRequestsListQueryOptions(
+      status,
+      status === 'pending' ? 'exact' : undefined,
+    ),
   )
 
   const { data: staffData } = useQuery({
     ...staffListQueryOptions(),
     enabled: status === 'pending',
   })
-  const { data: servicesData } = useQuery({
-    ...servicesListQueryOptions(),
-    enabled: status === 'pending',
+  const { data: servicesData, isLoading: servicesLoading } = useQuery(
+    servicesListQueryOptions(),
+  )
+  const { data: clientsData = [], isLoading: clientsLoading } = useQuery({
+    ...clientsListQueryOptions(),
+    enabled: status !== 'pending',
   })
 
   const requests = data?.requests
@@ -428,21 +446,41 @@ function RequestsList({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {requests.map((req) =>
-        req.timingMode !== 'exact' ? null : status === 'pending' ? (
-          <PendingCard
-            key={req.id}
-            request={req}
-            staff={staffData ?? []}
-            services={servicesData ?? []}
-            onChanged={onChanged}
-          />
-        ) : (
-          <DecidedCard key={req.id} request={req} status={status} />
-        ),
-      )}
-    </div>
+    <>
+      <div className="flex flex-col gap-3">
+        {requests.map((req) =>
+          status === 'pending' && req.timingMode === 'exact' ? (
+            <PendingCard
+              key={req.id}
+              request={req}
+              staff={staffData ?? []}
+              services={servicesData ?? []}
+              onChanged={onChanged}
+            />
+          ) : status !== 'pending' ? (
+            <DecidedCard
+              key={req.id}
+              request={req}
+              status={status}
+              onRenew={() => setRenewingRequest(req)}
+              renewDisabled={clientsLoading || servicesLoading}
+            />
+          ) : null,
+        )}
+      </div>
+      {renewingRequest ? (
+        <NewDraftSheet
+          key={renewingRequest.id}
+          source={renewingRequest}
+          open
+          onOpenChange={(open) => {
+            if (!open) setRenewingRequest(null)
+          }}
+          clients={clientsData}
+          services={(servicesData ?? []).filter((service) => service.active)}
+        />
+      ) : null}
+    </>
   )
 }
 
@@ -546,8 +584,42 @@ function DraftCard({
   onEdit: () => void
   onConvert: () => void
 }) {
+  const [outcome, setOutcome] = useState<'rejected' | 'cancelled' | null>(null)
+  const [closureNote, setClosureNote] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const rejectDraft = useRejectAppointmentRequestMutation()
+  const cancelDraft = useCancelAppointmentRequestMutation()
   const clientName = draft.existingClient?.name ?? draft.customerName
   const today = salonTodayYmd()
+  const submitting = rejectDraft.isPending || cancelDraft.isPending
+  const rejecting = outcome === 'rejected'
+
+  const closeDialog = () => {
+    setOutcome(null)
+    setClosureNote('')
+    setErrorMessage('')
+  }
+
+  const closeDraft = () => {
+    if (!outcome) return
+    const input = {
+      requestId: draft.id,
+      ...(closureNote.trim() ? { closureNote: closureNote.trim() } : {}),
+    }
+    const mutation = rejecting ? rejectDraft : cancelDraft
+    mutation.mutate(
+      rejecting
+        ? { requestId: input.requestId, reason: input.closureNote }
+        : input,
+      {
+        onSuccess: closeDialog,
+        onError: (error: unknown) =>
+          setErrorMessage(
+            error instanceof Error ? error.message : 'بستن پیش‌نویس انجام نشد',
+          ),
+      },
+    )
+  }
   return (
     <div className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm">
       <div className="flex items-center gap-3">
@@ -562,6 +634,29 @@ function DraftCard({
           </p>
         </div>
         <Badge variant="neutral">پیش‌نویس</Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`اقدامات بیشتر برای پیش‌نویس ${clientName}`}
+            >
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setOutcome('rejected')}
+            >
+              رد توسط سالن
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setOutcome('cancelled')}>
+              انصراف مشتری
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="space-y-2 rounded-2xl bg-background p-3 text-xs">
         <div className="flex items-start gap-2">
@@ -599,6 +694,43 @@ function DraftCard({
           <Check className="size-4" /> تبدیل به نوبت
         </Button>
       </div>
+      <Dialog
+        open={outcome != null}
+        onOpenChange={(open) => !open && closeDialog()}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {rejecting ? 'رد پیش‌نویس' : 'ثبت انصراف مشتری'}
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={closureNote}
+            onChange={(event) => setClosureNote(event.target.value)}
+            placeholder="یادداشت پایانی (اختیاری)"
+            rows={3}
+          />
+          {errorMessage && (
+            <p className="text-xs text-destructive">{errorMessage}</p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeDialog}
+              disabled={submitting}
+            >
+              انصراف
+            </Button>
+            <Button
+              variant={rejecting ? 'destructive' : 'default'}
+              onClick={closeDraft}
+              disabled={submitting}
+            >
+              ثبت نتیجه
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -608,23 +740,40 @@ function NewDraftSheet({
   onOpenChange,
   clients,
   services,
+  source,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   clients: Client[]
   services: Service[]
+  source?: ExactAppointmentRequestListItem | FlexibleAppointmentRequestListItem
 }) {
   const queryClient = useQueryClient()
   const [localClients, setLocalClients] = useState(clients)
-  const [clientId, setClientId] = useState('')
-  const [serviceId, setServiceId] = useState('')
+  const [clientId, setClientId] = useState(() =>
+    source?.clientId && clients.some((client) => client.id === source.clientId)
+      ? source.clientId
+      : '',
+  )
+  const [serviceId, setServiceId] = useState(() =>
+    source && services.some((service) => service.id === source.serviceId)
+      ? source.serviceId
+      : '',
+  )
   const [dates, setDates] = useState([''])
   const [timePreference, setTimePreference] =
     useState<keyof typeof DRAFT_TIME_PREFERENCE_LABELS>('any')
-  const [notes, setNotes] = useState('')
+  const [notes, setNotes] = useState(source?.notes ?? '')
   const [errorMessage, setErrorMessage] = useState('')
   const createDraft = useCreateDraftMutation()
+  const renewDraft = useRenewTerminalRequestMutation()
   const today = salonTodayYmd()
+  const lockedClient = source?.clientId
+    ? localClients.find((client) => client.id === source.clientId)
+    : undefined
+  const lockedService = source
+    ? services.find((service) => service.id === source.serviceId)
+    : undefined
 
   useEffect(() => setLocalClients(clients), [clients])
 
@@ -650,14 +799,16 @@ function NewDraftSheet({
       setErrorMessage('تاریخ‌ها باید یکتا و در ۳۰ روز آینده باشند')
       return
     }
+    const requestBody = { clientId, serviceId, acceptableDates, timePreference }
+    if (source) {
+      renewDraft.mutate(
+        { requestId: source.id, body: requestBody },
+        { onSuccess: close },
+      )
+      return
+    }
     createDraft.mutate(
-      {
-        clientId,
-        serviceId,
-        acceptableDates,
-        timePreference,
-        ...(notes.trim() ? { notes: notes.trim() } : {}),
-      },
+      { ...requestBody, ...(notes.trim() ? { notes: notes.trim() } : {}) },
       { onSuccess: close },
     )
   }
@@ -666,23 +817,31 @@ function NewDraftSheet({
     <FormSheet open={open} onOpenChange={onOpenChange}>
       <FormSheetContent onRequestClose={close}>
         <FormSheetHeader>
-          <FormSheetTitle>پیش‌نویس جدید</FormSheetTitle>
+          <FormSheetTitle>
+            {source ? 'پیش‌نویس تازه از این درخواست' : 'پیش‌نویس جدید'}
+          </FormSheetTitle>
         </FormSheetHeader>
         <FormSheetBody className="space-y-5 px-5 py-4">
           <label className="block space-y-2 text-sm font-medium">
             مشتری
-            <ClientPicker
-              clients={localClients}
-              value={clientId}
-              onChange={setClientId}
-              onClientCreated={(client) => {
-                setLocalClients((current) => [...current, client])
-                void queryClient.invalidateQueries({
-                  queryKey: getApiV1ClientsQueryKey(),
-                })
-              }}
-              hostActive={open}
-            />
+            {lockedClient ? (
+              <div className="flex h-11 items-center rounded-xl border border-line-soft bg-blush-soft px-3 text-sm">
+                {lockedClient.name}
+              </div>
+            ) : (
+              <ClientPicker
+                clients={localClients}
+                value={clientId}
+                onChange={setClientId}
+                onClientCreated={(client) => {
+                  setLocalClients((current) => [...current, client])
+                  void queryClient.invalidateQueries({
+                    queryKey: getApiV1ClientsQueryKey(),
+                  })
+                }}
+                hostActive={open}
+              />
+            )}
           </label>
           <label className="block space-y-2 text-sm font-medium">
             خدمت
@@ -690,6 +849,7 @@ function NewDraftSheet({
               services={services}
               value={serviceId}
               onChange={setServiceId}
+              disabled={Boolean(lockedService)}
             />
           </label>
           <DraftTimingFields
@@ -699,15 +859,21 @@ function NewDraftSheet({
             onTimePreferenceChange={setTimePreference}
             notes={notes}
             onNotesChange={setNotes}
+            notesReadOnly={Boolean(source)}
           />
           {errorMessage && (
             <p className="text-xs text-destructive">{errorMessage}</p>
           )}
         </FormSheetBody>
         <FormSheetFooter>
-          <Button onClick={submit} disabled={createDraft.isPending}>
-            {createDraft.isPending ? (
+          <Button
+            onClick={submit}
+            disabled={createDraft.isPending || renewDraft.isPending}
+          >
+            {createDraft.isPending || renewDraft.isPending ? (
               <Spinner className="size-4" />
+            ) : source ? (
+              'ثبت پیش‌نویس تازه'
             ) : (
               'ثبت پیش‌نویس'
             )}
@@ -981,47 +1147,72 @@ function PendingCard({
 function DecidedCard({
   request,
   status,
+  onRenew,
+  renewDisabled,
 }: {
-  request: ExactAppointmentRequestListItem
+  request: ExactAppointmentRequestListItem | FlexibleAppointmentRequestListItem
   status: Exclude<StatusTab, 'pending'>
+  onRenew: () => void
+  renewDisabled: boolean
 }) {
   const meta = DECIDED[status]
   const Icon = meta.icon
   const name = request.existingClient?.name ?? request.customerName
+  const closureNote =
+    request.timingMode === 'flexible'
+      ? request.closureNote
+      : request.rejectionReason
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-[var(--radius)] border border-line-soft bg-card p-3.5 shadow-sm',
+        'space-y-3 rounded-[var(--radius)] border border-line-soft bg-card p-3.5 shadow-sm',
         status !== 'approved' && 'opacity-80',
       )}
     >
-      <div
-        className={cn(
-          'flex size-10 shrink-0 items-center justify-center rounded-xl',
-          meta.tile,
-        )}
-      >
-        <Icon className="size-[18px]" strokeWidth={2.2} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold text-foreground">{name}</span>
-          <Badge variant={meta.tone}>{meta.label}</Badge>
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            'flex size-10 shrink-0 items-center justify-center rounded-xl',
+            meta.tile,
+          )}
+        >
+          <Icon className="size-[18px]" strokeWidth={2.2} />
         </div>
-        <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-          {request.bookedServiceName} ·{' '}
-          {formatJalaliFullDate(request.requestedDate)} ·{' '}
-          <span className="tabular-nums">
-            {formatPersianTime(request.requestedStartTime)}
-          </span>
-        </p>
-        {status === 'rejected' && request.rejectionReason && (
-          <p className="mt-0.5 text-[11px] text-destructive">
-            {request.rejectionReason}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-sm font-semibold text-foreground">
+              {name}
+            </span>
+            <Badge variant={meta.tone}>{meta.label}</Badge>
+          </div>
+          <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+            {request.bookedServiceName}
+            {request.timingMode === 'exact' && (
+              <>
+                {' · '}
+                {formatJalaliFullDate(request.requestedDate)} ·{' '}
+                <span className="tabular-nums">
+                  {formatPersianTime(request.requestedStartTime)}
+                </span>
+              </>
+            )}
           </p>
-        )}
+          {closureNote ? (
+            <p className="mt-0.5 text-[11px] text-destructive">{closureNote}</p>
+          ) : null}
+        </div>
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={onRenew}
+        disabled={renewDisabled}
+      >
+        <Plus className="size-4" />
+        ایجاد پیش‌نویس جدید از این
+      </Button>
     </div>
   )
 }

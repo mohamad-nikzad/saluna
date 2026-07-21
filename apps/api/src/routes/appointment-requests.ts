@@ -3,9 +3,11 @@ import { z } from 'zod'
 import {
   approveAppointmentRequest,
   convertFlexibleAppointmentRequest,
+  cancelAppointmentRequest,
   createFlexibleAppointmentRequest,
   listAppointmentRequests,
   rejectAppointmentRequest,
+  renewTerminalAppointmentRequest,
   updateFlexibleAppointmentRequest,
   type AppointmentRequestStatus,
 } from '@repo/database/appointment-requests'
@@ -14,8 +16,10 @@ import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
 import {
+  cancelAppointmentRequestBodySchema,
   createFlexibleAppointmentRequestBodySchema,
   convertFlexibleAppointmentRequestBodySchema,
+  renewTerminalAppointmentRequestBodySchema,
   updateFlexibleAppointmentRequestBodySchema,
 } from '../openapi/schemas/appointment-requests'
 
@@ -99,6 +103,21 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
     },
   )
   .post(
+    '/:id/renew',
+    zValidator('param', idParamSchema),
+    zValidator('json', renewTerminalAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const result = await renewTerminalAppointmentRequest({
+        id: c.req.valid('param').id,
+        salonId,
+        ...c.req.valid('json'),
+      })
+      if (!result.ok) return error(c, result.error, result.status)
+      return c.json({ request: result.request }, 201)
+    },
+  )
+  .post(
     '/:id/approve',
     zValidator('param', idParamSchema),
     zValidator('json', approveBodySchema),
@@ -134,6 +153,24 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
         salonId,
         reviewedByUserId: userId,
         ...(reason ? { reason } : {}),
+      })
+      if (!result.ok) return error(c, result.error, result.status as 404)
+      return ok(c, { ok: true })
+    },
+  )
+  .post(
+    '/:id/cancel',
+    zValidator('param', idParamSchema),
+    zValidator('json', cancelAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId, userId } = c.var.tenant
+      const { id } = c.req.valid('param')
+      const { closureNote } = c.req.valid('json')
+      const result = await cancelAppointmentRequest({
+        id,
+        salonId,
+        reviewedByUserId: userId,
+        ...(closureNote ? { closureNote } : {}),
       })
       if (!result.ok) return error(c, result.error, result.status as 404)
       return ok(c, { ok: true })

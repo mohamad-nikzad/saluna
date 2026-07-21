@@ -86,6 +86,7 @@ const flexibleAppointmentRequestListItemSchema =
       requestedEndTime: z.null(),
       acceptableDates: z.array(z.string()).min(1),
       timePreference: timePreferenceSchema,
+      closureNote: z.string().nullable(),
       existingClient: z.object({ id: z.string(), name: z.string() }),
     })
     .openapi('FlexibleAppointmentRequestListItem')
@@ -134,6 +135,27 @@ export const createFlexibleAppointmentRequestBodySchema = z
 export const createFlexibleAppointmentRequestResponseSchema = z
   .object({ request: flexibleAppointmentRequestListItemSchema })
   .openapi('CreateFlexibleAppointmentRequestResponse')
+
+export const renewTerminalAppointmentRequestBodySchema = z
+  .object({
+    acceptableDates: acceptableDatesSchema,
+    timePreference: timePreferenceSchema,
+    clientId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source Client is unavailable',
+    }),
+    serviceId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source ServiceVariant is unavailable',
+    }),
+  })
+  .strict()
+  .superRefine(validateAcceptableDates)
+  .openapi('RenewTerminalAppointmentRequestRequest')
+
+export const renewTerminalAppointmentRequestResponseSchema = z
+  .object({ request: flexibleAppointmentRequestListItemSchema })
+  .openapi('RenewTerminalAppointmentRequestResponse')
 
 export const updateFlexibleAppointmentRequestBodySchema = z
   .object({
@@ -187,3 +209,15 @@ export const rejectAppointmentRequestResponseSchema = z
     ok: z.literal(true),
   })
   .openapi('RejectAppointmentRequestResponse')
+
+export const cancelAppointmentRequestBodySchema = z
+  .object({
+    closureNote: z.string().trim().min(1).optional().openapi({
+      description: 'Optional note explaining the customer withdrawal',
+    }),
+  })
+  .openapi('CancelAppointmentRequestRequest')
+
+export const cancelAppointmentRequestResponseSchema = z
+  .object({ ok: z.literal(true) })
+  .openapi('CancelAppointmentRequestResponse')

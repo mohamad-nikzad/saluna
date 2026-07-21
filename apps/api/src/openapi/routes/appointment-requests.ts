@@ -7,6 +7,8 @@ import {
 import {
   approveAppointmentRequestBodySchema,
   approveAppointmentRequestResponseSchema,
+  cancelAppointmentRequestBodySchema,
+  cancelAppointmentRequestResponseSchema,
   appointmentRequestsListQuerySchema,
   appointmentRequestsListResponseSchema,
   createFlexibleAppointmentRequestBodySchema,
@@ -14,6 +16,8 @@ import {
   convertFlexibleAppointmentRequestBodySchema,
   rejectAppointmentRequestBodySchema,
   rejectAppointmentRequestResponseSchema,
+  renewTerminalAppointmentRequestBodySchema,
+  renewTerminalAppointmentRequestResponseSchema,
   updateFlexibleAppointmentRequestBodySchema,
   updateFlexibleAppointmentRequestResponseSchema,
 } from '../schemas/appointment-requests'
@@ -131,6 +135,40 @@ export const updateFlexibleAppointmentRequestRoute = createRoute({
   },
 })
 
+export const renewTerminalAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/{id}/renew',
+  tags: ['Appointment requests'],
+  summary: 'Create a new Draft from a terminal request',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: renewTerminalAppointmentRequestBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Renewed flexible AppointmentRequest recorded',
+      content: {
+        'application/json': {
+          schema: renewTerminalAppointmentRequestResponseSchema,
+        },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
+  },
+})
+
 export const approveAppointmentRequestRoute = createRoute({
   method: 'post',
   path: '/{id}/approve',
@@ -219,5 +257,35 @@ export const rejectAppointmentRequestRoute = createRoute({
     401: unauthorizedResponse,
     403: forbiddenResponse,
     404: notFoundResponse,
+  },
+})
+
+export const cancelAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/{id}/cancel',
+  tags: ['Appointment requests'],
+  summary: 'Record customer withdrawal from a manager Draft',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: false,
+      content: {
+        'application/json': { schema: cancelAppointmentRequestBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Request cancelled',
+      content: {
+        'application/json': { schema: cancelAppointmentRequestResponseSchema },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
   },
 })

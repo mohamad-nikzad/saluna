@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lt, type SQL } from 'drizzle-orm'
+import { and, asc, eq, gte, lt, or, sql, type SQL } from 'drizzle-orm'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import { isStartTimeInPreference } from '@repo/salon-core/appointment-request-timing'
@@ -13,9 +13,19 @@ export type AppointmentRequestRow = typeof appointmentRequests.$inferSelect
 
 export type AppointmentRequestStatus = AppointmentRequestRow['status']
 
-export type AppointmentRequestListItem = AppointmentRequestRow & {
+type AppointmentRequestListItemBase = Omit<
+  AppointmentRequestRow,
+  'timingMode'
+> & {
   existingClient: { id: string; name: string } | null
 }
+
+export type AppointmentRequestListItem =
+  | (AppointmentRequestListItemBase & { timingMode: 'exact' })
+  | (AppointmentRequestListItemBase & {
+      timingMode: 'flexible'
+      closureNote: string | null
+    })
 
 export type ListAppointmentRequestsFilter = {
   /** Defaults to `'pending'`. */
@@ -78,15 +88,22 @@ export async function listAppointmentRequests(
     }
   }
 
-  return rows.map((row) => ({
-    ...row,
-    existingClient:
+  return rows.map((row): AppointmentRequestListItem => {
+    const existingClient =
       (row.clientId
         ? clientRows.find((client) => client.id === row.clientId)
         : undefined) ??
       byPhone.get(row.customerPhone) ??
-      null,
-  }))
+      null
+    return row.timingMode === 'flexible'
+      ? {
+          ...row,
+          timingMode: 'flexible',
+          closureNote: row.rejectionReason,
+          existingClient,
+        }
+      : { ...row, timingMode: 'exact', existingClient }
+  })
 }
 
 export type TimePreference = NonNullable<
@@ -159,9 +176,92 @@ export async function createFlexibleAppointmentRequest(
     ok: true,
     request: {
       ...request,
+      timingMode: 'flexible',
+      closureNote: null,
       existingClient: { id: client.id, name: client.name },
     },
   }
+}
+
+export type RenewTerminalAppointmentRequestInput = {
+  id: string
+  salonId: string
+  acceptableDates: string[]
+  timePreference: TimePreference
+  clientId?: string
+  serviceId?: string
+}
+
+export type RenewTerminalAppointmentRequestResult =
+  | { ok: true; request: AppointmentRequestListItem }
+  | { ok: false; status: 404 | 409; error: string }
+
+export async function renewTerminalAppointmentRequest(
+  input: RenewTerminalAppointmentRequestInput,
+): Promise<RenewTerminalAppointmentRequestResult> {
+  const db = getDb()
+  const [source] = await db
+    .select()
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+      ),
+    )
+    .limit(1)
+  if (!source) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
+  if (source.status === 'pending') {
+    return { ok: false, status: 409, error: 'درخواست هنوز نهایی نشده است' }
+  }
+
+  const sourceClient = source.clientId
+    ? await getClientById(source.clientId, input.salonId)
+    : undefined
+  if (sourceClient && input.clientId && input.clientId !== sourceClient.id) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'مشتری این درخواست قابل تغییر نیست',
+    }
+  }
+  const clientId = sourceClient?.id ?? input.clientId
+  if (!clientId) {
+    return { ok: false, status: 409, error: 'انتخاب مشتری الزامی است' }
+  }
+
+  const [sourceService] = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(
+      and(
+        eq(services.id, source.serviceId),
+        eq(services.salonId, input.salonId),
+        eq(services.active, true),
+        eq(services.kind, 'standard'),
+      ),
+    )
+    .limit(1)
+  if (
+    sourceService &&
+    input.serviceId &&
+    input.serviceId !== sourceService.id
+  ) {
+    return { ok: false, status: 409, error: 'خدمت این درخواست قابل تغییر نیست' }
+  }
+  const serviceId = sourceService?.id ?? input.serviceId
+  if (!serviceId) {
+    return { ok: false, status: 409, error: 'انتخاب خدمت الزامی است' }
+  }
+
+  return createFlexibleAppointmentRequest({
+    salonId: input.salonId,
+    clientId,
+    serviceId,
+    acceptableDates: input.acceptableDates,
+    timePreference: input.timePreference,
+    ...(source.notes !== null ? { notes: source.notes } : {}),
+  })
 }
 
 export type UpdateFlexibleAppointmentRequestInput = {
@@ -232,6 +332,8 @@ export async function updateFlexibleAppointmentRequest(
     ok: true,
     request: {
       ...request,
+      timingMode: 'flexible',
+      closureNote: request.rejectionReason,
       existingClient: client ? { id: client.id, name: client.name } : null,
     },
   }
@@ -478,17 +580,25 @@ export type RejectAppointmentRequestResult =
   | { ok: true }
   | { ok: false; status: number; error: string }
 
-export async function rejectAppointmentRequest(
-  input: RejectAppointmentRequestInput,
+type CloseAppointmentRequestInput = {
+  id: string
+  salonId: string
+  reviewedByUserId: string
+  closureNote?: string
+}
+
+async function closeAppointmentRequest(
+  input: CloseAppointmentRequestInput,
+  status: 'rejected' | 'cancelled',
 ): Promise<RejectAppointmentRequestResult> {
   const db = getDb()
   const updated = await db
     .update(appointmentRequests)
     .set({
-      status: 'rejected',
+      status,
       reviewedByUserId: input.reviewedByUserId,
       reviewedAt: new Date(),
-      rejectionReason: input.reason,
+      rejectionReason: input.closureNote,
       updatedAt: new Date(),
     })
     .where(
@@ -496,24 +606,53 @@ export async function rejectAppointmentRequest(
         eq(appointmentRequests.id, input.id),
         eq(appointmentRequests.salonId, input.salonId),
         eq(appointmentRequests.status, 'pending'),
+        ...(status === 'cancelled'
+          ? [eq(appointmentRequests.timingMode, 'flexible')]
+          : []),
       ),
     )
     .returning({ id: appointmentRequests.id })
-  if (updated.length === 0) {
-    const [existing] = await db
-      .select({ id: appointmentRequests.id })
-      .from(appointmentRequests)
-      .where(
-        and(
-          eq(appointmentRequests.id, input.id),
-          eq(appointmentRequests.salonId, input.salonId),
-        ),
-      )
-      .limit(1)
-    if (!existing) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
-    return { ok: false, status: 409, error: 'این درخواست قابل رد نیست' }
+  if (updated.length > 0) return { ok: true }
+
+  const [existing] = await db
+    .select({ id: appointmentRequests.id })
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+      ),
+    )
+    .limit(1)
+  if (!existing) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
+  return {
+    ok: false,
+    status: 409,
+    error:
+      status === 'rejected'
+        ? 'این درخواست قابل رد نیست'
+        : 'این درخواست قابل لغو نیست',
   }
-  return { ok: true }
+}
+
+export async function rejectAppointmentRequest(
+  input: RejectAppointmentRequestInput,
+): Promise<RejectAppointmentRequestResult> {
+  return closeAppointmentRequest(
+    { ...input, ...(input.reason ? { closureNote: input.reason } : {}) },
+    'rejected',
+  )
+}
+
+export type ManagerCancelAppointmentRequestInput = CloseAppointmentRequestInput
+
+export type ManagerCancelAppointmentRequestResult =
+  RejectAppointmentRequestResult
+
+export async function cancelAppointmentRequest(
+  input: ManagerCancelAppointmentRequestInput,
+): Promise<ManagerCancelAppointmentRequestResult> {
+  return closeAppointmentRequest(input, 'cancelled')
 }
 
 export type AppointmentRequestNotificationContext = {
@@ -621,14 +760,28 @@ export async function expirePastDueAppointmentRequests(
   now?: Date,
 ): Promise<number> {
   const db = getDb()
-  const today = salonTodayYmd(now ?? new Date())
+  const timestamp = now ?? new Date()
+  const today = salonTodayYmd(timestamp)
   const updated = await db
     .update(appointmentRequests)
-    .set({ status: 'expired', reviewedAt: new Date(), updatedAt: new Date() })
+    .set({ status: 'expired', reviewedAt: timestamp, updatedAt: timestamp })
     .where(
       and(
         eq(appointmentRequests.status, 'pending'),
-        lt(appointmentRequests.requestedDate, today),
+        or(
+          and(
+            eq(appointmentRequests.timingMode, 'exact'),
+            lt(appointmentRequests.requestedDate, today),
+          ),
+          and(
+            eq(appointmentRequests.timingMode, 'flexible'),
+            sql`NOT EXISTS (
+              SELECT 1
+              FROM unnest(${appointmentRequests.acceptableDates}) AS acceptable_date
+              WHERE acceptable_date >= ${today}
+            )`,
+          ),
+        ),
       ),
     )
     .returning({ id: appointmentRequests.id })

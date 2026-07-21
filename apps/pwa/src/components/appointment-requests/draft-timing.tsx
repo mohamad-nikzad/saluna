@@ -53,6 +53,7 @@ export function DraftTimingFields({
   onTimePreferenceChange,
   notes,
   onNotesChange,
+  notesReadOnly = false,
 }: {
   dates: string[]
   onDatesChange: (dates: string[]) => void
@@ -60,6 +61,7 @@ export function DraftTimingFields({
   onTimePreferenceChange: (preference: TimePreference) => void
   notes: string
   onNotesChange: (notes: string) => void
+  notesReadOnly?: boolean
 }) {
   const today = salonTodayYmd()
   const maxDate = addDaysYmd(today, 30)
@@ -137,9 +139,10 @@ export function DraftTimingFields({
         </Select>
       </label>
       <label className="block space-y-2 text-sm font-medium">
-        یادداشت (اختیاری)
+        {notesReadOnly ? 'یادداشت کپی‌شده' : 'یادداشت (اختیاری)'}
         <Textarea
           value={notes}
+          readOnly={notesReadOnly}
           onChange={(event) => onNotesChange(event.target.value)}
         />
       </label>

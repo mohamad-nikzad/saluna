@@ -126,8 +126,10 @@ import {
   postApiV1AdminUsersByIdNotes,
   postApiV1AppointmentRequests,
   postApiV1AppointmentRequestsByIdApprove,
+  postApiV1AppointmentRequestsByIdCancel,
   postApiV1AppointmentRequestsByIdConvert,
   postApiV1AppointmentRequestsByIdReject,
+  postApiV1AppointmentRequestsByIdRenew,
   postApiV1Appointments,
   postApiV1AppointmentsByIdCompleteClient,
   postApiV1CatalogPresetsByIdApply,
@@ -503,12 +505,18 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveError,
   PostApiV1AppointmentRequestsByIdApproveResponse,
+  PostApiV1AppointmentRequestsByIdCancelData,
+  PostApiV1AppointmentRequestsByIdCancelError,
+  PostApiV1AppointmentRequestsByIdCancelResponse,
   PostApiV1AppointmentRequestsByIdConvertData,
   PostApiV1AppointmentRequestsByIdConvertError,
   PostApiV1AppointmentRequestsByIdConvertResponse,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectError,
   PostApiV1AppointmentRequestsByIdRejectResponse,
+  PostApiV1AppointmentRequestsByIdRenewData,
+  PostApiV1AppointmentRequestsByIdRenewError,
+  PostApiV1AppointmentRequestsByIdRenewResponse,
   PostApiV1AppointmentRequestsData,
   PostApiV1AppointmentRequestsError,
   PostApiV1AppointmentRequestsResponse,
@@ -4157,6 +4165,33 @@ export const patchApiV1AppointmentRequestsByIdMutation = (
 }
 
 /**
+ * Create a new Draft from a terminal request
+ */
+export const postApiV1AppointmentRequestsByIdRenewMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsByIdRenewData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsByIdRenewResponse,
+  PostApiV1AppointmentRequestsByIdRenewError,
+  Options<PostApiV1AppointmentRequestsByIdRenewData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsByIdRenewResponse,
+    PostApiV1AppointmentRequestsByIdRenewError,
+    Options<PostApiV1AppointmentRequestsByIdRenewData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequestsByIdRenew({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
  * Approve appointment request
  */
 export const postApiV1AppointmentRequestsByIdApproveMutation = (
@@ -4227,6 +4262,33 @@ export const postApiV1AppointmentRequestsByIdRejectMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1AppointmentRequestsByIdReject({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Record customer withdrawal from a manager Draft
+ */
+export const postApiV1AppointmentRequestsByIdCancelMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsByIdCancelData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsByIdCancelResponse,
+  PostApiV1AppointmentRequestsByIdCancelError,
+  Options<PostApiV1AppointmentRequestsByIdCancelData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsByIdCancelResponse,
+    PostApiV1AppointmentRequestsByIdCancelError,
+    Options<PostApiV1AppointmentRequestsByIdCancelData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequestsByIdCancel({
         ...options,
         ...fnOptions,
         throwOnError: true,

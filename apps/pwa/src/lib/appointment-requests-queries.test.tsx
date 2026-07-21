@@ -8,12 +8,14 @@ import {
   appointmentRequestsListQueryOptions,
   getApiV1AppointmentRequestsQueryKey,
   useConvertDraftMutation,
+  useRenewTerminalRequestMutation,
   useUpdateDraftMutation,
 } from '#/lib/appointment-requests-queries'
 
 const getApiV1AppointmentRequests = vi.fn()
 const patchApiV1AppointmentRequestsById = vi.fn()
 const postApiV1AppointmentRequestsByIdConvert = vi.fn()
+const postApiV1AppointmentRequestsByIdRenew = vi.fn()
 
 vi.mock('@repo/api-client/sdk', () => ({
   getApiV1AppointmentRequests: (...args: unknown[]) =>
@@ -22,12 +24,15 @@ vi.mock('@repo/api-client/sdk', () => ({
     patchApiV1AppointmentRequestsById(...args),
   postApiV1AppointmentRequestsByIdConvert: (...args: unknown[]) =>
     postApiV1AppointmentRequestsByIdConvert(...args),
+  postApiV1AppointmentRequestsByIdRenew: (...args: unknown[]) =>
+    postApiV1AppointmentRequestsByIdRenew(...args),
 }))
 
 beforeEach(() => {
   getApiV1AppointmentRequests.mockReset()
   patchApiV1AppointmentRequestsById.mockReset()
   postApiV1AppointmentRequestsByIdConvert.mockReset()
+  postApiV1AppointmentRequestsByIdRenew.mockReset()
 })
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -66,7 +71,7 @@ describe('appointment-requests-queries', () => {
     })
 
     const data = await queryClient.fetchQuery(
-      appointmentRequestsListQueryOptions('pending'),
+      appointmentRequestsListQueryOptions('pending', 'exact'),
     )
 
     expect(data).toEqual({
@@ -113,6 +118,42 @@ describe('appointment-requests-queries', () => {
 
     expect(postApiV1AppointmentRequestsByIdConvert).toHaveBeenCalledWith(
       expect.objectContaining({ path: { id: 'draft-1' }, body }),
+    )
+  })
+
+  it('loads both request origins for terminal lifecycle tabs', async () => {
+    getApiV1AppointmentRequests.mockResolvedValue({ data: { requests: [] } })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    await queryClient.fetchQuery(
+      appointmentRequestsListQueryOptions('cancelled', undefined),
+    )
+
+    expect(getApiV1AppointmentRequests).toHaveBeenCalledWith(
+      expect.objectContaining({ query: { status: 'cancelled' } }),
+    )
+  })
+
+  it('renews a terminal request with fresh timing and selected replacements', async () => {
+    postApiV1AppointmentRequestsByIdRenew.mockResolvedValue({
+      data: { request: { id: 'renewed-request' } },
+    })
+    const { result } = renderHook(() => useRenewTerminalRequestMutation(), {
+      wrapper,
+    })
+    const body = {
+      clientId: '33333333-3333-4333-8333-333333333333',
+      serviceId: '44444444-4444-4444-8444-444444444444',
+      acceptableDates: ['2026-07-25'],
+      timePreference: 'evening' as const,
+    }
+
+    await result.current.mutateAsync({ requestId: 'source-request', body })
+
+    expect(postApiV1AppointmentRequestsByIdRenew).toHaveBeenCalledWith(
+      expect.objectContaining({ path: { id: 'source-request' }, body }),
     )
   })
 })
