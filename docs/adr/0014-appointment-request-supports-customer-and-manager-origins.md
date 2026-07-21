@@ -1,0 +1,3 @@
+# AppointmentRequest supports customer and manager origins
+
+`AppointmentRequest` remains the single aggregate for off-calendar proposals, whether an exact request is customer-recorded or a flexible Draft is manager-recorded. A manager-recorded request references a validated Client while a customer-recorded request may carry raw contact until approval; we rejected a separate Draft aggregate because both origins share the lifecycle, snapshot, off-calendar invariant, and conversion through Appointment Intake. This amends ADR-0001's rationale—public origin and absence of `clientId` are no longer universal—but preserves its aggregate boundary.

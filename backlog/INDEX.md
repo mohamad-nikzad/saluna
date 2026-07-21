@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-17 (BL-0019 Staff Commission work completed)
+Last organized: 2026-07-21 (BL-0061 manager draft direction resolved)
 
 ## Now
 
@@ -11,6 +11,13 @@ No active backlog items.
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
+- [BL-0061 Capture flexible AppointmentRequests as manager drafts](ready/BL-0061-plan-flexible-appointment-requests.md)
+  - [BL-0062 Record and list manager Drafts](ready/BL-0062-record-list-manager-drafts.md)
+  - [BL-0063 Organize and edit Draft timing](ready/BL-0063-organize-edit-draft-timing.md)
+  - [BL-0064 Convert a Draft into an Appointment](ready/BL-0064-convert-draft-to-appointment.md)
+  - [BL-0065 Close Drafts accurately](ready/BL-0065-close-drafts-accurately.md)
+  - [BL-0066 Expire and renew terminal Drafts](ready/BL-0066-expire-renew-terminal-drafts.md)
+  - [BL-0067 Prove the complete Draft journey](ready/BL-0067-prove-complete-draft-journey.md)
 
 ## Inbox
 

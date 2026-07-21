@@ -9,8 +9,12 @@ A scheduled service on the staff calendar, with a validated client, assigned sta
 _Avoid_: booking (verb only, customer UI copy)
 
 **AppointmentRequest**:
-A customer-submitted proposal for an `Appointment` or `Service Package`, awaiting manager review. Carries raw customer contact, desired timing, and snapshot-shaped service/package fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
+A proposal for an `Appointment` or `Service Package`, recorded by a customer or manager and awaiting manager review. Carries customer contact, desired timing, and snapshot-shaped service/package fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
 _Avoid_: booking request, public booking, pending appointment
+
+An **AppointmentRequest** is **rejected** when the salon declines it and **cancelled** when the customer withdraws it; closing it never deletes its history.
+
+An approved, rejected, cancelled, or expired **AppointmentRequest** is terminal and cannot be reopened; renewed demand becomes a new **AppointmentRequest**.
 
 Approving a package request schedules every package task with staff and time, making the package operationally real on staff calendars.
 
@@ -69,7 +73,7 @@ _Avoid_: service preset page, template manager
 ### Snapshots
 
 **BookedServiceSnapshot**:
-The appointment-owned copy of the selected `ServiceVariant` at booking time: name, duration, price. Binding even if the underlying service is later edited or archived.
+The request- or appointment-owned copy of the selected `ServiceVariant`: name, duration, price. Binding even if the underlying service is later edited or archived.
 
 **BookedAddonSnapshot**:
 The appointment-owned copy of a selected `ServiceAddon`: name, duration delta, price delta.
@@ -82,6 +86,32 @@ The appointment-owned total duration and price after applying the `BookedService
 **Client**:
 A salon's customer record — name, phone, notes, tags — used for appointments, retention, and messaging. Persian UI: `مشتری`.
 _Avoid_: contact (phone address book), customer (public booking copy)
+
+A manager-recorded **AppointmentRequest** belongs to exactly one **Client**; a customer-recorded **AppointmentRequest** may remain unlinked until approval.
+
+For an **AppointmentRequest**, “next week” means the Saturday–Friday calendar week immediately following the current Salon-local week.
+
+**Flexible AppointmentRequest**:
+A manager-recorded **AppointmentRequest** constrained by one or more acceptable dates and one **Time Preference**, instead of an exact start time.
+
+Each **Flexible AppointmentRequest** names exactly one **ServiceVariant** and binds its **BookedServiceSnapshot** when recorded.
+
+**Request Horizon**:
+The rolling period from Salon-local today through 30 days ahead, inclusive, in which an **AppointmentRequest** may specify dates.
+
+A pending **Flexible AppointmentRequest** expires after its final acceptable date has fully ended in Salon local time.
+
+Elapsed acceptable dates remain part of a **Flexible AppointmentRequest**'s history, while only current or future acceptable dates remain schedulable.
+
+While an **AppointmentRequest** is pending, only its acceptable dates, **Time Preference**, and notes may change; its **Client** and **BookedServiceSnapshot** remain fixed.
+
+The saved acceptable dates and **Time Preference** are the current customer agreement; Saluna keeps no separate consent record.
+
+**Time Preference**:
+A fixed, system-defined part of a day that limits an **Appointment** start time: Morning (00:00–12:00), Afternoon (12:00–17:00), Evening (17:00–24:00), or Any time; the Appointment may end after the band.
+_Avoid_: custom time window, salon time band
+
+One **Time Preference** applies to every acceptable date in an **AppointmentRequest**.
 
 **Device Contact**:
 An entry from the manager's phone address book. May become a `Client` after import or pick; not tenant-scoped until created on the server.
