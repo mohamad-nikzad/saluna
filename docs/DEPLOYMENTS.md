@@ -1,6 +1,6 @@
 # Saluna deployments
 
-Last updated: **2026-06-19**
+Last updated: **2026-07-22**
 
 The primary production path uses GitHub-hosted Actions runners, GHCR, and a
 manual production deployment workflow. The existing HamGit/HamDocker pipeline
@@ -84,6 +84,57 @@ Publishing failures do not roll back a healthy deployment. The workflow fails
 and reports each channel result; after fixing permissions or configuration,
 rerun the failed job. Per-channel markers under
 `/opt/saluna/release-announcements/` prevent duplicate posts on retries.
+
+#### Current social-channel state
+
+| Provider | Production state | Channel   | Bot           | Notes                                      |
+| -------- | ---------------- | --------- | ------------- | ------------------------------------------ |
+| Bale     | enabled          | `@saluna` | `@salunabot`  | Active release-announcement destination    |
+| Telegram | disabled         | —         | `@saloorabot` | VPS outbound access to Telegram is blocked |
+
+Keep `TELEGRAM_ENABLED=false` until the VPS has a verified route to
+`api.telegram.org`. The publisher skips disabled providers and requires bot and
+channel configuration only for enabled providers, so Bale releases remain
+independent of Telegram availability. Never put bot tokens in documentation,
+commands, release notes, or workflow inputs.
+
+The Bale channel launched on 2026-07-22. The setup test post was removed, then
+the full Persian introduction was published with release key
+`channel-introduction-v1`. The production setting is:
+
+```env
+BALE_ENABLED=true
+BALE_BOT_USERNAME=salunabot
+BALE_RELEASE_CHANNEL_ID=@saluna
+```
+
+The canonical operator procedure, including the announcement decision, is in
+[How To Release](#how-to-release).
+
+A good release note is short, friendly, and scannable. Use this shape:
+
+```text
+یک جمله کوتاه درباره نتیجه اصلی این نسخه.
+
+• قابلیت یا بهبود قابل مشاهده برای کاربر
+• قابلیت یا بهبود قابل مشاهده دیگر
+
+در صورت نیاز، یک راهنمای خیلی کوتاه برای پیدا کردن قابلیت جدید.
+```
+
+The publisher adds the Saluna heading and website link automatically. Do not
+repeat them in `release_notes`.
+
+For a social-only bootstrap post or an operator-controlled manual retry, run the
+publisher directly on the VPS. Normal releases must use the deployment workflow:
+
+```bash
+cd /opt/saluna
+./scripts/publish_release_announcement.py \
+  --revision UNIQUE_RELEASE_KEY \
+  --apps api,web,pwa \
+  --notes 'متن نهایی و تاییدشده انتشار'
+```
 
 ## GitHub Workflows
 
@@ -231,13 +282,24 @@ package. For uncertain shared code changes, deploy all three apps.
 
 1. Bump only the changed app package version when the change should produce a
    new app release.
-2. Push to GitHub `main`.
-3. Confirm the normal `CI` workflow passed.
-4. Confirm `Build production images` built every affected app.
-5. Manually run `Deploy production`, select the app (or `all`), and keep `ref`
+2. Decide separately whether users should hear about the release. For a
+   user-facing change, prepare final Persian `release_notes` using user benefits
+   rather than commits, ticket numbers, implementation details, or promises
+   about unfinished work.
+3. Push to GitHub `main`.
+4. Confirm the normal `CI` workflow passed.
+5. Confirm `Build production images` built every affected app.
+6. Manually run `Deploy production`, select the app (or `all`), and keep `ref`
    set to the built revision, normally `main`.
-6. Keep `skip_ci_check` disabled for normal releases.
-7. Confirm the workflow's internal and external smoke checks passed.
+7. Enable `announce_release` and supply the prepared note only for a user-facing
+   release. Leave it disabled for internal, infrastructure, or maintenance work.
+8. Keep `skip_ci_check` disabled for normal releases.
+9. Confirm the workflow's internal and external smoke checks passed.
+10. When announcing, confirm the workflow summary reports `bale: sent` or
+    `bale: already sent`, then visually check the post in `@saluna`.
+11. If publishing fails, fix the channel permission or configuration and rerun
+    the failed job with the same revision, selected apps, and note text. Keeping
+    those values unchanged preserves the idempotency key and avoids duplicates.
 
 If GitHub, GHCR, or international routing is unavailable, push the same commit
 to HamGit and run the existing manual `deploy-*` job. If both registries are
