@@ -1696,11 +1696,22 @@ export const appointmentRequests = pgTable(
     serviceId: uuid('service_id')
       .notNull()
       .references(() => services.id, { onDelete: 'restrict' }),
+    clientId: uuid('client_id').references(() => clients.id, {
+      onDelete: 'restrict',
+    }),
+    timingMode: text('timing_mode')
+      .notNull()
+      .$type<'exact' | 'flexible'>()
+      .default('exact'),
     /** Null at submit; set when manager approves. */
     staffId: uuid('staff_id'),
-    requestedDate: text('requested_date').notNull(),
-    requestedStartTime: text('requested_start_time').notNull(),
-    requestedEndTime: text('requested_end_time').notNull(),
+    requestedDate: text('requested_date'),
+    requestedStartTime: text('requested_start_time'),
+    requestedEndTime: text('requested_end_time'),
+    acceptableDates: text('acceptable_dates').array(),
+    timePreference: text('time_preference').$type<
+      'morning' | 'afternoon' | 'evening' | 'any'
+    >(),
     customerName: text('customer_name').notNull(),
     customerPhone: text('customer_phone').notNull(),
     notes: text('notes'),
@@ -1747,6 +1758,14 @@ export const appointmentRequests = pgTable(
     index('appointment_requests_salon_id_customer_phone_idx').on(
       t.salonId,
       t.customerPhone,
+    ),
+    check(
+      'appointment_requests_timing_mode_check',
+      sql`(
+        (${t.timingMode} = 'exact' and ${t.requestedDate} is not null and ${t.requestedStartTime} is not null and ${t.requestedEndTime} is not null and ${t.acceptableDates} is null and ${t.timePreference} is null)
+        or
+        (${t.timingMode} = 'flexible' and ${t.clientId} is not null and ${t.requestedDate} is null and ${t.requestedStartTime} is null and ${t.requestedEndTime} is null and cardinality(${t.acceptableDates}) > 0 and ${t.timePreference} is not null)
+      )`,
     ),
   ],
 )

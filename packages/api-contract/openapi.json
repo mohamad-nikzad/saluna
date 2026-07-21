@@ -4684,6 +4684,23 @@
         "required": ["requests"]
       },
       "AppointmentRequestListItem": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ExactAppointmentRequestListItem"
+          },
+          {
+            "$ref": "#/components/schemas/FlexibleAppointmentRequestListItem"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "timingMode",
+          "mapping": {
+            "exact": "#/components/schemas/ExactAppointmentRequestListItem",
+            "flexible": "#/components/schemas/FlexibleAppointmentRequestListItem"
+          }
+        }
+      },
+      "ExactAppointmentRequestListItem": {
         "type": "object",
         "properties": {
           "id": {
@@ -4695,21 +4712,13 @@
           "serviceId": {
             "type": "string"
           },
-          "staffId": {
+          "clientId": {
             "type": "string",
             "nullable": true
           },
-          "requestedDate": {
+          "staffId": {
             "type": "string",
-            "example": "2026-06-07"
-          },
-          "requestedStartTime": {
-            "type": "string",
-            "example": "10:00"
-          },
-          "requestedEndTime": {
-            "type": "string",
-            "example": "11:00"
+            "nullable": true
           },
           "customerName": {
             "type": "string"
@@ -4793,16 +4802,36 @@
           },
           "existingClient": {
             "$ref": "#/components/schemas/AppointmentRequestExistingClient"
+          },
+          "timingMode": {
+            "type": "string",
+            "enum": ["exact"]
+          },
+          "requestedDate": {
+            "type": "string",
+            "example": "2026-06-07"
+          },
+          "requestedStartTime": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "requestedEndTime": {
+            "type": "string",
+            "example": "11:00"
+          },
+          "acceptableDates": {
+            "nullable": true
+          },
+          "timePreference": {
+            "nullable": true
           }
         },
         "required": [
           "id",
           "salonId",
           "serviceId",
+          "clientId",
           "staffId",
-          "requestedDate",
-          "requestedStartTime",
-          "requestedEndTime",
           "customerName",
           "customerPhone",
           "notes",
@@ -4819,11 +4848,14 @@
           "appointmentId",
           "createdAt",
           "updatedAt",
-          "existingClient"
-        ],
-        "additionalProperties": {
-          "nullable": true
-        }
+          "existingClient",
+          "timingMode",
+          "requestedDate",
+          "requestedStartTime",
+          "requestedEndTime",
+          "acceptableDates",
+          "timePreference"
+        ]
       },
       "AppointmentRequestStatus": {
         "type": "string",
@@ -4845,6 +4877,218 @@
           }
         },
         "required": ["id", "name"]
+      },
+      "FlexibleAppointmentRequestListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "salonId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "staffId": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "bookedServiceName": {
+            "type": "string"
+          },
+          "bookedServiceDuration": {
+            "type": "integer"
+          },
+          "bookedServicePrice": {
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentRequestStatus"
+          },
+          "paymentStatus": {
+            "$ref": "#/components/schemas/AppointmentRequestPaymentStatus"
+          },
+          "depositAmount": {
+            "type": "integer",
+            "nullable": true
+          },
+          "confirmationToken": {
+            "type": "string"
+          },
+          "reviewedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "appointmentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "existingClient": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "name"]
+          },
+          "timingMode": {
+            "type": "string",
+            "enum": ["flexible"]
+          },
+          "requestedDate": {
+            "nullable": true
+          },
+          "requestedStartTime": {
+            "nullable": true
+          },
+          "requestedEndTime": {
+            "nullable": true
+          },
+          "acceptableDates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "timePreference": {
+            "$ref": "#/components/schemas/TimePreference"
+          }
+        },
+        "required": [
+          "id",
+          "salonId",
+          "serviceId",
+          "clientId",
+          "staffId",
+          "customerName",
+          "customerPhone",
+          "notes",
+          "bookedServiceName",
+          "bookedServiceDuration",
+          "bookedServicePrice",
+          "status",
+          "paymentStatus",
+          "depositAmount",
+          "confirmationToken",
+          "reviewedByUserId",
+          "reviewedAt",
+          "rejectionReason",
+          "appointmentId",
+          "createdAt",
+          "updatedAt",
+          "existingClient",
+          "timingMode",
+          "requestedDate",
+          "requestedStartTime",
+          "requestedEndTime",
+          "acceptableDates",
+          "timePreference"
+        ]
+      },
+      "TimePreference": {
+        "type": "string",
+        "enum": ["morning", "afternoon", "evening", "any"]
+      },
+      "CreateFlexibleAppointmentRequestResponse": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/FlexibleAppointmentRequestListItem"
+          }
+        },
+        "required": ["request"]
+      },
+      "CreateFlexibleAppointmentRequestRequest": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptableDates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "timePreference": {
+            "$ref": "#/components/schemas/TimePreference"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "clientId",
+          "serviceId",
+          "acceptableDates",
+          "timePreference"
+        ]
       },
       "ApproveAppointmentRequestResponse": {
         "type": "object",
@@ -15152,6 +15396,15 @@
             "description": "Filter by request status. Defaults to pending on the server.",
             "name": "status",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["exact", "flexible"]
+            },
+            "required": false,
+            "name": "timingMode",
+            "in": "query"
           }
         ],
         "responses": {
@@ -15187,6 +15440,80 @@
           },
           "403": {
             "description": "Authenticated but missing manage_appointments permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Appointment requests"],
+        "summary": "Record a manager Draft",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFlexibleAppointmentRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Flexible AppointmentRequest recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateFlexibleAppointmentRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_appointments permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Appointment request not found or no longer pending",
             "content": {
               "application/json": {
                 "schema": {

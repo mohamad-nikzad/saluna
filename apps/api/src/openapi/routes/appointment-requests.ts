@@ -9,6 +9,8 @@ import {
   approveAppointmentRequestResponseSchema,
   appointmentRequestsListQuerySchema,
   appointmentRequestsListResponseSchema,
+  createFlexibleAppointmentRequestBodySchema,
+  createFlexibleAppointmentRequestResponseSchema,
   rejectAppointmentRequestBodySchema,
   rejectAppointmentRequestResponseSchema,
 } from '../schemas/appointment-requests'
@@ -57,6 +59,38 @@ export const listAppointmentRequestsRoute = createRoute({
     400: validationErrorResponse,
     401: unauthorizedResponse,
     403: forbiddenResponse,
+  },
+})
+
+export const createFlexibleAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['Appointment requests'],
+  summary: 'Record a manager Draft',
+  security: tenantSecurity,
+  request: {
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: createFlexibleAppointmentRequestBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Flexible AppointmentRequest recorded',
+      content: {
+        'application/json': {
+          schema: createFlexibleAppointmentRequestResponseSchema,
+        },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
   },
 })
 

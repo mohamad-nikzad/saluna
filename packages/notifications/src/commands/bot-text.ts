@@ -88,6 +88,7 @@ export async function handlePendingCommand(
 
   const requests = await listAppointmentRequests(caller.salonId, {
     status: 'pending',
+    timingMode: 'exact',
   })
   if (requests.length === 0) {
     return { messages: [{ messageHtml: '✅ درخواست در انتظار ندارید.' }] }
@@ -102,6 +103,7 @@ export async function handlePendingCommand(
   const base = input.publicAppBaseUrl?.trim()
   const messages: BotTextMessage[] = [{ messageHtml: header }]
   for (const r of shown) {
+    if (!r.requestedDate || !r.requestedStartTime) continue
     const date = formatJalaliFullDate(r.requestedDate)
     const name = r.existingClient?.name ?? r.customerName
     const body = [

@@ -123,6 +123,7 @@ import {
   postApiV1AdminSalonsByIdSetupHandoff,
   postApiV1AdminSalonsByIdSetupStaff,
   postApiV1AdminUsersByIdNotes,
+  postApiV1AppointmentRequests,
   postApiV1AppointmentRequestsByIdApprove,
   postApiV1AppointmentRequestsByIdReject,
   postApiV1Appointments,
@@ -500,6 +501,9 @@ import type {
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectError,
   PostApiV1AppointmentRequestsByIdRejectResponse,
+  PostApiV1AppointmentRequestsData,
+  PostApiV1AppointmentRequestsError,
+  PostApiV1AppointmentRequestsResponse,
   PostApiV1AppointmentsByIdCompleteClientData,
   PostApiV1AppointmentsByIdCompleteClientError,
   PostApiV1AppointmentsByIdCompleteClientResponse,
@@ -4089,6 +4093,33 @@ export const getApiV1AppointmentRequestsOptions = (
     },
     queryKey: getApiV1AppointmentRequestsQueryKey(options),
   })
+
+/**
+ * Record a manager Draft
+ */
+export const postApiV1AppointmentRequestsMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsResponse,
+  PostApiV1AppointmentRequestsError,
+  Options<PostApiV1AppointmentRequestsData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsResponse,
+    PostApiV1AppointmentRequestsError,
+    Options<PostApiV1AppointmentRequestsData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequests({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
 
 /**
  * Approve appointment request

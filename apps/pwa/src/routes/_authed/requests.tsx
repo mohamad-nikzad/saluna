@@ -11,6 +11,7 @@ import {
   Inbox,
   MessageCircle,
   Phone,
+  Plus,
   Scissors,
   Sparkles,
   X,
@@ -35,6 +36,7 @@ import {
   DialogTitle,
 } from '@repo/ui/dialog'
 import { Textarea } from '@repo/ui/textarea'
+import { Input } from '@repo/ui/input'
 import { scrollFocusedInputIntoView } from '#/lib/scroll-focused-input-into-view'
 import {
   toPersianDigits,
@@ -48,16 +50,35 @@ import {
   appointmentRequestsListQueryOptions,
   getApiV1AppointmentRequestsQueryKey,
   pendingAppointmentRequestsQueryOptions,
+  pendingDraftsQueryOptions,
+  useCreateDraftMutation,
   useApproveAppointmentRequestMutation,
   useRejectAppointmentRequestMutation,
-  type AppointmentRequestListItem,
   type AppointmentRequestStatus,
+  type ExactAppointmentRequestListItem,
+  type FlexibleAppointmentRequestListItem,
 } from '#/lib/appointment-requests-queries'
 import { servicesListQueryOptions } from '#/lib/services-queries'
+import {
+  clientsListQueryOptions,
+  getApiV1ClientsQueryKey,
+} from '#/lib/clients-queries'
 import { staffListQueryOptions } from '#/lib/staff-queries'
 import { ClientAvatar } from '#/components/clients/client-visuals'
+import { ClientPicker } from '#/components/calendar/client-picker'
+import { ServicePicker } from '#/components/services/service-picker'
+import {
+  FormSheet,
+  FormSheetBody,
+  FormSheetContent,
+  FormSheetFooter,
+  FormSheetHeader,
+  FormSheetTitle,
+} from '#/components/form-sheet'
+import type { Client } from '@repo/salon-core/types'
 
 type StatusTab = AppointmentRequestStatus
+type RequestsTab = StatusTab | 'drafts'
 
 const TABS: { id: StatusTab; label: string }[] = [
   { id: 'pending', label: 'در انتظار' },
@@ -159,12 +180,12 @@ function RequestsError({ error }: { error: Error }) {
 
 function RequestsPage() {
   const { focus } = Route.useSearch()
-  const [tab, setTab] = useState<StatusTab>('pending')
+  const [tab, setTab] = useState<RequestsTab>('pending')
   const [counts, setCounts] = useState<Partial<Record<StatusTab, number>>>({})
   const initial = Route.useLoaderData()
 
   // A focused request is only meaningful while pending.
-  const activeTab: StatusTab = focus ? 'pending' : tab
+  const activeTab: RequestsTab = focus ? 'pending' : tab
 
   const { data: pendingData } = useQuery({
     ...pendingAppointmentRequestsQueryOptions(),
@@ -180,7 +201,7 @@ function RequestsPage() {
   }, [])
 
   const selectTab = useCallback(
-    (id: StatusTab) => {
+    (id: RequestsTab) => {
       setTab(id)
       // Changing tabs is an explicit action that clears any focused request.
       if (focus) void navigate({ to: '/requests' })
@@ -212,6 +233,18 @@ function RequestsPage() {
         </div>
 
         <div className="-mx-5 mt-3.5 flex gap-2 overflow-x-auto px-5 scrollbar-hide">
+          <button
+            type="button"
+            onClick={() => selectTab('drafts')}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] whitespace-nowrap transition-colors',
+              activeTab === 'drafts'
+                ? 'border-primary font-bold text-foreground'
+                : 'border-transparent font-medium text-muted-foreground',
+            )}
+          >
+            پیش‌نویس‌ها
+          </button>
           {TABS.map(({ id, label }) => {
             const active = activeTab === id
             const count = id === 'pending' ? pendingCount : counts[id]
@@ -265,7 +298,15 @@ function RequestsPage() {
       )}
 
       <div className="flex-1 overflow-auto px-5 pb-24 pt-4">
-        <RequestsList status={activeTab} focus={focus} onCount={reportCount} />
+        {activeTab === 'drafts' ? (
+          <DraftsPanel />
+        ) : (
+          <RequestsList
+            status={activeTab}
+            focus={focus}
+            onCount={reportCount}
+          />
+        )}
       </div>
     </div>
   )
@@ -319,7 +360,12 @@ function RequestsList({
   )
 
   // Focus only applies to the pending tab (enforced in RequestsPage).
-  const focused = focus ? requests?.find((req) => req.id === focus) : undefined
+  const focused = focus
+    ? requests?.find(
+        (req): req is ExactAppointmentRequestListItem =>
+          req.id === focus && req.timingMode === 'exact',
+      )
+    : undefined
 
   if (isLoading) {
     return (
@@ -375,7 +421,7 @@ function RequestsList({
   return (
     <div className="flex flex-col gap-3">
       {requests.map((req) =>
-        status === 'pending' ? (
+        req.timingMode !== 'exact' ? null : status === 'pending' ? (
           <PendingCard
             key={req.id}
             request={req}
@@ -388,6 +434,246 @@ function RequestsList({
         ),
       )}
     </div>
+  )
+}
+
+const TIME_PREFERENCE_LABELS = {
+  morning: 'صبح',
+  afternoon: 'بعدازظهر',
+  evening: 'عصر',
+  any: 'هر زمان',
+} as const
+
+function DraftsPanel() {
+  const { data, isLoading } = useQuery(pendingDraftsQueryOptions())
+  const { data: clients = [] } = useQuery(clientsListQueryOptions())
+  const { data: services = [] } = useQuery(servicesListQueryOptions())
+  const [open, setOpen] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <Spinner className="size-5" />
+      </div>
+    )
+  }
+
+  const drafts = (data?.requests ?? []).filter(
+    (request): request is FlexibleAppointmentRequestListItem =>
+      request.timingMode === 'flexible',
+  )
+
+  return (
+    <div className="space-y-3">
+      <Button className="w-full rounded-xl" onClick={() => setOpen(true)}>
+        <Plus className="size-4" />
+        پیش‌نویس جدید
+      </Button>
+      {drafts.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-sm font-bold">پیش‌نویسی ثبت نشده</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            درخواست‌های تلفنی و پیام‌ها را اینجا ثبت کنید.
+          </p>
+        </div>
+      ) : (
+        drafts.map((draft) => <DraftCard key={draft.id} draft={draft} />)
+      )}
+      <NewDraftSheet
+        open={open}
+        onOpenChange={setOpen}
+        clients={clients}
+        services={services.filter((service) => service.active)}
+      />
+    </div>
+  )
+}
+
+function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
+  const clientName = draft.existingClient?.name ?? draft.customerName
+  return (
+    <div className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <ClientAvatar name={clientName} accent="var(--mint)" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold">{clientName}</p>
+          <p className="text-xs text-muted-foreground">
+            {draft.bookedServiceName} ·{' '}
+            {toPersianDigits(draft.bookedServiceDuration)} دقیقه
+          </p>
+        </div>
+        <Badge variant="neutral">پیش‌نویس</Badge>
+      </div>
+      <div className="space-y-2 rounded-2xl bg-background p-3 text-xs">
+        <p className="flex items-center gap-2">
+          <Calendar className="size-3.5 text-primary" />
+          {draft.acceptableDates.map(formatJalaliFullDate).join('، ')}
+        </p>
+        <p className="flex items-center gap-2">
+          <Clock className="size-3.5 text-primary" />
+          {TIME_PREFERENCE_LABELS[draft.timePreference]}
+        </p>
+        {draft.notes && (
+          <p className="border-t border-dashed border-border pt-2 text-muted-foreground">
+            {draft.notes}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NewDraftSheet({
+  open,
+  onOpenChange,
+  clients,
+  services,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  clients: Client[]
+  services: Service[]
+}) {
+  const queryClient = useQueryClient()
+  const [localClients, setLocalClients] = useState(clients)
+  const [clientId, setClientId] = useState('')
+  const [serviceId, setServiceId] = useState('')
+  const [dates, setDates] = useState([''])
+  const [timePreference, setTimePreference] =
+    useState<keyof typeof TIME_PREFERENCE_LABELS>('any')
+  const [notes, setNotes] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const createDraft = useCreateDraftMutation()
+
+  useEffect(() => setLocalClients(clients), [clients])
+
+  const close = () => {
+    onOpenChange(false)
+    setClientId('')
+    setServiceId('')
+    setDates([''])
+    setTimePreference('any')
+    setNotes('')
+    setErrorMessage('')
+  }
+
+  const submit = () => {
+    const acceptableDates = dates.filter(Boolean)
+    if (!clientId || !serviceId || acceptableDates.length === 0) {
+      setErrorMessage('مشتری، خدمت و حداقل یک تاریخ را انتخاب کنید')
+      return
+    }
+    createDraft.mutate(
+      {
+        clientId,
+        serviceId,
+        acceptableDates,
+        timePreference,
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
+      },
+      { onSuccess: close },
+    )
+  }
+
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange}>
+      <FormSheetContent onRequestClose={close}>
+        <FormSheetHeader>
+          <FormSheetTitle>پیش‌نویس جدید</FormSheetTitle>
+        </FormSheetHeader>
+        <FormSheetBody className="space-y-5 px-5 py-4">
+          <label className="block space-y-2 text-sm font-medium">
+            مشتری
+            <ClientPicker
+              clients={localClients}
+              value={clientId}
+              onChange={setClientId}
+              onClientCreated={(client) => {
+                setLocalClients((current) => [...current, client])
+                void queryClient.invalidateQueries({
+                  queryKey: getApiV1ClientsQueryKey(),
+                })
+              }}
+              hostActive={open}
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            خدمت
+            <ServicePicker
+              services={services}
+              value={serviceId}
+              onChange={setServiceId}
+            />
+          </label>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">تاریخ‌های قابل قبول</p>
+            {dates.map((date, index) => (
+              <Input
+                key={index}
+                type="date"
+                value={date}
+                onChange={(event) =>
+                  setDates((current) =>
+                    current.map((value, i) =>
+                      i === index ? event.target.value : value,
+                    ),
+                  )
+                }
+              />
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDates((current) => [...current, ''])}
+            >
+              <Plus className="size-3.5" /> تاریخ دیگر
+            </Button>
+          </div>
+          <label className="block space-y-2 text-sm font-medium">
+            ترجیح زمانی
+            <Select
+              value={timePreference}
+              onValueChange={(value) =>
+                setTimePreference(value as keyof typeof TIME_PREFERENCE_LABELS)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TIME_PREFERENCE_LABELS).map(
+                  ([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            یادداشت (اختیاری)
+            <Textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </label>
+          {errorMessage && (
+            <p className="text-xs text-destructive">{errorMessage}</p>
+          )}
+        </FormSheetBody>
+        <FormSheetFooter>
+          <Button onClick={submit} disabled={createDraft.isPending}>
+            {createDraft.isPending ? (
+              <Spinner className="size-4" />
+            ) : (
+              'ثبت پیش‌نویس'
+            )}
+          </Button>
+        </FormSheetFooter>
+      </FormSheetContent>
+    </FormSheet>
   )
 }
 
@@ -438,7 +724,7 @@ function PendingCard({
   services,
   onChanged,
 }: {
-  request: AppointmentRequestListItem
+  request: ExactAppointmentRequestListItem
   staff: User[]
   services: Service[]
   onChanged: () => void
@@ -655,7 +941,7 @@ function DecidedCard({
   request,
   status,
 }: {
-  request: AppointmentRequestListItem
+  request: ExactAppointmentRequestListItem
   status: Exclude<StatusTab, 'pending'>
 }) {
   const meta = DECIDED[status]

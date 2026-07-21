@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/appointment-requests', () => ({
   listAppointmentRequests: vi.fn(),
+  createFlexibleAppointmentRequest: vi.fn(),
   approveAppointmentRequest: vi.fn(),
   rejectAppointmentRequest: vi.fn(),
 }))
@@ -125,6 +126,91 @@ describe('appointment-requests router', () => {
     expect(db.listAppointmentRequests).toHaveBeenCalledWith('s1', {
       status: 'expired',
     })
+  })
+
+  it('GET /?timingMode=flexible lists tenant Drafts', async () => {
+    vi.mocked(db.listAppointmentRequests).mockResolvedValue([])
+    await app.request('/api/v1/appointment-requests?timingMode=flexible', {
+      headers: authHeaders(),
+    })
+    expect(db.listAppointmentRequests).toHaveBeenCalledWith('s1', {
+      timingMode: 'flexible',
+    })
+  })
+
+  it('POST / creates a tenant-scoped flexible Draft', async () => {
+    vi.mocked(db.createFlexibleAppointmentRequest).mockResolvedValue({
+      ok: true,
+      request: { id: requestId },
+    } as never)
+    const body = {
+      clientId: '33333333-3333-4333-8333-333333333333',
+      serviceId: '44444444-4444-4444-8444-444444444444',
+      acceptableDates: ['2026-07-23'],
+      timePreference: 'afternoon',
+      notes: 'بعد از ظهر تماس بگیرید',
+    }
+    const res = await app.request('/api/v1/appointment-requests', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    expect(res.status).toBe(201)
+    expect(db.createFlexibleAppointmentRequest).toHaveBeenCalledWith({
+      salonId: 's1',
+      ...body,
+    })
+  })
+
+  it.each([
+    [
+      {
+        serviceId: requestId,
+        acceptableDates: ['2026-07-23'],
+        timePreference: 'morning',
+      },
+    ],
+    [
+      {
+        clientId: requestId,
+        serviceId: requestId,
+        acceptableDates: [],
+        timePreference: 'morning',
+      },
+    ],
+    [
+      {
+        clientId: requestId,
+        serviceId: requestId,
+        acceptableDates: ['2026-02-30'],
+        timePreference: 'morning',
+      },
+    ],
+    [
+      {
+        clientId: requestId,
+        serviceId: requestId,
+        acceptableDates: ['2026-07-23'],
+        timePreference: 'late',
+      },
+    ],
+    [
+      {
+        clientId: requestId,
+        serviceId: requestId,
+        acceptableDates: ['2026-07-23'],
+        timePreference: 'morning',
+        requestedDate: '2026-07-23',
+      },
+    ],
+  ])('POST / rejects invalid flexible input %#', async (body) => {
+    const res = await app.request('/api/v1/appointment-requests', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    expect(res.status).toBe(400)
+    expect(db.createFlexibleAppointmentRequest).not.toHaveBeenCalled()
   })
 
   it('POST /:id/approve calls approveAppointmentRequest with tenant context', async () => {

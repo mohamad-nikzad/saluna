@@ -25,12 +25,16 @@ vi.mock('./client-queries', () => ({
   createClient: mocks.createClient,
 }))
 
-import { approveAppointmentRequest } from './appointment-request-queries'
+import {
+  approveAppointmentRequest,
+  createFlexibleAppointmentRequest,
+} from './appointment-request-queries'
 
 const pendingRequest = {
   id: '22222222-2222-2222-2222-222222222222',
   salonId: 'salon-1',
   serviceId: 'service-1',
+  timingMode: 'exact',
   staffId: null,
   requestedDate: '2026-07-03',
   requestedStartTime: '10:00',
@@ -142,5 +146,70 @@ describe('appointment request approval', () => {
         },
       },
     )
+  })
+})
+
+describe('flexible appointment request creation', () => {
+  it('binds the active tenant ServiceVariant snapshot and Client', async () => {
+    const client = {
+      id: 'client-1',
+      salonId: 'salon-1',
+      name: 'سارا',
+      phone: '09121234567',
+    }
+    const service = {
+      id: 'service-1',
+      salonId: 'salon-1',
+      name: 'کوتاهی',
+      duration: 45,
+      price: 750_000,
+      active: true,
+      kind: 'standard',
+    }
+    const selectResults = [[client], [service]]
+    const select = vi.fn(() => {
+      const builder = {
+        from: vi.fn(),
+        where: vi.fn(),
+        limit: vi.fn(),
+      }
+      builder.from.mockReturnValue(builder)
+      builder.where.mockReturnValue(builder)
+      builder.limit.mockResolvedValue(selectResults.shift())
+      return builder
+    })
+    const values = vi.fn()
+    const returning = vi
+      .fn()
+      .mockImplementation(async () => [values.mock.calls[0][0]])
+    values.mockReturnValue({ returning })
+    mocks.getDb.mockReturnValue({
+      select,
+      insert: vi.fn(() => ({ values })),
+    })
+
+    const result = await createFlexibleAppointmentRequest({
+      salonId: 'salon-1',
+      clientId: client.id,
+      serviceId: service.id,
+      acceptableDates: ['2026-07-23'],
+      timePreference: 'afternoon',
+      notes: 'تماس بگیرید',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: client.id,
+        serviceId: service.id,
+        timingMode: 'flexible',
+        acceptableDates: ['2026-07-23'],
+        timePreference: 'afternoon',
+        bookedServiceName: service.name,
+        bookedServiceDuration: service.duration,
+        bookedServicePrice: service.price,
+      }),
+    )
+    expect(values.mock.calls[0][0]).not.toHaveProperty('requestedDate')
   })
 })

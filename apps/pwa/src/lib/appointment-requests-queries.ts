@@ -4,11 +4,15 @@ import {
   getApiV1AppointmentRequestsQueryKey,
   postApiV1AppointmentRequestsByIdApproveMutation,
   postApiV1AppointmentRequestsByIdRejectMutation,
+  postApiV1AppointmentRequestsMutation,
 } from '@repo/api-client/query'
 import type {
   AppointmentRequestListItem,
   AppointmentRequestStatus,
   AppointmentRequestsListResponse,
+  CreateFlexibleAppointmentRequestRequest,
+  ExactAppointmentRequestListItem,
+  FlexibleAppointmentRequestListItem,
 } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
@@ -18,6 +22,8 @@ export type {
   AppointmentRequestListItem,
   AppointmentRequestStatus,
   AppointmentRequestsListResponse,
+  ExactAppointmentRequestListItem,
+  FlexibleAppointmentRequestListItem,
 }
 
 export function appointmentRequestsInvalidationKeys() {
@@ -26,13 +32,16 @@ export function appointmentRequestsInvalidationKeys() {
 
 export function appointmentRequestsListQueryOptions(
   status: AppointmentRequestStatus,
+  timingMode: 'exact' | 'flexible' = 'exact',
 ) {
   return queryOptions({
-    queryKey: getApiV1AppointmentRequestsQueryKey({ query: { status } }),
+    queryKey: getApiV1AppointmentRequestsQueryKey({
+      query: { status, timingMode },
+    }),
     staleTime: HEAVY_QUERY_STALE_TIME_MS,
     queryFn: async ({ signal }): Promise<AppointmentRequestsListResponse> => {
       const { data } = await getApiV1AppointmentRequests({
-        query: { status },
+        query: { status, timingMode },
         signal,
         throwOnError: true,
       })
@@ -43,6 +52,24 @@ export function appointmentRequestsListQueryOptions(
 
 export function pendingAppointmentRequestsQueryOptions() {
   return appointmentRequestsListQueryOptions('pending')
+}
+
+export function pendingDraftsQueryOptions() {
+  return appointmentRequestsListQueryOptions('pending', 'flexible')
+}
+
+export function useCreateDraftMutation() {
+  const generated = postApiV1AppointmentRequestsMutation()
+  return useMutation({
+    mutationFn: async (
+      body: CreateFlexibleAppointmentRequestRequest,
+      mutationContext,
+    ) => generated.mutationFn!({ body }, mutationContext),
+    meta: {
+      invalidatesQuery: appointmentRequestsInvalidationKeys(),
+      errorMessage: 'ثبت پیش‌نویس انجام نشد',
+    },
+  })
 }
 
 export function useApproveAppointmentRequestMutation() {

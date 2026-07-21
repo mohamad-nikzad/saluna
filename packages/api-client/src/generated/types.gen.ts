@@ -1403,14 +1403,20 @@ export type AppointmentRequestsListResponse = {
   requests: Array<AppointmentRequestListItem>
 }
 
-export type AppointmentRequestListItem = {
+export type AppointmentRequestListItem =
+  | ({
+      timingMode: 'exact'
+    } & ExactAppointmentRequestListItem)
+  | ({
+      timingMode: 'flexible'
+    } & FlexibleAppointmentRequestListItem)
+
+export type ExactAppointmentRequestListItem = {
   id: string
   salonId: string
   serviceId: string
+  clientId: string | null
   staffId: string | null
-  requestedDate: string
-  requestedStartTime: string
-  requestedEndTime: string
   customerName: string
   customerPhone: string
   notes: string | null
@@ -1428,7 +1434,12 @@ export type AppointmentRequestListItem = {
   createdAt: string | string
   updatedAt: string | string
   existingClient: AppointmentRequestExistingClient
-  [key: string]: unknown
+  timingMode: 'exact'
+  requestedDate: string
+  requestedStartTime: string
+  requestedEndTime: string
+  acceptableDates: unknown
+  timePreference: unknown
 }
 
 export type AppointmentRequestStatus =
@@ -1444,6 +1455,54 @@ export type AppointmentRequestExistingClient = {
   id: string
   name: string
 } | null
+
+export type FlexibleAppointmentRequestListItem = {
+  id: string
+  salonId: string
+  serviceId: string
+  clientId: string
+  staffId: string | null
+  customerName: string
+  customerPhone: string
+  notes: string | null
+  bookedServiceName: string
+  bookedServiceDuration: number
+  bookedServicePrice: number
+  status: AppointmentRequestStatus
+  paymentStatus: AppointmentRequestPaymentStatus
+  depositAmount: number | null
+  confirmationToken: string
+  reviewedByUserId: string | null
+  reviewedAt: string | string | unknown
+  rejectionReason: string | null
+  appointmentId: string | null
+  createdAt: string | string
+  updatedAt: string | string
+  existingClient: {
+    id: string
+    name: string
+  }
+  timingMode: 'flexible'
+  requestedDate: unknown
+  requestedStartTime: unknown
+  requestedEndTime: unknown
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+}
+
+export type TimePreference = 'morning' | 'afternoon' | 'evening' | 'any'
+
+export type CreateFlexibleAppointmentRequestResponse = {
+  request: FlexibleAppointmentRequestListItem
+}
+
+export type CreateFlexibleAppointmentRequestRequest = {
+  clientId: string
+  serviceId: string
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+  notes?: string
+}
 
 export type ApproveAppointmentRequestResponse = {
   appointmentId: string
@@ -6062,6 +6121,7 @@ export type GetApiV1AppointmentRequestsData = {
      * Filter by request status. Defaults to pending on the server.
      */
     status?: AppointmentRequestStatus & unknown
+    timingMode?: 'exact' | 'flexible'
   }
   url: '/api/v1/appointment-requests'
 }
@@ -6093,6 +6153,45 @@ export type GetApiV1AppointmentRequestsResponses = {
 
 export type GetApiV1AppointmentRequestsResponse =
   GetApiV1AppointmentRequestsResponses[keyof GetApiV1AppointmentRequestsResponses]
+
+export type PostApiV1AppointmentRequestsData = {
+  body: CreateFlexibleAppointmentRequestRequest
+  path?: never
+  query?: never
+  url: '/api/v1/appointment-requests'
+}
+
+export type PostApiV1AppointmentRequestsErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+}
+
+export type PostApiV1AppointmentRequestsError =
+  PostApiV1AppointmentRequestsErrors[keyof PostApiV1AppointmentRequestsErrors]
+
+export type PostApiV1AppointmentRequestsResponses = {
+  /**
+   * Flexible AppointmentRequest recorded
+   */
+  201: CreateFlexibleAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsResponse =
+  PostApiV1AppointmentRequestsResponses[keyof PostApiV1AppointmentRequestsResponses]
 
 export type PostApiV1AppointmentRequestsByIdApproveData = {
   body: ApproveAppointmentRequestRequest

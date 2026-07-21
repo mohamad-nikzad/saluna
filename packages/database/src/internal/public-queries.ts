@@ -510,7 +510,13 @@ export async function getAppointmentRequestByToken(
     .where(eq(appointmentRequests.confirmationToken, token))
     .limit(1)
   const row = rows[0]
-  if (!row) return null
+  if (
+    !row ||
+    !row.request.requestedDate ||
+    !row.request.requestedStartTime ||
+    !row.request.requestedEndTime
+  )
+    return null
   return {
     id: row.request.id,
     status: row.request.status,

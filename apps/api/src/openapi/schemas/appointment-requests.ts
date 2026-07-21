@@ -17,34 +17,66 @@ export const appointmentRequestExistingClientSchema = z
   })
   .openapi('AppointmentRequestExistingClient')
 
+const appointmentRequestListItemBaseSchema = z.object({
+  id: z.string(),
+  salonId: z.string(),
+  serviceId: z.string(),
+  clientId: z.string().nullable(),
+  staffId: z.string().nullable(),
+  customerName: z.string(),
+  customerPhone: z.string(),
+  notes: z.string().nullable(),
+  bookedServiceName: z.string(),
+  bookedServiceDuration: z.number().int(),
+  bookedServicePrice: z.number().int(),
+  status: appointmentRequestStatusSchema,
+  paymentStatus: appointmentRequestPaymentStatusSchema,
+  depositAmount: z.number().int().nullable(),
+  confirmationToken: z.string(),
+  reviewedByUserId: z.string().nullable(),
+  reviewedAt: isoDateTimeSchema.nullable(),
+  rejectionReason: z.string().nullable(),
+  appointmentId: z.string().nullable(),
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+  existingClient: appointmentRequestExistingClientSchema.nullable(),
+})
+
+const exactAppointmentRequestListItemSchema =
+  appointmentRequestListItemBaseSchema
+    .extend({
+      timingMode: z.literal('exact'),
+      requestedDate: z.string().openapi({ example: '2026-06-07' }),
+      requestedStartTime: z.string().openapi({ example: '10:00' }),
+      requestedEndTime: z.string().openapi({ example: '11:00' }),
+      acceptableDates: z.null(),
+      timePreference: z.null(),
+    })
+    .openapi('ExactAppointmentRequestListItem')
+
+export const timePreferenceSchema = z
+  .enum(['morning', 'afternoon', 'evening', 'any'])
+  .openapi('TimePreference')
+
+const flexibleAppointmentRequestListItemSchema =
+  appointmentRequestListItemBaseSchema
+    .extend({
+      timingMode: z.literal('flexible'),
+      clientId: z.string(),
+      requestedDate: z.null(),
+      requestedStartTime: z.null(),
+      requestedEndTime: z.null(),
+      acceptableDates: z.array(z.string()).min(1),
+      timePreference: timePreferenceSchema,
+      existingClient: z.object({ id: z.string(), name: z.string() }),
+    })
+    .openapi('FlexibleAppointmentRequestListItem')
+
 export const appointmentRequestListItemSchema = z
-  .object({
-    id: z.string(),
-    salonId: z.string(),
-    serviceId: z.string(),
-    staffId: z.string().nullable(),
-    requestedDate: z.string().openapi({ example: '2026-06-07' }),
-    requestedStartTime: z.string().openapi({ example: '10:00' }),
-    requestedEndTime: z.string().openapi({ example: '11:00' }),
-    customerName: z.string(),
-    customerPhone: z.string(),
-    notes: z.string().nullable(),
-    bookedServiceName: z.string(),
-    bookedServiceDuration: z.number().int(),
-    bookedServicePrice: z.number().int(),
-    status: appointmentRequestStatusSchema,
-    paymentStatus: appointmentRequestPaymentStatusSchema,
-    depositAmount: z.number().int().nullable(),
-    confirmationToken: z.string(),
-    reviewedByUserId: z.string().nullable(),
-    reviewedAt: isoDateTimeSchema.nullable(),
-    rejectionReason: z.string().nullable(),
-    appointmentId: z.string().nullable(),
-    createdAt: isoDateTimeSchema,
-    updatedAt: isoDateTimeSchema,
-    existingClient: appointmentRequestExistingClientSchema.nullable(),
-  })
-  .passthrough()
+  .discriminatedUnion('timingMode', [
+    exactAppointmentRequestListItemSchema,
+    flexibleAppointmentRequestListItemSchema,
+  ])
   .openapi('AppointmentRequestListItem')
 
 export const appointmentRequestsListQuerySchema = z
@@ -54,6 +86,12 @@ export const appointmentRequestsListQuerySchema = z
       description:
         'Filter by request status. Defaults to pending on the server.',
     }),
+    timingMode: z
+      .enum(['exact', 'flexible'])
+      .optional()
+      .openapi({
+        param: { name: 'timingMode', in: 'query' },
+      }),
   })
   .openapi('AppointmentRequestsListQuery')
 
@@ -62,6 +100,20 @@ export const appointmentRequestsListResponseSchema = z
     requests: z.array(appointmentRequestListItemSchema),
   })
   .openapi('AppointmentRequestsListResponse')
+
+export const createFlexibleAppointmentRequestBodySchema = z
+  .object({
+    clientId: z.string().uuid(),
+    serviceId: z.string().uuid(),
+    acceptableDates: z.array(z.string()).min(1),
+    timePreference: timePreferenceSchema,
+    notes: z.string().max(2000).optional(),
+  })
+  .openapi('CreateFlexibleAppointmentRequestRequest')
+
+export const createFlexibleAppointmentRequestResponseSchema = z
+  .object({ request: flexibleAppointmentRequestListItemSchema })
+  .openapi('CreateFlexibleAppointmentRequestResponse')
 
 export const approveAppointmentRequestBodySchema = z
   .object({

@@ -3,7 +3,7 @@ import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 import { getDb } from '../client'
-import { appointmentRequests, clients, organization } from '../schema'
+import { appointmentRequests, clients, organization, services } from '../schema'
 import { createAppointment } from './appointment-queries'
 import { validateCreateAppointmentIntake } from './appointment-intake'
 import { getClientByPhone, createClient } from './client-queries'
@@ -24,6 +24,7 @@ export type ListAppointmentRequestsFilter = {
    * Defaults to `salonTodayYmd()` for `'pending'`, and undefined otherwise.
    */
   fromDate?: string
+  timingMode?: AppointmentRequestRow['timingMode']
 }
 
 /**
@@ -41,8 +42,14 @@ export async function listAppointmentRequests(
     eq(appointmentRequests.salonId, salonId),
     eq(appointmentRequests.status, status),
   ]
+  if (filter.timingMode) {
+    conditions.push(eq(appointmentRequests.timingMode, filter.timingMode))
+  }
   const effectiveFromDate =
-    filter.fromDate ?? (status === 'pending' ? salonTodayYmd() : undefined)
+    filter.fromDate ??
+    (status === 'pending' && filter.timingMode !== 'flexible'
+      ? salonTodayYmd()
+      : undefined)
   if (effectiveFromDate) {
     conditions.push(gte(appointmentRequests.requestedDate, effectiveFromDate))
   }
@@ -72,8 +79,88 @@ export async function listAppointmentRequests(
 
   return rows.map((row) => ({
     ...row,
-    existingClient: byPhone.get(row.customerPhone) ?? null,
+    existingClient:
+      (row.clientId
+        ? clientRows.find((client) => client.id === row.clientId)
+        : undefined) ??
+      byPhone.get(row.customerPhone) ??
+      null,
   }))
+}
+
+export type TimePreference = NonNullable<
+  AppointmentRequestRow['timePreference']
+>
+
+export type CreateFlexibleAppointmentRequestInput = {
+  salonId: string
+  clientId: string
+  serviceId: string
+  acceptableDates: string[]
+  timePreference: TimePreference
+  notes?: string
+}
+
+export type CreateFlexibleAppointmentRequestResult =
+  | { ok: true; request: AppointmentRequestListItem }
+  | { ok: false; status: 404; error: string }
+
+export async function createFlexibleAppointmentRequest(
+  input: CreateFlexibleAppointmentRequestInput,
+): Promise<CreateFlexibleAppointmentRequestResult> {
+  const db = getDb()
+  const [client] = await db
+    .select()
+    .from(clients)
+    .where(
+      and(eq(clients.id, input.clientId), eq(clients.salonId, input.salonId)),
+    )
+    .limit(1)
+  if (!client) {
+    return { ok: false, status: 404, error: 'مشتری یافت نشد' }
+  }
+
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(
+      and(
+        eq(services.id, input.serviceId),
+        eq(services.salonId, input.salonId),
+        eq(services.active, true),
+        eq(services.kind, 'standard'),
+      ),
+    )
+    .limit(1)
+  if (!service) {
+    return { ok: false, status: 404, error: 'خدمت فعال یافت نشد' }
+  }
+
+  const [request] = await db
+    .insert(appointmentRequests)
+    .values({
+      salonId: input.salonId,
+      clientId: client.id,
+      serviceId: service.id,
+      timingMode: 'flexible',
+      acceptableDates: input.acceptableDates,
+      timePreference: input.timePreference,
+      customerName: client.name,
+      customerPhone: client.phone ?? '',
+      notes: input.notes,
+      bookedServiceName: service.name,
+      bookedServiceDuration: service.duration,
+      bookedServicePrice: service.price,
+    })
+    .returning()
+
+  return {
+    ok: true,
+    request: {
+      ...request,
+      existingClient: { id: client.id, name: client.name },
+    },
+  }
 }
 
 export async function lookupClientByPhone(
@@ -122,6 +209,13 @@ export async function approveAppointmentRequest(
   }
   if (request.status !== 'pending') {
     return { ok: false, status: 409, error: 'این درخواست قابل تأیید نیست' }
+  }
+  if (
+    request.timingMode !== 'exact' ||
+    !request.requestedDate ||
+    !request.requestedStartTime
+  ) {
+    return { ok: false, status: 409, error: 'این پیش‌نویس باید زمان‌بندی شود' }
   }
 
   const normalizedPhone = normalizePhone(request.customerPhone)
@@ -274,7 +368,7 @@ export async function getAppointmentRequestNotificationContext(
     .where(eq(appointmentRequests.id, requestId))
     .limit(1)
   const row = rows[0]
-  if (!row) return undefined
+  if (!row || !row.requestedDate || !row.requestedStartTime) return undefined
   return {
     requestId: row.id,
     salonId: row.salonId,
@@ -321,7 +415,7 @@ export async function getAppointmentRequestForCallback(
     .where(eq(appointmentRequests.id, requestId))
     .limit(1)
   const row = rows[0]
-  if (!row) return undefined
+  if (!row || !row.requestedDate || !row.requestedStartTime) return undefined
   return {
     requestId: row.id,
     salonId: row.salonId,

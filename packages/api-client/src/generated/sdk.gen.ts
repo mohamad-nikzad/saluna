@@ -353,6 +353,9 @@ import type {
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectErrors,
   PostApiV1AppointmentRequestsByIdRejectResponses,
+  PostApiV1AppointmentRequestsData,
+  PostApiV1AppointmentRequestsErrors,
+  PostApiV1AppointmentRequestsResponses,
   PostApiV1AppointmentsByIdCompleteClientData,
   PostApiV1AppointmentsByIdCompleteClientErrors,
   PostApiV1AppointmentsByIdCompleteClientResponses,
@@ -2551,6 +2554,31 @@ export const getApiV1AppointmentRequests = <
     GetApiV1AppointmentRequestsErrors,
     ThrowOnError
   >({ url: '/api/v1/appointment-requests', ...options })
+
+/**
+ * Record a manager Draft
+ */
+export const postApiV1AppointmentRequests = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsResponses,
+  PostApiV1AppointmentRequestsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsResponses,
+    PostApiV1AppointmentRequestsErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
 
 /**
  * Approve appointment request
