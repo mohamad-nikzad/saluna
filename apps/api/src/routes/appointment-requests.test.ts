@@ -7,6 +7,7 @@ vi.mock('@repo/database/appointment-requests', () => ({
   updateFlexibleAppointmentRequest: vi.fn(),
   approveAppointmentRequest: vi.fn(),
   rejectAppointmentRequest: vi.fn(),
+  cancelAppointmentRequest: vi.fn(),
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -352,5 +353,82 @@ describe('appointment-requests router', () => {
       },
     )
     expect(res.status).toBe(409)
+  })
+
+  it('POST /:id/cancel records a customer withdrawal for the tenant Draft', async () => {
+    vi.mocked(db.cancelAppointmentRequest).mockResolvedValue({
+      ok: true,
+    } as never)
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/cancel`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ closureNote: 'مشتری منصرف شد' }),
+      },
+    )
+    expect(res.status).toBe(200)
+    expect(db.cancelAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      reviewedByUserId: 'u1',
+      closureNote: 'مشتری منصرف شد',
+    })
+  })
+
+  it('POST /:id/cancel works without a closure note', async () => {
+    vi.mocked(db.cancelAppointmentRequest).mockResolvedValue({
+      ok: true,
+    } as never)
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/cancel`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    )
+    expect(res.status).toBe(200)
+    expect(db.cancelAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      reviewedByUserId: 'u1',
+    })
+  })
+
+  it('POST /:id/cancel returns 401 without auth', async () => {
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/cancel`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    )
+    expect(res.status).toBe(401)
+    expect(db.cancelAppointmentRequest).not.toHaveBeenCalled()
+  })
+
+  it('POST /:id/cancel returns 403 for staff', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/cancel`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    )
+    expect(res.status).toBe(403)
+    expect(db.cancelAppointmentRequest).not.toHaveBeenCalled()
   })
 })

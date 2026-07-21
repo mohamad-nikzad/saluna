@@ -29,6 +29,7 @@ vi.mock('./client-queries', () => ({
 
 import {
   approveAppointmentRequest,
+  cancelAppointmentRequest,
   createFlexibleAppointmentRequest,
   updateFlexibleAppointmentRequest,
 } from './appointment-request-queries'
@@ -40,9 +41,9 @@ const pendingRequest = {
   serviceId: 'service-1',
   timingMode: 'exact',
   staffId: null,
-  requestedDate: '2026-07-03',
-  requestedStartTime: '10:00',
-  requestedEndTime: '10:45',
+  requestedDate: '2026-07-03' as string | null,
+  requestedStartTime: '10:00' as string | null,
+  requestedEndTime: '10:45' as string | null,
   customerName: 'سارا',
   customerPhone: '09121234567',
   notes: 'لطفا با همان قیمت ثبت شود',
@@ -308,5 +309,34 @@ describe('flexible appointment request editing', () => {
       error: 'این پیش‌نویس قابل ویرایش نیست',
     })
     expect(update).not.toHaveBeenCalled()
+  })
+})
+
+describe('manager appointment request cancellation', () => {
+  it('records customer withdrawal without overwriting request details', async () => {
+    const { updateBuilder } = setupDb({
+      ...pendingRequest,
+      timingMode: 'flexible',
+      requestedDate: null,
+      requestedStartTime: null,
+      requestedEndTime: null,
+    })
+
+    await expect(
+      cancelAppointmentRequest({
+        id: pendingRequest.id,
+        salonId: 'salon-1',
+        reviewedByUserId: 'manager-1',
+        closureNote: 'مشتری منصرف شد',
+      }),
+    ).resolves.toEqual({ ok: true })
+
+    expect(updateBuilder.set).toHaveBeenCalledWith({
+      status: 'cancelled',
+      reviewedByUserId: 'manager-1',
+      reviewedAt: expect.any(Date),
+      rejectionReason: 'مشتری منصرف شد',
+      updatedAt: expect.any(Date),
+    })
   })
 })

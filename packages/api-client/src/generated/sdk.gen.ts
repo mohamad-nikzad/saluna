@@ -353,6 +353,9 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveErrors,
   PostApiV1AppointmentRequestsByIdApproveResponses,
+  PostApiV1AppointmentRequestsByIdCancelData,
+  PostApiV1AppointmentRequestsByIdCancelErrors,
+  PostApiV1AppointmentRequestsByIdCancelResponses,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectErrors,
   PostApiV1AppointmentRequestsByIdRejectResponses,
@@ -2651,6 +2654,31 @@ export const postApiV1AppointmentRequestsByIdReject = <
     ThrowOnError
   >({
     url: '/api/v1/appointment-requests/{id}/reject',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Record customer withdrawal from a manager Draft
+ */
+export const postApiV1AppointmentRequestsByIdCancel = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdCancelData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdCancelResponses,
+  PostApiV1AppointmentRequestsByIdCancelErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdCancelResponses,
+    PostApiV1AppointmentRequestsByIdCancelErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/cancel',
     ...options,
     headers: {
       'Content-Type': 'application/json',

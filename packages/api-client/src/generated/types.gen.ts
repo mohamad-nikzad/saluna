@@ -1488,6 +1488,7 @@ export type FlexibleAppointmentRequestListItem = {
   requestedEndTime: unknown
   acceptableDates: Array<string>
   timePreference: TimePreference
+  closureNote: string | null
 }
 
 export type TimePreference = 'morning' | 'afternoon' | 'evening' | 'any'
@@ -1535,6 +1536,17 @@ export type RejectAppointmentRequestRequest = {
    * Optional rejection reason shown to salon staff
    */
   reason?: string
+}
+
+export type CancelAppointmentRequestResponse = {
+  ok: true
+}
+
+export type CancelAppointmentRequestRequest = {
+  /**
+   * Optional note explaining the customer withdrawal
+   */
+  closureNote?: string
 }
 
 export type BusinessSettingsResponse = {
@@ -6333,6 +6345,51 @@ export type PostApiV1AppointmentRequestsByIdRejectResponses = {
 
 export type PostApiV1AppointmentRequestsByIdRejectResponse =
   PostApiV1AppointmentRequestsByIdRejectResponses[keyof PostApiV1AppointmentRequestsByIdRejectResponses]
+
+export type PostApiV1AppointmentRequestsByIdCancelData = {
+  body?: CancelAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/cancel'
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelError =
+  PostApiV1AppointmentRequestsByIdCancelErrors[keyof PostApiV1AppointmentRequestsByIdCancelErrors]
+
+export type PostApiV1AppointmentRequestsByIdCancelResponses = {
+  /**
+   * Request cancelled
+   */
+  200: CancelAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelResponse =
+  PostApiV1AppointmentRequestsByIdCancelResponses[keyof PostApiV1AppointmentRequestsByIdCancelResponses]
 
 export type GetApiV1SettingsBusinessData = {
   body?: never

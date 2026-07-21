@@ -7,6 +7,8 @@ import {
 import {
   approveAppointmentRequestBodySchema,
   approveAppointmentRequestResponseSchema,
+  cancelAppointmentRequestBodySchema,
+  cancelAppointmentRequestResponseSchema,
   appointmentRequestsListQuerySchema,
   appointmentRequestsListResponseSchema,
   createFlexibleAppointmentRequestBodySchema,
@@ -186,5 +188,35 @@ export const rejectAppointmentRequestRoute = createRoute({
     401: unauthorizedResponse,
     403: forbiddenResponse,
     404: notFoundResponse,
+  },
+})
+
+export const cancelAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/{id}/cancel',
+  tags: ['Appointment requests'],
+  summary: 'Record customer withdrawal from a manager Draft',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: false,
+      content: {
+        'application/json': { schema: cancelAppointmentRequestBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Request cancelled',
+      content: {
+        'application/json': { schema: cancelAppointmentRequestResponseSchema },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
   },
 })

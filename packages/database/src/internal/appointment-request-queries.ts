@@ -12,9 +12,19 @@ export type AppointmentRequestRow = typeof appointmentRequests.$inferSelect
 
 export type AppointmentRequestStatus = AppointmentRequestRow['status']
 
-export type AppointmentRequestListItem = AppointmentRequestRow & {
+type AppointmentRequestListItemBase = Omit<
+  AppointmentRequestRow,
+  'timingMode'
+> & {
   existingClient: { id: string; name: string } | null
 }
+
+export type AppointmentRequestListItem =
+  | (AppointmentRequestListItemBase & { timingMode: 'exact' })
+  | (AppointmentRequestListItemBase & {
+      timingMode: 'flexible'
+      closureNote: string | null
+    })
 
 export type ListAppointmentRequestsFilter = {
   /** Defaults to `'pending'`. */
@@ -77,15 +87,22 @@ export async function listAppointmentRequests(
     }
   }
 
-  return rows.map((row) => ({
-    ...row,
-    existingClient:
+  return rows.map((row): AppointmentRequestListItem => {
+    const existingClient =
       (row.clientId
         ? clientRows.find((client) => client.id === row.clientId)
         : undefined) ??
       byPhone.get(row.customerPhone) ??
-      null,
-  }))
+      null
+    return row.timingMode === 'flexible'
+      ? {
+          ...row,
+          timingMode: 'flexible',
+          closureNote: row.rejectionReason,
+          existingClient,
+        }
+      : { ...row, timingMode: 'exact', existingClient }
+  })
 }
 
 export type TimePreference = NonNullable<
@@ -158,6 +175,8 @@ export async function createFlexibleAppointmentRequest(
     ok: true,
     request: {
       ...request,
+      timingMode: 'flexible',
+      closureNote: null,
       existingClient: { id: client.id, name: client.name },
     },
   }
@@ -231,6 +250,8 @@ export async function updateFlexibleAppointmentRequest(
     ok: true,
     request: {
       ...request,
+      timingMode: 'flexible',
+      closureNote: request.rejectionReason,
       existingClient: client ? { id: client.id, name: client.name } : null,
     },
   }
@@ -366,17 +387,25 @@ export type RejectAppointmentRequestResult =
   | { ok: true }
   | { ok: false; status: number; error: string }
 
-export async function rejectAppointmentRequest(
-  input: RejectAppointmentRequestInput,
+type CloseAppointmentRequestInput = {
+  id: string
+  salonId: string
+  reviewedByUserId: string
+  closureNote?: string
+}
+
+async function closeAppointmentRequest(
+  input: CloseAppointmentRequestInput,
+  status: 'rejected' | 'cancelled',
 ): Promise<RejectAppointmentRequestResult> {
   const db = getDb()
   const updated = await db
     .update(appointmentRequests)
     .set({
-      status: 'rejected',
+      status,
       reviewedByUserId: input.reviewedByUserId,
       reviewedAt: new Date(),
-      rejectionReason: input.reason,
+      rejectionReason: input.closureNote,
       updatedAt: new Date(),
     })
     .where(
@@ -384,24 +413,53 @@ export async function rejectAppointmentRequest(
         eq(appointmentRequests.id, input.id),
         eq(appointmentRequests.salonId, input.salonId),
         eq(appointmentRequests.status, 'pending'),
+        ...(status === 'cancelled'
+          ? [eq(appointmentRequests.timingMode, 'flexible')]
+          : []),
       ),
     )
     .returning({ id: appointmentRequests.id })
-  if (updated.length === 0) {
-    const [existing] = await db
-      .select({ id: appointmentRequests.id })
-      .from(appointmentRequests)
-      .where(
-        and(
-          eq(appointmentRequests.id, input.id),
-          eq(appointmentRequests.salonId, input.salonId),
-        ),
-      )
-      .limit(1)
-    if (!existing) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
-    return { ok: false, status: 409, error: 'این درخواست قابل رد نیست' }
+  if (updated.length > 0) return { ok: true }
+
+  const [existing] = await db
+    .select({ id: appointmentRequests.id })
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+      ),
+    )
+    .limit(1)
+  if (!existing) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
+  return {
+    ok: false,
+    status: 409,
+    error:
+      status === 'rejected'
+        ? 'این درخواست قابل رد نیست'
+        : 'این درخواست قابل لغو نیست',
   }
-  return { ok: true }
+}
+
+export async function rejectAppointmentRequest(
+  input: RejectAppointmentRequestInput,
+): Promise<RejectAppointmentRequestResult> {
+  return closeAppointmentRequest(
+    { ...input, ...(input.reason ? { closureNote: input.reason } : {}) },
+    'rejected',
+  )
+}
+
+export type ManagerCancelAppointmentRequestInput = CloseAppointmentRequestInput
+
+export type ManagerCancelAppointmentRequestResult =
+  RejectAppointmentRequestResult
+
+export async function cancelAppointmentRequest(
+  input: ManagerCancelAppointmentRequestInput,
+): Promise<ManagerCancelAppointmentRequestResult> {
+  return closeAppointmentRequest(input, 'cancelled')
 }
 
 export type AppointmentRequestNotificationContext = {
