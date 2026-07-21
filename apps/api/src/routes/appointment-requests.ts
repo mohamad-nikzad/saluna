@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import {
   approveAppointmentRequest,
+  convertFlexibleAppointmentRequest,
   createFlexibleAppointmentRequest,
   listAppointmentRequests,
   rejectAppointmentRequest,
@@ -14,6 +15,7 @@ import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
 import {
   createFlexibleAppointmentRequestBodySchema,
+  convertFlexibleAppointmentRequestBodySchema,
   updateFlexibleAppointmentRequestBodySchema,
 } from '../openapi/schemas/appointment-requests'
 
@@ -68,6 +70,32 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
       })
       if (!result.ok) return error(c, result.error, result.status)
       return ok(c, { request: result.request })
+    },
+  )
+  .post(
+    '/:id/convert',
+    zValidator('param', idParamSchema),
+    zValidator('json', convertFlexibleAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId, userId } = c.var.tenant
+      const result = await convertFlexibleAppointmentRequest({
+        id: c.req.valid('param').id,
+        salonId,
+        reviewedByUserId: userId,
+        ...c.req.valid('json'),
+      })
+      if (!result.ok) {
+        return error(
+          c,
+          result.error,
+          result.status as 400 | 404 | 409,
+          result.code,
+        )
+      }
+      return ok(c, {
+        appointmentId: result.appointmentId,
+        clientId: result.clientId,
+      })
     },
   )
   .post(

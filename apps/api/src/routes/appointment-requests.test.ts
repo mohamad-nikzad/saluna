@@ -5,6 +5,7 @@ vi.mock('@repo/database/appointment-requests', () => ({
   listAppointmentRequests: vi.fn(),
   createFlexibleAppointmentRequest: vi.fn(),
   updateFlexibleAppointmentRequest: vi.fn(),
+  convertFlexibleAppointmentRequest: vi.fn(),
   approveAppointmentRequest: vi.fn(),
   rejectAppointmentRequest: vi.fn(),
 }))
@@ -280,6 +281,59 @@ describe('appointment-requests router', () => {
       staffId: 'staff1',
       reviewedByUserId: 'u1',
     })
+  })
+
+  it('POST /:id/convert converts a tenant Draft with final scheduling choices', async () => {
+    vi.mocked(db.convertFlexibleAppointmentRequest).mockResolvedValue({
+      ok: true,
+      appointmentId: 'apt1',
+      clientId: 'cli1',
+    } as never)
+    const body = {
+      finalDate: validFlexibleDate,
+      startTime: '13:30',
+      staffId: 'staff1',
+    }
+
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/convert`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      appointmentId: 'apt1',
+      clientId: 'cli1',
+    })
+    expect(db.convertFlexibleAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      reviewedByUserId: 'u1',
+      ...body,
+    })
+  })
+
+  it('POST /:id/convert rejects immutable Draft fields', async () => {
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/convert`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          finalDate: validFlexibleDate,
+          startTime: '13:30',
+          staffId: 'staff1',
+          serviceId: requestId,
+        }),
+      },
+    )
+
+    expect(res.status).toBe(400)
+    expect(db.convertFlexibleAppointmentRequest).not.toHaveBeenCalled()
   })
 
   it('POST /:id/approve returns 409 with code on slot conflict', async () => {

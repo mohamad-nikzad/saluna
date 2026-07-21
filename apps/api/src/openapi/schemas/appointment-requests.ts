@@ -149,6 +149,15 @@ export const updateFlexibleAppointmentRequestResponseSchema = z
   .object({ request: flexibleAppointmentRequestListItemSchema })
   .openapi('UpdateFlexibleAppointmentRequestResponse')
 
+export const convertFlexibleAppointmentRequestBodySchema = z
+  .object({
+    finalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+    staffId: z.string().min(1),
+  })
+  .strict()
+  .openapi('ConvertFlexibleAppointmentRequestRequest')
+
 export const approveAppointmentRequestBodySchema = z
   .object({
     staffId: z.string().min(1).openapi({

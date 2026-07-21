@@ -58,6 +58,7 @@ import {
 } from './routes/commissions'
 import {
   approveAppointmentRequestRoute,
+  convertFlexibleAppointmentRequestRoute,
   createFlexibleAppointmentRequestRoute,
   listAppointmentRequestsRoute,
   rejectAppointmentRequestRoute,
@@ -918,6 +919,11 @@ const approveAppointmentRequestStub: RouteHandler<
 > = (c) =>
   c.json({ appointmentId: stubAppointment.id, clientId: stubClient.id }, 200)
 
+const convertFlexibleAppointmentRequestStub: RouteHandler<
+  typeof convertFlexibleAppointmentRequestRoute
+> = (c) =>
+  c.json({ appointmentId: stubAppointment.id, clientId: stubClient.id }, 200)
+
 const rejectAppointmentRequestStub: RouteHandler<
   typeof rejectAppointmentRequestRoute
 > = (c) => c.json({ ok: true as const }, 200)
@@ -1535,6 +1541,10 @@ export const contractApp = new OpenAPIHono()
         updateFlexibleAppointmentRequestStub,
       )
       .openapi(approveAppointmentRequestRoute, approveAppointmentRequestStub)
+      .openapi(
+        convertFlexibleAppointmentRequestRoute,
+        convertFlexibleAppointmentRequestStub,
+      )
       .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub),
   )
   .route(

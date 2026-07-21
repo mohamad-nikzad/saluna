@@ -10,6 +10,13 @@ export type FlexibleRequestGroup =
 const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const HM_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/
 
+export const TIME_PREFERENCE_BOUNDS = {
+  morning: { min: '00:00', max: '11:59' },
+  afternoon: { min: '12:00', max: '16:59' },
+  evening: { min: '17:00', max: '23:59' },
+  any: { min: '00:00', max: '23:59' },
+} as const satisfies Record<TimePreference, { min: string; max: string }>
+
 function isValidYmd(value: string): boolean {
   if (!YMD_PATTERN.test(value)) return false
   const [year, month, day] = value.split('-').map(Number)
@@ -52,12 +59,8 @@ export function isStartTimeInPreference(
   preference: TimePreference,
 ): boolean {
   if (!HM_PATTERN.test(startTime)) return false
-  if (preference === 'any') return true
-  if (preference === 'morning') return startTime < '12:00'
-  if (preference === 'afternoon') {
-    return startTime >= '12:00' && startTime < '17:00'
-  }
-  return startTime >= '17:00'
+  const bounds = TIME_PREFERENCE_BOUNDS[preference]
+  return startTime >= bounds.min && startTime <= bounds.max
 }
 
 export function flexibleRequestGroup(

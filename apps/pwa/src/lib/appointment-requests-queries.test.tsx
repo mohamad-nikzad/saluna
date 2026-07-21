@@ -7,22 +7,27 @@ import type { ReactNode } from 'react'
 import {
   appointmentRequestsListQueryOptions,
   getApiV1AppointmentRequestsQueryKey,
+  useConvertDraftMutation,
   useUpdateDraftMutation,
 } from '#/lib/appointment-requests-queries'
 
 const getApiV1AppointmentRequests = vi.fn()
 const patchApiV1AppointmentRequestsById = vi.fn()
+const postApiV1AppointmentRequestsByIdConvert = vi.fn()
 
 vi.mock('@repo/api-client/sdk', () => ({
   getApiV1AppointmentRequests: (...args: unknown[]) =>
     getApiV1AppointmentRequests(...args),
   patchApiV1AppointmentRequestsById: (...args: unknown[]) =>
     patchApiV1AppointmentRequestsById(...args),
+  postApiV1AppointmentRequestsByIdConvert: (...args: unknown[]) =>
+    postApiV1AppointmentRequestsByIdConvert(...args),
 }))
 
 beforeEach(() => {
   getApiV1AppointmentRequests.mockReset()
   patchApiV1AppointmentRequestsById.mockReset()
+  postApiV1AppointmentRequestsByIdConvert.mockReset()
 })
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -89,6 +94,24 @@ describe('appointment-requests-queries', () => {
     await result.current.mutateAsync({ requestId: 'draft-1', body })
 
     expect(patchApiV1AppointmentRequestsById).toHaveBeenCalledWith(
+      expect.objectContaining({ path: { id: 'draft-1' }, body }),
+    )
+  })
+
+  it('converts a Draft with only its final scheduling choices', async () => {
+    postApiV1AppointmentRequestsByIdConvert.mockResolvedValue({
+      data: { appointmentId: 'appointment-1', clientId: 'client-1' },
+    })
+    const { result } = renderHook(() => useConvertDraftMutation(), { wrapper })
+    const body = {
+      finalDate: '2026-07-25',
+      startTime: '13:30',
+      staffId: 'staff-1',
+    }
+
+    await result.current.mutateAsync({ requestId: 'draft-1', body })
+
+    expect(postApiV1AppointmentRequestsByIdConvert).toHaveBeenCalledWith(
       expect.objectContaining({ path: { id: 'draft-1' }, body }),
     )
   })

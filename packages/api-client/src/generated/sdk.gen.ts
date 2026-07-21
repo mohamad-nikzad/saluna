@@ -353,6 +353,9 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveErrors,
   PostApiV1AppointmentRequestsByIdApproveResponses,
+  PostApiV1AppointmentRequestsByIdConvertData,
+  PostApiV1AppointmentRequestsByIdConvertErrors,
+  PostApiV1AppointmentRequestsByIdConvertResponses,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectErrors,
   PostApiV1AppointmentRequestsByIdRejectResponses,
@@ -2626,6 +2629,31 @@ export const postApiV1AppointmentRequestsByIdApprove = <
     ThrowOnError
   >({
     url: '/api/v1/appointment-requests/{id}/approve',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Convert a manager Draft to an Appointment
+ */
+export const postApiV1AppointmentRequestsByIdConvert = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdConvertData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdConvertResponses,
+  PostApiV1AppointmentRequestsByIdConvertErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdConvertResponses,
+    PostApiV1AppointmentRequestsByIdConvertErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/convert',
     ...options,
     headers: {
       'Content-Type': 'application/json',

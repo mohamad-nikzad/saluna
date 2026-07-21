@@ -3,6 +3,7 @@ import { getApiV1AppointmentRequests } from '@repo/api-client/sdk'
 import {
   getApiV1AppointmentRequestsQueryKey,
   patchApiV1AppointmentRequestsByIdMutation,
+  postApiV1AppointmentRequestsByIdConvertMutation,
   postApiV1AppointmentRequestsByIdApproveMutation,
   postApiV1AppointmentRequestsByIdRejectMutation,
   postApiV1AppointmentRequestsMutation,
@@ -12,12 +13,14 @@ import type {
   AppointmentRequestStatus,
   AppointmentRequestsListResponse,
   CreateFlexibleAppointmentRequestRequest,
+  ConvertFlexibleAppointmentRequestRequest,
   ExactAppointmentRequestListItem,
   FlexibleAppointmentRequestListItem,
   UpdateFlexibleAppointmentRequestRequest,
 } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
+import { appointmentsRangeInvalidationKeys } from '#/lib/appointments-queries'
 
 export { getApiV1AppointmentRequestsQueryKey }
 export type {
@@ -91,6 +94,30 @@ export function useUpdateDraftMutation() {
     meta: {
       invalidatesQuery: appointmentRequestsInvalidationKeys(),
       errorMessage: 'ویرایش پیش‌نویس انجام نشد',
+    },
+  })
+}
+
+export function useConvertDraftMutation() {
+  const generated = postApiV1AppointmentRequestsByIdConvertMutation()
+  return useMutation({
+    mutationFn: async (
+      {
+        requestId,
+        body,
+      }: {
+        requestId: string
+        body: ConvertFlexibleAppointmentRequestRequest
+      },
+      mutationContext,
+    ) =>
+      generated.mutationFn!({ path: { id: requestId }, body }, mutationContext),
+    meta: {
+      invalidatesQuery: [
+        ...appointmentRequestsInvalidationKeys(),
+        ...appointmentsRangeInvalidationKeys(),
+      ],
+      errorMessage: 'تبدیل پیش‌نویس انجام نشد',
     },
   })
 }

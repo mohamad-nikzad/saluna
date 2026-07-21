@@ -1526,6 +1526,12 @@ export type ApproveAppointmentRequestRequest = {
   staffId: string
 }
 
+export type ConvertFlexibleAppointmentRequestRequest = {
+  finalDate: string
+  startTime: string
+  staffId: string
+}
+
 export type RejectAppointmentRequestResponse = {
   ok: true
 }
@@ -6292,6 +6298,51 @@ export type PostApiV1AppointmentRequestsByIdApproveResponses = {
 
 export type PostApiV1AppointmentRequestsByIdApproveResponse =
   PostApiV1AppointmentRequestsByIdApproveResponses[keyof PostApiV1AppointmentRequestsByIdApproveResponses]
+
+export type PostApiV1AppointmentRequestsByIdConvertData = {
+  body: ConvertFlexibleAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/convert'
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertError =
+  PostApiV1AppointmentRequestsByIdConvertErrors[keyof PostApiV1AppointmentRequestsByIdConvertErrors]
+
+export type PostApiV1AppointmentRequestsByIdConvertResponses = {
+  /**
+   * Draft converted and Appointment created
+   */
+  200: ApproveAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertResponse =
+  PostApiV1AppointmentRequestsByIdConvertResponses[keyof PostApiV1AppointmentRequestsByIdConvertResponses]
 
 export type PostApiV1AppointmentRequestsByIdRejectData = {
   body?: RejectAppointmentRequestRequest

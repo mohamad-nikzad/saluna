@@ -11,6 +11,7 @@ import {
   appointmentRequestsListResponseSchema,
   createFlexibleAppointmentRequestBodySchema,
   createFlexibleAppointmentRequestResponseSchema,
+  convertFlexibleAppointmentRequestBodySchema,
   rejectAppointmentRequestBodySchema,
   rejectAppointmentRequestResponseSchema,
   updateFlexibleAppointmentRequestBodySchema,
@@ -148,6 +149,38 @@ export const approveAppointmentRequestRoute = createRoute({
   responses: {
     200: {
       description: 'Request approved and appointment created',
+      content: {
+        'application/json': { schema: approveAppointmentRequestResponseSchema },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
+  },
+})
+
+export const convertFlexibleAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/{id}/convert',
+  tags: ['Appointment requests'],
+  summary: 'Convert a manager Draft to an Appointment',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: convertFlexibleAppointmentRequestBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Draft converted and Appointment created',
       content: {
         'application/json': { schema: approveAppointmentRequestResponseSchema },
       },

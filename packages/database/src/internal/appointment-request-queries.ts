@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, lt, type SQL } from 'drizzle-orm'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { isStartTimeInPreference } from '@repo/salon-core/appointment-request-timing'
 
 import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
@@ -353,6 +354,117 @@ export async function approveAppointmentRequest(
   }
 
   return { ok: true, appointmentId: appointment.id, clientId: client.id }
+}
+
+export type ConvertFlexibleAppointmentRequestInput = {
+  id: string
+  salonId: string
+  finalDate: string
+  startTime: string
+  staffId: string
+  reviewedByUserId: string
+}
+
+export type ConvertFlexibleAppointmentRequestResult =
+  | { ok: true; appointmentId: string; clientId: string }
+  | { ok: false; status: number; error: string; code?: string }
+
+export async function convertFlexibleAppointmentRequest(
+  input: ConvertFlexibleAppointmentRequestInput,
+): Promise<ConvertFlexibleAppointmentRequestResult> {
+  const db = getDb()
+  const [request] = await db
+    .select()
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+        eq(appointmentRequests.timingMode, 'flexible'),
+      ),
+    )
+    .limit(1)
+  if (!request) {
+    return { ok: false, status: 404, error: 'پیش‌نویس یافت نشد' }
+  }
+  if (request.status !== 'pending' || !request.clientId) {
+    return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
+  }
+  const clientId = request.clientId
+  if (
+    input.finalDate < salonTodayYmd() ||
+    !request.acceptableDates?.includes(input.finalDate)
+  ) {
+    return { ok: false, status: 400, error: 'تاریخ انتخاب‌شده قابل قبول نیست' }
+  }
+  if (
+    !request.timePreference ||
+    !isStartTimeInPreference(input.startTime, request.timePreference)
+  ) {
+    return { ok: false, status: 400, error: 'ساعت انتخاب‌شده قابل قبول نیست' }
+  }
+
+  const intake = await validateCreateAppointmentIntake({
+    salonId: input.salonId,
+    clientId,
+    staffId: input.staffId,
+    serviceId: request.serviceId,
+    date: input.finalDate,
+    startTime: input.startTime,
+    durationMinutes: request.bookedServiceDuration,
+    notes: request.notes ?? undefined,
+  })
+  if (!intake.ok) {
+    return {
+      ok: false,
+      status: intake.status,
+      error: intake.error,
+      ...(intake.code ? { code: intake.code } : {}),
+    }
+  }
+
+  return db.transaction(async (tx) => {
+    const updated = await tx
+      .update(appointmentRequests)
+      .set({
+        status: 'approved',
+        staffId: input.staffId,
+        reviewedByUserId: input.reviewedByUserId,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(appointmentRequests.id, input.id),
+          eq(appointmentRequests.salonId, input.salonId),
+          eq(appointmentRequests.timingMode, 'flexible'),
+          eq(appointmentRequests.status, 'pending'),
+        ),
+      )
+      .returning({ id: appointmentRequests.id })
+    if (updated.length === 0) {
+      return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
+    }
+
+    const appointment = await createAppointment(intake.command, input.salonId, {
+      createdByUserId: input.reviewedByUserId,
+      transaction: tx,
+      serviceSnapshotOverride: {
+        name: request.bookedServiceName,
+        duration: request.bookedServiceDuration,
+        price: request.bookedServicePrice,
+      },
+    })
+    await tx
+      .update(appointmentRequests)
+      .set({ appointmentId: appointment.id })
+      .where(eq(appointmentRequests.id, input.id))
+    return {
+      ok: true,
+      appointmentId: appointment.id,
+      clientId,
+    }
+  })
 }
 
 export type RejectAppointmentRequestInput = {

@@ -126,6 +126,7 @@ import {
   postApiV1AdminUsersByIdNotes,
   postApiV1AppointmentRequests,
   postApiV1AppointmentRequestsByIdApprove,
+  postApiV1AppointmentRequestsByIdConvert,
   postApiV1AppointmentRequestsByIdReject,
   postApiV1Appointments,
   postApiV1AppointmentsByIdCompleteClient,
@@ -502,6 +503,9 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveError,
   PostApiV1AppointmentRequestsByIdApproveResponse,
+  PostApiV1AppointmentRequestsByIdConvertData,
+  PostApiV1AppointmentRequestsByIdConvertError,
+  PostApiV1AppointmentRequestsByIdConvertResponse,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectError,
   PostApiV1AppointmentRequestsByIdRejectResponse,
@@ -4169,6 +4173,33 @@ export const postApiV1AppointmentRequestsByIdApproveMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1AppointmentRequestsByIdApprove({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Convert a manager Draft to an Appointment
+ */
+export const postApiV1AppointmentRequestsByIdConvertMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsByIdConvertData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsByIdConvertResponse,
+  PostApiV1AppointmentRequestsByIdConvertError,
+  Options<PostApiV1AppointmentRequestsByIdConvertData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsByIdConvertResponse,
+    PostApiV1AppointmentRequestsByIdConvertError,
+    Options<PostApiV1AppointmentRequestsByIdConvertData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequestsByIdConvert({
         ...options,
         ...fnOptions,
         throwOnError: true,

@@ -5145,6 +5145,25 @@
         },
         "required": ["staffId"]
       },
+      "ConvertFlexibleAppointmentRequestRequest": {
+        "type": "object",
+        "properties": {
+          "finalDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "staffId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["finalDate", "startTime", "staffId"],
+        "additionalProperties": false
+      },
       "RejectAppointmentRequestResponse": {
         "type": "object",
         "properties": {
@@ -15692,6 +15711,104 @@
         "responses": {
           "200": {
             "description": "Request approved and appointment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApproveAppointmentRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_appointments permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Appointment request not found or no longer pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Slot no longer available or intake validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointment-requests/{id}/convert": {
+      "post": {
+        "tags": ["Appointment requests"],
+        "summary": "Convert a manager Draft to an Appointment",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertFlexibleAppointmentRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft converted and Appointment created",
             "content": {
               "application/json": {
                 "schema": {

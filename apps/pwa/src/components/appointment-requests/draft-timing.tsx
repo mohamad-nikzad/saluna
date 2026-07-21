@@ -4,9 +4,14 @@ import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import {
   nextSalonWeekDates,
   normalizeAcceptableDates,
+  isStartTimeInPreference,
+  TIME_PREFERENCE_BOUNDS,
   type TimePreference,
 } from '@repo/salon-core/appointment-request-timing'
 import { formatJalaliFullDate } from '@repo/salon-core/jalali'
+import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import type { User } from '@repo/salon-core/types'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import {
@@ -21,12 +26,14 @@ import { Textarea } from '@repo/ui/textarea'
 
 import {
   useUpdateDraftMutation,
+  useConvertDraftMutation,
   type FlexibleAppointmentRequestListItem,
 } from '#/lib/appointment-requests-queries'
 import {
   FormSheet,
   FormSheetBody,
   FormSheetContent,
+  FormSheetDescription,
   FormSheetFooter,
   FormSheetHeader,
   FormSheetTitle,
@@ -214,6 +221,183 @@ export function EditDraftSheet({
         <FormSheetFooter>
           <Button size="lg" onClick={submit} disabled={updateDraft.isPending}>
             {updateDraft.isPending ? <Spinner className="size-4" /> : 'ذخیره'}
+          </Button>
+        </FormSheetFooter>
+      </FormSheetContent>
+    </FormSheet>
+  )
+}
+
+export function ConvertDraftSheet({
+  draft,
+  staff,
+  open,
+  onOpenChange,
+}: {
+  draft: FlexibleAppointmentRequestListItem
+  staff: User[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const today = salonTodayYmd()
+  const remainingDates = draft.acceptableDates.filter((date) => date >= today)
+  const capableStaff = eligibleStaffForService(
+    staff.filter((member) => member.role === 'staff'),
+    draft.serviceId,
+  )
+  const bounds = TIME_PREFERENCE_BOUNDS[draft.timePreference]
+  const [finalDate, setFinalDate] = useState(remainingDates[0] ?? '')
+  const [startTime, setStartTime] = useState(
+    draft.timePreference === 'any' ? '09:00' : bounds.min,
+  )
+  const [staffId, setStaffId] = useState('')
+  const convertDraft = useConvertDraftMutation()
+  const startTimeValid = isStartTimeInPreference(
+    startTime,
+    draft.timePreference,
+  )
+
+  const submit = () => {
+    if (!finalDate || !startTimeValid || !staffId) return
+    convertDraft.mutate(
+      {
+        requestId: draft.id,
+        body: { finalDate, startTime, staffId },
+      },
+      { onSuccess: () => onOpenChange(false) },
+    )
+  }
+
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange}>
+      <FormSheetContent onRequestClose={() => onOpenChange(false)}>
+        <FormSheetHeader>
+          <FormSheetTitle>تبدیل پیش‌نویس به نوبت</FormSheetTitle>
+          <FormSheetDescription>
+            تاریخ، ساعت شروع و پرسنل نوبت را انتخاب کنید.
+          </FormSheetDescription>
+        </FormSheetHeader>
+        <FormSheetBody className="space-y-5 px-5 py-4">
+          <div className="space-y-3 rounded-2xl border border-line-soft bg-background p-4 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">مشتری</p>
+              <p className="font-bold">
+                {draft.existingClient?.name ?? draft.customerName}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 border-t border-dashed border-border pt-3">
+              <div>
+                <p className="text-xs text-muted-foreground">خدمت ثبت‌شده</p>
+                <p className="font-semibold">{draft.bookedServiceName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">مدت و مبلغ</p>
+                <p className="font-semibold">
+                  {toPersianDigits(draft.bookedServiceDuration)} دقیقه ·{' '}
+                  {toPersianDigits(
+                    draft.bookedServicePrice.toLocaleString('en-US'),
+                  )}{' '}
+                  تومان
+                </p>
+              </div>
+            </div>
+            <div className="border-t border-dashed border-border pt-3">
+              <p className="text-xs text-muted-foreground">
+                تاریخ‌های قابل قبول
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {draft.acceptableDates.map((date) => (
+                  <span
+                    key={date}
+                    className={`rounded-lg bg-card px-2 py-1 text-xs ${date < today ? 'text-muted-foreground line-through' : ''}`}
+                  >
+                    {formatJalaliFullDate(date)}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <p className="border-t border-dashed border-border pt-3">
+              <span className="text-xs text-muted-foreground">
+                ترجیح زمانی:{' '}
+              </span>
+              {DRAFT_TIME_PREFERENCE_LABELS[draft.timePreference]}
+            </p>
+            {draft.notes ? (
+              <p className="border-t border-dashed border-border pt-3 text-muted-foreground">
+                {draft.notes}
+              </p>
+            ) : null}
+          </div>
+
+          <label className="block space-y-2 text-sm font-medium">
+            تاریخ نهایی
+            <Select value={finalDate} onValueChange={setFinalDate}>
+              <SelectTrigger>
+                <SelectValue placeholder="انتخاب تاریخ" />
+              </SelectTrigger>
+              <SelectContent>
+                {remainingDates.map((date) => (
+                  <SelectItem key={date} value={date}>
+                    {formatJalaliFullDate(date)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            ساعت شروع
+            <Input
+              type="time"
+              value={startTime}
+              min={bounds.min}
+              max={bounds.max}
+              onChange={(event) => setStartTime(event.target.value)}
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            پرسنل
+            <Select value={staffId} onValueChange={setStaffId}>
+              <SelectTrigger>
+                <SelectValue placeholder="انتخاب پرسنل" />
+              </SelectTrigger>
+              <SelectContent>
+                {capableStaff.length > 0 ? (
+                  capableStaff.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="__none__" disabled>
+                    پرسنل فعالی برای این خدمت وجود ندارد
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </label>
+          {remainingDates.length === 0 ? (
+            <p className="text-xs text-destructive">
+              تاریخ قابل زمان‌بندی برای این پیش‌نویس باقی نمانده است.
+            </p>
+          ) : null}
+        </FormSheetBody>
+        <FormSheetFooter>
+          <Button
+            size="lg"
+            onClick={submit}
+            disabled={
+              convertDraft.isPending ||
+              !finalDate ||
+              !startTimeValid ||
+              !staffId ||
+              capableStaff.length === 0
+            }
+          >
+            {convertDraft.isPending ? (
+              <Spinner className="size-4" />
+            ) : (
+              'ثبت نوبت'
+            )}
           </Button>
         </FormSheetFooter>
       </FormSheetContent>

@@ -71,6 +71,7 @@ import { ClientAvatar } from '#/components/clients/client-visuals'
 import {
   DRAFT_TIME_PREFERENCE_LABELS,
   DraftTimingFields,
+  ConvertDraftSheet,
   EditDraftSheet,
 } from '#/components/appointment-requests/draft-timing'
 import { ClientPicker } from '#/components/calendar/client-picker'
@@ -456,8 +457,11 @@ function DraftsPanel() {
   const { data, isLoading } = useQuery(pendingDraftsQueryOptions())
   const { data: clients = [] } = useQuery(clientsListQueryOptions())
   const { data: services = [] } = useQuery(servicesListQueryOptions())
+  const { data: staff = [] } = useQuery(staffListQueryOptions())
   const [open, setOpen] = useState(false)
   const [editingDraft, setEditingDraft] =
+    useState<FlexibleAppointmentRequestListItem | null>(null)
+  const [convertingDraft, setConvertingDraft] =
     useState<FlexibleAppointmentRequestListItem | null>(null)
 
   if (isLoading) {
@@ -498,6 +502,7 @@ function DraftsPanel() {
                 key={draft.id}
                 draft={draft}
                 onEdit={() => setEditingDraft(draft)}
+                onConvert={() => setConvertingDraft(draft)}
               />
             ))}
           </section>
@@ -518,6 +523,16 @@ function DraftsPanel() {
           }}
         />
       )}
+      {convertingDraft ? (
+        <ConvertDraftSheet
+          draft={convertingDraft}
+          staff={staff}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setConvertingDraft(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }
@@ -525,9 +540,11 @@ function DraftsPanel() {
 function DraftCard({
   draft,
   onEdit,
+  onConvert,
 }: {
   draft: FlexibleAppointmentRequestListItem
   onEdit: () => void
+  onConvert: () => void
 }) {
   const clientName = draft.existingClient?.name ?? draft.customerName
   const today = salonTodayYmd()
@@ -574,9 +591,14 @@ function DraftCard({
           </p>
         )}
       </div>
-      <Button type="button" variant="outline" onClick={onEdit}>
-        <Pencil className="size-4" /> ویرایش
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button type="button" variant="outline" onClick={onEdit}>
+          <Pencil className="size-4" /> ویرایش
+        </Button>
+        <Button type="button" onClick={onConvert}>
+          <Check className="size-4" /> تبدیل به نوبت
+        </Button>
+      </div>
     </div>
   )
 }
