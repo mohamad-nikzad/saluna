@@ -359,6 +359,9 @@ import type {
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectErrors,
   PostApiV1AppointmentRequestsByIdRejectResponses,
+  PostApiV1AppointmentRequestsByIdRenewData,
+  PostApiV1AppointmentRequestsByIdRenewErrors,
+  PostApiV1AppointmentRequestsByIdRenewResponses,
   PostApiV1AppointmentRequestsData,
   PostApiV1AppointmentRequestsErrors,
   PostApiV1AppointmentRequestsResponses,
@@ -2604,6 +2607,31 @@ export const patchApiV1AppointmentRequestsById = <
     ThrowOnError
   >({
     url: '/api/v1/appointment-requests/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Create a new Draft from a terminal request
+ */
+export const postApiV1AppointmentRequestsByIdRenew = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdRenewData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdRenewResponses,
+  PostApiV1AppointmentRequestsByIdRenewErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdRenewResponses,
+    PostApiV1AppointmentRequestsByIdRenewErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/renew',
     ...options,
     headers: {
       'Content-Type': 'application/json',

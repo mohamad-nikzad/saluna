@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lt, type SQL } from 'drizzle-orm'
+import { and, asc, eq, gte, lt, or, sql, type SQL } from 'drizzle-orm'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
@@ -180,6 +180,87 @@ export async function createFlexibleAppointmentRequest(
       existingClient: { id: client.id, name: client.name },
     },
   }
+}
+
+export type RenewTerminalAppointmentRequestInput = {
+  id: string
+  salonId: string
+  acceptableDates: string[]
+  timePreference: TimePreference
+  clientId?: string
+  serviceId?: string
+}
+
+export type RenewTerminalAppointmentRequestResult =
+  | { ok: true; request: AppointmentRequestListItem }
+  | { ok: false; status: 404 | 409; error: string }
+
+export async function renewTerminalAppointmentRequest(
+  input: RenewTerminalAppointmentRequestInput,
+): Promise<RenewTerminalAppointmentRequestResult> {
+  const db = getDb()
+  const [source] = await db
+    .select()
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+      ),
+    )
+    .limit(1)
+  if (!source) return { ok: false, status: 404, error: 'درخواست یافت نشد' }
+  if (source.status === 'pending') {
+    return { ok: false, status: 409, error: 'درخواست هنوز نهایی نشده است' }
+  }
+
+  const sourceClient = source.clientId
+    ? await getClientById(source.clientId, input.salonId)
+    : undefined
+  if (sourceClient && input.clientId && input.clientId !== sourceClient.id) {
+    return {
+      ok: false,
+      status: 409,
+      error: 'مشتری این درخواست قابل تغییر نیست',
+    }
+  }
+  const clientId = sourceClient?.id ?? input.clientId
+  if (!clientId) {
+    return { ok: false, status: 409, error: 'انتخاب مشتری الزامی است' }
+  }
+
+  const [sourceService] = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(
+      and(
+        eq(services.id, source.serviceId),
+        eq(services.salonId, input.salonId),
+        eq(services.active, true),
+        eq(services.kind, 'standard'),
+      ),
+    )
+    .limit(1)
+  if (
+    sourceService &&
+    input.serviceId &&
+    input.serviceId !== sourceService.id
+  ) {
+    return { ok: false, status: 409, error: 'خدمت این درخواست قابل تغییر نیست' }
+  }
+  const serviceId = sourceService?.id ?? input.serviceId
+  if (!serviceId) {
+    return { ok: false, status: 409, error: 'انتخاب خدمت الزامی است' }
+  }
+
+  return createFlexibleAppointmentRequest({
+    salonId: input.salonId,
+    clientId,
+    serviceId,
+    acceptableDates: input.acceptableDates,
+    timePreference: input.timePreference,
+    ...(source.notes !== null ? { notes: source.notes } : {}),
+  })
 }
 
 export type UpdateFlexibleAppointmentRequestInput = {
@@ -567,14 +648,28 @@ export async function expirePastDueAppointmentRequests(
   now?: Date,
 ): Promise<number> {
   const db = getDb()
-  const today = salonTodayYmd(now ?? new Date())
+  const timestamp = now ?? new Date()
+  const today = salonTodayYmd(timestamp)
   const updated = await db
     .update(appointmentRequests)
-    .set({ status: 'expired', reviewedAt: new Date(), updatedAt: new Date() })
+    .set({ status: 'expired', reviewedAt: timestamp, updatedAt: timestamp })
     .where(
       and(
         eq(appointmentRequests.status, 'pending'),
-        lt(appointmentRequests.requestedDate, today),
+        or(
+          and(
+            eq(appointmentRequests.timingMode, 'exact'),
+            lt(appointmentRequests.requestedDate, today),
+          ),
+          and(
+            eq(appointmentRequests.timingMode, 'flexible'),
+            sql`NOT EXISTS (
+              SELECT 1
+              FROM unnest(${appointmentRequests.acceptableDates}) AS acceptable_date
+              WHERE acceptable_date >= ${today}
+            )`,
+          ),
+        ),
       ),
     )
     .returning({ id: appointmentRequests.id })

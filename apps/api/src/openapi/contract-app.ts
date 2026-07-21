@@ -62,6 +62,7 @@ import {
   createFlexibleAppointmentRequestRoute,
   listAppointmentRequestsRoute,
   rejectAppointmentRequestRoute,
+  renewTerminalAppointmentRequestRoute,
   updateFlexibleAppointmentRequestRoute,
 } from './routes/appointment-requests'
 import {
@@ -916,6 +917,27 @@ const updateFlexibleAppointmentRequestStub: RouteHandler<
     200,
   )
 
+const renewTerminalAppointmentRequestStub: RouteHandler<
+  typeof renewTerminalAppointmentRequestRoute
+> = (c) =>
+  c.json(
+    {
+      request: {
+        ...stubAppointmentRequest,
+        clientId: stubClient.id,
+        timingMode: 'flexible' as const,
+        requestedDate: null,
+        requestedStartTime: null,
+        requestedEndTime: null,
+        acceptableDates: ['2026-06-07'],
+        timePreference: 'any' as const,
+        closureNote: null,
+        existingClient: { id: stubClient.id, name: stubClient.name },
+      },
+    },
+    201,
+  )
+
 const approveAppointmentRequestStub: RouteHandler<
   typeof approveAppointmentRequestRoute
 > = (c) =>
@@ -1540,6 +1562,10 @@ export const contractApp = new OpenAPIHono()
       .openapi(
         updateFlexibleAppointmentRequestRoute,
         updateFlexibleAppointmentRequestStub,
+      )
+      .openapi(
+        renewTerminalAppointmentRequestRoute,
+        renewTerminalAppointmentRequestStub,
       )
       .openapi(approveAppointmentRequestRoute, approveAppointmentRequestStub)
       .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub)

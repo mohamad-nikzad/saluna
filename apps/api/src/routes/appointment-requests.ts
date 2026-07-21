@@ -6,6 +6,7 @@ import {
   createFlexibleAppointmentRequest,
   listAppointmentRequests,
   rejectAppointmentRequest,
+  renewTerminalAppointmentRequest,
   updateFlexibleAppointmentRequest,
   type AppointmentRequestStatus,
 } from '@repo/database/appointment-requests'
@@ -16,6 +17,7 @@ import { error, ok } from '../lib/responses'
 import {
   cancelAppointmentRequestBodySchema,
   createFlexibleAppointmentRequestBodySchema,
+  renewTerminalAppointmentRequestBodySchema,
   updateFlexibleAppointmentRequestBodySchema,
 } from '../openapi/schemas/appointment-requests'
 
@@ -70,6 +72,21 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
       })
       if (!result.ok) return error(c, result.error, result.status)
       return ok(c, { request: result.request })
+    },
+  )
+  .post(
+    '/:id/renew',
+    zValidator('param', idParamSchema),
+    zValidator('json', renewTerminalAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const result = await renewTerminalAppointmentRequest({
+        id: c.req.valid('param').id,
+        salonId,
+        ...c.req.valid('json'),
+      })
+      if (!result.ok) return error(c, result.error, result.status)
+      return c.json({ request: result.request }, 201)
     },
   )
   .post(

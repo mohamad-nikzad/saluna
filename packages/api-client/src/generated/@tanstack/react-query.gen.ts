@@ -128,6 +128,7 @@ import {
   postApiV1AppointmentRequestsByIdApprove,
   postApiV1AppointmentRequestsByIdCancel,
   postApiV1AppointmentRequestsByIdReject,
+  postApiV1AppointmentRequestsByIdRenew,
   postApiV1Appointments,
   postApiV1AppointmentsByIdCompleteClient,
   postApiV1CatalogPresetsByIdApply,
@@ -509,6 +510,9 @@ import type {
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectError,
   PostApiV1AppointmentRequestsByIdRejectResponse,
+  PostApiV1AppointmentRequestsByIdRenewData,
+  PostApiV1AppointmentRequestsByIdRenewError,
+  PostApiV1AppointmentRequestsByIdRenewResponse,
   PostApiV1AppointmentRequestsData,
   PostApiV1AppointmentRequestsError,
   PostApiV1AppointmentRequestsResponse,
@@ -4146,6 +4150,33 @@ export const patchApiV1AppointmentRequestsByIdMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await patchApiV1AppointmentRequestsById({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Create a new Draft from a terminal request
+ */
+export const postApiV1AppointmentRequestsByIdRenewMutation = (
+  options?: Partial<Options<PostApiV1AppointmentRequestsByIdRenewData>>,
+): UseMutationOptions<
+  PostApiV1AppointmentRequestsByIdRenewResponse,
+  PostApiV1AppointmentRequestsByIdRenewError,
+  Options<PostApiV1AppointmentRequestsByIdRenewData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1AppointmentRequestsByIdRenewResponse,
+    PostApiV1AppointmentRequestsByIdRenewError,
+    Options<PostApiV1AppointmentRequestsByIdRenewData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1AppointmentRequestsByIdRenew({
         ...options,
         ...fnOptions,
         throwOnError: true,

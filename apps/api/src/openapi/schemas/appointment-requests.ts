@@ -136,6 +136,27 @@ export const createFlexibleAppointmentRequestResponseSchema = z
   .object({ request: flexibleAppointmentRequestListItemSchema })
   .openapi('CreateFlexibleAppointmentRequestResponse')
 
+export const renewTerminalAppointmentRequestBodySchema = z
+  .object({
+    acceptableDates: acceptableDatesSchema,
+    timePreference: timePreferenceSchema,
+    clientId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source Client is unavailable',
+    }),
+    serviceId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source ServiceVariant is unavailable',
+    }),
+  })
+  .strict()
+  .superRefine(validateAcceptableDates)
+  .openapi('RenewTerminalAppointmentRequestRequest')
+
+export const renewTerminalAppointmentRequestResponseSchema = z
+  .object({ request: flexibleAppointmentRequestListItemSchema })
+  .openapi('RenewTerminalAppointmentRequestResponse')
+
 export const updateFlexibleAppointmentRequestBodySchema = z
   .object({
     acceptableDates: acceptableDatesSchema,

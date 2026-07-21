@@ -31,6 +31,7 @@ import {
   approveAppointmentRequest,
   cancelAppointmentRequest,
   createFlexibleAppointmentRequest,
+  renewTerminalAppointmentRequest,
   updateFlexibleAppointmentRequest,
 } from './appointment-request-queries'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
@@ -216,6 +217,158 @@ describe('flexible appointment request creation', () => {
       }),
     )
     expect(values.mock.calls[0][0]).not.toHaveProperty('requestedDate')
+  })
+})
+
+describe('terminal AppointmentRequest renewal', () => {
+  it('creates a distinct Draft with fresh timing and the current ServiceVariant snapshot', async () => {
+    const source = {
+      ...pendingRequest,
+      status: 'cancelled',
+      timingMode: 'flexible',
+      clientId: 'client-1',
+      acceptableDates: ['2026-07-20'],
+      timePreference: 'morning',
+      bookedServiceName: 'نام قدیمی',
+      notes: '',
+    }
+    const client = {
+      id: 'client-1',
+      salonId: 'salon-1',
+      name: 'سارا',
+      phone: '09121234567',
+    }
+    const service = {
+      id: 'service-1',
+      salonId: 'salon-1',
+      name: 'نام فعلی',
+      duration: 60,
+      price: 900_000,
+      active: true,
+      kind: 'standard',
+    }
+    const selectResults = [[source], [{ id: service.id }], [client], [service]]
+    const select = vi.fn(() => {
+      const builder = {
+        from: vi.fn(),
+        where: vi.fn(),
+        limit: vi.fn(),
+      }
+      builder.from.mockReturnValue(builder)
+      builder.where.mockReturnValue(builder)
+      builder.limit.mockResolvedValue(selectResults.shift())
+      return builder
+    })
+    const values = vi.fn()
+    values.mockReturnValue({
+      returning: vi.fn(async () => [
+        { id: 'renewed-request', ...values.mock.calls[0][0] },
+      ]),
+    })
+    mocks.getDb.mockReturnValue({
+      select,
+      insert: vi.fn(() => ({ values })),
+    })
+    mocks.getClientById.mockResolvedValue(client)
+
+    const result = await renewTerminalAppointmentRequest({
+      id: source.id,
+      salonId: source.salonId,
+      acceptableDates: ['2026-07-25'],
+      timePreference: 'evening',
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      request: { id: 'renewed-request' },
+    })
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: source.clientId,
+        serviceId: source.serviceId,
+        notes: source.notes,
+        acceptableDates: ['2026-07-25'],
+        timePreference: 'evening',
+        bookedServiceName: service.name,
+        bookedServiceDuration: service.duration,
+        bookedServicePrice: service.price,
+      }),
+    )
+  })
+
+  it('requires a replacement Client when the source has none', async () => {
+    const source = { ...pendingRequest, status: 'expired', clientId: null }
+    const selectBuilder = {
+      from: vi.fn(),
+      where: vi.fn(),
+      limit: vi.fn(),
+    }
+    selectBuilder.from.mockReturnValue(selectBuilder)
+    selectBuilder.where.mockReturnValue(selectBuilder)
+    selectBuilder.limit.mockResolvedValue([source])
+    mocks.getDb.mockReturnValue({ select: vi.fn(() => selectBuilder) })
+
+    await expect(
+      renewTerminalAppointmentRequest({
+        id: source.id,
+        salonId: source.salonId,
+        acceptableDates: ['2026-07-25'],
+        timePreference: 'any',
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      status: 409,
+      error: 'انتخاب مشتری الزامی است',
+    })
+  })
+
+  it('does not reopen a pending AppointmentRequest', async () => {
+    const selectBuilder = {
+      from: vi.fn(),
+      where: vi.fn(),
+      limit: vi.fn(),
+    }
+    selectBuilder.from.mockReturnValue(selectBuilder)
+    selectBuilder.where.mockReturnValue(selectBuilder)
+    selectBuilder.limit.mockResolvedValue([pendingRequest])
+    mocks.getDb.mockReturnValue({ select: vi.fn(() => selectBuilder) })
+
+    await expect(
+      renewTerminalAppointmentRequest({
+        id: pendingRequest.id,
+        salonId: pendingRequest.salonId,
+        acceptableDates: ['2026-07-25'],
+        timePreference: 'any',
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 409 })
+  })
+
+  it('does not replace a Client that is still available', async () => {
+    const source = {
+      ...pendingRequest,
+      status: 'rejected',
+      clientId: 'client-1',
+    }
+    const selectBuilder = {
+      from: vi.fn(),
+      where: vi.fn(),
+      limit: vi.fn(),
+    }
+    selectBuilder.from.mockReturnValue(selectBuilder)
+    selectBuilder.where.mockReturnValue(selectBuilder)
+    selectBuilder.limit.mockResolvedValue([source])
+    mocks.getDb.mockReturnValue({ select: vi.fn(() => selectBuilder) })
+    mocks.getClientById.mockResolvedValue({ id: source.clientId })
+
+    await expect(
+      renewTerminalAppointmentRequest({
+        id: source.id,
+        salonId: source.salonId,
+        clientId: 'replacement-client',
+        acceptableDates: ['2026-07-25'],
+        timePreference: 'any',
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 409 })
   })
 })
 

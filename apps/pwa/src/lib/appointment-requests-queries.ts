@@ -6,6 +6,7 @@ import {
   postApiV1AppointmentRequestsByIdApproveMutation,
   postApiV1AppointmentRequestsByIdCancelMutation,
   postApiV1AppointmentRequestsByIdRejectMutation,
+  postApiV1AppointmentRequestsByIdRenewMutation,
   postApiV1AppointmentRequestsMutation,
 } from '@repo/api-client/query'
 import type {
@@ -15,6 +16,7 @@ import type {
   CreateFlexibleAppointmentRequestRequest,
   ExactAppointmentRequestListItem,
   FlexibleAppointmentRequestListItem,
+  RenewTerminalAppointmentRequestRequest,
   UpdateFlexibleAppointmentRequestRequest,
 } from '@repo/api-client/types'
 
@@ -91,6 +93,27 @@ export function useUpdateDraftMutation() {
     meta: {
       invalidatesQuery: appointmentRequestsInvalidationKeys(),
       errorMessage: 'ویرایش پیش‌نویس انجام نشد',
+    },
+  })
+}
+
+export function useRenewTerminalRequestMutation() {
+  const generated = postApiV1AppointmentRequestsByIdRenewMutation()
+  return useMutation({
+    mutationFn: async (
+      {
+        requestId,
+        body,
+      }: {
+        requestId: string
+        body: RenewTerminalAppointmentRequestRequest
+      },
+      mutationContext,
+    ) =>
+      generated.mutationFn!({ path: { id: requestId }, body }, mutationContext),
+    meta: {
+      invalidatesQuery: appointmentRequestsInvalidationKeys(),
+      errorMessage: 'ثبت پیش‌نویس تازه انجام نشد',
     },
   })
 }

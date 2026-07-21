@@ -1515,6 +1515,23 @@ export type UpdateFlexibleAppointmentRequestRequest = {
   notes: string | null
 }
 
+export type RenewTerminalAppointmentRequestResponse = {
+  request: FlexibleAppointmentRequestListItem
+}
+
+export type RenewTerminalAppointmentRequestRequest = {
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+  /**
+   * Required replacement only when the source Client is unavailable
+   */
+  clientId?: string
+  /**
+   * Required replacement only when the source ServiceVariant is unavailable
+   */
+  serviceId?: string
+}
+
 export type ApproveAppointmentRequestResponse = {
   appointmentId: string
   clientId: string
@@ -6259,6 +6276,51 @@ export type PatchApiV1AppointmentRequestsByIdResponses = {
 
 export type PatchApiV1AppointmentRequestsByIdResponse =
   PatchApiV1AppointmentRequestsByIdResponses[keyof PatchApiV1AppointmentRequestsByIdResponses]
+
+export type PostApiV1AppointmentRequestsByIdRenewData = {
+  body: RenewTerminalAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/renew'
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewError =
+  PostApiV1AppointmentRequestsByIdRenewErrors[keyof PostApiV1AppointmentRequestsByIdRenewErrors]
+
+export type PostApiV1AppointmentRequestsByIdRenewResponses = {
+  /**
+   * Renewed flexible AppointmentRequest recorded
+   */
+  201: RenewTerminalAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewResponse =
+  PostApiV1AppointmentRequestsByIdRenewResponses[keyof PostApiV1AppointmentRequestsByIdRenewResponses]
 
 export type PostApiV1AppointmentRequestsByIdApproveData = {
   body: ApproveAppointmentRequestRequest

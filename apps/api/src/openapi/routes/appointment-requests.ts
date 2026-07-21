@@ -15,6 +15,8 @@ import {
   createFlexibleAppointmentRequestResponseSchema,
   rejectAppointmentRequestBodySchema,
   rejectAppointmentRequestResponseSchema,
+  renewTerminalAppointmentRequestBodySchema,
+  renewTerminalAppointmentRequestResponseSchema,
   updateFlexibleAppointmentRequestBodySchema,
   updateFlexibleAppointmentRequestResponseSchema,
 } from '../schemas/appointment-requests'
@@ -129,6 +131,40 @@ export const updateFlexibleAppointmentRequestRoute = createRoute({
     403: forbiddenResponse,
     404: notFoundResponse,
     409: notFoundResponse,
+  },
+})
+
+export const renewTerminalAppointmentRequestRoute = createRoute({
+  method: 'post',
+  path: '/{id}/renew',
+  tags: ['Appointment requests'],
+  summary: 'Create a new Draft from a terminal request',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: renewTerminalAppointmentRequestBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Renewed flexible AppointmentRequest recorded',
+      content: {
+        'application/json': {
+          schema: renewTerminalAppointmentRequestResponseSchema,
+        },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
   },
 })
 

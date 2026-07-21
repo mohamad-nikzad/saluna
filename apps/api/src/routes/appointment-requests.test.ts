@@ -8,6 +8,7 @@ vi.mock('@repo/database/appointment-requests', () => ({
   approveAppointmentRequest: vi.fn(),
   rejectAppointmentRequest: vi.fn(),
   cancelAppointmentRequest: vi.fn(),
+  renewTerminalAppointmentRequest: vi.fn(),
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -203,6 +204,32 @@ describe('appointment-requests router', () => {
 
     expect(res.status).toBe(400)
     expect(db.updateFlexibleAppointmentRequest).not.toHaveBeenCalled()
+  })
+
+  it('POST /:id/renew starts a fresh tenant Draft from a terminal request', async () => {
+    vi.mocked(db.renewTerminalAppointmentRequest).mockResolvedValue({
+      ok: true,
+      request: { id: 'renewed-request' },
+    } as never)
+    const body = {
+      acceptableDates: [validFlexibleDate],
+      timePreference: 'evening',
+    }
+    const res = await app.request(
+      `/api/v1/appointment-requests/${requestId}/renew`,
+      {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    )
+
+    expect(res.status).toBe(201)
+    expect(db.renewTerminalAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      ...body,
+    })
   })
 
   it.each([
