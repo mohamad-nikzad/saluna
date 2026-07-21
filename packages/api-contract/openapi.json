@@ -5071,8 +5071,7 @@
           "acceptableDates": {
             "type": "array",
             "items": {
-              "type": "string",
-              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              "type": "string"
             },
             "minItems": 1
           },
@@ -5090,6 +5089,37 @@
           "acceptableDates",
           "timePreference"
         ],
+        "additionalProperties": false
+      },
+      "UpdateFlexibleAppointmentRequestResponse": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/FlexibleAppointmentRequestListItem"
+          }
+        },
+        "required": ["request"]
+      },
+      "UpdateFlexibleAppointmentRequestRequest": {
+        "type": "object",
+        "properties": {
+          "acceptableDates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "timePreference": {
+            "$ref": "#/components/schemas/TimePreference"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          }
+        },
+        "required": ["acceptableDates", "timePreference", "notes"],
         "additionalProperties": false
       },
       "ApproveAppointmentRequestResponse": {
@@ -15515,6 +15545,104 @@
             }
           },
           "404": {
+            "description": "Appointment request not found or no longer pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointment-requests/{id}": {
+      "patch": {
+        "tags": ["Appointment requests"],
+        "summary": "Edit a pending manager Draft timing agreement",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFlexibleAppointmentRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending flexible AppointmentRequest updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateFlexibleAppointmentRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but missing manage_appointments permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Appointment request not found or no longer pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "Appointment request not found or no longer pending",
             "content": {
               "application/json": {

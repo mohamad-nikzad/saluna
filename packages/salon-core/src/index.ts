@@ -1,6 +1,7 @@
 export * from './client-import'
 export * from './device-contacts'
 export * from './appointment-conflict'
+export * from './appointment-request-timing'
 export * from './appointment-time'
 export * from './availability'
 export * from './calendar-colors'

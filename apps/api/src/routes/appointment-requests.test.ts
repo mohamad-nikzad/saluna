@@ -4,6 +4,7 @@ import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 vi.mock('@repo/database/appointment-requests', () => ({
   listAppointmentRequests: vi.fn(),
   createFlexibleAppointmentRequest: vi.fn(),
+  updateFlexibleAppointmentRequest: vi.fn(),
   approveAppointmentRequest: vi.fn(),
   rejectAppointmentRequest: vi.fn(),
 }))
@@ -162,6 +163,45 @@ describe('appointment-requests router', () => {
       salonId: 's1',
       ...body,
     })
+  })
+
+  it('PATCH /:id edits only a tenant Draft current timing agreement', async () => {
+    vi.mocked(db.updateFlexibleAppointmentRequest).mockResolvedValue({
+      ok: true,
+      request: { id: requestId },
+    } as never)
+    const body = {
+      acceptableDates: [validFlexibleDate],
+      timePreference: 'evening',
+      notes: 'بعد از ساعت پنج',
+    }
+    const res = await app.request(`/api/v1/appointment-requests/${requestId}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.updateFlexibleAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      ...body,
+    })
+  })
+
+  it('PATCH /:id rejects immutable Client and ServiceVariant fields', async () => {
+    const res = await app.request(`/api/v1/appointment-requests/${requestId}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        acceptableDates: [validFlexibleDate],
+        timePreference: 'morning',
+        clientId: requestId,
+      }),
+    })
+
+    expect(res.status).toBe(400)
+    expect(db.updateFlexibleAppointmentRequest).not.toHaveBeenCalled()
   })
 
   it.each([

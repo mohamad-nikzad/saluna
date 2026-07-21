@@ -1,6 +1,7 @@
 export {
   listAppointmentRequests,
   createFlexibleAppointmentRequest,
+  updateFlexibleAppointmentRequest,
   lookupClientByPhone,
   approveAppointmentRequest,
   rejectAppointmentRequest,
@@ -16,6 +17,8 @@ export type {
   TimePreference,
   CreateFlexibleAppointmentRequestInput,
   CreateFlexibleAppointmentRequestResult,
+  UpdateFlexibleAppointmentRequestInput,
+  UpdateFlexibleAppointmentRequestResult,
   ApproveAppointmentRequestInput,
   ApproveAppointmentRequestResult,
   RejectAppointmentRequestInput,

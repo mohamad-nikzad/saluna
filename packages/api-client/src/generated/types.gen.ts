@@ -1504,6 +1504,16 @@ export type CreateFlexibleAppointmentRequestRequest = {
   notes?: string
 }
 
+export type UpdateFlexibleAppointmentRequestResponse = {
+  request: FlexibleAppointmentRequestListItem
+}
+
+export type UpdateFlexibleAppointmentRequestRequest = {
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+  notes: string | null
+}
+
 export type ApproveAppointmentRequestResponse = {
   appointmentId: string
   clientId: string
@@ -6192,6 +6202,51 @@ export type PostApiV1AppointmentRequestsResponses = {
 
 export type PostApiV1AppointmentRequestsResponse =
   PostApiV1AppointmentRequestsResponses[keyof PostApiV1AppointmentRequestsResponses]
+
+export type PatchApiV1AppointmentRequestsByIdData = {
+  body: UpdateFlexibleAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}'
+}
+
+export type PatchApiV1AppointmentRequestsByIdErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  409: ApiError
+}
+
+export type PatchApiV1AppointmentRequestsByIdError =
+  PatchApiV1AppointmentRequestsByIdErrors[keyof PatchApiV1AppointmentRequestsByIdErrors]
+
+export type PatchApiV1AppointmentRequestsByIdResponses = {
+  /**
+   * Pending flexible AppointmentRequest updated
+   */
+  200: UpdateFlexibleAppointmentRequestResponse
+}
+
+export type PatchApiV1AppointmentRequestsByIdResponse =
+  PatchApiV1AppointmentRequestsByIdResponses[keyof PatchApiV1AppointmentRequestsByIdResponses]
 
 export type PostApiV1AppointmentRequestsByIdApproveData = {
   body: ApproveAppointmentRequestRequest

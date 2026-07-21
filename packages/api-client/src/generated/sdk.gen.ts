@@ -260,6 +260,9 @@ import type {
   PatchApiV1AdminSalonsByIdStatusData,
   PatchApiV1AdminSalonsByIdStatusErrors,
   PatchApiV1AdminSalonsByIdStatusResponses,
+  PatchApiV1AppointmentRequestsByIdData,
+  PatchApiV1AppointmentRequestsByIdErrors,
+  PatchApiV1AppointmentRequestsByIdResponses,
   PatchApiV1AppointmentsByIdData,
   PatchApiV1AppointmentsByIdErrors,
   PatchApiV1AppointmentsByIdResponses,
@@ -2573,6 +2576,31 @@ export const postApiV1AppointmentRequests = <
     ThrowOnError
   >({
     url: '/api/v1/appointment-requests',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Edit a pending manager Draft timing agreement
+ */
+export const patchApiV1AppointmentRequestsById = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PatchApiV1AppointmentRequestsByIdData, ThrowOnError>,
+): RequestResult<
+  PatchApiV1AppointmentRequestsByIdResponses,
+  PatchApiV1AppointmentRequestsByIdErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    PatchApiV1AppointmentRequestsByIdResponses,
+    PatchApiV1AppointmentRequestsByIdErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',

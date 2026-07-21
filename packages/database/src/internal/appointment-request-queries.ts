@@ -6,7 +6,7 @@ import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
 import { createAppointment } from './appointment-queries'
 import { validateCreateAppointmentIntake } from './appointment-intake'
-import { getClientByPhone, createClient } from './client-queries'
+import { createClient, getClientById, getClientByPhone } from './client-queries'
 
 export type AppointmentRequestRow = typeof appointmentRequests.$inferSelect
 
@@ -143,7 +143,7 @@ export async function createFlexibleAppointmentRequest(
       clientId: client.id,
       serviceId: service.id,
       timingMode: 'flexible',
-      acceptableDates: input.acceptableDates,
+      acceptableDates: [...input.acceptableDates].sort(),
       timePreference: input.timePreference,
       customerName: client.name,
       customerPhone: client.phone ?? '',
@@ -159,6 +159,79 @@ export async function createFlexibleAppointmentRequest(
     request: {
       ...request,
       existingClient: { id: client.id, name: client.name },
+    },
+  }
+}
+
+export type UpdateFlexibleAppointmentRequestInput = {
+  id: string
+  salonId: string
+  acceptableDates: string[]
+  timePreference: TimePreference
+  notes: string | null
+}
+
+export type UpdateFlexibleAppointmentRequestResult =
+  | { ok: true; request: AppointmentRequestListItem }
+  | { ok: false; status: 404 | 409; error: string }
+
+export async function updateFlexibleAppointmentRequest(
+  input: UpdateFlexibleAppointmentRequestInput,
+): Promise<UpdateFlexibleAppointmentRequestResult> {
+  const db = getDb()
+  const [existing] = await db
+    .select()
+    .from(appointmentRequests)
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+        eq(appointmentRequests.timingMode, 'flexible'),
+      ),
+    )
+    .limit(1)
+  if (!existing) {
+    return { ok: false, status: 404, error: 'پیش‌نویس یافت نشد' }
+  }
+  if (existing.status !== 'pending') {
+    return { ok: false, status: 409, error: 'این پیش‌نویس قابل ویرایش نیست' }
+  }
+
+  const elapsedDates = (existing.acceptableDates ?? []).filter(
+    (date) => date < salonTodayYmd(),
+  )
+  const [request] = await db
+    .update(appointmentRequests)
+    .set({
+      acceptableDates: [
+        ...new Set([...elapsedDates, ...input.acceptableDates]),
+      ].sort(),
+      timePreference: input.timePreference,
+      notes: input.notes?.trim() || null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(appointmentRequests.id, input.id),
+        eq(appointmentRequests.salonId, input.salonId),
+        eq(appointmentRequests.timingMode, 'flexible'),
+        eq(appointmentRequests.status, 'pending'),
+      ),
+    )
+    .returning()
+
+  if (!request) {
+    return { ok: false, status: 409, error: 'این پیش‌نویس قابل ویرایش نیست' }
+  }
+
+  const client = request.clientId
+    ? await getClientById(request.clientId, input.salonId)
+    : undefined
+  return {
+    ok: true,
+    request: {
+      ...request,
+      existingClient: client ? { id: client.id, name: client.name } : null,
     },
   }
 }

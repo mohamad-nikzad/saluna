@@ -11,6 +11,7 @@ import {
   Inbox,
   MessageCircle,
   Phone,
+  Pencil,
   Plus,
   Scissors,
   Sparkles,
@@ -36,13 +37,14 @@ import {
   DialogTitle,
 } from '@repo/ui/dialog'
 import { Textarea } from '@repo/ui/textarea'
-import { Input } from '@repo/ui/input'
 import { scrollFocusedInputIntoView } from '#/lib/scroll-focused-input-into-view'
 import {
   toPersianDigits,
   formatPersianTime,
 } from '@repo/salon-core/persian-digits'
 import { formatJalaliFullDate } from '@repo/salon-core/jalali'
+import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { normalizeAcceptableDates } from '@repo/salon-core/appointment-request-timing'
 import { displayPhone } from '@repo/salon-core/phone'
 import type { User, Service } from '@repo/salon-core/types'
 
@@ -58,6 +60,7 @@ import {
   type ExactAppointmentRequestListItem,
   type FlexibleAppointmentRequestListItem,
 } from '#/lib/appointment-requests-queries'
+import { organizeDrafts } from '#/lib/draft-queue'
 import { servicesListQueryOptions } from '#/lib/services-queries'
 import {
   clientsListQueryOptions,
@@ -65,6 +68,11 @@ import {
 } from '#/lib/clients-queries'
 import { staffListQueryOptions } from '#/lib/staff-queries'
 import { ClientAvatar } from '#/components/clients/client-visuals'
+import {
+  DRAFT_TIME_PREFERENCE_LABELS,
+  DraftTimingFields,
+  EditDraftSheet,
+} from '#/components/appointment-requests/draft-timing'
 import { ClientPicker } from '#/components/calendar/client-picker'
 import { ServicePicker } from '#/components/services/service-picker'
 import {
@@ -437,11 +445,11 @@ function RequestsList({
   )
 }
 
-const TIME_PREFERENCE_LABELS = {
-  morning: 'صبح',
-  afternoon: 'بعدازظهر',
-  evening: 'عصر',
-  any: 'هر زمان',
+const DRAFT_GROUP_LABELS = {
+  'this-week': 'این هفته',
+  'next-week': 'هفته آینده',
+  later: 'بعدتر',
+  elapsed: 'تاریخ‌های گذشته',
 } as const
 
 function DraftsPanel() {
@@ -449,6 +457,8 @@ function DraftsPanel() {
   const { data: clients = [] } = useQuery(clientsListQueryOptions())
   const { data: services = [] } = useQuery(servicesListQueryOptions())
   const [open, setOpen] = useState(false)
+  const [editingDraft, setEditingDraft] =
+    useState<FlexibleAppointmentRequestListItem | null>(null)
 
   if (isLoading) {
     return (
@@ -462,6 +472,7 @@ function DraftsPanel() {
     (request): request is FlexibleAppointmentRequestListItem =>
       request.timingMode === 'flexible',
   )
+  const sections = organizeDrafts(drafts, salonTodayYmd())
 
   return (
     <div className="space-y-3">
@@ -477,7 +488,20 @@ function DraftsPanel() {
           </p>
         </div>
       ) : (
-        drafts.map((draft) => <DraftCard key={draft.id} draft={draft} />)
+        sections.map((section) => (
+          <section key={section.id} className="space-y-2">
+            <h2 className="px-1 text-sm font-bold">
+              {DRAFT_GROUP_LABELS[section.id]}
+            </h2>
+            {section.drafts.map((draft) => (
+              <DraftCard
+                key={draft.id}
+                draft={draft}
+                onEdit={() => setEditingDraft(draft)}
+              />
+            ))}
+          </section>
+        ))
       )}
       <NewDraftSheet
         open={open}
@@ -485,12 +509,28 @@ function DraftsPanel() {
         clients={clients}
         services={services.filter((service) => service.active)}
       />
+      {editingDraft && (
+        <EditDraftSheet
+          draft={editingDraft}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setEditingDraft(null)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
+function DraftCard({
+  draft,
+  onEdit,
+}: {
+  draft: FlexibleAppointmentRequestListItem
+  onEdit: () => void
+}) {
   const clientName = draft.existingClient?.name ?? draft.customerName
+  const today = salonTodayYmd()
   return (
     <div className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm">
       <div className="flex items-center gap-3">
@@ -507,13 +547,26 @@ function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
         <Badge variant="neutral">پیش‌نویس</Badge>
       </div>
       <div className="space-y-2 rounded-2xl bg-background p-3 text-xs">
-        <p className="flex items-center gap-2">
+        <div className="flex items-start gap-2">
           <Calendar className="size-3.5 text-primary" />
-          {draft.acceptableDates.map(formatJalaliFullDate).join('، ')}
-        </p>
+          <span className="flex flex-wrap gap-1.5">
+            {draft.acceptableDates.map((date) => (
+              <span
+                key={date}
+                className={cn(
+                  'rounded-lg bg-card px-2 py-1',
+                  date < today && 'text-muted-foreground line-through',
+                )}
+                aria-label={date < today ? 'تاریخ گذشته' : undefined}
+              >
+                {formatJalaliFullDate(date)}
+              </span>
+            ))}
+          </span>
+        </div>
         <p className="flex items-center gap-2">
           <Clock className="size-3.5 text-primary" />
-          {TIME_PREFERENCE_LABELS[draft.timePreference]}
+          {DRAFT_TIME_PREFERENCE_LABELS[draft.timePreference]}
         </p>
         {draft.notes && (
           <p className="border-t border-dashed border-border pt-2 text-muted-foreground">
@@ -521,6 +574,9 @@ function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
           </p>
         )}
       </div>
+      <Button type="button" variant="outline" onClick={onEdit}>
+        <Pencil className="size-4" /> ویرایش
+      </Button>
     </div>
   )
 }
@@ -542,10 +598,11 @@ function NewDraftSheet({
   const [serviceId, setServiceId] = useState('')
   const [dates, setDates] = useState([''])
   const [timePreference, setTimePreference] =
-    useState<keyof typeof TIME_PREFERENCE_LABELS>('any')
+    useState<keyof typeof DRAFT_TIME_PREFERENCE_LABELS>('any')
   const [notes, setNotes] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const createDraft = useCreateDraftMutation()
+  const today = salonTodayYmd()
 
   useEffect(() => setLocalClients(clients), [clients])
 
@@ -560,9 +617,15 @@ function NewDraftSheet({
   }
 
   const submit = () => {
-    const acceptableDates = dates.filter(Boolean)
-    if (!clientId || !serviceId || acceptableDates.length === 0) {
+    if (!clientId || !serviceId) {
       setErrorMessage('مشتری، خدمت و حداقل یک تاریخ را انتخاب کنید')
+      return
+    }
+    let acceptableDates: string[]
+    try {
+      acceptableDates = normalizeAcceptableDates(dates.filter(Boolean), today)
+    } catch {
+      setErrorMessage('تاریخ‌ها باید یکتا و در ۳۰ روز آینده باشند')
       return
     }
     createDraft.mutate(
@@ -607,60 +670,14 @@ function NewDraftSheet({
               onChange={setServiceId}
             />
           </label>
-          <div className="space-y-2">
-            <p className="text-sm font-medium">تاریخ‌های قابل قبول</p>
-            {dates.map((date, index) => (
-              <Input
-                key={index}
-                type="date"
-                value={date}
-                onChange={(event) =>
-                  setDates((current) =>
-                    current.map((value, i) =>
-                      i === index ? event.target.value : value,
-                    ),
-                  )
-                }
-              />
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDates((current) => [...current, ''])}
-            >
-              <Plus className="size-3.5" /> تاریخ دیگر
-            </Button>
-          </div>
-          <label className="block space-y-2 text-sm font-medium">
-            ترجیح زمانی
-            <Select
-              value={timePreference}
-              onValueChange={(value) =>
-                setTimePreference(value as keyof typeof TIME_PREFERENCE_LABELS)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(TIME_PREFERENCE_LABELS).map(
-                  ([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            یادداشت (اختیاری)
-            <Textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
+          <DraftTimingFields
+            dates={dates}
+            onDatesChange={setDates}
+            timePreference={timePreference}
+            onTimePreferenceChange={setTimePreference}
+            notes={notes}
+            onNotesChange={setNotes}
+          />
           {errorMessage && (
             <p className="text-xs text-destructive">{errorMessage}</p>
           )}

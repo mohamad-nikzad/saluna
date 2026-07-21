@@ -13,6 +13,8 @@ import {
   createFlexibleAppointmentRequestResponseSchema,
   rejectAppointmentRequestBodySchema,
   rejectAppointmentRequestResponseSchema,
+  updateFlexibleAppointmentRequestBodySchema,
+  updateFlexibleAppointmentRequestResponseSchema,
 } from '../schemas/appointment-requests'
 
 const unauthorizedResponse = {
@@ -91,6 +93,40 @@ export const createFlexibleAppointmentRequestRoute = createRoute({
     401: unauthorizedResponse,
     403: forbiddenResponse,
     404: notFoundResponse,
+  },
+})
+
+export const updateFlexibleAppointmentRequestRoute = createRoute({
+  method: 'patch',
+  path: '/{id}',
+  tags: ['Appointment requests'],
+  summary: 'Edit a pending manager Draft timing agreement',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: updateFlexibleAppointmentRequestBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Pending flexible AppointmentRequest updated',
+      content: {
+        'application/json': {
+          schema: updateFlexibleAppointmentRequestResponseSchema,
+        },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: notFoundResponse,
   },
 })
 

@@ -5,13 +5,17 @@ import {
   createFlexibleAppointmentRequest,
   listAppointmentRequests,
   rejectAppointmentRequest,
+  updateFlexibleAppointmentRequest,
   type AppointmentRequestStatus,
 } from '@repo/database/appointment-requests'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
-import { createFlexibleAppointmentRequestBodySchema } from '../openapi/schemas/appointment-requests'
+import {
+  createFlexibleAppointmentRequestBodySchema,
+  updateFlexibleAppointmentRequestBodySchema,
+} from '../openapi/schemas/appointment-requests'
 
 const idParamSchema = z.object({ id: z.string().guid() })
 
@@ -49,6 +53,21 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
       })
       if (!result.ok) return error(c, result.error, result.status)
       return c.json({ request: result.request }, 201)
+    },
+  )
+  .patch(
+    '/:id',
+    zValidator('param', idParamSchema),
+    zValidator('json', updateFlexibleAppointmentRequestBodySchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const result = await updateFlexibleAppointmentRequest({
+        id: c.req.valid('param').id,
+        salonId,
+        ...c.req.valid('json'),
+      })
+      if (!result.ok) return error(c, result.error, result.status)
+      return ok(c, { request: result.request })
     },
   )
   .post(

@@ -94,6 +94,7 @@ import {
   patchApiV1AdminSalonsByIdSetupOwnerPhone,
   patchApiV1AdminSalonsByIdSetupPresence,
   patchApiV1AdminSalonsByIdStatus,
+  patchApiV1AppointmentRequestsById,
   patchApiV1AppointmentsById,
   patchApiV1ClientsById,
   patchApiV1MessagingAccountsById,
@@ -408,6 +409,9 @@ import type {
   PatchApiV1AdminSalonsByIdStatusData,
   PatchApiV1AdminSalonsByIdStatusError,
   PatchApiV1AdminSalonsByIdStatusResponse,
+  PatchApiV1AppointmentRequestsByIdData,
+  PatchApiV1AppointmentRequestsByIdError,
+  PatchApiV1AppointmentRequestsByIdResponse,
   PatchApiV1AppointmentsByIdData,
   PatchApiV1AppointmentsByIdError,
   PatchApiV1AppointmentsByIdResponse,
@@ -4111,6 +4115,33 @@ export const postApiV1AppointmentRequestsMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1AppointmentRequests({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Edit a pending manager Draft timing agreement
+ */
+export const patchApiV1AppointmentRequestsByIdMutation = (
+  options?: Partial<Options<PatchApiV1AppointmentRequestsByIdData>>,
+): UseMutationOptions<
+  PatchApiV1AppointmentRequestsByIdResponse,
+  PatchApiV1AppointmentRequestsByIdError,
+  Options<PatchApiV1AppointmentRequestsByIdData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PatchApiV1AppointmentRequestsByIdResponse,
+    PatchApiV1AppointmentRequestsByIdError,
+    Options<PatchApiV1AppointmentRequestsByIdData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await patchApiV1AppointmentRequestsById({
         ...options,
         ...fnOptions,
         throwOnError: true,

@@ -2,6 +2,7 @@ import { queryOptions, useMutation } from '@tanstack/react-query'
 import { getApiV1AppointmentRequests } from '@repo/api-client/sdk'
 import {
   getApiV1AppointmentRequestsQueryKey,
+  patchApiV1AppointmentRequestsByIdMutation,
   postApiV1AppointmentRequestsByIdApproveMutation,
   postApiV1AppointmentRequestsByIdRejectMutation,
   postApiV1AppointmentRequestsMutation,
@@ -13,6 +14,7 @@ import type {
   CreateFlexibleAppointmentRequestRequest,
   ExactAppointmentRequestListItem,
   FlexibleAppointmentRequestListItem,
+  UpdateFlexibleAppointmentRequestRequest,
 } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
@@ -68,6 +70,27 @@ export function useCreateDraftMutation() {
     meta: {
       invalidatesQuery: appointmentRequestsInvalidationKeys(),
       errorMessage: 'ثبت پیش‌نویس انجام نشد',
+    },
+  })
+}
+
+export function useUpdateDraftMutation() {
+  const generated = patchApiV1AppointmentRequestsByIdMutation()
+  return useMutation({
+    mutationFn: async (
+      {
+        requestId,
+        body,
+      }: {
+        requestId: string
+        body: UpdateFlexibleAppointmentRequestRequest
+      },
+      mutationContext,
+    ) =>
+      generated.mutationFn!({ path: { id: requestId }, body }, mutationContext),
+    meta: {
+      invalidatesQuery: appointmentRequestsInvalidationKeys(),
+      errorMessage: 'ویرایش پیش‌نویس انجام نشد',
     },
   })
 }

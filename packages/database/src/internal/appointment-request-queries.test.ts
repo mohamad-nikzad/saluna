@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   getDb: vi.fn(),
   createAppointment: vi.fn(),
   validateCreateAppointmentIntake: vi.fn(),
+  getClientById: vi.fn(),
   getClientByPhone: vi.fn(),
   createClient: vi.fn(),
 }))
@@ -21,6 +22,7 @@ vi.mock('./appointment-intake', () => ({
 }))
 
 vi.mock('./client-queries', () => ({
+  getClientById: mocks.getClientById,
   getClientByPhone: mocks.getClientByPhone,
   createClient: mocks.createClient,
 }))
@@ -28,7 +30,9 @@ vi.mock('./client-queries', () => ({
 import {
   approveAppointmentRequest,
   createFlexibleAppointmentRequest,
+  updateFlexibleAppointmentRequest,
 } from './appointment-request-queries'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 const pendingRequest = {
   id: '22222222-2222-2222-2222-222222222222',
@@ -211,5 +215,98 @@ describe('flexible appointment request creation', () => {
       }),
     )
     expect(values.mock.calls[0][0]).not.toHaveProperty('requestedDate')
+  })
+})
+
+describe('flexible appointment request editing', () => {
+  it('replaces the current agreement while retaining elapsed acceptable dates', async () => {
+    const today = salonTodayYmd()
+    const elapsedDate = addDaysYmd(today, -1)
+    const removedFutureDate = addDaysYmd(today, 2)
+    const newFutureDate = addDaysYmd(today, 3)
+    const request = {
+      ...pendingRequest,
+      timingMode: 'flexible',
+      acceptableDates: [elapsedDate, removedFutureDate],
+      timePreference: 'morning',
+      clientId: 'client-1',
+    }
+    const selectBuilder = {
+      from: vi.fn(),
+      where: vi.fn(),
+      limit: vi.fn(),
+    }
+    selectBuilder.from.mockReturnValue(selectBuilder)
+    selectBuilder.where.mockReturnValue(selectBuilder)
+    selectBuilder.limit.mockResolvedValue([request])
+    const set = vi.fn()
+    const returning = vi.fn().mockImplementation(async () => [
+      {
+        ...request,
+        ...set.mock.calls[0][0],
+      },
+    ])
+    const updateBuilder = { set, where: vi.fn(), returning }
+    set.mockReturnValue(updateBuilder)
+    updateBuilder.where.mockReturnValue(updateBuilder)
+    mocks.getDb.mockReturnValue({
+      select: vi.fn(() => selectBuilder),
+      update: vi.fn(() => updateBuilder),
+    })
+    mocks.getClientById.mockResolvedValue({ id: 'client-1', name: 'سارا' })
+
+    const result = await updateFlexibleAppointmentRequest({
+      id: request.id,
+      salonId: request.salonId,
+      acceptableDates: [newFutureDate],
+      timePreference: 'evening',
+      notes: 'زمان تازه',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        acceptableDates: [elapsedDate, newFutureDate],
+        timePreference: 'evening',
+      }),
+    )
+  })
+
+  it('does not edit a terminal AppointmentRequest', async () => {
+    const terminalRequest = {
+      ...pendingRequest,
+      timingMode: 'flexible',
+      acceptableDates: [addDaysYmd(salonTodayYmd(), 1)],
+      timePreference: 'any',
+      status: 'approved',
+    }
+    const selectBuilder = {
+      from: vi.fn(),
+      where: vi.fn(),
+      limit: vi.fn(),
+    }
+    selectBuilder.from.mockReturnValue(selectBuilder)
+    selectBuilder.where.mockReturnValue(selectBuilder)
+    selectBuilder.limit.mockResolvedValue([terminalRequest])
+    const update = vi.fn()
+    mocks.getDb.mockReturnValue({
+      select: vi.fn(() => selectBuilder),
+      update,
+    })
+
+    const result = await updateFlexibleAppointmentRequest({
+      id: terminalRequest.id,
+      salonId: terminalRequest.salonId,
+      acceptableDates: [addDaysYmd(salonTodayYmd(), 2)],
+      timePreference: 'afternoon',
+      notes: null,
+    })
+
+    expect(result).toEqual({
+      ok: false,
+      status: 409,
+      error: 'این پیش‌نویس قابل ویرایش نیست',
+    })
+    expect(update).not.toHaveBeenCalled()
   })
 })
