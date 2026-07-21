@@ -499,7 +499,9 @@ function DraftCard({ draft }: { draft: FlexibleAppointmentRequestListItem }) {
           <p className="truncate text-[15px] font-bold">{clientName}</p>
           <p className="text-xs text-muted-foreground">
             {draft.bookedServiceName} ·{' '}
-            {toPersianDigits(draft.bookedServiceDuration)} دقیقه
+            {toPersianDigits(draft.bookedServiceDuration)} دقیقه ·{' '}
+            {toPersianDigits(draft.bookedServicePrice.toLocaleString('en-US'))}{' '}
+            تومان
           </p>
         </div>
         <Badge variant="neutral">پیش‌نویس</Badge>

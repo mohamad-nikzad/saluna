@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 const isoDateTimeSchema = z.string().datetime().or(z.string())
 
@@ -105,9 +106,33 @@ export const createFlexibleAppointmentRequestBodySchema = z
   .object({
     clientId: z.string().uuid(),
     serviceId: z.string().uuid(),
-    acceptableDates: z.array(z.string()).min(1),
+    acceptableDates: z
+      .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+      .min(1)
+      .refine((dates) =>
+        dates.every((date) => {
+          const parsed = new Date(`${date}T00:00:00Z`)
+          return (
+            !Number.isNaN(parsed.getTime()) &&
+            parsed.toISOString().slice(0, 10) === date
+          )
+        }),
+      )
+      .refine((dates) => new Set(dates).size === dates.length),
     timePreference: timePreferenceSchema,
     notes: z.string().max(2000).optional(),
+  })
+  .strict()
+  .superRefine((values, ctx) => {
+    const today = salonTodayYmd()
+    const maxDate = addDaysYmd(today, 30)
+    if (values.acceptableDates.some((date) => date < today || date > maxDate)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['acceptableDates'],
+        message: 'تاریخ خارج از بازه مجاز است',
+      })
+    }
   })
   .openapi('CreateFlexibleAppointmentRequestRequest')
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 vi.mock('@repo/database/appointment-requests', () => ({
   listAppointmentRequests: vi.fn(),
@@ -53,6 +54,7 @@ const staffUser = {
 }
 
 const requestId = '22222222-2222-2222-2222-222222222222'
+const validFlexibleDate = addDaysYmd(salonTodayYmd(), 2)
 
 function authHeaders() {
   return { Authorization: 'Bearer testtoken' }
@@ -146,7 +148,7 @@ describe('appointment-requests router', () => {
     const body = {
       clientId: '33333333-3333-4333-8333-333333333333',
       serviceId: '44444444-4444-4444-8444-444444444444',
-      acceptableDates: ['2026-07-23'],
+      acceptableDates: [validFlexibleDate],
       timePreference: 'afternoon',
       notes: 'بعد از ظهر تماس بگیرید',
     }
@@ -166,7 +168,7 @@ describe('appointment-requests router', () => {
     [
       {
         serviceId: requestId,
-        acceptableDates: ['2026-07-23'],
+        acceptableDates: [validFlexibleDate],
         timePreference: 'morning',
       },
     ],
@@ -190,7 +192,7 @@ describe('appointment-requests router', () => {
       {
         clientId: requestId,
         serviceId: requestId,
-        acceptableDates: ['2026-07-23'],
+        acceptableDates: [validFlexibleDate],
         timePreference: 'late',
       },
     ],
@@ -198,9 +200,9 @@ describe('appointment-requests router', () => {
       {
         clientId: requestId,
         serviceId: requestId,
-        acceptableDates: ['2026-07-23'],
+        acceptableDates: [validFlexibleDate],
         timePreference: 'morning',
-        requestedDate: '2026-07-23',
+        requestedDate: validFlexibleDate,
       },
     ],
   ])('POST / rejects invalid flexible input %#', async (body) => {
