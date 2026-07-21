@@ -30,8 +30,10 @@ class Response:
 class ReleaseAnnouncementTest(unittest.TestCase):
     def setUp(self):
         self.config = {
+            "TELEGRAM_ENABLED": "true",
             "TELEGRAM_BOT_TOKEN": "telegram-token",
             "TELEGRAM_RELEASE_CHANNEL_ID": "@saluna",
+            "BALE_ENABLED": "true",
             "BALE_BOT_TOKEN": "bale-token",
             "BALE_RELEASE_CHANNEL_ID": "@saluna",
         }
@@ -105,14 +107,63 @@ class ReleaseAnnouncementTest(unittest.TestCase):
         self.assertEqual(second, {"telegram": "already sent", "bale": "sent"})
         self.assertEqual(len(attempts), 2)
 
+    def test_skips_disabled_telegram(self):
+        requests = []
+        config = {
+            "TELEGRAM_ENABLED": "false",
+            "BALE_ENABLED": "true",
+            "BALE_BOT_TOKEN": "bale-token",
+            "BALE_RELEASE_CHANNEL_ID": "@saluna",
+        }
+
+        with tempfile.TemporaryDirectory() as directory:
+            results = publisher.publish_release(
+                config=config,
+                revision="abc123",
+                apps="pwa",
+                notes="بهبود سرعت",
+                state_dir=Path(directory),
+                opener=lambda request, timeout: requests.append(request) or Response(),
+            )
+
+        self.assertEqual(results, {"telegram": "disabled", "bale": "sent"})
+        self.assertEqual(len(requests), 1)
+        self.assertIn("tapi.bale.ai", requests[0].full_url)
+
     def test_missing_configuration_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             env_file = Path(directory) / ".env.production"
-            env_file.write_text("TELEGRAM_BOT_TOKEN=token\n", encoding="utf-8")
+            env_file.write_text(
+                "TELEGRAM_ENABLED=false\n"
+                "BALE_ENABLED=true\n"
+                "BALE_BOT_TOKEN=token\n",
+                encoding="utf-8",
+            )
             with self.assertRaisesRegex(
-                publisher.AnnouncementError, "TELEGRAM_RELEASE_CHANNEL_ID"
+                publisher.AnnouncementError, "BALE_RELEASE_CHANNEL_ID"
             ):
                 publisher.load_config(env_file)
+
+    def test_load_config_only_requires_enabled_providers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env_file = Path(directory) / ".env.production"
+            env_file.write_text(
+                "TELEGRAM_ENABLED=false\n"
+                "BALE_ENABLED=true\n"
+                "BALE_BOT_TOKEN=token\n"
+                "BALE_RELEASE_CHANNEL_ID=@saluna\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                publisher.load_config(env_file),
+                {
+                    "TELEGRAM_ENABLED": "false",
+                    "BALE_ENABLED": "true",
+                    "BALE_BOT_TOKEN": "token",
+                    "BALE_RELEASE_CHANNEL_ID": "@saluna",
+                },
+            )
 
 
 if __name__ == "__main__":

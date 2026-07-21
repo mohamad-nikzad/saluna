@@ -16,8 +16,18 @@ from typing import Callable
 
 MAX_NOTES_LENGTH = 3500
 PROVIDERS = {
-    "telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_RELEASE_CHANNEL_ID", "https://api.telegram.org"),
-    "bale": ("BALE_BOT_TOKEN", "BALE_RELEASE_CHANNEL_ID", "https://tapi.bale.ai"),
+    "telegram": (
+        "TELEGRAM_ENABLED",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_RELEASE_CHANNEL_ID",
+        "https://api.telegram.org",
+    ),
+    "bale": (
+        "BALE_ENABLED",
+        "BALE_BOT_TOKEN",
+        "BALE_RELEASE_CHANNEL_ID",
+        "https://tapi.bale.ai",
+    ),
 }
 
 
@@ -53,7 +63,15 @@ def load_config(env_file: Path) -> dict[str, str]:
 
     config: dict[str, str] = {}
     missing: list[str] = []
-    for token_key, channel_key, _ in PROVIDERS.values():
+    enabled_count = 0
+    for enabled_key, token_key, channel_key, _ in PROVIDERS.values():
+        enabled = os.environ.get(enabled_key, values.get(enabled_key, "false")).strip().lower()
+        if enabled not in {"true", "false"}:
+            raise AnnouncementError(f"{enabled_key} must be true or false.")
+        config[enabled_key] = enabled
+        if enabled == "false":
+            continue
+        enabled_count += 1
         for key in (token_key, channel_key):
             value = os.environ.get(key, values.get(key, "")).strip()
             if value:
@@ -64,6 +82,8 @@ def load_config(env_file: Path) -> dict[str, str]:
         raise AnnouncementError(
             "Missing release announcement configuration: " + ", ".join(missing)
         )
+    if enabled_count == 0:
+        raise AnnouncementError("No release announcement provider is enabled.")
     return config
 
 
@@ -88,7 +108,10 @@ def publish_release(
     open_url = opener or urllib.request.urlopen
     results: dict[str, str] = {}
 
-    for provider, (token_key, channel_key, api_base) in PROVIDERS.items():
+    for provider, (enabled_key, token_key, channel_key, api_base) in PROVIDERS.items():
+        if config[enabled_key] == "false":
+            results[provider] = "disabled"
+            continue
         marker = release_dir / f"{provider}.sent"
         if marker.exists():
             results[provider] = "already sent"
@@ -149,7 +172,12 @@ def main() -> int:
         config = load_config(args.env_file)
         if args.dry_run:
             print(message)
-            print("\nDry run: Telegram and Bale configuration is present.")
+            enabled = [
+                provider
+                for provider, (enabled_key, *_rest) in PROVIDERS.items()
+                if config[enabled_key] == "true"
+            ]
+            print(f"\nDry run: configuration is present for {', '.join(enabled)}.")
             return 0
         results = publish_release(
             config=config,

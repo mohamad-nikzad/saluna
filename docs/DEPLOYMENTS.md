@@ -55,7 +55,7 @@ from the `Build production images` workflow.
 For a user-facing deployment, enable `announce_release` in the manual
 `Deploy production` form and enter concise Persian `release_notes`. After every
 selected app passes its health and public smoke checks, the workflow publishes
-one identical announcement to the Saluna Telegram and Bale channels. Leave the
+one identical announcement through each enabled release provider. Leave the
 option disabled for internal, infrastructure, or maintenance deployments.
 
 The existing bots must be channel administrators with permission to post. Add
@@ -67,8 +67,9 @@ TELEGRAM_RELEASE_CHANNEL_ID=@saluna_channel
 BALE_RELEASE_CHANNEL_ID=@saluna_channel
 ```
 
-The existing `TELEGRAM_BOT_TOKEN` and `BALE_BOT_TOKEN` are reused. Preview and
-validate the message and configuration without publishing:
+Only providers whose existing `<PROVIDER>_ENABLED` value is `true` are used;
+disabled providers need no release channel ID. Their existing bot token is
+reused. Preview and validate the message and configuration without publishing:
 
 ```bash
 cd /opt/saluna
