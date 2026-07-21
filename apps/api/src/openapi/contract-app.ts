@@ -58,9 +58,13 @@ import {
 } from './routes/commissions'
 import {
   approveAppointmentRequestRoute,
+  convertFlexibleAppointmentRequestRoute,
+  cancelAppointmentRequestRoute,
   createFlexibleAppointmentRequestRoute,
   listAppointmentRequestsRoute,
   rejectAppointmentRequestRoute,
+  renewTerminalAppointmentRequestRoute,
+  updateFlexibleAppointmentRequestRoute,
 } from './routes/appointment-requests'
 import {
   getBusinessSettingsRoute,
@@ -886,6 +890,49 @@ const createFlexibleAppointmentRequestStub: RouteHandler<
         requestedEndTime: null,
         acceptableDates: ['2026-06-07'],
         timePreference: 'any' as const,
+        closureNote: null,
+        existingClient: { id: stubClient.id, name: stubClient.name },
+      },
+    },
+    201,
+  )
+
+const updateFlexibleAppointmentRequestStub: RouteHandler<
+  typeof updateFlexibleAppointmentRequestRoute
+> = (c) =>
+  c.json(
+    {
+      request: {
+        ...stubAppointmentRequest,
+        clientId: stubClient.id,
+        timingMode: 'flexible' as const,
+        requestedDate: null,
+        requestedStartTime: null,
+        requestedEndTime: null,
+        acceptableDates: ['2026-06-07'],
+        timePreference: 'any' as const,
+        closureNote: null,
+        existingClient: { id: stubClient.id, name: stubClient.name },
+      },
+    },
+    200,
+  )
+
+const renewTerminalAppointmentRequestStub: RouteHandler<
+  typeof renewTerminalAppointmentRequestRoute
+> = (c) =>
+  c.json(
+    {
+      request: {
+        ...stubAppointmentRequest,
+        clientId: stubClient.id,
+        timingMode: 'flexible' as const,
+        requestedDate: null,
+        requestedStartTime: null,
+        requestedEndTime: null,
+        acceptableDates: ['2026-06-07'],
+        timePreference: 'any' as const,
+        closureNote: null,
         existingClient: { id: stubClient.id, name: stubClient.name },
       },
     },
@@ -897,8 +944,17 @@ const approveAppointmentRequestStub: RouteHandler<
 > = (c) =>
   c.json({ appointmentId: stubAppointment.id, clientId: stubClient.id }, 200)
 
+const convertFlexibleAppointmentRequestStub: RouteHandler<
+  typeof convertFlexibleAppointmentRequestRoute
+> = (c) =>
+  c.json({ appointmentId: stubAppointment.id, clientId: stubClient.id }, 200)
+
 const rejectAppointmentRequestStub: RouteHandler<
   typeof rejectAppointmentRequestRoute
+> = (c) => c.json({ ok: true as const }, 200)
+
+const cancelAppointmentRequestStub: RouteHandler<
+  typeof cancelAppointmentRequestRoute
 > = (c) => c.json({ ok: true as const }, 200)
 
 const stubSalonPresence = {
@@ -1509,8 +1565,21 @@ export const contractApp = new OpenAPIHono()
         createFlexibleAppointmentRequestRoute,
         createFlexibleAppointmentRequestStub,
       )
+      .openapi(
+        updateFlexibleAppointmentRequestRoute,
+        updateFlexibleAppointmentRequestStub,
+      )
+      .openapi(
+        renewTerminalAppointmentRequestRoute,
+        renewTerminalAppointmentRequestStub,
+      )
       .openapi(approveAppointmentRequestRoute, approveAppointmentRequestStub)
-      .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub),
+      .openapi(
+        convertFlexibleAppointmentRequestRoute,
+        convertFlexibleAppointmentRequestStub,
+      )
+      .openapi(rejectAppointmentRequestRoute, rejectAppointmentRequestStub)
+      .openapi(cancelAppointmentRequestRoute, cancelAppointmentRequestStub),
   )
   .route(
     '/api/v1/settings',

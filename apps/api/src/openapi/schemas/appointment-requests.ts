@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { normalizeAcceptableDates } from '@repo/salon-core/appointment-request-timing'
 
 const isoDateTimeSchema = z.string().datetime().or(z.string())
 
@@ -59,6 +59,23 @@ export const timePreferenceSchema = z
   .enum(['morning', 'afternoon', 'evening', 'any'])
   .openapi('TimePreference')
 
+const acceptableDatesSchema = z.array(z.string()).min(1)
+
+function validateAcceptableDates(
+  values: { acceptableDates: string[] },
+  ctx: z.RefinementCtx,
+) {
+  try {
+    normalizeAcceptableDates(values.acceptableDates)
+  } catch {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['acceptableDates'],
+      message: 'تاریخ‌ها باید معتبر، یکتا و در بازه مجاز باشند',
+    })
+  }
+}
+
 const flexibleAppointmentRequestListItemSchema =
   appointmentRequestListItemBaseSchema
     .extend({
@@ -69,6 +86,7 @@ const flexibleAppointmentRequestListItemSchema =
       requestedEndTime: z.null(),
       acceptableDates: z.array(z.string()).min(1),
       timePreference: timePreferenceSchema,
+      closureNote: z.string().nullable(),
       existingClient: z.object({ id: z.string(), name: z.string() }),
     })
     .openapi('FlexibleAppointmentRequestListItem')
@@ -106,39 +124,61 @@ export const createFlexibleAppointmentRequestBodySchema = z
   .object({
     clientId: z.string().uuid(),
     serviceId: z.string().uuid(),
-    acceptableDates: z
-      .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
-      .min(1)
-      .refine((dates) =>
-        dates.every((date) => {
-          const parsed = new Date(`${date}T00:00:00Z`)
-          return (
-            !Number.isNaN(parsed.getTime()) &&
-            parsed.toISOString().slice(0, 10) === date
-          )
-        }),
-      )
-      .refine((dates) => new Set(dates).size === dates.length),
+    acceptableDates: acceptableDatesSchema,
     timePreference: timePreferenceSchema,
     notes: z.string().max(2000).optional(),
   })
   .strict()
-  .superRefine((values, ctx) => {
-    const today = salonTodayYmd()
-    const maxDate = addDaysYmd(today, 30)
-    if (values.acceptableDates.some((date) => date < today || date > maxDate)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['acceptableDates'],
-        message: 'تاریخ خارج از بازه مجاز است',
-      })
-    }
-  })
+  .superRefine(validateAcceptableDates)
   .openapi('CreateFlexibleAppointmentRequestRequest')
 
 export const createFlexibleAppointmentRequestResponseSchema = z
   .object({ request: flexibleAppointmentRequestListItemSchema })
   .openapi('CreateFlexibleAppointmentRequestResponse')
+
+export const renewTerminalAppointmentRequestBodySchema = z
+  .object({
+    acceptableDates: acceptableDatesSchema,
+    timePreference: timePreferenceSchema,
+    clientId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source Client is unavailable',
+    }),
+    serviceId: z.string().uuid().optional().openapi({
+      description:
+        'Required replacement only when the source ServiceVariant is unavailable',
+    }),
+  })
+  .strict()
+  .superRefine(validateAcceptableDates)
+  .openapi('RenewTerminalAppointmentRequestRequest')
+
+export const renewTerminalAppointmentRequestResponseSchema = z
+  .object({ request: flexibleAppointmentRequestListItemSchema })
+  .openapi('RenewTerminalAppointmentRequestResponse')
+
+export const updateFlexibleAppointmentRequestBodySchema = z
+  .object({
+    acceptableDates: acceptableDatesSchema,
+    timePreference: timePreferenceSchema,
+    notes: z.string().max(2000).nullable(),
+  })
+  .strict()
+  .superRefine(validateAcceptableDates)
+  .openapi('UpdateFlexibleAppointmentRequestRequest')
+
+export const updateFlexibleAppointmentRequestResponseSchema = z
+  .object({ request: flexibleAppointmentRequestListItemSchema })
+  .openapi('UpdateFlexibleAppointmentRequestResponse')
+
+export const convertFlexibleAppointmentRequestBodySchema = z
+  .object({
+    finalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+    staffId: z.string().min(1),
+  })
+  .strict()
+  .openapi('ConvertFlexibleAppointmentRequestRequest')
 
 export const approveAppointmentRequestBodySchema = z
   .object({
@@ -169,3 +209,15 @@ export const rejectAppointmentRequestResponseSchema = z
     ok: z.literal(true),
   })
   .openapi('RejectAppointmentRequestResponse')
+
+export const cancelAppointmentRequestBodySchema = z
+  .object({
+    closureNote: z.string().trim().min(1).optional().openapi({
+      description: 'Optional note explaining the customer withdrawal',
+    }),
+  })
+  .openapi('CancelAppointmentRequestRequest')
+
+export const cancelAppointmentRequestResponseSchema = z
+  .object({ ok: z.literal(true) })
+  .openapi('CancelAppointmentRequestResponse')

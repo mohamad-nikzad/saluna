@@ -1488,6 +1488,7 @@ export type FlexibleAppointmentRequestListItem = {
   requestedEndTime: unknown
   acceptableDates: Array<string>
   timePreference: TimePreference
+  closureNote: string | null
 }
 
 export type TimePreference = 'morning' | 'afternoon' | 'evening' | 'any'
@@ -1504,6 +1505,33 @@ export type CreateFlexibleAppointmentRequestRequest = {
   notes?: string
 }
 
+export type UpdateFlexibleAppointmentRequestResponse = {
+  request: FlexibleAppointmentRequestListItem
+}
+
+export type UpdateFlexibleAppointmentRequestRequest = {
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+  notes: string | null
+}
+
+export type RenewTerminalAppointmentRequestResponse = {
+  request: FlexibleAppointmentRequestListItem
+}
+
+export type RenewTerminalAppointmentRequestRequest = {
+  acceptableDates: Array<string>
+  timePreference: TimePreference
+  /**
+   * Required replacement only when the source Client is unavailable
+   */
+  clientId?: string
+  /**
+   * Required replacement only when the source ServiceVariant is unavailable
+   */
+  serviceId?: string
+}
+
 export type ApproveAppointmentRequestResponse = {
   appointmentId: string
   clientId: string
@@ -1516,6 +1544,12 @@ export type ApproveAppointmentRequestRequest = {
   staffId: string
 }
 
+export type ConvertFlexibleAppointmentRequestRequest = {
+  finalDate: string
+  startTime: string
+  staffId: string
+}
+
 export type RejectAppointmentRequestResponse = {
   ok: true
 }
@@ -1525,6 +1559,17 @@ export type RejectAppointmentRequestRequest = {
    * Optional rejection reason shown to salon staff
    */
   reason?: string
+}
+
+export type CancelAppointmentRequestResponse = {
+  ok: true
+}
+
+export type CancelAppointmentRequestRequest = {
+  /**
+   * Optional note explaining the customer withdrawal
+   */
+  closureNote?: string
 }
 
 export type BusinessSettingsResponse = {
@@ -6193,6 +6238,96 @@ export type PostApiV1AppointmentRequestsResponses = {
 export type PostApiV1AppointmentRequestsResponse =
   PostApiV1AppointmentRequestsResponses[keyof PostApiV1AppointmentRequestsResponses]
 
+export type PatchApiV1AppointmentRequestsByIdData = {
+  body: UpdateFlexibleAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}'
+}
+
+export type PatchApiV1AppointmentRequestsByIdErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  409: ApiError
+}
+
+export type PatchApiV1AppointmentRequestsByIdError =
+  PatchApiV1AppointmentRequestsByIdErrors[keyof PatchApiV1AppointmentRequestsByIdErrors]
+
+export type PatchApiV1AppointmentRequestsByIdResponses = {
+  /**
+   * Pending flexible AppointmentRequest updated
+   */
+  200: UpdateFlexibleAppointmentRequestResponse
+}
+
+export type PatchApiV1AppointmentRequestsByIdResponse =
+  PatchApiV1AppointmentRequestsByIdResponses[keyof PatchApiV1AppointmentRequestsByIdResponses]
+
+export type PostApiV1AppointmentRequestsByIdRenewData = {
+  body: RenewTerminalAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/renew'
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewError =
+  PostApiV1AppointmentRequestsByIdRenewErrors[keyof PostApiV1AppointmentRequestsByIdRenewErrors]
+
+export type PostApiV1AppointmentRequestsByIdRenewResponses = {
+  /**
+   * Renewed flexible AppointmentRequest recorded
+   */
+  201: RenewTerminalAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdRenewResponse =
+  PostApiV1AppointmentRequestsByIdRenewResponses[keyof PostApiV1AppointmentRequestsByIdRenewResponses]
+
 export type PostApiV1AppointmentRequestsByIdApproveData = {
   body: ApproveAppointmentRequestRequest
   path: {
@@ -6238,6 +6373,51 @@ export type PostApiV1AppointmentRequestsByIdApproveResponses = {
 export type PostApiV1AppointmentRequestsByIdApproveResponse =
   PostApiV1AppointmentRequestsByIdApproveResponses[keyof PostApiV1AppointmentRequestsByIdApproveResponses]
 
+export type PostApiV1AppointmentRequestsByIdConvertData = {
+  body: ConvertFlexibleAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/convert'
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertError =
+  PostApiV1AppointmentRequestsByIdConvertErrors[keyof PostApiV1AppointmentRequestsByIdConvertErrors]
+
+export type PostApiV1AppointmentRequestsByIdConvertResponses = {
+  /**
+   * Draft converted and Appointment created
+   */
+  200: ApproveAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdConvertResponse =
+  PostApiV1AppointmentRequestsByIdConvertResponses[keyof PostApiV1AppointmentRequestsByIdConvertResponses]
+
 export type PostApiV1AppointmentRequestsByIdRejectData = {
   body?: RejectAppointmentRequestRequest
   path: {
@@ -6278,6 +6458,51 @@ export type PostApiV1AppointmentRequestsByIdRejectResponses = {
 
 export type PostApiV1AppointmentRequestsByIdRejectResponse =
   PostApiV1AppointmentRequestsByIdRejectResponses[keyof PostApiV1AppointmentRequestsByIdRejectResponses]
+
+export type PostApiV1AppointmentRequestsByIdCancelData = {
+  body?: CancelAppointmentRequestRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/appointment-requests/{id}/cancel'
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_appointments permission
+   */
+  403: ApiError
+  /**
+   * Appointment request not found or no longer pending
+   */
+  404: ApiError
+  /**
+   * Slot no longer available or intake validation failed
+   */
+  409: ApiError
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelError =
+  PostApiV1AppointmentRequestsByIdCancelErrors[keyof PostApiV1AppointmentRequestsByIdCancelErrors]
+
+export type PostApiV1AppointmentRequestsByIdCancelResponses = {
+  /**
+   * Request cancelled
+   */
+  200: CancelAppointmentRequestResponse
+}
+
+export type PostApiV1AppointmentRequestsByIdCancelResponse =
+  PostApiV1AppointmentRequestsByIdCancelResponses[keyof PostApiV1AppointmentRequestsByIdCancelResponses]
 
 export type GetApiV1SettingsBusinessData = {
   body?: never

@@ -44,6 +44,7 @@ interface ClientPickerProps {
   hostActive?: boolean
   /** Show device contact action beside the trigger instead of inside the list. */
   contactActionPlacement?: 'list' | 'beside'
+  ariaLabel?: string
 }
 
 type PickerMode = 'closed' | 'searching' | 'adding'
@@ -55,6 +56,7 @@ export function ClientPicker({
   onClientCreated,
   hostActive = true,
   contactActionPlacement = 'list',
+  ariaLabel,
 }: ClientPickerProps) {
   const isTouch = useIsTouch()
   const [mode, setMode] = useState<PickerMode>('closed')
@@ -230,6 +232,7 @@ export function ClientPicker({
   const triggerButton = (
     <button
       type="button"
+      aria-label={ariaLabel}
       dir="rtl"
       onClick={isTouch ? undefined : openSearch}
       className={cn(

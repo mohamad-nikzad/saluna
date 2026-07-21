@@ -260,6 +260,9 @@ import type {
   PatchApiV1AdminSalonsByIdStatusData,
   PatchApiV1AdminSalonsByIdStatusErrors,
   PatchApiV1AdminSalonsByIdStatusResponses,
+  PatchApiV1AppointmentRequestsByIdData,
+  PatchApiV1AppointmentRequestsByIdErrors,
+  PatchApiV1AppointmentRequestsByIdResponses,
   PatchApiV1AppointmentsByIdData,
   PatchApiV1AppointmentsByIdErrors,
   PatchApiV1AppointmentsByIdResponses,
@@ -350,9 +353,18 @@ import type {
   PostApiV1AppointmentRequestsByIdApproveData,
   PostApiV1AppointmentRequestsByIdApproveErrors,
   PostApiV1AppointmentRequestsByIdApproveResponses,
+  PostApiV1AppointmentRequestsByIdCancelData,
+  PostApiV1AppointmentRequestsByIdCancelErrors,
+  PostApiV1AppointmentRequestsByIdCancelResponses,
+  PostApiV1AppointmentRequestsByIdConvertData,
+  PostApiV1AppointmentRequestsByIdConvertErrors,
+  PostApiV1AppointmentRequestsByIdConvertResponses,
   PostApiV1AppointmentRequestsByIdRejectData,
   PostApiV1AppointmentRequestsByIdRejectErrors,
   PostApiV1AppointmentRequestsByIdRejectResponses,
+  PostApiV1AppointmentRequestsByIdRenewData,
+  PostApiV1AppointmentRequestsByIdRenewErrors,
+  PostApiV1AppointmentRequestsByIdRenewResponses,
   PostApiV1AppointmentRequestsData,
   PostApiV1AppointmentRequestsErrors,
   PostApiV1AppointmentRequestsResponses,
@@ -2581,6 +2593,56 @@ export const postApiV1AppointmentRequests = <
   })
 
 /**
+ * Edit a pending manager Draft timing agreement
+ */
+export const patchApiV1AppointmentRequestsById = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PatchApiV1AppointmentRequestsByIdData, ThrowOnError>,
+): RequestResult<
+  PatchApiV1AppointmentRequestsByIdResponses,
+  PatchApiV1AppointmentRequestsByIdErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    PatchApiV1AppointmentRequestsByIdResponses,
+    PatchApiV1AppointmentRequestsByIdErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Create a new Draft from a terminal request
+ */
+export const postApiV1AppointmentRequestsByIdRenew = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdRenewData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdRenewResponses,
+  PostApiV1AppointmentRequestsByIdRenewErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdRenewResponses,
+    PostApiV1AppointmentRequestsByIdRenewErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/renew',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
  * Approve appointment request
  */
 export const postApiV1AppointmentRequestsByIdApprove = <
@@ -2606,6 +2668,31 @@ export const postApiV1AppointmentRequestsByIdApprove = <
   })
 
 /**
+ * Convert a manager Draft to an Appointment
+ */
+export const postApiV1AppointmentRequestsByIdConvert = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdConvertData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdConvertResponses,
+  PostApiV1AppointmentRequestsByIdConvertErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdConvertResponses,
+    PostApiV1AppointmentRequestsByIdConvertErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/convert',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
  * Reject appointment request
  */
 export const postApiV1AppointmentRequestsByIdReject = <
@@ -2623,6 +2710,31 @@ export const postApiV1AppointmentRequestsByIdReject = <
     ThrowOnError
   >({
     url: '/api/v1/appointment-requests/{id}/reject',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Record customer withdrawal from a manager Draft
+ */
+export const postApiV1AppointmentRequestsByIdCancel = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1AppointmentRequestsByIdCancelData, ThrowOnError>,
+): RequestResult<
+  PostApiV1AppointmentRequestsByIdCancelResponses,
+  PostApiV1AppointmentRequestsByIdCancelErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1AppointmentRequestsByIdCancelResponses,
+    PostApiV1AppointmentRequestsByIdCancelErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/appointment-requests/{id}/cancel',
     ...options,
     headers: {
       'Content-Type': 'application/json',

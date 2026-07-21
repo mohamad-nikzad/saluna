@@ -34,6 +34,9 @@ import {
 } from './service-queries'
 import { syncAppointmentCommission } from './commission-queries'
 
+type Db = ReturnType<typeof getDb>
+type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0]
+
 type SnapshotKeys =
   | 'bookedServiceName'
   | 'bookedServiceDuration'
@@ -402,6 +405,7 @@ export async function getAppointmentById(
 export type CreateAppointmentOptions = {
   createdByUserId?: string
   finalPrice?: number
+  transaction?: DbTransaction
   /**
    * Overrides the live service snapshot at insert time. Used by
    * `AppointmentRequest` approval so the customer is honored at the terms
@@ -456,7 +460,7 @@ export async function createAppointment(
   if (isClientProvidedEntityId(apt.id)) {
     values.id = apt.id
   }
-  const [row] = await db.transaction(async (tx) => {
+  const insert = async (tx: DbTransaction) => {
     const [created] = await tx.insert(appointments).values(values).returning()
     if (!created) throw new Error('appointment creation failed')
     if (selectedAddons.length > 0) {
@@ -470,7 +474,10 @@ export async function createAppointment(
     }
     await syncAppointmentCommission(tx, null, created)
     return [created]
-  })
+  }
+  const [row] = options.transaction
+    ? await insert(options.transaction)
+    : await db.transaction(insert)
   const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
