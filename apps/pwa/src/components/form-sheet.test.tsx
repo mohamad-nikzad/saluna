@@ -15,6 +15,7 @@ import {
   FormSheet,
   FormSheetContent,
   FormSheetDescription,
+  FormSheetHeader,
   FormSheetTitle,
 } from './form-sheet'
 
@@ -39,8 +40,10 @@ function GuardedFormSheet({
   return (
     <FormSheet open={open} onOpenChange={requestClose}>
       <FormSheetContent onRequestClose={() => requestClose(false)}>
-        <FormSheetTitle>ویرایش مشتری</FormSheetTitle>
-        <FormSheetDescription>مشخصات مشتری</FormSheetDescription>
+        <FormSheetHeader>
+          <FormSheetTitle>ویرایش مشتری</FormSheetTitle>
+          <FormSheetDescription>مشخصات مشتری</FormSheetDescription>
+        </FormSheetHeader>
       </FormSheetContent>
       {confirmDialog}
     </FormSheet>
@@ -55,8 +58,12 @@ describe('FormSheet', () => {
     render(
       <FormSheet open onOpenChange={onOpenChange}>
         <FormSheetContent onRequestClose={onRequestClose}>
-          <FormSheetTitle>ثبت نوبت</FormSheetTitle>
-          <FormSheetDescription>مشخصات نوبت را وارد کنید.</FormSheetDescription>
+          <FormSheetHeader>
+            <FormSheetTitle>ثبت نوبت</FormSheetTitle>
+            <FormSheetDescription>
+              مشخصات نوبت را وارد کنید.
+            </FormSheetDescription>
+          </FormSheetHeader>
         </FormSheetContent>
       </FormSheet>,
     )

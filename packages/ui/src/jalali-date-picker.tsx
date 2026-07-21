@@ -29,6 +29,9 @@ interface JalaliDatePickerProps {
   id?: string
   required?: boolean
   className?: string
+  /** Controlled open state for programmatic open (e.g. “add date” actions). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const numFmt = new Intl.NumberFormat('fa-IR')
@@ -38,8 +41,11 @@ export function JalaliDatePicker({
   onChange,
   id,
   className,
+  open: openProp,
+  onOpenChange,
 }: JalaliDatePickerProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = openProp ?? uncontrolledOpen
 
   const selected = useMemo(() => {
     if (!value) return null
@@ -63,9 +69,10 @@ export function JalaliDatePicker({
         setViewYear(target.jy)
         setViewMonth(target.jm)
       }
-      setOpen(isOpen)
+      onOpenChange?.(isOpen)
+      if (openProp === undefined) setUncontrolledOpen(isOpen)
     },
-    [selected, todayJalali],
+    [selected, todayJalali, onOpenChange, openProp],
   )
 
   const goPrev = useCallback(() => {
@@ -91,9 +98,9 @@ export function JalaliDatePicker({
   const handleDayClick = useCallback(
     (day: number) => {
       onChange(jalaliToGregorianStr(viewYear, viewMonth, day))
-      setOpen(false)
+      handleOpen(false)
     },
-    [viewYear, viewMonth, onChange],
+    [viewYear, viewMonth, onChange, handleOpen],
   )
 
   const daysInMonth = jalaliMonthLength(viewYear, viewMonth)
@@ -116,6 +123,7 @@ export function JalaliDatePicker({
       <button
         type="button"
         id={id}
+        aria-label={displayText ? `تاریخ ${displayText}` : 'انتخاب تاریخ'}
         onClick={() => handleOpen(true)}
         className={cn(
           'border-input bg-blush-soft dark:bg-input/30 flex h-9 touch:h-11 w-full min-w-0 items-center justify-between rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
@@ -143,6 +151,7 @@ export function JalaliDatePicker({
                 variant="ghost"
                 size="icon"
                 className="touch-manipulation"
+                aria-label="ماه بعد"
                 onClick={goNext}
               >
                 <ChevronRightIcon className="h-5 w-5" />
@@ -155,6 +164,7 @@ export function JalaliDatePicker({
                 variant="ghost"
                 size="icon"
                 className="touch-manipulation"
+                aria-label="ماه قبل"
                 onClick={goPrev}
               >
                 <ChevronLeftIcon className="h-5 w-5" />
@@ -230,7 +240,7 @@ export function JalaliDatePicker({
                 onChange(
                   `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
                 )
-                setOpen(false)
+                handleOpen(false)
               }}
             >
               امروز

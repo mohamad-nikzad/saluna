@@ -451,11 +451,11 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
           enabled={useTemporaryClient}
           focus={() => setFocus('temporaryClientName')}
         />
-        <FormSheetHeader className="gap-2 pb-2">
+        <FormSheetHeader className="pb-2">
           <FormSheetTitle className="text-base">
             {mode === 'single' ? 'ثبت نوبت' : 'ثبت پکیج'}
           </FormSheetTitle>
-          <div className="rounded-xl bg-muted/70 p-0.5">
+          <div className="mt-2 rounded-xl bg-muted/70 p-0.5">
             <div className="grid grid-cols-2 gap-1">
               <button
                 type="button"

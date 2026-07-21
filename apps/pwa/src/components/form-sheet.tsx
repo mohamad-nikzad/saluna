@@ -7,6 +7,38 @@ import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 
 const FormSheetOpenContext = React.createContext(false)
 
+type FormSheetChromeValue = {
+  onRequestClose: () => void
+  closeButtonRef: React.RefObject<HTMLButtonElement | null>
+}
+
+const FormSheetChromeContext = React.createContext<FormSheetChromeValue | null>(
+  null,
+)
+
+function FormSheetCloseButton({
+  className,
+}: {
+  className?: string
+}) {
+  const chrome = React.useContext(FormSheetChromeContext)
+  if (!chrome) return null
+  return (
+    <button
+      ref={chrome.closeButtonRef}
+      type="button"
+      onClick={chrome.onRequestClose}
+      aria-label="بستن"
+      className={cn(
+        'flex size-9 touch:size-11 shrink-0 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none',
+        className,
+      )}
+    >
+      <XIcon className="size-4" />
+    </button>
+  )
+}
+
 function FormSheet({
   open,
   onOpenChange,
@@ -44,6 +76,10 @@ function FormSheetContent({
 }) {
   const open = React.useContext(FormSheetOpenContext)
   const closeButtonRef = React.useRef<HTMLButtonElement>(null)
+  const chrome = React.useMemo(
+    () => ({ onRequestClose, closeButtonRef }),
+    [onRequestClose],
+  )
 
   return (
     <DialogPrimitive.Portal>
@@ -83,32 +119,34 @@ function FormSheetContent({
         aria-hidden={open ? undefined : true}
         inert={open ? undefined : true}
       >
-        <button
-          ref={closeButtonRef}
-          type="button"
-          onClick={onRequestClose}
-          aria-label="بستن"
-          className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] inset-e-3 z-10 flex size-9 touch:size-11 items-center justify-center rounded-full bg-secondary/70 text-foreground/75 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-          <XIcon className="size-4" />
-        </button>
-        {children}
+        <FormSheetChromeContext.Provider value={chrome}>
+          {children}
+        </FormSheetChromeContext.Provider>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   )
 }
 
-function FormSheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
+function FormSheetHeader({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="form-sheet-header"
       className={cn(
-        'shrink-0 flex flex-col gap-0.5 border-b border-line-soft bg-card px-5 pb-4 pe-14 text-right',
+        'shrink-0 border-b border-line-soft bg-card px-5 pb-4 text-right',
         'pt-[calc(0.75rem+env(safe-area-inset-top))]',
         className,
       )}
       {...props}
-    />
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
+        <FormSheetCloseButton className="-me-1.5 -mt-0.5" />
+      </div>
+    </div>
   )
 }
 

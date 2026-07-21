@@ -238,8 +238,8 @@ describe('flexible appointment request conversion', () => {
     )
   })
 
-  it('rejects a final date outside the remaining acceptable dates', async () => {
-    const finalDate = addDaysYmd(salonTodayYmd(), 2)
+  it('rejects a final date outside the Request Horizon', async () => {
+    const finalDate = addDaysYmd(salonTodayYmd(), 45)
     setupDb({
       ...pendingRequest,
       timingMode: 'flexible',
@@ -267,6 +267,59 @@ describe('flexible appointment request conversion', () => {
     })
     expect(mocks.validateCreateAppointmentIntake).not.toHaveBeenCalled()
     expect(mocks.createAppointment).not.toHaveBeenCalled()
+  })
+
+  it('allows a horizon date even when it was not listed as acceptable', async () => {
+    const listedDate = addDaysYmd(salonTodayYmd(), 1)
+    const finalDate = addDaysYmd(salonTodayYmd(), 2)
+    const request = {
+      ...pendingRequest,
+      timingMode: 'flexible' as const,
+      clientId: 'client-1',
+      requestedDate: null,
+      requestedStartTime: null,
+      requestedEndTime: null,
+      acceptableDates: [listedDate],
+      timePreference: 'any' as const,
+    }
+    const { db } = setupDb(request)
+    const tx = { id: 'transaction', update: db.update }
+    db.transaction = vi.fn(async (work) => work(tx))
+    mocks.validateCreateAppointmentIntake.mockResolvedValue({
+      ok: true,
+      command: {
+        clientId: 'client-1',
+        staffId: 'staff-1',
+        serviceId: 'service-1',
+        date: finalDate,
+        startTime: '13:30',
+        endTime: '14:15',
+        status: 'scheduled',
+        notes: request.notes,
+      },
+      client: { id: 'client-1' },
+      staff: { id: 'staff-1' },
+      service: { id: 'service-1', duration: 90 },
+    })
+    mocks.createAppointment.mockResolvedValue({ id: 'appointment-manual-date' })
+
+    const result = await convertFlexibleAppointmentRequest({
+      id: request.id,
+      salonId: request.salonId,
+      finalDate,
+      startTime: '13:30',
+      staffId: 'staff-1',
+      reviewedByUserId: 'manager-1',
+    })
+
+    expect(result).toEqual({
+      ok: true,
+      appointmentId: 'appointment-manual-date',
+      clientId: 'client-1',
+    })
+    expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith(
+      expect.objectContaining({ date: finalDate }),
+    )
   })
 
   it('rejects a start time outside the saved Time Preference', async () => {

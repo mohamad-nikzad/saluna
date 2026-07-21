@@ -118,16 +118,22 @@ function WheelColumn({
         <div style={{ height: PADDING }} />
 
         {items.map((item) => (
-          <div
+          <button
             key={item}
+            type="button"
+            onClick={() => {
+              onChange(item)
+              const idx = items.indexOf(item)
+              if (idx >= 0) scrollToIndex(idx, 'smooth')
+            }}
             className={cn(
-              'flex items-center justify-center text-xl font-semibold tabular-nums transition-colors',
+              'flex w-full items-center justify-center text-xl font-semibold tabular-nums transition-colors',
               item === value ? 'text-foreground' : 'text-muted-foreground/60',
             )}
             style={{ height: ITEM_HEIGHT, scrollSnapAlign: 'center' }}
           >
             {formatItem(item)}
-          </div>
+          </button>
         ))}
 
         {/* Bottom spacer */}
@@ -174,6 +180,7 @@ export function TimePicker({ value, onChange, id, label }: TimePickerProps) {
       <button
         type="button"
         id={id}
+        aria-label={label || 'انتخاب ساعت'}
         onClick={() => handleOpen(true)}
         className={cn(
           'border-input bg-blush-soft dark:bg-input/30 flex h-9 touch:h-11 w-full min-w-0 items-center justify-between rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',

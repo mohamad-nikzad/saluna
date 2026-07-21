@@ -1,6 +1,15 @@
 import { use, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { AlertTriangle, CalendarDays, Clock, Plus, Users } from 'lucide-react'
+import {
+  AlertTriangle,
+  CalendarDays,
+  ChevronLeft,
+  Clock,
+  Inbox,
+  Plus,
+  Users,
+} from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
@@ -11,6 +20,7 @@ import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
+import { pendingDraftsQueryOptions } from '#/lib/appointment-requests-queries'
 import {
   buildManagerTodayViewModel,
   buildWeekStrip,
@@ -157,6 +167,11 @@ export function ManagerTodayScreen() {
   })
   const createReady = staff.length > 0 && services.length > 0
   const createDisabled = !createReady
+  const { data: pendingDrafts } = useQuery({
+    ...pendingDraftsQueryOptions(),
+    refetchInterval: 60_000,
+  })
+  const pendingDraftCount = pendingDrafts?.requests.length ?? 0
 
   const {
     queue,
@@ -292,6 +307,20 @@ export function ManagerTodayScreen() {
               </div>
             </div>
           </div>
+
+          <Link
+            to="/requests"
+            search={{ tab: 'drafts' }}
+            className="flex items-center gap-2 rounded-xl px-1 py-1.5 text-[12px] text-muted-foreground transition-colors active:bg-accent/35 active:text-foreground"
+          >
+            <Inbox className="size-3.5 shrink-0 opacity-70" />
+            <span className="min-w-0 flex-1 truncate">
+              {pendingDraftCount > 0
+                ? `${toPersianDigits(pendingDraftCount)} پیش‌نویس درخواست`
+                : 'پیش‌نویس‌های درخواست'}
+            </span>
+            <ChevronLeft className="size-3.5 shrink-0 opacity-45" />
+          </Link>
 
           {attentionItems.length > 0 ? (
             <section>

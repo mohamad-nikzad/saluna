@@ -3,14 +3,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
-import { formatJalaliFullDate } from '@repo/salon-core/jalali'
+import { formatPersianTime } from '@repo/salon-core/persian-digits'
 import type { User } from '@repo/salon-core/types'
 
 import type { FlexibleAppointmentRequestListItem } from '#/lib/appointment-requests-queries'
-import { ConvertDraftSheet } from './draft-timing'
+import { ConvertDraftSheet, formatAcceptableDateChip } from './draft-timing'
 
 describe('ConvertDraftSheet', () => {
-  it('shows immutable Draft context and only schedules a remaining date', () => {
+  it('shows immutable Draft context and compact day choices plus manual date', () => {
     const today = salonTodayYmd()
     const elapsedDate = addDaysYmd(today, -1)
     const remainingDate = addDaysYmd(today, 1)
@@ -58,16 +58,17 @@ describe('ConvertDraftSheet', () => {
     expect(screen.getByText('سارا احمدی')).toBeTruthy()
     expect(screen.getByText('کوتاهی ثبت‌شده')).toBeTruthy()
     expect(screen.getByText('لطفاً تماس بگیرید')).toBeTruthy()
-    expect(screen.getAllByText(formatJalaliFullDate(elapsedDate))).toHaveLength(
-      1,
-    )
     expect(
-      screen.getAllByText(formatJalaliFullDate(remainingDate)).length,
-    ).toBeGreaterThan(1)
-    expect(screen.getByLabelText('ساعت شروع')).toMatchObject({
-      min: '12:00',
-      max: '16:59',
-      value: '12:00',
-    })
+      screen.getAllByText(formatAcceptableDateChip(elapsedDate)),
+    ).toHaveLength(1)
+    expect(
+      screen
+        .getByRole('radio', { name: formatAcceptableDateChip(remainingDate) })
+        .getAttribute('aria-checked'),
+    ).toBe('true')
+    expect(screen.getByLabelText('تاریخ نهایی')).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: 'ساعت شروع' }).textContent,
+    ).toContain(formatPersianTime('12:00'))
   })
 })

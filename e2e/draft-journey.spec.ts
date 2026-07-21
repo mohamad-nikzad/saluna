@@ -1,5 +1,9 @@
 import { test, expect, type Page } from '@playwright/test'
-import { formatJalaliFullDate } from '../packages/salon-core/src/jalali'
+import {
+  JALALI_MONTHS,
+  JALALI_WEEKDAYS_SHORT,
+  parseGregorianToJalali,
+} from '../packages/salon-core/src/jalali'
 import { apiPathPattern } from './helpers/api'
 import { addDaysYmd, tehranTodayYmd } from './helpers/date'
 import {
@@ -7,6 +11,15 @@ import {
   loginManagerExpectsToday,
   loginStaffExpectsToday,
 } from './helpers/auth'
+import { pickOpenJalaliDate, pickTime } from './helpers/jalali-pickers'
+
+const chipNumFmt = new Intl.NumberFormat('fa-IR')
+
+function acceptableDateChip(ymd: string) {
+  const { jd, jm } = parseGregorianToJalali(ymd)
+  const weekdayIndex = (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 1) % 7
+  return `${JALALI_WEEKDAYS_SHORT[weekdayIndex]} ${chipNumFmt.format(jd)} ${JALALI_MONTHS[jm - 1]}`
+}
 
 type Client = { id: string; name: string }
 type Service = { id: string; name: string; duration: number }
@@ -154,16 +167,11 @@ test.describe('Flexible AppointmentRequest journey', () => {
 
         await sheet.getByRole('combobox', { name: 'خدمت', exact: true }).click()
         await page.getByRole('option', { name: /پاکسازی پوست/ }).click()
-        const dates = sheet.locator('input[type="date"]')
-        await dates.first().fill(firstDate)
-        await sheet.getByRole('button', { name: 'تاریخ دیگر' }).click()
-        await dates.nth(1).fill(secondDate)
-        await sheet
-          .getByRole('combobox', { name: 'ترجیح زمانی', exact: true })
-          .click()
-        await page
-          .getByRole('option', { name: 'بعدازظهر', exact: true })
-          .click()
+        await sheet.getByRole('button', { name: 'افزودن تاریخ' }).click()
+        await pickOpenJalaliDate(page, firstDate)
+        await sheet.getByRole('button', { name: 'افزودن تاریخ' }).click()
+        await pickOpenJalaliDate(page, secondDate)
+        await sheet.getByRole('radio', { name: 'بعدازظهر', exact: true }).click()
         await sheet.locator('textarea').fill(marker)
 
         const createDraftResponse = page.waitForResponse(
@@ -241,8 +249,8 @@ test.describe('Flexible AppointmentRequest journey', () => {
       await expect(originalCard).toContainText(clientName)
       await expect(originalCard).toContainText('پاکسازی پوست')
       await expect(originalCard).toContainText('بعدازظهر')
-      await expect(originalCard).toContainText(formatJalaliFullDate(firstDate))
-      await expect(originalCard).toContainText(formatJalaliFullDate(secondDate))
+      await expect(originalCard).toContainText(acceptableDateChip(firstDate))
+      await expect(originalCard).toContainText(acceptableDateChip(secondDate))
       await expect(page.getByRole('region', { name: 'بعدتر' })).toContainText(
         clientName,
       )
@@ -252,12 +260,14 @@ test.describe('Flexible AppointmentRequest journey', () => {
         const sheet = page.getByRole('dialog', {
           name: 'ویرایش زمان پیش‌نویس',
         })
-        const dates = sheet.locator('input[type="date"]')
-        await dates.nth(1).fill(editedSecondDate)
         await sheet
-          .getByRole('combobox', { name: 'ترجیح زمانی', exact: true })
+          .getByRole('button', {
+            name: `حذف ${acceptableDateChip(secondDate)}`,
+          })
           .click()
-        await page.getByRole('option', { name: 'هر زمان', exact: true }).click()
+        await sheet.getByRole('button', { name: 'افزودن تاریخ' }).click()
+        await pickOpenJalaliDate(page, editedSecondDate)
+        await sheet.getByRole('radio', { name: 'هر زمان', exact: true }).click()
         await sheet.locator('textarea').fill(editedMarker)
         const updateResponse = page.waitForResponse(
           (response) =>
@@ -270,8 +280,8 @@ test.describe('Flexible AppointmentRequest journey', () => {
 
       const card = draftCard(page, clientName)
       await expect(card).toContainText('هر زمان')
-      await expect(card).toContainText(formatJalaliFullDate(editedSecondDate))
-      await expect(card).not.toContainText(formatJalaliFullDate(secondDate))
+      await expect(card).toContainText(acceptableDateChip(editedSecondDate))
+      await expect(card).not.toContainText(acceptableDateChip(secondDate))
 
       await test.step('Pending Draft stays off-calendar', async () => {
         await page.goto(`/calendar?date=${firstDate}`)
@@ -310,7 +320,11 @@ test.describe('Flexible AppointmentRequest journey', () => {
       const conversionSheet = page.getByRole('dialog', {
         name: 'تبدیل پیش‌نویس به نوبت',
       })
-      await conversionSheet.locator('input[type="time"]').fill(startTime)
+      await pickTime(
+        page,
+        conversionSheet.getByRole('button', { name: 'ساعت شروع' }),
+        startTime,
+      )
       await conversionSheet
         .getByRole('combobox', { name: 'پرسنل', exact: true })
         .click()

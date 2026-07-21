@@ -49,9 +49,15 @@ import {
   toPersianDigits,
   formatPersianTime,
 } from '@repo/salon-core/persian-digits'
-import { formatJalaliFullDate } from '@repo/salon-core/jalali'
+import {
+  formatJalaliFullDate,
+  JALALI_WEEKDAYS_SHORT,
+} from '@repo/salon-core/jalali'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
-import { normalizeAcceptableDates } from '@repo/salon-core/appointment-request-timing'
+import {
+  nextSalonWeekDates,
+  normalizeAcceptableDates,
+} from '@repo/salon-core/appointment-request-timing'
 import { displayPhone } from '@repo/salon-core/phone'
 import type { User, Service } from '@repo/salon-core/types'
 
@@ -82,6 +88,8 @@ import {
   DraftTimingFields,
   ConvertDraftSheet,
   EditDraftSheet,
+  formatAcceptableDateChip,
+  formatNextWeekRangeLabel,
 } from '#/components/appointment-requests/draft-timing'
 import { ClientPicker } from '#/components/calendar/client-picker'
 import { ServicePicker } from '#/components/services/service-picker'
@@ -161,6 +169,7 @@ const EMPTY_COPY: Record<StatusTab, { title: string; sub: string }> = {
 
 const searchSchema = z.object({
   focus: z.string().optional(),
+  tab: z.literal('drafts').optional(),
 })
 
 export const Route = createFileRoute('/_authed/requests')({
@@ -197,10 +206,17 @@ function RequestsError({ error }: { error: Error }) {
 }
 
 function RequestsPage() {
-  const { focus } = Route.useSearch()
-  const [tab, setTab] = useState<RequestsTab>('pending')
+  const { focus, tab: draftsTab } = Route.useSearch()
+  const [tab, setTab] = useState<RequestsTab>(() =>
+    draftsTab === 'drafts' ? 'drafts' : 'pending',
+  )
   const [counts, setCounts] = useState<Partial<Record<StatusTab, number>>>({})
+  const [newDraftOpen, setNewDraftOpen] = useState(false)
   const initial = Route.useLoaderData()
+
+  useEffect(() => {
+    if (draftsTab === 'drafts') setTab('drafts')
+  }, [draftsTab])
 
   // A focused request is only meaningful while pending.
   const activeTab: RequestsTab = focus ? 'pending' : tab
@@ -221,10 +237,12 @@ function RequestsPage() {
   const selectTab = useCallback(
     (id: RequestsTab) => {
       setTab(id)
-      // Changing tabs is an explicit action that clears any focused request.
-      if (focus) void navigate({ to: '/requests' })
+      void navigate({
+        to: '/requests',
+        search: id === 'drafts' ? { tab: 'drafts' } : {},
+      })
     },
-    [focus, navigate],
+    [navigate],
   )
 
   return (
@@ -248,6 +266,17 @@ function RequestsPage() {
               )}
             </p>
           </div>
+          {activeTab === 'drafts' ? (
+            <Button
+              type="button"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setNewDraftOpen(true)}
+            >
+              <Plus className="size-4" />
+              پیش‌نویس جدید
+            </Button>
+          ) : null}
         </div>
 
         <div className="-mx-5 mt-3.5 flex gap-2 overflow-x-auto px-5 scrollbar-hide">
@@ -317,7 +346,10 @@ function RequestsPage() {
 
       <div className="flex-1 overflow-auto px-5 pb-24 pt-4">
         {activeTab === 'drafts' ? (
-          <DraftsPanel />
+          <DraftsPanel
+            createOpen={newDraftOpen}
+            onCreateOpenChange={setNewDraftOpen}
+          />
         ) : (
           <RequestsList
             status={activeTab}
@@ -484,19 +516,36 @@ function RequestsList({
   )
 }
 
-const DRAFT_GROUP_LABELS = {
-  'this-week': 'این هفته',
-  'next-week': 'هفته آینده',
-  later: 'بعدتر',
-  elapsed: 'تاریخ‌های گذشته',
+const DRAFT_GROUP_META = {
+  'this-week': {
+    label: 'این هفته',
+    accent: 'bg-primary',
+  },
+  'next-week': {
+    label: 'هفته آینده',
+    accent: 'bg-sky',
+  },
+  later: {
+    label: 'بعدتر',
+    accent: 'bg-plum-deep',
+  },
+  elapsed: {
+    label: 'تاریخ‌های گذشته',
+    accent: 'bg-muted-foreground',
+  },
 } as const
 
-function DraftsPanel() {
+function DraftsPanel({
+  createOpen,
+  onCreateOpenChange,
+}: {
+  createOpen: boolean
+  onCreateOpenChange: (open: boolean) => void
+}) {
   const { data, isLoading } = useQuery(pendingDraftsQueryOptions())
   const { data: clients = [] } = useQuery(clientsListQueryOptions())
   const { data: services = [] } = useQuery(servicesListQueryOptions())
   const { data: staff = [] } = useQuery(staffListQueryOptions())
-  const [open, setOpen] = useState(false)
   const [editingDraft, setEditingDraft] =
     useState<FlexibleAppointmentRequestListItem | null>(null)
   const [convertingDraft, setConvertingDraft] =
@@ -517,11 +566,7 @@ function DraftsPanel() {
   const sections = organizeDrafts(drafts, salonTodayYmd())
 
   return (
-    <div className="space-y-3">
-      <Button className="w-full rounded-xl" onClick={() => setOpen(true)}>
-        <Plus className="size-4" />
-        پیش‌نویس جدید
-      </Button>
+    <div className="space-y-4">
       {drafts.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm font-bold">پیش‌نویسی ثبت نشده</p>
@@ -530,32 +575,48 @@ function DraftsPanel() {
           </p>
         </div>
       ) : (
-        sections.map((section) => (
-          <section
-            key={section.id}
-            aria-labelledby={`draft-section-${section.id}`}
-            className="space-y-2"
-          >
-            <h2
-              id={`draft-section-${section.id}`}
-              className="px-1 text-sm font-bold"
+        sections.map((section) => {
+          const meta = DRAFT_GROUP_META[section.id]
+          return (
+            <section
+              key={section.id}
+              aria-labelledby={`draft-section-${section.id}`}
+              className="overflow-hidden rounded-2xl border border-line-soft bg-muted/30"
             >
-              {DRAFT_GROUP_LABELS[section.id]}
-            </h2>
-            {section.drafts.map((draft) => (
-              <DraftCard
-                key={draft.id}
-                draft={draft}
-                onEdit={() => setEditingDraft(draft)}
-                onConvert={() => setConvertingDraft(draft)}
-              />
-            ))}
-          </section>
-        ))
+              <div className="flex items-center gap-2 px-3.5 pt-3 pb-2">
+                <span
+                  className={cn('size-1.5 shrink-0 rounded-full', meta.accent)}
+                />
+                <h2
+                  id={`draft-section-${section.id}`}
+                  className="min-w-0 flex-1 truncate text-[12px] font-bold text-foreground/75"
+                >
+                  {meta.label}
+                </h2>
+                <span
+                  className="shrink-0 text-[11px] font-bold tabular-nums text-muted-foreground"
+                  aria-label={`${toPersianDigits(section.drafts.length)} پیش‌نویس`}
+                >
+                  {toPersianDigits(section.drafts.length)}
+                </span>
+              </div>
+              <div className="space-y-2 px-2 pb-2">
+                {section.drafts.map((draft) => (
+                  <DraftCard
+                    key={draft.id}
+                    draft={draft}
+                    onEdit={() => setEditingDraft(draft)}
+                    onConvert={() => setConvertingDraft(draft)}
+                  />
+                ))}
+              </div>
+            </section>
+          )
+        })
       )}
       <NewDraftSheet
-        open={open}
-        onOpenChange={setOpen}
+        open={createOpen}
+        onOpenChange={onCreateOpenChange}
         clients={clients}
         services={services.filter((service) => service.active)}
       />
@@ -577,6 +638,83 @@ function DraftsPanel() {
             if (!nextOpen) setConvertingDraft(null)
           }}
         />
+      ) : null}
+    </div>
+  )
+}
+
+function DraftAcceptableDatesSummary({
+  dates,
+  today,
+}: {
+  dates: string[]
+  today: string
+}) {
+  const weekDates = nextSalonWeekDates(today)
+  const weekSet = new Set(weekDates)
+  const inWeek = dates.filter((date) => weekSet.has(date))
+  const other = dates.filter((date) => !weekSet.has(date))
+  const showWeekSummary = inWeek.length >= 3
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      {showWeekSummary ? (
+        <div className="rounded-xl border border-line-soft/80 bg-card px-2.5 py-2">
+          <p className="text-[12px] font-semibold text-foreground">
+            هفته آینده · {formatNextWeekRangeLabel(weekDates)}
+            {inWeek.length < 7
+              ? ` · ${toPersianDigits(inWeek.length)} روز`
+              : ' · تمام هفته'}
+          </p>
+          <div className="mt-1.5 grid grid-cols-7 gap-1" dir="rtl">
+            {weekDates.map((date, index) => {
+              const on = inWeek.includes(date)
+              return (
+                <span
+                  key={date}
+                  className={cn(
+                    'flex h-7 items-center justify-center rounded-lg text-[11px] font-bold',
+                    on
+                      ? 'bg-primary/12 text-primary'
+                      : 'bg-muted/50 text-muted-foreground/40',
+                    date < today && on && 'line-through opacity-60',
+                  )}
+                >
+                  {JALALI_WEEKDAYS_SHORT[index]}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      ) : (
+        <span className="flex flex-wrap gap-1.5">
+          {inWeek.map((date) => (
+            <span
+              key={date}
+              className={cn(
+                'rounded-lg bg-card px-2 py-1 text-[12px] font-semibold text-foreground shadow-sm ring-1 ring-line-soft/70',
+                date < today && 'text-muted-foreground line-through',
+              )}
+            >
+              {formatAcceptableDateChip(date)}
+            </span>
+          ))}
+        </span>
+      )}
+      {other.length > 0 ? (
+        <span className="flex flex-wrap gap-1.5">
+          {other.map((date) => (
+            <span
+              key={date}
+              className={cn(
+                'rounded-lg bg-card px-2 py-1 text-[12px] font-semibold text-foreground shadow-sm ring-1 ring-line-soft/70',
+                date < today && 'text-muted-foreground line-through',
+              )}
+            >
+              {formatAcceptableDateChip(date)}
+            </span>
+          ))}
+        </span>
       ) : null}
     </div>
   )
@@ -630,20 +768,26 @@ function DraftCard({
   return (
     <article
       aria-label={`پیش‌نویس ${clientName}`}
-      className="space-y-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-primary bg-card p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-xl border border-line-soft/90 border-s-[3px] border-s-primary bg-card p-3.5 shadow-sm"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <ClientAvatar name={clientName} accent="var(--mint)" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-bold">{clientName}</p>
-          <p className="text-xs text-muted-foreground">
-            {draft.bookedServiceName} ·{' '}
+          <p className="truncate text-[15px] font-extrabold text-foreground">
+            {clientName}
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <Scissors className="size-3.5 shrink-0 text-primary" />
+            <p className="truncate text-[13px] font-semibold text-foreground">
+              {draft.bookedServiceName}
+            </p>
+          </div>
+          <p className="mt-1 text-[12px] tabular-nums text-muted-foreground">
             {toPersianDigits(draft.bookedServiceDuration)} دقیقه ·{' '}
             {toPersianDigits(draft.bookedServicePrice.toLocaleString('en-US'))}{' '}
             تومان
           </p>
         </div>
-        <Badge variant="neutral">پیش‌نویس</Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -668,39 +812,36 @@ function DraftCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="space-y-2 rounded-2xl bg-background p-3 text-xs">
+      <div className="flex flex-col gap-2.5 rounded-2xl bg-background/90 p-3.5 ring-1 ring-line-soft/60">
         <div className="flex items-start gap-2">
-          <Calendar className="size-3.5 text-primary" />
-          <span className="flex flex-wrap gap-1.5">
-            {draft.acceptableDates.map((date) => (
-              <span
-                key={date}
-                className={cn(
-                  'rounded-lg bg-card px-2 py-1',
-                  date < today && 'text-muted-foreground line-through',
-                )}
-                aria-label={date < today ? 'تاریخ گذشته' : undefined}
-              >
-                {formatJalaliFullDate(date)}
-              </span>
-            ))}
+          <Calendar className="mt-1 size-3.5 shrink-0 text-primary" />
+          <DraftAcceptableDatesSummary
+            dates={draft.acceptableDates}
+            today={today}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border/80 pt-2.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blush-soft px-2.5 py-1 text-[11.5px] font-bold text-plum-deep">
+            <Clock className="size-3" />
+            {DRAFT_TIME_PREFERENCE_LABELS[draft.timePreference]}
           </span>
         </div>
-        <p className="flex items-center gap-2">
-          <Clock className="size-3.5 text-primary" />
-          {DRAFT_TIME_PREFERENCE_LABELS[draft.timePreference]}
-        </p>
-        {draft.notes && (
-          <p className="border-t border-dashed border-border pt-2 text-muted-foreground">
-            {draft.notes}
+        {draft.notes ? (
+          <p className="border-t border-dashed border-border/80 pt-2.5 text-[12px] leading-relaxed text-sage-deep">
+            «‌ {draft.notes} ‌»
           </p>
-        )}
+        ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="outline" onClick={onEdit}>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="rounded-xl"
+          onClick={onEdit}
+        >
           <Pencil className="size-4" /> ویرایش
         </Button>
-        <Button type="button" onClick={onConvert}>
+        <Button type="button" className="flex-1 rounded-xl" onClick={onConvert}>
           <Check className="size-4" /> تبدیل به نوبت
         </Button>
       </div>
@@ -770,7 +911,7 @@ function NewDraftSheet({
       ? source.serviceId
       : '',
   )
-  const [dates, setDates] = useState([''])
+  const [dates, setDates] = useState<string[]>([])
   const [timePreference, setTimePreference] =
     useState<keyof typeof DRAFT_TIME_PREFERENCE_LABELS>('any')
   const [notes, setNotes] = useState(source?.notes ?? '')
@@ -791,7 +932,7 @@ function NewDraftSheet({
     onOpenChange(false)
     setClientId('')
     setServiceId('')
-    setDates([''])
+    setDates([])
     setTimePreference('any')
     setNotes('')
     setErrorMessage('')
@@ -804,7 +945,7 @@ function NewDraftSheet({
     }
     let acceptableDates: string[]
     try {
-      acceptableDates = normalizeAcceptableDates(dates.filter(Boolean), today)
+      acceptableDates = normalizeAcceptableDates(dates, today)
     } catch {
       setErrorMessage('تاریخ‌ها باید یکتا و در ۳۰ روز آینده باشند')
       return
@@ -832,8 +973,8 @@ function NewDraftSheet({
           </FormSheetTitle>
         </FormSheetHeader>
         <FormSheetBody className="space-y-5 px-5 py-4">
-          <div className="block space-y-2 text-sm font-medium">
-            <span>مشتری</span>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">مشتری</p>
             {lockedClient ? (
               <div className="flex h-11 items-center rounded-xl border border-line-soft bg-blush-soft px-3 text-sm">
                 {lockedClient.name}
@@ -854,8 +995,8 @@ function NewDraftSheet({
               />
             )}
           </div>
-          <div className="block space-y-2 text-sm font-medium">
-            <span>خدمت</span>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">خدمت</p>
             <ServicePicker
               services={services}
               value={serviceId}
@@ -873,12 +1014,13 @@ function NewDraftSheet({
             onNotesChange={setNotes}
             notesReadOnly={Boolean(source)}
           />
-          {errorMessage && (
+          {errorMessage ? (
             <p className="text-xs text-destructive">{errorMessage}</p>
-          )}
+          ) : null}
         </FormSheetBody>
         <FormSheetFooter>
           <Button
+            size="lg"
             onClick={submit}
             disabled={createDraft.isPending || renewDraft.isPending}
           >
@@ -1019,7 +1161,7 @@ function PendingCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-line-soft border-s-[3px] border-s-amber bg-card p-4 shadow-sm">
+    <div className="flex flex-col gap-3.5 rounded-2xl border border-line-soft border-s-[3px] border-s-amber bg-card p-4 shadow-sm">
       <div className="flex items-start gap-3">
         <ClientAvatar
           name={name}
@@ -1027,15 +1169,26 @@ function PendingCard({
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[15px] font-bold text-foreground">
+            <span className="truncate text-[15px] font-extrabold text-foreground">
               {name}
             </span>
             <Badge variant={isReturning ? 'mint' : 'sky'}>
               {isReturning ? 'بازگشتی' : 'جدید'}
             </Badge>
           </div>
+          <div className="mt-1 flex items-center gap-2">
+            <Scissors className="size-3.5 shrink-0 text-primary" />
+            <p className="truncate text-[13px] font-semibold text-foreground">
+              {request.bookedServiceName}
+            </p>
+            {serviceVariantChanged ? (
+              <Badge variant="danger" className="shrink-0">
+                خدمت تغییر کرده
+              </Badge>
+            ) : null}
+          </div>
           <p
-            className="mt-0.5 truncate text-[12px] tabular-nums text-muted-foreground"
+            className="mt-1 text-[12px] tabular-nums text-muted-foreground"
             dir="ltr"
           >
             {displayPhone(request.customerPhone)}
@@ -1044,43 +1197,33 @@ function PendingCard({
         <PhoneActions phone={request.customerPhone} name={name} />
       </div>
 
-      <div className="flex flex-col gap-2 rounded-2xl bg-background p-3.5">
-        <div className="flex items-center gap-2">
-          <Scissors className="size-3.5 shrink-0 text-primary" />
-          <span className="flex-1 text-[13px] font-semibold text-foreground">
-            {request.bookedServiceName}
-          </span>
-          {serviceVariantChanged && (
-            <Badge variant="danger">خدمت تغییر کرده</Badge>
-          )}
-          <span className="text-[12px] tabular-nums text-muted-foreground">
-            {toPersianDigits(
-              request.bookedServicePrice.toLocaleString('en-US'),
-            )}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11.5px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="size-3" />
+      <div className="flex flex-col gap-2.5 rounded-2xl bg-background/90 p-3.5 ring-1 ring-line-soft/60">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 text-[12px] font-semibold text-foreground shadow-sm ring-1 ring-line-soft/70">
+            <Calendar className="size-3.5 text-primary" />
             {formatJalaliFullDate(request.requestedDate)}
           </span>
-          <span className="inline-flex items-center gap-1 tabular-nums">
-            <Clock className="size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 text-[12px] font-semibold tabular-nums text-foreground shadow-sm ring-1 ring-line-soft/70">
+            <Clock className="size-3.5 text-primary" />
             {formatPersianTime(request.requestedStartTime)} تا{' '}
-            {formatPersianTime(request.requestedEndTime)} ·{' '}
-            {toPersianDigits(request.bookedServiceDuration)} دقیقه
+            {formatPersianTime(request.requestedEndTime)}
           </span>
         </div>
-        {request.notes && (
-          <p className="border-t border-dashed border-border pt-2 text-[11.5px] italic leading-relaxed text-sage-deep">
+        <p className="text-[12px] tabular-nums text-muted-foreground">
+          {toPersianDigits(request.bookedServiceDuration)} دقیقه ·{' '}
+          {toPersianDigits(request.bookedServicePrice.toLocaleString('en-US'))}{' '}
+          تومان
+        </p>
+        {request.notes ? (
+          <p className="border-t border-dashed border-border/80 pt-2.5 text-[12px] leading-relaxed text-sage-deep">
             «‌ {request.notes} ‌»
           </p>
-        )}
+        ) : null}
       </div>
 
       <div className="space-y-2">
         <Select value={staffId} onValueChange={setStaffId}>
-          <SelectTrigger className="h-10 rounded-xl border-line-soft">
+          <SelectTrigger className="w-full rounded-xl border-line-soft">
             <SelectValue placeholder="انتخاب پرسنل" />
           </SelectTrigger>
           <SelectContent>
@@ -1098,7 +1241,7 @@ function PendingCard({
           </SelectContent>
         </Select>
 
-        {errMsg && <p className="text-xs text-destructive">{errMsg}</p>}
+        {errMsg ? <p className="text-xs text-destructive">{errMsg}</p> : null}
 
         <div className="flex gap-2">
           <Button
@@ -1178,11 +1321,11 @@ function DecidedCard({
   return (
     <div
       className={cn(
-        'space-y-3 rounded-[var(--radius)] border border-line-soft bg-card p-3.5 shadow-sm',
-        status !== 'approved' && 'opacity-80',
+        'flex flex-col gap-3 rounded-2xl border border-line-soft bg-card p-4 shadow-sm',
+        status !== 'approved' && 'opacity-85',
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <div
           className={cn(
             'flex size-10 shrink-0 items-center justify-center rounded-xl',
@@ -1193,32 +1336,40 @@ function DecidedCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm font-semibold text-foreground">
+            <span className="truncate text-[15px] font-extrabold text-foreground">
               {name}
             </span>
             <Badge variant={meta.tone}>{meta.label}</Badge>
           </div>
-          <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-            {request.bookedServiceName}
-            {request.timingMode === 'exact' && (
-              <>
-                {' · '}
-                {formatJalaliFullDate(request.requestedDate)} ·{' '}
-                <span className="tabular-nums">
-                  {formatPersianTime(request.requestedStartTime)}
-                </span>
-              </>
-            )}
-          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <Scissors className="size-3.5 shrink-0 text-primary" />
+            <p className="truncate text-[13px] font-semibold text-foreground">
+              {request.bookedServiceName}
+            </p>
+          </div>
+          {request.timingMode === 'exact' ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-background px-2 py-1 text-[11.5px] font-semibold text-foreground ring-1 ring-line-soft/70">
+                <Calendar className="size-3 text-primary" />
+                {formatJalaliFullDate(request.requestedDate)}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-background px-2 py-1 text-[11.5px] font-semibold tabular-nums text-foreground ring-1 ring-line-soft/70">
+                <Clock className="size-3 text-primary" />
+                {formatPersianTime(request.requestedStartTime)}
+              </span>
+            </div>
+          ) : null}
           {closureNote ? (
-            <p className="mt-0.5 text-[11px] text-destructive">{closureNote}</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-destructive">
+              {closureNote}
+            </p>
           ) : null}
         </div>
       </div>
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className="w-full rounded-xl"
         onClick={onRenew}
         disabled={renewDisabled}
       >

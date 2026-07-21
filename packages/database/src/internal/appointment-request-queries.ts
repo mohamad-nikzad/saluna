@@ -1,7 +1,10 @@
 import { and, asc, eq, gte, lt, or, sql, type SQL } from 'drizzle-orm'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
-import { isStartTimeInPreference } from '@repo/salon-core/appointment-request-timing'
+import {
+  isStartTimeInPreference,
+  normalizeAcceptableDates,
+} from '@repo/salon-core/appointment-request-timing'
 
 import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
@@ -493,10 +496,9 @@ export async function convertFlexibleAppointmentRequest(
     return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
   }
   const clientId = request.clientId
-  if (
-    input.finalDate < salonTodayYmd() ||
-    !request.acceptableDates?.includes(input.finalDate)
-  ) {
+  try {
+    normalizeAcceptableDates([input.finalDate], salonTodayYmd())
+  } catch {
     return { ok: false, status: 400, error: 'تاریخ انتخاب‌شده قابل قبول نیست' }
   }
   if (
