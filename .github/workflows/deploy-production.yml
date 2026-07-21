@@ -24,6 +24,16 @@ on:
         required: true
         default: false
         type: boolean
+      announce_release:
+        description: Publish a Persian release announcement after a successful deploy
+        required: true
+        default: false
+        type: boolean
+      release_notes:
+        description: Persian user-facing release notes (required when announcing)
+        required: false
+        default: ""
+        type: string
 
 permissions:
   actions: read
@@ -104,16 +114,39 @@ jobs:
             exit 1
           fi
 
+      - name: Validate release announcement
+        if: inputs.announce_release == true
+        working-directory: ${{ steps.revision.outputs.source }}
+        env:
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          DEPLOY_SHA: ${{ steps.revision.outputs.sha }}
+        run: |
+          publisher=scripts/publish_release_announcement.py
+          if [[ ! -f "$publisher" ]]; then
+            publisher=/opt/saluna/scripts/publish_release_announcement.py
+          fi
+          python3 "$publisher" \
+            --env-file /opt/saluna/.env.production \
+            --revision "$DEPLOY_SHA" \
+            --apps "${{ inputs.app }}" \
+            --notes "$RELEASE_NOTES" \
+            --dry-run
+
       - name: Install deployment files
         working-directory: ${{ steps.revision.outputs.source }}
         run: |
           install -m 755 -d /opt/saluna/scripts /opt/saluna/deploy/nginx/templates
           install -m 644 docker-compose.prod.yml /opt/saluna/docker-compose.prod.yml
           install -m 755 scripts/deploy-registry-app.sh /opt/saluna/scripts/deploy-registry-app.sh
+          if [[ -f scripts/publish_release_announcement.py ]]; then
+            install -m 755 scripts/publish_release_announcement.py \
+              /opt/saluna/scripts/publish_release_announcement.py
+          fi
           install -m 644 deploy/nginx/templates/saluna.conf.template \
             /opt/saluna/deploy/nginx/templates/saluna.conf.template
 
-      - name: Deploy sequentially
+      - id: deploy
+        name: Deploy sequentially
         working-directory: ${{ steps.revision.outputs.source }}
         env:
           SELECTED_APP: ${{ inputs.app }}
@@ -204,3 +237,30 @@ jobs:
               --output /dev/null "$smoke_url"
             echo "Deployed ${app}:${tag}" >> "$GITHUB_STEP_SUMMARY"
           done
+
+          apps_csv="$(IFS=,; echo "${apps[*]}")"
+          echo "apps=$apps_csv" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release announcement
+        if: inputs.announce_release == true
+        env:
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          DEPLOY_SHA: ${{ steps.revision.outputs.sha }}
+          DEPLOYED_APPS: ${{ steps.deploy.outputs.apps }}
+        run: |
+          set +e
+          output="$(python3 /opt/saluna/scripts/publish_release_announcement.py \
+            --revision "$DEPLOY_SHA" \
+            --apps "$DEPLOYED_APPS" \
+            --notes "$RELEASE_NOTES" 2>&1)"
+          status=$?
+          set -e
+
+          printf '%s\n' "$output"
+          {
+            echo "### Release announcement"
+            echo '```text'
+            printf '%s\n' "$output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"

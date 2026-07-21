@@ -50,6 +50,40 @@ Deployments are intentionally manual. Builds are automatic on `main` and only
 run for affected apps. A manual rebuild of one app or all apps is also available
 from the `Build production images` workflow.
 
+### Release announcements
+
+For a user-facing deployment, enable `announce_release` in the manual
+`Deploy production` form and enter concise Persian `release_notes`. After every
+selected app passes its health and public smoke checks, the workflow publishes
+one identical announcement to the Saluna Telegram and Bale channels. Leave the
+option disabled for internal, infrastructure, or maintenance deployments.
+
+The existing bots must be channel administrators with permission to post. Add
+the public channel usernames (for example `@saluna`) or numeric IDs to
+`/opt/saluna/.env.production`:
+
+```env
+TELEGRAM_RELEASE_CHANNEL_ID=@saluna_channel
+BALE_RELEASE_CHANNEL_ID=@saluna_channel
+```
+
+The existing `TELEGRAM_BOT_TOKEN` and `BALE_BOT_TOKEN` are reused. Preview and
+validate the message and configuration without publishing:
+
+```bash
+cd /opt/saluna
+./scripts/publish_release_announcement.py \
+  --revision setup-check \
+  --apps pwa \
+  --notes 'بهبودهای جدید سالونا آماده استفاده است.' \
+  --dry-run
+```
+
+Publishing failures do not roll back a healthy deployment. The workflow fails
+and reports each channel result; after fixing permissions or configuration,
+rerun the failed job. Per-channel markers under
+`/opt/saluna/release-announcements/` prevent duplicate posts on retries.
+
 ## GitHub Workflows
 
 - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) validates pull
