@@ -30,6 +30,7 @@ playwright-report/
 test-results/
 blob-report/
 playwright/.cache/
+.playwright-cli/
 
 # Local Claude worktrees
 .claude/worktrees/
