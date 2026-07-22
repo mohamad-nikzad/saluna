@@ -16,11 +16,7 @@ const FormSheetChromeContext = React.createContext<FormSheetChromeValue | null>(
   null,
 )
 
-function FormSheetCloseButton({
-  className,
-}: {
-  className?: string
-}) {
+function FormSheetCloseButton({ className }: { className?: string }) {
   const chrome = React.useContext(FormSheetChromeContext)
   if (!chrome) return null
   return (

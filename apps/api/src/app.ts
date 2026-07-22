@@ -79,7 +79,7 @@ const app = new Hono<AppEnv>()
   // `/api/v1/auth/*` (sign-in, sign-out, get-session, …) falls through to the
   // Better Auth handler below.
   .route('/api/v1/auth', authRoute)
-  .on(['GET', 'POST'], '/api/v1/auth/*', (c) => {
+  .on(['GET', 'POST'], ['/api/v1/auth/*'], async (c) => {
     const authServer = getAuthForRequest(c.req.raw)
     if (!authServer) return c.json({ error: 'مبدأ درخواست مجاز نیست' }, 403)
     return authServer.handler(c.req.raw)

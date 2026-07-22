@@ -15,6 +15,7 @@ import type { UserRole } from '@repo/salon-core/types'
 import { getDb } from '@repo/database/client'
 import {
   appointments,
+  appointmentRequests,
   businessSettings,
   clientFollowUps,
   clientTags,
@@ -1062,6 +1063,9 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     .where(and(eq(clients.salonId, salonId), like(clients.phone, '09129900%')))
   const demoIds = existingDemo.map((r) => r.id)
   if (demoIds.length > 0) {
+    await db
+      .delete(appointmentRequests)
+      .where(inArray(appointmentRequests.clientId, demoIds))
     await db.delete(appointments).where(inArray(appointments.clientId, demoIds))
     await db.delete(clientTags).where(inArray(clientTags.clientId, demoIds))
     await db

@@ -189,7 +189,7 @@ export function JalaliDatePicker({
                 <div key={wi} className="grid grid-cols-7 gap-1">
                   {week.map((day, di) => {
                     if (day === null) {
-                      return <div key={di} className="aspect-square min-h-11" />
+                      return <div key={di} className="h-11" />
                     }
 
                     const isToday =
@@ -209,7 +209,7 @@ export function JalaliDatePicker({
                         type="button"
                         onClick={() => handleDayClick(day)}
                         className={cn(
-                          'aspect-square min-h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-95',
+                          'h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-95',
                           'hover:bg-accent hover:text-accent-foreground',
                           isToday &&
                             !isSelected &&

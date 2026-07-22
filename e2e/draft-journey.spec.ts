@@ -166,12 +166,16 @@ test.describe('Flexible AppointmentRequest journey', () => {
         await page.getByRole('button', { name: new RegExp(clientName) }).click()
 
         await sheet.getByRole('combobox', { name: 'خدمت', exact: true }).click()
-        await page.getByRole('option', { name: /پاکسازی پوست/ }).click()
+        await page
+          .getByRole('option', { name: /پاکسازی پوست/ })
+          .click({ force: true })
         await sheet.getByRole('button', { name: 'افزودن تاریخ' }).click()
         await pickOpenJalaliDate(page, firstDate)
         await sheet.getByRole('button', { name: 'افزودن تاریخ' }).click()
         await pickOpenJalaliDate(page, secondDate)
-        await sheet.getByRole('radio', { name: 'بعدازظهر', exact: true }).click()
+        await sheet
+          .getByRole('radio', { name: 'بعدازظهر', exact: true })
+          .click()
         await sheet.locator('textarea').fill(marker)
 
         const createDraftResponse = page.waitForResponse(

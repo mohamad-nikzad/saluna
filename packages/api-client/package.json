@@ -28,7 +28,6 @@
     "@hey-api/openapi-ts": "^0.98.1",
     "@repo/typescript-config": "workspace:*",
     "@tanstack/react-query": "^5.62.7",
-    "typescript": "5.7.3",
     "vitest": "^3.0.5"
   }
 }

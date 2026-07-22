@@ -63,8 +63,7 @@ const numFmt = new Intl.NumberFormat('fa-IR')
 /** Compact chip label: "ش ۱۲ تیر" */
 export function formatAcceptableDateChip(ymd: string): string {
   const { jd, jm } = parseGregorianToJalali(ymd)
-  const weekdayIndex =
-    (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 1) % 7
+  const weekdayIndex = (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 1) % 7
   return `${JALALI_WEEKDAYS_SHORT[weekdayIndex]} ${numFmt.format(jd)} ${JALALI_MONTHS[jm - 1]}`
 }
 
@@ -151,7 +150,9 @@ function NextWeekDayStrip({
             <span
               className={cn(
                 'text-[10px] font-bold leading-none',
-                selected ? 'text-primary-foreground/90' : 'text-muted-foreground/80',
+                selected
+                  ? 'text-primary-foreground/90'
+                  : 'text-muted-foreground/80',
               )}
             >
               {JALALI_WEEKDAYS_SHORT[index]}
@@ -187,17 +188,14 @@ function AcceptableDatesField({
   const today = salonTodayYmd()
   const weekDates = useMemo(() => nextSalonWeekDates(today), [today])
   const weekSet = useMemo(() => new Set(weekDates), [weekDates])
-  const selected = useMemo(
-    () => new Set(dates.filter(Boolean)),
-    [dates],
-  )
-  const weekSelectedCount = weekDates.filter((date) => selected.has(date)).length
+  const selected = useMemo(() => new Set(dates.filter(Boolean)), [dates])
+  const weekSelectedCount = weekDates.filter((date) =>
+    selected.has(date),
+  ).length
   const [weekPanelOpen, setWeekPanelOpen] = useState(weekSelectedCount > 0)
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  const extraDates = dates
-    .filter((date) => date && !weekSet.has(date))
-    .sort()
+  const extraDates = dates.filter((date) => date && !weekSet.has(date)).sort()
 
   const commitDates = (next: Iterable<string>) => {
     onDatesChange([...new Set(next)].filter(Boolean).sort())
@@ -466,9 +464,7 @@ export function EditDraftSheet({
             notes={notes}
             onNotesChange={setNotes}
           />
-          {errorMessage ? (
-            <FieldError>{errorMessage}</FieldError>
-          ) : null}
+          {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
         </FormSheetBody>
         <FormSheetFooter>
           <Button size="lg" onClick={submit} disabled={updateDraft.isPending}>

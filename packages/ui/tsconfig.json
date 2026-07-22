@@ -1,7 +1,6 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@repo/salon-core": ["../salon-core/src/index.ts"],
       "@repo/salon-core/*": ["../salon-core/src/*"]

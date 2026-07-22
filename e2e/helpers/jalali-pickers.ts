@@ -12,24 +12,14 @@ function monthLabel(jy: number, jm: number) {
 }
 
 function parseMonthLabel(label: string): { jy: number; jm: number } | null {
-  for (let jm = 1; jm <= 12; jm++) {
-    const month = JALALI_MONTHS[jm - 1]
-    if (!label.startsWith(month)) continue
-    const yearText = label.slice(month.length).trim()
-    const jy = Number(
-      yearText.replace(/[۰-۹]/g, (ch) =>
-        String(ch.charCodeAt(0) - '۰'.charCodeAt(0)),
-      ),
-    )
-    if (Number.isFinite(jy)) return { jy, jm }
-  }
-  return null
+  const jm = JALALI_MONTHS.findIndex((month) => label.includes(month)) + 1
+  const yearText = label
+    .replace(/[۰-۹]/g, (ch) => String(ch.charCodeAt(0) - '۰'.charCodeAt(0)))
+    .match(/\d+/)?.[0]
+  return jm && yearText ? { jy: Number(yearText), jm } : null
 }
 
-async function chooseJalaliDayInOpenDrawer(
-  page: Page,
-  gregorianYmd: string,
-) {
+async function chooseJalaliDayInOpenDrawer(page: Page, gregorianYmd: string) {
   const { jy, jm, jd } = parseGregorianToJalali(gregorianYmd)
   const targetLabel = monthLabel(jy, jm)
   const drawer = page
@@ -43,7 +33,10 @@ async function chooseJalaliDayInOpenDrawer(
     ).trim()
     if (currentLabel === targetLabel) break
     const current = parseMonthLabel(currentLabel)
-    expect(current).toBeTruthy()
+    expect(
+      current,
+      `Unexpected Jalali month label: ${currentLabel}`,
+    ).toBeTruthy()
     const currentIndex = current!.jy * 12 + current!.jm
     const targetIndex = jy * 12 + jm
     if (targetIndex > currentIndex) {
@@ -56,7 +49,9 @@ async function chooseJalaliDayInOpenDrawer(
   await expect(drawer.locator('span.text-base.font-semibold')).toHaveText(
     targetLabel,
   )
-  await drawer.getByRole('button', { name: numFmt.format(jd), exact: true }).click()
+  await drawer
+    .getByRole('button', { name: numFmt.format(jd), exact: true })
+    .click()
   await expect(drawer).toBeHidden()
 }
 
@@ -74,11 +69,7 @@ export async function pickOpenJalaliDate(page: Page, gregorianYmd: string) {
   await chooseJalaliDayInOpenDrawer(page, gregorianYmd)
 }
 
-export async function pickTime(
-  page: Page,
-  trigger: Locator,
-  timeHm: string,
-) {
+export async function pickTime(page: Page, trigger: Locator, timeHm: string) {
   const [hour, minute] = timeHm.split(':').map(Number)
   await trigger.click()
   const drawer = page
