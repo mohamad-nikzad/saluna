@@ -13,11 +13,14 @@ describe('Flexible AppointmentRequest timing', () => {
     expect(
       normalizeAcceptableDates(['2026-07-31', '2026-07-21'], '2026-07-21'),
     ).toEqual(['2026-07-21', '2026-07-31'])
+    expect(
+      normalizeAcceptableDates(['2026-10-19'], '2026-07-21'),
+    ).toEqual(['2026-10-19'])
     expect(() =>
       normalizeAcceptableDates(['2026-07-21', '2026-07-21'], '2026-07-21'),
     ).toThrow('unique')
     expect(() =>
-      normalizeAcceptableDates(['2026-08-21'], '2026-07-21'),
+      normalizeAcceptableDates(['2026-10-20'], '2026-07-21'),
     ).toThrow('Request Horizon')
   })
 
@@ -51,9 +54,18 @@ describe('Flexible AppointmentRequest timing', () => {
     expect(
       flexibleRequestGroup(['2026-07-20', '2026-07-25'], '2026-07-21'),
     ).toEqual({ group: 'next-week', earliestRemainingDate: '2026-07-25' })
+    // From 2026-08-01: next week ends 2026-08-14; Jalali month ends 2026-08-22.
+    expect(flexibleRequestGroup(['2026-08-20'], '2026-08-01')).toEqual({
+      group: 'this-month',
+      earliestRemainingDate: '2026-08-20',
+    })
     expect(
       flexibleRequestGroup(['2026-07-20', '2026-08-08'], '2026-07-21'),
-    ).toEqual({ group: 'later', earliestRemainingDate: '2026-08-08' })
+    ).toEqual({ group: 'next-month', earliestRemainingDate: '2026-08-08' })
+    expect(flexibleRequestGroup(['2026-10-01'], '2026-08-01')).toEqual({
+      group: 'later',
+      earliestRemainingDate: '2026-10-01',
+    })
     expect(flexibleRequestGroup(['2026-07-20'], '2026-07-21')).toEqual({
       group: 'elapsed',
       earliestRemainingDate: null,

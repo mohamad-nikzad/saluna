@@ -28,7 +28,7 @@ describe('manager Draft queue', () => {
         drafts: [drafts[2], drafts[0]],
       },
       {
-        id: 'later',
+        id: 'next-month',
         drafts: [drafts[1]],
       },
     ])

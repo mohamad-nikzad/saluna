@@ -29,18 +29,47 @@ interface JalaliDatePickerProps {
   id?: string
   required?: boolean
   className?: string
+  /** Inclusive Gregorian YMD lower bound; earlier days are disabled. */
+  minDate?: string
+  /** Inclusive Gregorian YMD upper bound; later days are disabled. */
+  maxDate?: string
   /** Controlled open state for programmatic open (e.g. “add date” actions). */
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
 const numFmt = new Intl.NumberFormat('fa-IR')
+const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+function isValidYmd(value: string | undefined): value is string {
+  return typeof value === 'string' && YMD_PATTERN.test(value)
+}
+
+function isDateOutOfRange(
+  ymd: string,
+  minDate?: string,
+  maxDate?: string,
+): boolean {
+  if (isValidYmd(minDate) && ymd < minDate) return true
+  if (isValidYmd(maxDate) && ymd > maxDate) return true
+  return false
+}
+
+function localTodayYmd(): string {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth() + 1
+  const d = now.getDate()
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
 
 export function JalaliDatePicker({
   value,
   onChange,
   id,
   className,
+  minDate,
+  maxDate,
   open: openProp,
   onOpenChange,
 }: JalaliDatePickerProps) {
@@ -65,17 +94,42 @@ export function JalaliDatePicker({
   const handleOpen = useCallback(
     (isOpen: boolean) => {
       if (isOpen) {
-        const target = selected ?? todayJalali
+        const fallbackYmd =
+          (isValidYmd(value) &&
+          !isDateOutOfRange(value, minDate, maxDate)
+            ? value
+            : null) ??
+          (isValidYmd(minDate) ? minDate : null) ??
+          localTodayYmd()
+        const target = parseGregorianToJalali(fallbackYmd)
         setViewYear(target.jy)
         setViewMonth(target.jm)
       }
       onOpenChange?.(isOpen)
       if (openProp === undefined) setUncontrolledOpen(isOpen)
     },
-    [selected, todayJalali, onOpenChange, openProp],
+    [value, minDate, maxDate, onOpenChange, openProp],
   )
 
+  const canGoPrev = useMemo(() => {
+    if (!isValidYmd(minDate)) return true
+    const prevMonth = viewMonth === 1 ? 12 : viewMonth - 1
+    const prevYear = viewMonth === 1 ? viewYear - 1 : viewYear
+    const lastDay = jalaliMonthLength(prevYear, prevMonth)
+    const lastYmd = jalaliToGregorianStr(prevYear, prevMonth, lastDay)
+    return lastYmd >= minDate
+  }, [minDate, viewYear, viewMonth])
+
+  const canGoNext = useMemo(() => {
+    if (!isValidYmd(maxDate)) return true
+    const nextMonth = viewMonth === 12 ? 1 : viewMonth + 1
+    const nextYear = viewMonth === 12 ? viewYear + 1 : viewYear
+    const firstYmd = jalaliToGregorianStr(nextYear, nextMonth, 1)
+    return firstYmd <= maxDate
+  }, [maxDate, viewYear, viewMonth])
+
   const goPrev = useCallback(() => {
+    if (!canGoPrev) return
     setViewMonth((m) => {
       if (m === 1) {
         setViewYear((y) => y - 1)
@@ -83,9 +137,10 @@ export function JalaliDatePicker({
       }
       return m - 1
     })
-  }, [])
+  }, [canGoPrev])
 
   const goNext = useCallback(() => {
+    if (!canGoNext) return
     setViewMonth((m) => {
       if (m === 12) {
         setViewYear((y) => y + 1)
@@ -93,14 +148,16 @@ export function JalaliDatePicker({
       }
       return m + 1
     })
-  }, [])
+  }, [canGoNext])
 
   const handleDayClick = useCallback(
     (day: number) => {
-      onChange(jalaliToGregorianStr(viewYear, viewMonth, day))
+      const ymd = jalaliToGregorianStr(viewYear, viewMonth, day)
+      if (isDateOutOfRange(ymd, minDate, maxDate)) return
+      onChange(ymd)
       handleOpen(false)
     },
-    [viewYear, viewMonth, onChange, handleOpen],
+    [viewYear, viewMonth, minDate, maxDate, onChange, handleOpen],
   )
 
   const daysInMonth = jalaliMonthLength(viewYear, viewMonth)
@@ -117,6 +174,8 @@ export function JalaliDatePicker({
   }, [startDow, daysInMonth])
 
   const displayText = value ? formatJalaliDate(value) : ''
+  const todayYmd = localTodayYmd()
+  const todaySelectable = !isDateOutOfRange(todayYmd, minDate, maxDate)
 
   return (
     <>
@@ -152,6 +211,7 @@ export function JalaliDatePicker({
                 size="icon"
                 className="touch-manipulation"
                 aria-label="ماه بعد"
+                disabled={!canGoNext}
                 onClick={goNext}
               >
                 <ChevronRightIcon className="h-5 w-5" />
@@ -165,6 +225,7 @@ export function JalaliDatePicker({
                 size="icon"
                 className="touch-manipulation"
                 aria-label="ماه قبل"
+                disabled={!canGoPrev}
                 onClick={goPrev}
               >
                 <ChevronLeftIcon className="h-5 w-5" />
@@ -192,6 +253,9 @@ export function JalaliDatePicker({
                       return <div key={di} className="h-11" />
                     }
 
+                    const ymd = jalaliToGregorianStr(viewYear, viewMonth, day)
+                    const disabled = isDateOutOfRange(ymd, minDate, maxDate)
+
                     const isToday =
                       viewYear === todayJalali.jy &&
                       viewMonth === todayJalali.jm &&
@@ -207,15 +271,22 @@ export function JalaliDatePicker({
                       <button
                         key={di}
                         type="button"
+                        disabled={disabled}
+                        aria-disabled={disabled || undefined}
                         onClick={() => handleDayClick(day)}
                         className={cn(
-                          'h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation active:scale-95',
-                          'hover:bg-accent hover:text-accent-foreground',
-                          isToday &&
+                          'h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation',
+                          disabled
+                            ? 'cursor-not-allowed text-muted-foreground/35'
+                            : 'hover:bg-accent hover:text-accent-foreground active:scale-95',
+                          !disabled &&
+                            isToday &&
                             !isSelected &&
                             'bg-accent text-accent-foreground ring-1 ring-primary/30',
-                          isSelected &&
+                          !disabled &&
+                            isSelected &&
                             'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm',
+                          disabled && isToday && 'ring-1 ring-border/40',
                         )}
                       >
                         {numFmt.format(day)}
@@ -232,14 +303,10 @@ export function JalaliDatePicker({
               type="button"
               variant="outline"
               className="touch-manipulation"
+              disabled={!todaySelectable}
               onClick={() => {
-                const now = new Date()
-                const y = now.getFullYear()
-                const m = now.getMonth() + 1
-                const d = now.getDate()
-                onChange(
-                  `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
-                )
+                if (!todaySelectable) return
+                onChange(todayYmd)
                 handleOpen(false)
               }}
             >

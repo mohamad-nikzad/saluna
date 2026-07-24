@@ -239,7 +239,7 @@ describe('flexible appointment request conversion', () => {
   })
 
   it('rejects a final date outside the Request Horizon', async () => {
-    const finalDate = addDaysYmd(salonTodayYmd(), 45)
+    const finalDate = addDaysYmd(salonTodayYmd(), 91)
     setupDb({
       ...pendingRequest,
       timingMode: 'flexible',

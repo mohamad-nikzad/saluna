@@ -1,11 +1,21 @@
+import {
+  jalaliMonthLength,
+  jalaliToGregorianStr,
+  parseGregorianToJalali,
+} from './jalali'
 import { addDaysYmd, salonTodayYmd } from './salon-local-time'
 
 export type TimePreference = 'morning' | 'afternoon' | 'evening' | 'any'
 export type FlexibleRequestGroup =
   | 'this-week'
   | 'next-week'
+  | 'this-month'
+  | 'next-month'
   | 'later'
   | 'elapsed'
+
+/** Inclusive Salon-local days ahead for manager Flexible AppointmentRequest dates. */
+export const REQUEST_HORIZON_DAYS = 90
 
 const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const HM_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/
@@ -30,6 +40,22 @@ function saturdayIndex(ymd: string): number {
   return (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 1) % 7
 }
 
+function endOfJalaliMonthContaining(ymd: string): string {
+  const { jy, jm } = parseGregorianToJalali(ymd)
+  return jalaliToGregorianStr(jy, jm, jalaliMonthLength(jy, jm))
+}
+
+function endOfNextJalaliMonth(ymd: string): string {
+  const { jy, jm } = parseGregorianToJalali(ymd)
+  const nextJm = jm === 12 ? 1 : jm + 1
+  const nextJy = jm === 12 ? jy + 1 : jy
+  return jalaliToGregorianStr(
+    nextJy,
+    nextJm,
+    jalaliMonthLength(nextJy, nextJm),
+  )
+}
+
 export function normalizeAcceptableDates(
   dates: readonly string[],
   today = salonTodayYmd(),
@@ -38,7 +64,7 @@ export function normalizeAcceptableDates(
   if (new Set(dates).size !== dates.length) {
     throw new Error('acceptable dates must be unique')
   }
-  const maxDate = addDaysYmd(today, 30)
+  const maxDate = addDaysYmd(today, REQUEST_HORIZON_DAYS)
   if (
     dates.some((date) => !isValidYmd(date) || date < today || date > maxDate)
   ) {
@@ -77,15 +103,23 @@ export function flexibleRequestGroup(
 
   const thisWeekEnd = addDaysYmd(today, 6 - saturdayIndex(today))
   const nextWeekEnd = addDaysYmd(thisWeekEnd, 7)
-  return {
-    group:
-      earliestRemainingDate <= thisWeekEnd
-        ? 'this-week'
-        : earliestRemainingDate <= nextWeekEnd
-          ? 'next-week'
-          : 'later',
-    earliestRemainingDate,
+  const thisMonthEnd = endOfJalaliMonthContaining(today)
+  const nextMonthEnd = endOfNextJalaliMonth(today)
+
+  let group: FlexibleRequestGroup
+  if (earliestRemainingDate <= thisWeekEnd) {
+    group = 'this-week'
+  } else if (earliestRemainingDate <= nextWeekEnd) {
+    group = 'next-week'
+  } else if (earliestRemainingDate <= thisMonthEnd) {
+    group = 'this-month'
+  } else if (earliestRemainingDate <= nextMonthEnd) {
+    group = 'next-month'
+  } else {
+    group = 'later'
   }
+
+  return { group, earliestRemainingDate }
 }
 
 export function isFlexibleRequestExpired(

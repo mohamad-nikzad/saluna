@@ -97,7 +97,7 @@ A manager-recorded **AppointmentRequest** constrained by one or more acceptable 
 Each **Flexible AppointmentRequest** names exactly one **ServiceVariant** and binds its **BookedServiceSnapshot** when recorded.
 
 **Request Horizon**:
-The rolling period from Salon-local today through 30 days ahead, inclusive, in which an **AppointmentRequest** may specify dates.
+The rolling period from Salon-local today through 90 days ahead, inclusive, in which a **Flexible AppointmentRequest** may specify acceptable dates.
 
 A pending **Flexible AppointmentRequest** expires after its final acceptable date has fully ended in Salon local time.
 

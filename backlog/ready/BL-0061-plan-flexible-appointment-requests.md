@@ -20,7 +20,7 @@ Saluna's current `AppointmentRequest` requires an exact date, start time, and en
 
 Let managers record a `Flexible AppointmentRequest` from the existing Requests page. A new Drafts tab provides a prominent New draft action and shows pending manager-recorded requests as cards grouped chronologically by their earliest remaining acceptable date. “Draft” is UI language for a pending manager-recorded `Flexible AppointmentRequest`, not a new domain object or status.
 
-A flexible request records exactly one Client, one ServiceVariant and its binding `BookedServiceSnapshot`, one or more acceptable dates within the 30-day Request Horizon, one shared Time Preference, and optional notes. Managers can select arbitrary dates across weeks or use a quick “next week” action.
+A flexible request records exactly one Client, one ServiceVariant and its binding `BookedServiceSnapshot`, one or more acceptable dates within the 90-day Request Horizon, one shared Time Preference, and optional notes. Managers can select arbitrary dates across weeks or use a quick “next week” action.
 
 Each Draft card exposes Edit and Convert to Appointment actions. Conversion opens a focused scheduling sheet in which the manager chooses only the final date, start time, and Staff Profile. Saluna guides the manager toward choices that satisfy the request, then runs Appointment Intake as the authoritative validation gate before atomically creating the Appointment and approving the AppointmentRequest.
 
@@ -38,7 +38,7 @@ Pending Drafts never occupy staff calendars or hold availability. The existing e
 8. As a manager, I want acceptable dates to span calendar weeks, so that the date picker does not impose an artificial weekly boundary.
 9. As a manager, I want a quick “next week” action, so that the most common rough request takes one action to record.
 10. As a manager, I want “next week” resolved using the Salon-local Saturday–Friday week, so that the saved dates match the salon's planning language.
-11. As a manager, I want acceptable dates limited to today through 30 days ahead, so that Drafts remain near-term and actionable.
+11. As a manager, I want acceptable dates limited to today through 90 days ahead, so that Drafts stay within a practical planning window without matching the shorter customer public request window.
 12. As a manager, I want one broad Time Preference shared by every acceptable date, so that I can capture “these days, afternoon” without entering exact windows.
 13. As a manager, I want Morning, Afternoon, Evening, and Any time choices, so that common customer language maps to clear scheduling constraints.
 14. As a manager, I want the Time Preference to constrain only the Appointment start time, so that a service may finish after the named part of day.
@@ -46,7 +46,7 @@ Pending Drafts never occupy staff calendars or hold availability. The existing e
 16. As a manager, I want pending Drafts kept off every staff calendar, so that tentative demand is never mistaken for a scheduled Appointment.
 17. As a manager, I want pending Drafts not to reserve availability, so that other customers may still be scheduled normally.
 18. As a manager, I want Drafts grouped by their earliest remaining acceptable date, so that the most urgent actionable demand appears first.
-19. As a manager, I want sections such as This week, Next week, and Later, so that I can scan Drafts by planning horizon.
+19. As a manager, I want sections such as This week, Next week, This month, Next month, and Later, so that I can scan Drafts by planning horizon across the Request Horizon.
 20. As a manager, I want each Draft shown exactly once even when its dates span groups, so that counts and actions are not duplicated.
 21. As a manager, I want all acceptable dates visible on the Draft card, so that grouping does not hide later choices.
 22. As a manager, I want elapsed acceptable dates retained but visibly unavailable, so that the original request remains understandable without offering impossible choices.
@@ -87,7 +87,7 @@ Pending Drafts never occupy staff calendars or hold availability. The existing e
 - Add an optional Client relationship to AppointmentRequest. Require it for manager-recorded flexible requests; public exact requests may remain unlinked until approval.
 - Require exactly one ServiceVariant for a flexible request and bind its BookedServiceSnapshot name, duration, and price at creation.
 - Do not support Service Packages or ServiceAddons on flexible requests.
-- Accept one or more normalized Gregorian acceptable dates from Salon-local today through 30 days ahead, inclusive. Dates may cross calendar weeks.
+- Accept one or more normalized Gregorian acceptable dates from Salon-local today through 90 days ahead, inclusive. Dates may cross calendar weeks. Customer exact public requests keep their separate 30-day window.
 - Enforce unique acceptable dates within one request and store them as normalized calendar constraints rather than preserving relative phrases.
 - Resolve “next week” to all seven dates in the next Salon-local Saturday–Friday week. Salon Working Days constrain conversion, not the recorded customer preference.
 - Use one Time Preference for all acceptable dates: Morning `[00:00, 12:00)`, Afternoon `[12:00, 17:00)`, Evening `[17:00, 24:00)`, or Any time.
@@ -98,7 +98,7 @@ Pending Drafts never occupy staff calendars or hold availability. The existing e
 - While pending, permit updates only to acceptable dates, Time Preference, and notes. Client, ServiceVariant, and BookedServiceSnapshot remain immutable.
 - Treat the saved dates and Time Preference as the current customer agreement. Do not add consent flags or preference-history storage.
 - Add a Drafts tab to the existing Requests page with a top New draft action.
-- Group a Draft by its earliest remaining acceptable date into chronological sections such as This week, Next week, and Later.
+- Group a Draft by its earliest remaining acceptable date into chronological sections: This week, Next week, This month, Next month, Later, and Elapsed. Month sections use Salon-local Jalali calendar months; week sections keep priority when they overlap a month boundary.
 - Render a Draft only once and show every acceptable date on its card. Mark elapsed dates unavailable instead of deleting them.
 - Within a section, order Drafts by earliest remaining acceptable date, then oldest creation time.
 - Each card provides Edit and Convert to Appointment as primary actions and rejection/cancellation through secondary actions.

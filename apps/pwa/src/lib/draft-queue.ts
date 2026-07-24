@@ -11,6 +11,8 @@ type DraftTiming = {
 const GROUP_ORDER: FlexibleRequestGroup[] = [
   'this-week',
   'next-week',
+  'this-month',
+  'next-month',
   'later',
   'elapsed',
 ]

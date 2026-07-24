@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { flexibleRequestGroup } from '../packages/salon-core/src/appointment-request-timing'
 import {
   JALALI_MONTHS,
   JALALI_WEEKDAYS_SHORT,
@@ -15,10 +16,23 @@ import { pickOpenJalaliDate, pickTime } from './helpers/jalali-pickers'
 
 const chipNumFmt = new Intl.NumberFormat('fa-IR')
 
+const DRAFT_GROUP_LABELS = {
+  'this-week': 'این هفته',
+  'next-week': 'هفته آینده',
+  'this-month': 'همین ماه',
+  'next-month': 'ماه آینده',
+  later: 'بعدتر',
+  elapsed: 'تاریخ‌های گذشته',
+} as const
+
 function acceptableDateChip(ymd: string) {
   const { jd, jm } = parseGregorianToJalali(ymd)
   const weekdayIndex = (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 1) % 7
   return `${JALALI_WEEKDAYS_SHORT[weekdayIndex]} ${chipNumFmt.format(jd)} ${JALALI_MONTHS[jm - 1]}`
+}
+
+function draftGroupLabel(ymd: string, today = tehranTodayYmd()) {
+  return DRAFT_GROUP_LABELS[flexibleRequestGroup([ymd], today).group]
 }
 
 type Client = { id: string; name: string }
@@ -255,9 +269,9 @@ test.describe('Flexible AppointmentRequest journey', () => {
       await expect(originalCard).toContainText('بعدازظهر')
       await expect(originalCard).toContainText(acceptableDateChip(firstDate))
       await expect(originalCard).toContainText(acceptableDateChip(secondDate))
-      await expect(page.getByRole('region', { name: 'بعدتر' })).toContainText(
-        clientName,
-      )
+      await expect(
+        page.getByRole('region', { name: draftGroupLabel(firstDate) }),
+      ).toContainText(clientName)
 
       await test.step('Edit only the Draft timing agreement and notes', async () => {
         await originalCard.getByRole('button', { name: 'ویرایش' }).click()

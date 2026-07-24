@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import {
+  REQUEST_HORIZON_DAYS,
   nextSalonWeekDates,
   normalizeAcceptableDates,
   isStartTimeInPreference,
@@ -186,6 +187,7 @@ function AcceptableDatesField({
   onDatesChange: (dates: string[]) => void
 }) {
   const today = salonTodayYmd()
+  const maxDate = addDaysYmd(today, REQUEST_HORIZON_DAYS)
   const weekDates = useMemo(() => nextSalonWeekDates(today), [today])
   const weekSet = useMemo(() => new Set(weekDates), [weekDates])
   const selected = useMemo(() => new Set(dates.filter(Boolean)), [dates])
@@ -341,6 +343,8 @@ function AcceptableDatesField({
         <JalaliDatePicker
           id="acceptable-date-add"
           value=""
+          minDate={today}
+          maxDate={maxDate}
           open={pickerOpen}
           onOpenChange={setPickerOpen}
           onChange={(date) => {
@@ -422,7 +426,9 @@ export function EditDraftSheet({
     try {
       acceptableDates = normalizeAcceptableDates(dates, salonTodayYmd())
     } catch {
-      setErrorMessage('تاریخ‌ها باید یکتا و در ۳۰ روز آینده باشند')
+      setErrorMessage(
+        `تاریخ‌ها باید یکتا و در ${toPersianDigits(REQUEST_HORIZON_DAYS)} روز آینده باشند`,
+      )
       return
     }
     updateDraft.mutate(
@@ -485,6 +491,8 @@ function ConvertFinalDatePicker({
   value: string
   onChange: (ymd: string) => void
 }) {
+  const today = salonTodayYmd()
+  const maxDate = addDaysYmd(today, REQUEST_HORIZON_DAYS)
   const suggested = new Set(remainingDates)
   const isManual = Boolean(value) && !suggested.has(value)
 
@@ -533,6 +541,8 @@ function ConvertFinalDatePicker({
         <JalaliDatePicker
           id="convert-final-date"
           value={value}
+          minDate={today}
+          maxDate={maxDate}
           onChange={onChange}
         />
         {isManual ? (

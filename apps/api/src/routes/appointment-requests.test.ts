@@ -168,6 +168,30 @@ describe('appointment-requests router', () => {
     })
   })
 
+  it('POST / accepts a Draft date beyond the public 30-day window within the Request Horizon', async () => {
+    vi.mocked(db.createFlexibleAppointmentRequest).mockResolvedValue({
+      ok: true,
+      request: { id: requestId },
+    } as never)
+    const farDate = addDaysYmd(salonTodayYmd(), 45)
+    const body = {
+      clientId: '33333333-3333-4333-8333-333333333333',
+      serviceId: '44444444-4444-4444-8444-444444444444',
+      acceptableDates: [farDate],
+      timePreference: 'morning',
+    }
+    const res = await app.request('/api/v1/appointment-requests', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    expect(res.status).toBe(201)
+    expect(db.createFlexibleAppointmentRequest).toHaveBeenCalledWith({
+      salonId: 's1',
+      ...body,
+    })
+  })
+
   it('PATCH /:id edits only a tenant Draft current timing agreement', async () => {
     vi.mocked(db.updateFlexibleAppointmentRequest).mockResolvedValue({
       ok: true,
@@ -254,6 +278,14 @@ describe('appointment-requests router', () => {
         clientId: requestId,
         serviceId: requestId,
         acceptableDates: ['2026-02-30'],
+        timePreference: 'morning',
+      },
+    ],
+    [
+      {
+        clientId: requestId,
+        serviceId: requestId,
+        acceptableDates: [addDaysYmd(salonTodayYmd(), 91)],
         timePreference: 'morning',
       },
     ],

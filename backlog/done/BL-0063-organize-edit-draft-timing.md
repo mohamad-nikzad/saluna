@@ -22,11 +22,11 @@ Make the Draft queue useful for day-to-day planning. Managers can capture arbitr
 
 ## Acceptance Criteria
 
-- [x] Managers can select one or more unique acceptable dates from Salon-local today through 30 days ahead, including dates across calendar weeks.
+- [x] Managers can select one or more unique acceptable dates from Salon-local today through 90 days ahead, including dates across calendar weeks.
 - [x] “Next week” selects and stores all seven dates in the next Salon-local Saturday–Friday week without retaining a relative phrase.
 - [x] Morning, Afternoon, Evening, and Any time use the spec's fixed half-open start-time boundaries and one choice applies to every acceptable date.
 - [x] A pending Draft can edit only acceptable dates, Time Preference, and notes; Client, ServiceVariant, and BookedServiceSnapshot remain immutable.
-- [x] Drafts are grouped into chronological sections by earliest remaining acceptable date and ordered oldest-first when that date ties.
+- [x] Drafts are grouped into chronological sections (This week, Next week, This month, Next month, Later, Elapsed) by earliest remaining acceptable date and ordered oldest-first when that date ties.
 - [x] A Draft spanning groups appears once while every acceptable date remains visible on its card.
 - [x] Elapsed dates remain visible as history but cannot be selected for scheduling; a later remaining date advances the Draft to the appropriate group.
 - [x] Similar or overlapping Drafts remain allowed without duplicate warnings or blocking.

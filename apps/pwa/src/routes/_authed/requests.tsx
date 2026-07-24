@@ -55,6 +55,7 @@ import {
 } from '@repo/salon-core/jalali'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import {
+  REQUEST_HORIZON_DAYS,
   nextSalonWeekDates,
   normalizeAcceptableDates,
 } from '@repo/salon-core/appointment-request-timing'
@@ -525,6 +526,14 @@ const DRAFT_GROUP_META = {
     label: 'هفته آینده',
     accent: 'bg-sky',
   },
+  'this-month': {
+    label: 'همین ماه',
+    accent: 'bg-mint',
+  },
+  'next-month': {
+    label: 'ماه آینده',
+    accent: 'bg-amber',
+  },
   later: {
     label: 'بعدتر',
     accent: 'bg-plum-deep',
@@ -947,7 +956,9 @@ function NewDraftSheet({
     try {
       acceptableDates = normalizeAcceptableDates(dates, today)
     } catch {
-      setErrorMessage('تاریخ‌ها باید یکتا و در ۳۰ روز آینده باشند')
+      setErrorMessage(
+        `تاریخ‌ها باید یکتا و در ${toPersianDigits(REQUEST_HORIZON_DAYS)} روز آینده باشند`,
+      )
       return
     }
     const requestBody = { clientId, serviceId, acceptableDates, timePreference }
