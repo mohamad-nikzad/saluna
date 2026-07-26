@@ -49,11 +49,7 @@ function endOfNextJalaliMonth(ymd: string): string {
   const { jy, jm } = parseGregorianToJalali(ymd)
   const nextJm = jm === 12 ? 1 : jm + 1
   const nextJy = jm === 12 ? jy + 1 : jy
-  return jalaliToGregorianStr(
-    nextJy,
-    nextJm,
-    jalaliMonthLength(nextJy, nextJm),
-  )
+  return jalaliToGregorianStr(nextJy, nextJm, jalaliMonthLength(nextJy, nextJm))
 }
 
 export function normalizeAcceptableDates(

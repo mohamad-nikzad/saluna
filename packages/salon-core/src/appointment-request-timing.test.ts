@@ -13,9 +13,9 @@ describe('Flexible AppointmentRequest timing', () => {
     expect(
       normalizeAcceptableDates(['2026-07-31', '2026-07-21'], '2026-07-21'),
     ).toEqual(['2026-07-21', '2026-07-31'])
-    expect(
-      normalizeAcceptableDates(['2026-10-19'], '2026-07-21'),
-    ).toEqual(['2026-10-19'])
+    expect(normalizeAcceptableDates(['2026-10-19'], '2026-07-21')).toEqual([
+      '2026-10-19',
+    ])
     expect(() =>
       normalizeAcceptableDates(['2026-07-21', '2026-07-21'], '2026-07-21'),
     ).toThrow('unique')
