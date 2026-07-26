@@ -28,6 +28,7 @@ import {
   staffMayPerformService,
 } from './staff-queries'
 import { getServicePackageById } from './service-package-queries'
+import { assertSalonDateOpen } from './salon-closure-queries'
 
 type PackageBookingTaskInput = {
   packageComponentId: string
@@ -276,6 +277,7 @@ export async function createServicePackageBooking(
   const db = getDb()
   const { bookingRow, appointmentRows, taskRows } = await db.transaction(
     async (tx) => {
+      await assertSalonDateOpen(tx, input.salonId, input.date)
       const [createdBooking] = await tx
         .insert(servicePackageBookings)
         .values({

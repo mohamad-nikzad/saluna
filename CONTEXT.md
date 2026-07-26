@@ -153,6 +153,10 @@ _Avoid_: unrestricted access, super admin, impersonation, break-glass login
 **Salon Working Days**:
 Salon-level open-day mask — which weekdays the salon is open. DB: `business_settings.working_days`. Coarse gate above per-staff `staff_schedules`.
 
+**Salon Closure**:
+The salon-wide set of Salon-local calendar dates intentionally made unavailable by a manager. A manager may add or remove one date or an inclusive range; overlapping selections unify as date state rather than separate range ownership. A Salon Closure overrides Salon Working Days and Staff Profile schedules for new Appointment intake but does not cancel or change existing Appointments.
+_Avoid_: Staff Profile time off, recurring closure
+
 **Salon Presence**:
 Public contact surface: address, map links, and social links. DB: typed nullable columns on `salon_profile`. Persian UI: `حضور آنلاین`.
 _Avoid_: contact info, social block

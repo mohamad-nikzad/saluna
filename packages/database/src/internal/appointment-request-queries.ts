@@ -10,6 +10,7 @@ import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
 import { createAppointment } from './appointment-queries'
 import { validateCreateAppointmentIntake } from './appointment-intake'
+import { SalonClosedError } from './salon-closure-queries'
 import { createClient, getClientById, getClientByPhone } from './client-queries'
 
 export type AppointmentRequestRow = typeof appointmentRequests.$inferSelect
@@ -425,14 +426,27 @@ export async function approveAppointmentRequest(
     }
   }
 
-  const appointment = await createAppointment(intake.command, input.salonId, {
-    createdByUserId: input.reviewedByUserId,
-    serviceSnapshotOverride: {
-      name: request.bookedServiceName,
-      duration: request.bookedServiceDuration,
-      price: request.bookedServicePrice,
-    },
-  })
+  let appointment
+  try {
+    appointment = await createAppointment(intake.command, input.salonId, {
+      createdByUserId: input.reviewedByUserId,
+      serviceSnapshotOverride: {
+        name: request.bookedServiceName,
+        duration: request.bookedServiceDuration,
+        price: request.bookedServicePrice,
+      },
+    })
+  } catch (error) {
+    if (error instanceof SalonClosedError) {
+      return {
+        ok: false,
+        status: 409,
+        error: error.message,
+        code: error.code,
+      }
+    }
+    throw error
+  }
 
   // Conditional flip — if a concurrent action moved the request, undo our work.
   const updated = await db
@@ -527,48 +541,64 @@ export async function convertFlexibleAppointmentRequest(
     }
   }
 
-  return db.transaction(async (tx) => {
-    const updated = await tx
-      .update(appointmentRequests)
-      .set({
-        status: 'approved',
-        staffId: input.staffId,
-        reviewedByUserId: input.reviewedByUserId,
-        reviewedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(appointmentRequests.id, input.id),
-          eq(appointmentRequests.salonId, input.salonId),
-          eq(appointmentRequests.timingMode, 'flexible'),
-          eq(appointmentRequests.status, 'pending'),
-        ),
-      )
-      .returning({ id: appointmentRequests.id })
-    if (updated.length === 0) {
-      return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
-    }
+  try {
+    return await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(appointmentRequests)
+        .set({
+          status: 'approved',
+          staffId: input.staffId,
+          reviewedByUserId: input.reviewedByUserId,
+          reviewedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(appointmentRequests.id, input.id),
+            eq(appointmentRequests.salonId, input.salonId),
+            eq(appointmentRequests.timingMode, 'flexible'),
+            eq(appointmentRequests.status, 'pending'),
+          ),
+        )
+        .returning({ id: appointmentRequests.id })
+      if (updated.length === 0) {
+        return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
+      }
 
-    const appointment = await createAppointment(intake.command, input.salonId, {
-      createdByUserId: input.reviewedByUserId,
-      transaction: tx,
-      serviceSnapshotOverride: {
-        name: request.bookedServiceName,
-        duration: request.bookedServiceDuration,
-        price: request.bookedServicePrice,
-      },
+      const appointment = await createAppointment(
+        intake.command,
+        input.salonId,
+        {
+          createdByUserId: input.reviewedByUserId,
+          transaction: tx,
+          serviceSnapshotOverride: {
+            name: request.bookedServiceName,
+            duration: request.bookedServiceDuration,
+            price: request.bookedServicePrice,
+          },
+        },
+      )
+      await tx
+        .update(appointmentRequests)
+        .set({ appointmentId: appointment.id })
+        .where(eq(appointmentRequests.id, input.id))
+      return {
+        ok: true,
+        appointmentId: appointment.id,
+        clientId,
+      }
     })
-    await tx
-      .update(appointmentRequests)
-      .set({ appointmentId: appointment.id })
-      .where(eq(appointmentRequests.id, input.id))
-    return {
-      ok: true,
-      appointmentId: appointment.id,
-      clientId,
+  } catch (error) {
+    if (error instanceof SalonClosedError) {
+      return {
+        ok: false,
+        status: 409,
+        error: error.message,
+        code: error.code,
+      }
     }
-  })
+    throw error
+  }
 }
 
 export type RejectAppointmentRequestInput = {

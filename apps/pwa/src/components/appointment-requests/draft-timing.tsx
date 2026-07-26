@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import {
@@ -38,6 +39,7 @@ import {
   useConvertDraftMutation,
   type FlexibleAppointmentRequestListItem,
 } from '#/lib/appointment-requests-queries'
+import { salonClosuresQueryOptions } from '#/lib/settings-queries'
 import {
   FormSheet,
   FormSheetBody,
@@ -484,16 +486,19 @@ export function EditDraftSheet({
 
 function ConvertFinalDatePicker({
   remainingDates,
+  unavailableDates,
   value,
   onChange,
 }: {
   remainingDates: string[]
+  unavailableDates: readonly string[]
   value: string
   onChange: (ymd: string) => void
 }) {
   const today = salonTodayYmd()
   const maxDate = addDaysYmd(today, REQUEST_HORIZON_DAYS)
   const suggested = new Set(remainingDates)
+  const unavailable = new Set(unavailableDates)
   const isManual = Boolean(value) && !suggested.has(value)
 
   return (
@@ -512,19 +517,23 @@ function ConvertFinalDatePicker({
               const weekdayIndex =
                 (new Date(`${date}T12:00:00Z`).getUTCDay() + 1) % 7
               const selected = value === date
+              const closed = unavailable.has(date)
               return (
                 <button
                   key={date}
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  aria-label={formatAcceptableDateChip(date)}
+                  disabled={closed}
+                  aria-label={`${formatAcceptableDateChip(date)}${closed ? '، سالن بسته است' : ''}`}
                   onClick={() => onChange(date)}
                   className={cn(
                     'flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-2.5 py-1.5 transition-colors touch-manipulation',
-                    selected
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-muted/45 text-muted-foreground ring-1 ring-inset ring-border/70 hover:bg-muted hover:text-foreground',
+                    closed
+                      ? 'cursor-not-allowed bg-muted/45 text-destructive opacity-60 ring-1 ring-inset ring-destructive/60'
+                      : selected
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-muted/45 text-muted-foreground ring-1 ring-inset ring-border/70 hover:bg-muted hover:text-foreground',
                   )}
                 >
                   <span className="text-[10px] font-bold leading-none">
@@ -543,6 +552,7 @@ function ConvertFinalDatePicker({
           value={value}
           minDate={today}
           maxDate={maxDate}
+          unavailableDates={unavailableDates}
           onChange={onChange}
         />
         {isManual ? (
@@ -587,6 +597,8 @@ export function ConvertDraftSheet({
   )
   const [staffId, setStaffId] = useState('')
   const convertDraft = useConvertDraftMutation()
+  const unavailableDates = useQuery(salonClosuresQueryOptions()).data ?? []
+  const finalDateClosed = unavailableDates.includes(finalDate)
   const startTimeValid = isStartTimeInPreference(
     startTime,
     draft.timePreference,
@@ -666,6 +678,7 @@ export function ConvertDraftSheet({
 
           <ConvertFinalDatePicker
             remainingDates={remainingDates}
+            unavailableDates={unavailableDates}
             value={finalDate}
             onChange={setFinalDate}
           />
@@ -718,6 +731,7 @@ export function ConvertDraftSheet({
               !finalDate ||
               !startTimeValid ||
               !staffId ||
+              finalDateClosed ||
               capableStaff.length === 0
             }
           >

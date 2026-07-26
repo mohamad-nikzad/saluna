@@ -22,6 +22,7 @@ import { getAppointmentsByDateRange } from './appointment-queries'
 import { getBusinessSettings } from './settings-queries'
 import { getServiceById } from './service-queries'
 import { getAllStaff, getStaffSchedules } from './staff-queries'
+import { listSalonClosureDates } from './salon-closure-queries'
 
 export type ManagerAppointmentAvailabilityLookupResult =
   | { ok: true; response: AvailabilityResponse }
@@ -158,7 +159,9 @@ export async function getManagerAppointmentAvailability(
 
   if (
     params.mode === 'day' &&
-    !isSalonOpenOnDate(businessHours.workingDays, params.date)
+    (!isSalonOpenOnDate(businessHours.workingDays, params.date) ||
+      (await listSalonClosureDates(params.salonId, params.date, params.date))
+        .length > 0)
   ) {
     return {
       ok: true,
@@ -170,8 +173,20 @@ export async function getManagerAppointmentAvailability(
     }
   }
 
-  const searchDates = searchDatesFor(params.mode, params.date).filter((date) =>
-    isSalonOpenOnDate(businessHours.workingDays, date),
+  const candidateDates = searchDatesFor(params.mode, params.date)
+  const closedDates = new Set(
+    (
+      await listSalonClosureDates(
+        params.salonId,
+        candidateDates[0],
+        candidateDates[candidateDates.length - 1],
+      )
+    ).map((row) => row.date),
+  )
+  const searchDates = candidateDates.filter(
+    (date) =>
+      isSalonOpenOnDate(businessHours.workingDays, date) &&
+      !closedDates.has(date),
   )
 
   if (searchDates.length === 0) {

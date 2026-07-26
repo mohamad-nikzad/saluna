@@ -10,6 +10,7 @@ import {
 import type { BusinessHours as GeneratedBusinessHours } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
+import { apiClient } from '#/lib/api-client'
 
 export { getApiV1SettingsBusinessQueryKey }
 
@@ -53,6 +54,57 @@ export function useUpdateBusinessSettingsMutation(options?: {
       invalidatesQuery:
         options?.invalidatesQuery ?? getApiV1SettingsBusinessQueryKey(),
       ...(options?.skipToast ? { skipToast: true } : {}),
+    },
+  })
+}
+
+export type ClosureWarning = {
+  appointmentCount: number
+  appointmentsByDate: Array<{ date: string; count: number }>
+}
+
+export function salonClosuresQueryOptions() {
+  return queryOptions({
+    queryKey: ['settings', 'closures'],
+    staleTime: HEAVY_QUERY_STALE_TIME_MS,
+    queryFn: ({ signal }) =>
+      apiClient
+        .request<{ closures: string[] }>('/api/v1/settings/closures', {
+          signal,
+        })
+        .then((result) => result.closures),
+  })
+}
+
+export function useCloseSalonDatesMutation() {
+  return useMutation({
+    mutationFn: (input: {
+      startDate: string
+      endDate: string
+      confirmed?: boolean
+    }) =>
+      apiClient.request<{ dates: string[] }>('/api/v1/settings/closures', {
+        method: 'POST',
+        body: input,
+      }),
+    meta: {
+      errorMessage: 'بستن روزها انجام نشد',
+      invalidatesQuery: ['settings', 'closures'],
+      skipErrorToast: true,
+    },
+  })
+}
+
+export function useReopenSalonDatesMutation() {
+  return useMutation({
+    mutationFn: (input: { startDate: string; endDate: string }) =>
+      apiClient.request<{ dates: string[] }>('/api/v1/settings/closures', {
+        method: 'DELETE',
+        body: input,
+      }),
+    meta: {
+      errorMessage: 'باز کردن روز انجام نشد',
+      invalidatesQuery: ['settings', 'closures'],
     },
   })
 }

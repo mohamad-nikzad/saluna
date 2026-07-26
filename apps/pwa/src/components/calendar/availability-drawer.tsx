@@ -81,6 +81,7 @@ interface AvailabilityDrawerProps {
     slot: AvailabilitySlot
     serviceId: string
   }) => void
+  unavailableDates?: string[]
 }
 
 function emptyReasonCopy(reason?: AvailabilityEmptyReason): string {
@@ -134,6 +135,7 @@ export function AvailabilityDrawer({
   staff,
   services,
   onSelectSlot,
+  unavailableDates = [],
 }: AvailabilityDrawerProps) {
   const abortRef = useRef<AbortController | null>(null)
   const wasOpenRef = useRef(open)
@@ -403,6 +405,7 @@ export function AvailabilityDrawer({
                 id="availability-date"
                 value={date}
                 onChange={handleDateChange}
+                unavailableDates={unavailableDates}
                 required
               />
               {errors.date && <FieldError>{errors.date.message}</FieldError>}

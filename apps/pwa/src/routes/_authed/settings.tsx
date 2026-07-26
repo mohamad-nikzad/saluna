@@ -55,6 +55,7 @@ import { StaffDrawer } from '#/components/staff/staff-drawer'
 import { StaffSalonSwitcher } from '#/components/staff/staff-salon-switcher'
 import { clearPersistedActiveSalonId } from '#/lib/active-salon'
 import { api } from '#/lib/api-client'
+import { SalonClosures } from '#/components/settings/salon-closures'
 
 type DashboardMetrics = {
   monthRevenue: number
@@ -443,6 +444,8 @@ function SettingsPage() {
               </div>
             </div>
           ) : null}
+
+          {isManager ? <SalonClosures workingDays={workingDays} /> : null}
 
           <SettingsGroup label="ظاهر">
             <ToggleRow

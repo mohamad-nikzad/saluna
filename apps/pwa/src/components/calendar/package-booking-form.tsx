@@ -41,6 +41,7 @@ type PackageBookingFormProps = {
   onSuccess: () => void
   onCancel: () => void
   onClientsChanged?: () => void
+  unavailableDates?: string[]
 }
 
 function firstActivePackage(packages: ServicePackage[]) {
@@ -77,6 +78,7 @@ export function PackageBookingForm({
   onSuccess,
   onCancel,
   onClientsChanged,
+  unavailableDates = [],
 }: PackageBookingFormProps) {
   const activePackages = useMemo(
     () =>
@@ -159,6 +161,10 @@ export function PackageBookingForm({
       setRootError('مشتری را انتخاب کنید')
       return
     }
+    if (unavailableDates.includes(date)) {
+      setRootError('این روز برای رزرو بسته است')
+      return
+    }
     if (tasks.some((task) => !task.staffId)) {
       setRootError('برای همه خدمات پکیج پرسنل انتخاب کنید')
       return
@@ -229,7 +235,11 @@ export function PackageBookingForm({
 
           <Field>
             <FieldLabel>تاریخ</FieldLabel>
-            <JalaliDatePicker value={date} onChange={setDate} />
+            <JalaliDatePicker
+              value={date}
+              onChange={setDate}
+              unavailableDates={unavailableDates}
+            />
           </Field>
 
           {packageStaff.length > 0 ? (

@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-21 (BL-0061 manager draft direction resolved)
+Last organized: 2026-07-26 (BL-0068 salon closures completed)
 
 ## Now
 
@@ -21,7 +21,6 @@ No active backlog items.
 
 ## Inbox
 
-- [BL-0068 Let managers make one date unavailable](inbox/BL-0068-make-one-date-unavailable.md)
 - [BL-0011 Campaign support](inbox/BL-0011-campaign-support.md)
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
@@ -34,6 +33,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0068 Let managers make dates unavailable](done/BL-0068-make-one-date-unavailable.md)
 - [BL-0019 Configure and report Staff Commissions](done/BL-0019-configure-and-report-staff-commissions.md)
   - [BL-0055 Activate Staff Commission for a regular Appointment](done/BL-0055-activate-staff-commission.md)
   - [BL-0056 Keep Staff Commission correct through changes and deletion](done/BL-0056-correct-staff-commission-lifecycle.md)

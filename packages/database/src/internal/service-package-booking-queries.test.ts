@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('./salon-closure-queries', () => ({
+  assertSalonDateOpen: vi.fn(),
+}))
 import {
   appointments,
   servicePackageBookings,

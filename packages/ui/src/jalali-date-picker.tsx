@@ -36,10 +36,15 @@ interface JalaliDatePickerProps {
   /** Controlled open state for programmatic open (e.g. “add date” actions). */
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Dates to show as closed and prevent selecting. */
+  unavailableDates?: readonly string[]
+  /** Keeps an already-selected closed date valid, for editing in place. */
+  allowUnavailableValue?: boolean
 }
 
 const numFmt = new Intl.NumberFormat('fa-IR')
 const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const NO_UNAVAILABLE_DATES: readonly string[] = []
 
 function isValidYmd(value: string | undefined): value is string {
   return typeof value === 'string' && YMD_PATTERN.test(value)
@@ -72,6 +77,8 @@ export function JalaliDatePicker({
   maxDate,
   open: openProp,
   onOpenChange,
+  unavailableDates = NO_UNAVAILABLE_DATES,
+  allowUnavailableValue = false,
 }: JalaliDatePickerProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = openProp ?? uncontrolledOpen
@@ -80,6 +87,10 @@ export function JalaliDatePicker({
     if (!value) return null
     return parseGregorianToJalali(value)
   }, [value])
+  const unavailable = useMemo(
+    () => new Set(unavailableDates),
+    [unavailableDates],
+  )
 
   const todayJalali = useMemo(() => {
     const now = new Date()
@@ -95,8 +106,7 @@ export function JalaliDatePicker({
     (isOpen: boolean) => {
       if (isOpen) {
         const fallbackYmd =
-          (isValidYmd(value) &&
-          !isDateOutOfRange(value, minDate, maxDate)
+          (isValidYmd(value) && !isDateOutOfRange(value, minDate, maxDate)
             ? value
             : null) ??
           (isValidYmd(minDate) ? minDate : null) ??
@@ -153,11 +163,25 @@ export function JalaliDatePicker({
   const handleDayClick = useCallback(
     (day: number) => {
       const ymd = jalaliToGregorianStr(viewYear, viewMonth, day)
-      if (isDateOutOfRange(ymd, minDate, maxDate)) return
+      if (
+        isDateOutOfRange(ymd, minDate, maxDate) ||
+        (unavailable.has(ymd) && (!allowUnavailableValue || ymd !== value))
+      )
+        return
       onChange(ymd)
       handleOpen(false)
     },
-    [viewYear, viewMonth, minDate, maxDate, onChange, handleOpen],
+    [
+      viewYear,
+      viewMonth,
+      minDate,
+      maxDate,
+      unavailable,
+      allowUnavailableValue,
+      value,
+      onChange,
+      handleOpen,
+    ],
   )
 
   const daysInMonth = jalaliMonthLength(viewYear, viewMonth)
@@ -175,23 +199,36 @@ export function JalaliDatePicker({
 
   const displayText = value ? formatJalaliDate(value) : ''
   const todayYmd = localTodayYmd()
-  const todaySelectable = !isDateOutOfRange(todayYmd, minDate, maxDate)
+  const todaySelectable =
+    !isDateOutOfRange(todayYmd, minDate, maxDate) &&
+    (!unavailable.has(todayYmd) ||
+      (allowUnavailableValue && todayYmd === value))
 
   return (
     <>
       <button
         type="button"
         id={id}
-        aria-label={displayText ? `تاریخ ${displayText}` : 'انتخاب تاریخ'}
+        aria-label={
+          unavailable.has(value)
+            ? `تاریخ ${displayText}، سالن بسته است`
+            : displayText
+              ? `تاریخ ${displayText}`
+              : 'انتخاب تاریخ'
+        }
         onClick={() => handleOpen(true)}
         className={cn(
           'border-input bg-blush-soft dark:bg-input/30 flex h-9 touch:h-11 w-full min-w-0 items-center justify-between rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
           !value && 'text-muted-foreground',
+          unavailable.has(value) && 'border-destructive/60 text-destructive',
           className,
         )}
       >
-        <span>{displayText || 'انتخاب تاریخ'}</span>
+        <span>
+          {displayText || 'انتخاب تاریخ'}
+          {unavailable.has(value) ? ' · سالن بسته است' : ''}
+        </span>
         <CalendarIcon className="h-4 w-4 opacity-50" />
       </button>
 
@@ -255,6 +292,11 @@ export function JalaliDatePicker({
 
                     const ymd = jalaliToGregorianStr(viewYear, viewMonth, day)
                     const disabled = isDateOutOfRange(ymd, minDate, maxDate)
+                    const isUnavailable = unavailable.has(ymd)
+                    const selectionDisabled =
+                      disabled ||
+                      (isUnavailable &&
+                        (!allowUnavailableValue || ymd !== value))
 
                     const isToday =
                       viewYear === todayJalali.jy &&
@@ -271,22 +313,31 @@ export function JalaliDatePicker({
                       <button
                         key={di}
                         type="button"
-                        disabled={disabled}
-                        aria-disabled={disabled || undefined}
+                        disabled={selectionDisabled}
+                        aria-disabled={selectionDisabled || undefined}
+                        aria-label={
+                          isUnavailable
+                            ? `${numFmt.format(day)}، سالن بسته است`
+                            : undefined
+                        }
                         onClick={() => handleDayClick(day)}
                         className={cn(
                           'h-11 rounded-xl text-sm font-medium transition-colors touch-manipulation',
-                          disabled
+                          selectionDisabled
                             ? 'cursor-not-allowed text-muted-foreground/35'
                             : 'hover:bg-accent hover:text-accent-foreground active:scale-95',
-                          !disabled &&
+                          !selectionDisabled &&
                             isToday &&
                             !isSelected &&
                             'bg-accent text-accent-foreground ring-1 ring-primary/30',
-                          !disabled &&
+                          !selectionDisabled &&
                             isSelected &&
                             'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground shadow-sm',
-                          disabled && isToday && 'ring-1 ring-border/40',
+                          selectionDisabled &&
+                            isToday &&
+                            'ring-1 ring-border/40',
+                          isUnavailable &&
+                            'ring-1 ring-inset ring-destructive/70',
                         )}
                       >
                         {numFmt.format(day)}

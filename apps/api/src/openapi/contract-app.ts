@@ -67,7 +67,10 @@ import {
   updateFlexibleAppointmentRequestRoute,
 } from './routes/appointment-requests'
 import {
+  closeSalonDatesRoute,
   getBusinessSettingsRoute,
+  listSalonClosuresRoute,
+  reopenSalonDatesRoute,
   updateBusinessSettingsRoute,
 } from './routes/settings'
 import {
@@ -989,6 +992,16 @@ const updateBusinessSettingsStub: RouteHandler<
   typeof updateBusinessSettingsRoute
 > = (c) => c.json({ settings: stubBusinessHours }, 200)
 
+const listSalonClosuresStub: RouteHandler<typeof listSalonClosuresRoute> = (
+  c,
+) => c.json({ closures: ['2026-08-01'] }, 200)
+
+const closeSalonDatesStub: RouteHandler<typeof closeSalonDatesRoute> = (c) =>
+  c.json({ dates: ['2026-08-01'] }, 200)
+
+const reopenSalonDatesStub: RouteHandler<typeof reopenSalonDatesRoute> = (c) =>
+  c.json({ dates: ['2026-08-01'] }, 200)
+
 const getSalonPresenceStub: RouteHandler<typeof getSalonPresenceRoute> = (c) =>
   c.json({ presence: stubSalonPresence }, 200)
 
@@ -1585,7 +1598,10 @@ export const contractApp = new OpenAPIHono()
     '/api/v1/settings',
     new OpenAPIHono()
       .openapi(getBusinessSettingsRoute, getBusinessSettingsStub)
-      .openapi(updateBusinessSettingsRoute, updateBusinessSettingsStub),
+      .openapi(updateBusinessSettingsRoute, updateBusinessSettingsStub)
+      .openapi(listSalonClosuresRoute, listSalonClosuresStub)
+      .openapi(closeSalonDatesRoute, closeSalonDatesStub)
+      .openapi(reopenSalonDatesRoute, reopenSalonDatesStub),
   )
   .route(
     '/api/v1/salon-profile',

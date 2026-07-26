@@ -42,3 +42,41 @@ export const businessSettingsResponseSchema = z
     settings: businessHoursSchema,
   })
   .openapi('BusinessSettingsResponse')
+
+const closureDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .openapi({ example: '2026-08-01' })
+
+export const salonClosureRangeSchema = z
+  .object({
+    startDate: closureDateSchema,
+    endDate: closureDateSchema,
+  })
+  .openapi('SalonClosureRange')
+
+export const closeSalonDatesBodySchema = salonClosureRangeSchema
+  .extend({ confirmed: z.boolean().optional().default(false) })
+  .openapi('CloseSalonDatesRequest')
+
+export const salonClosuresResponseSchema = z
+  .object({ closures: z.array(closureDateSchema) })
+  .openapi('SalonClosuresResponse')
+
+export const changedSalonClosureDatesResponseSchema = z
+  .object({ dates: z.array(closureDateSchema) })
+  .openapi('ChangedSalonClosureDatesResponse')
+
+export const salonClosureWarningSchema = z
+  .object({
+    error: z.string(),
+    code: z.literal('CLOSURE_CONFIRMATION_REQUIRED'),
+    appointmentCount: z.number().int().nonnegative(),
+    appointmentsByDate: z.array(
+      z.object({
+        date: closureDateSchema,
+        count: z.number().int().positive(),
+      }),
+    ),
+  })
+  .openapi('SalonClosureWarning')

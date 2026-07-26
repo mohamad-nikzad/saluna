@@ -33,6 +33,7 @@ import {
   getServiceById,
 } from './service-queries'
 import { syncAppointmentCommission } from './commission-queries'
+import { assertSalonDateOpen } from './salon-closure-queries'
 
 type Db = ReturnType<typeof getDb>
 type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -461,6 +462,7 @@ export async function createAppointment(
     values.id = apt.id
   }
   const insert = async (tx: DbTransaction) => {
+    await assertSalonDateOpen(tx, salonId, apt.date)
     const [created] = await tx.insert(appointments).values(values).returning()
     if (!created) throw new Error('appointment creation failed')
     if (selectedAddons.length > 0) {
@@ -564,6 +566,9 @@ export async function updateAppointment(
   }
 
   const [row] = await db.transaction(async (tx) => {
+    if (data.date !== undefined && data.date !== existing.date) {
+      await assertSalonDateOpen(tx, salonId, data.date)
+    }
     const [updated] = await tx
       .update(appointments)
       .set(patch)

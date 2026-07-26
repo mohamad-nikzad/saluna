@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
 vi.mock('@repo/database/settings', () => ({
+  closeSalonDates: vi.fn(),
   getBusinessSettings: vi.fn(),
+  listSalonClosureDates: vi.fn(),
+  reopenSalonDates: vi.fn(),
   updateBusinessSettings: vi.fn(),
 }))
 
@@ -162,5 +166,54 @@ describe('settings router', () => {
       body: JSON.stringify({ workingStart: '17:00', workingEnd: '09:00' }),
     })
     expect(res.status).toBe(400)
+  })
+
+  it('lists the unified future closure dates', async () => {
+    vi.mocked(db.listSalonClosureDates).mockResolvedValue([
+      { date: '2026-08-01' },
+      { date: '2026-08-03' },
+    ])
+    const res = await app.request('/api/v1/settings/closures', {
+      headers: authHeaders,
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      closures: ['2026-08-01', '2026-08-03'],
+    })
+  })
+
+  it('returns appointment counts before closing an occupied range', async () => {
+    const startDate = addDaysYmd(salonTodayYmd(), 1)
+    const endDate = addDaysYmd(startDate, 2)
+    vi.mocked(db.closeSalonDates).mockResolvedValue({
+      ok: false,
+      appointmentCount: 3,
+      appointmentsByDate: [{ date: startDate, count: 3 }],
+    })
+    const res = await app.request('/api/v1/settings/closures', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ startDate, endDate }),
+    })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({
+      code: 'CLOSURE_CONFIRMATION_REQUIRED',
+      appointmentCount: 3,
+      appointmentsByDate: [{ date: startDate, count: 3 }],
+    })
+  })
+
+  it('rejects closure operations longer than 366 days', async () => {
+    const startDate = salonTodayYmd()
+    const res = await app.request('/api/v1/settings/closures', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        startDate,
+        endDate: addDaysYmd(startDate, 366),
+      }),
+    })
+    expect(res.status).toBe(400)
+    expect(db.closeSalonDates).not.toHaveBeenCalled()
   })
 })

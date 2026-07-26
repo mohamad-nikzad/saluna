@@ -88,6 +88,7 @@ interface AppointmentDrawerProps {
   onSuccess: (appointment: AppointmentWithDetails) => void
   onPackageBooked?: () => void
   onClientsChanged?: () => void
+  unavailableDates?: string[]
 }
 
 const AppointmentDrawerActiveContext = createContext(false)
@@ -137,6 +138,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
   onSuccess,
   onPackageBooked,
   onClientsChanged,
+  unavailableDates = [],
 }: Omit<AppointmentDrawerProps, 'open'>) {
   const [localClients, setLocalClients] = useState<Client[]>(clients)
   const [mode, setMode] = useState<BookingMode>('single')
@@ -403,6 +405,10 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
   const { createAppointment } = useAppointmentIntakeMutations()
 
   const onSubmit = handleSubmit(async (values) => {
+    if (unavailableDates.includes(values.date)) {
+      setError('root', { message: 'این روز برای رزرو بسته است' })
+      return
+    }
     const validationError = validateAppointmentIntakeSubmit({
       values,
       activeServices,
@@ -622,6 +628,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                     <JalaliDatePicker
                       id="date"
                       value={date}
+                      unavailableDates={unavailableDates}
                       onChange={(value) =>
                         setValue('date', value, {
                           shouldDirty: true,
@@ -805,6 +812,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
             }}
             onCancel={closeActiveMode}
             onClientsChanged={onClientsChanged}
+            unavailableDates={unavailableDates}
           />
         )}
       </FormSheetContent>

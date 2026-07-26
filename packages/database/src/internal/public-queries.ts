@@ -45,6 +45,10 @@ import {
 } from './salon-profile-queries'
 import { getAllStaff, getStaffSchedules } from './staff-queries'
 import { getBusinessSettings } from './settings-queries'
+import {
+  assertSalonDateOpen,
+  listSalonClosureDates,
+} from './salon-closure-queries'
 
 export type PublicSalonView = {
   salon: {
@@ -256,7 +260,9 @@ export async function getPublicAvailability(
 
   if (
     params.mode === 'day' &&
-    !isSalonOpenOnDate(businessHours.workingDays, params.date)
+    (!isSalonOpenOnDate(businessHours.workingDays, params.date) ||
+      (await listSalonClosureDates(salonId, params.date, params.date)).length >
+        0)
   ) {
     return emptyAvailability(
       params.mode,
@@ -269,10 +275,23 @@ export async function getPublicAvailability(
     params.mode === 'day'
       ? [0]
       : Array.from({ length: nearestDays }, (_, offset) => offset)
-  const searchDates = dateOffsets
+  const candidateDates = dateOffsets
     .map((offset) => addDaysYmd(params.date, offset))
     .filter((date) => date <= maxDate)
-    .filter((date) => isSalonOpenOnDate(businessHours.workingDays, date))
+  const closedDates = new Set(
+    (
+      await listSalonClosureDates(
+        salonId,
+        candidateDates[0],
+        candidateDates[candidateDates.length - 1],
+      )
+    ).map((row) => row.date),
+  )
+  const searchDates = candidateDates.filter(
+    (date) =>
+      isSalonOpenOnDate(businessHours.workingDays, date) &&
+      !closedDates.has(date),
+  )
 
   if (searchDates.length === 0) {
     return emptyAvailability(
@@ -449,26 +468,29 @@ export async function createAppointmentRequest(
 
   const endTime = endTimeFromDuration(input.startTime, service.duration)
 
-  const db = getDb()
-  const [row] = await db
-    .insert(appointmentRequests)
-    .values({
-      salonId,
-      serviceId: input.serviceId,
-      requestedDate: input.date,
-      requestedStartTime: input.startTime,
-      requestedEndTime: endTime,
-      customerName: input.customerName,
-      customerPhone: normalizePhone(input.customerPhone),
-      notes: input.notes,
-      bookedServiceName: service.name,
-      bookedServiceDuration: service.duration,
-      bookedServicePrice: service.price,
-    })
-    .returning({
-      id: appointmentRequests.id,
-      confirmationToken: appointmentRequests.confirmationToken,
-    })
+  const row = await getDb().transaction(async (tx) => {
+    await assertSalonDateOpen(tx, salonId, input.date)
+    const [created] = await tx
+      .insert(appointmentRequests)
+      .values({
+        salonId,
+        serviceId: input.serviceId,
+        requestedDate: input.date,
+        requestedStartTime: input.startTime,
+        requestedEndTime: endTime,
+        customerName: input.customerName,
+        customerPhone: normalizePhone(input.customerPhone),
+        notes: input.notes,
+        bookedServiceName: service.name,
+        bookedServiceDuration: service.duration,
+        bookedServicePrice: service.price,
+      })
+      .returning({
+        id: appointmentRequests.id,
+        confirmationToken: appointmentRequests.confirmationToken,
+      })
+    return created
+  })
   return { ok: true, id: row.id, confirmationToken: row.confirmationToken }
 }
 

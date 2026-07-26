@@ -1533,6 +1533,20 @@ export const businessSettings = pgTable(
   (t) => [uniqueIndex('business_settings_salon_id_unique').on(t.salonId)],
 )
 
+export const salonClosureDates = pgTable(
+  'salon_closure_dates',
+  {
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.salonId, t.date] })],
+)
+
 export const salonOnboarding = pgTable('salon_onboarding', {
   salonId: uuid('salon_id')
     .primaryKey()

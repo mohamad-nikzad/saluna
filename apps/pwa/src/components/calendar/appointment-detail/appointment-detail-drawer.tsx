@@ -32,6 +32,7 @@ interface AppointmentDetailDrawerProps {
   onClientsChanged?: () => void
   readOnly?: boolean
   canChangeStatus?: boolean
+  unavailableDates?: string[]
 }
 
 export function AppointmentDetailDrawer({
@@ -44,6 +45,7 @@ export function AppointmentDetailDrawer({
   onClientsChanged,
   readOnly = false,
   canChangeStatus = !readOnly,
+  unavailableDates = [],
 }: AppointmentDetailDrawerProps) {
   const drawer = useAppointmentDetailDrawer({
     appointment,
@@ -114,6 +116,7 @@ export function AppointmentDetailDrawer({
             applyDurationInput={drawer.applyDurationInput}
             triggerEdit={drawer.triggerEdit}
             applyEndTime={drawer.applyEndTime}
+            unavailableDates={unavailableDates}
           />
         ) : (
           <AppointmentDetailReadView

@@ -75,6 +75,7 @@ interface AppointmentDetailEditFormProps {
   applyDurationInput: (value: string) => void
   triggerEdit: UseFormReturn<AppointmentFormInput>['trigger']
   applyEndTime: (et: string) => void
+  unavailableDates?: string[]
 }
 
 export function AppointmentDetailEditForm({
@@ -116,6 +117,7 @@ export function AppointmentDetailEditForm({
   applyDurationInput,
   triggerEdit,
   applyEndTime,
+  unavailableDates = [],
 }: AppointmentDetailEditFormProps) {
   const {
     register: registerEdit,
@@ -250,6 +252,8 @@ export function AppointmentDetailEditForm({
             <JalaliDatePicker
               id="edit-date"
               value={date ?? ''}
+              unavailableDates={unavailableDates}
+              allowUnavailableValue
               onChange={(value) =>
                 setEditValue('date', value, {
                   shouldDirty: true,

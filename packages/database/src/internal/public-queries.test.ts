@@ -15,6 +15,11 @@ vi.mock('./service-queries', () => ({
   getAllServices: mocks.getAllServices,
 }))
 
+vi.mock('./salon-closure-queries', () => ({
+  assertSalonDateOpen: vi.fn(),
+  listSalonClosureDates: vi.fn().mockResolvedValue([]),
+}))
+
 import {
   createAppointmentRequest,
   filterPublicBookableServices,
@@ -121,7 +126,9 @@ function setupPublicSalonDb(input?: {
   const db = {
     select: vi.fn(() => selectBuilders.shift()),
     insert: vi.fn(() => insertBuilder),
+    transaction: vi.fn(),
   }
+  db.transaction.mockImplementation(async (callback) => callback(db))
   mocks.getDb.mockReturnValue(db)
   mocks.getAllServices.mockResolvedValue(
     input?.services ?? [
