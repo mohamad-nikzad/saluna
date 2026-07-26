@@ -9,65 +9,54 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StaffInvitesRouteImport } from './routes/staff-invites'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SelectSalonRouteImport } from './routes/select-salon'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as HandoffTokenRouteImport } from './routes/handoff.$token'
-import { Route as AuthedTodayRouteImport } from './routes/_authed/today'
-import { Route as AuthedSupportRouteImport } from './routes/_authed/support'
-import { Route as AuthedStaffRouteImport } from './routes/_authed/staff'
-import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
-import { Route as AuthedServicesRouteImport } from './routes/_authed/services'
-import { Route as AuthedRetentionRouteImport } from './routes/_authed/retention'
-import { Route as AuthedRequestsRouteImport } from './routes/_authed/requests'
-import { Route as AuthedPublicPageRouteImport } from './routes/_authed/public-page'
-import { Route as AuthedOnboardingRouteImport } from './routes/_authed/onboarding'
-import { Route as AuthedEarningsRouteImport } from './routes/_authed/earnings'
-import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
-import { Route as AuthedCommissionsRouteImport } from './routes/_authed/commissions'
-import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SelectSalonRouteImport } from './routes/select-salon'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as StaffInvitesRouteImport } from './routes/staff-invites'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
-import { Route as AuthedSupportIndexRouteImport } from './routes/_authed/support.index'
-import { Route as AuthedStaffIndexRouteImport } from './routes/_authed/staff.index'
-import { Route as AuthedOnboardingIndexRouteImport } from './routes/_authed/onboarding/index'
+import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
+import { Route as AuthedCommissionsRouteImport } from './routes/_authed/commissions'
+import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedEarningsRouteImport } from './routes/_authed/earnings'
+import { Route as AuthedOnboardingRouteImport } from './routes/_authed/onboarding'
+import { Route as AuthedPublicPageRouteImport } from './routes/_authed/public-page'
+import { Route as AuthedRequestsRouteImport } from './routes/_authed/requests'
+import { Route as AuthedRetentionRouteImport } from './routes/_authed/retention'
+import { Route as AuthedServicesRouteImport } from './routes/_authed/services'
+import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
+import { Route as AuthedStaffRouteImport } from './routes/_authed/staff'
+import { Route as AuthedSupportRouteImport } from './routes/_authed/support'
+import { Route as AuthedTodayRouteImport } from './routes/_authed/today'
+import { Route as HandoffTokenRouteImport } from './routes/handoff.$token'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthedClientsIndexRouteImport } from './routes/_authed/clients.index'
-import { Route as AuthedSupportNewRouteImport } from './routes/_authed/support.new'
-import { Route as AuthedSupportTicketIdRouteImport } from './routes/_authed/support.$ticketId'
-import { Route as AuthedStaffIdRouteImport } from './routes/_authed/staff.$id'
-import { Route as AuthedOnboardingWelcomeRouteImport } from './routes/_authed/onboarding/welcome'
-import { Route as AuthedOnboardingStaffRouteImport } from './routes/_authed/onboarding/staff'
-import { Route as AuthedOnboardingServicesRouteImport } from './routes/_authed/onboarding/services'
-import { Route as AuthedOnboardingPublicRouteImport } from './routes/_authed/onboarding/public'
-import { Route as AuthedOnboardingPresenceRouteImport } from './routes/_authed/onboarding/presence'
-import { Route as AuthedOnboardingNotificationsRouteImport } from './routes/_authed/onboarding/notifications'
-import { Route as AuthedOnboardingHoursRouteImport } from './routes/_authed/onboarding/hours'
-import { Route as AuthedOnboardingDoneRouteImport } from './routes/_authed/onboarding/done'
-import { Route as AuthedClientsImportRouteImport } from './routes/_authed/clients.import'
 import { Route as AuthedClientsIdRouteImport } from './routes/_authed/clients.$id'
+import { Route as AuthedClientsImportRouteImport } from './routes/_authed/clients.import'
+import { Route as AuthedOnboardingIndexRouteImport } from './routes/_authed/onboarding/index'
+import { Route as AuthedOnboardingDoneRouteImport } from './routes/_authed/onboarding/done'
+import { Route as AuthedOnboardingHoursRouteImport } from './routes/_authed/onboarding/hours'
+import { Route as AuthedOnboardingNotificationsRouteImport } from './routes/_authed/onboarding/notifications'
+import { Route as AuthedOnboardingPresenceRouteImport } from './routes/_authed/onboarding/presence'
+import { Route as AuthedOnboardingPublicRouteImport } from './routes/_authed/onboarding/public'
+import { Route as AuthedOnboardingServicesRouteImport } from './routes/_authed/onboarding/services'
+import { Route as AuthedOnboardingStaffRouteImport } from './routes/_authed/onboarding/staff'
+import { Route as AuthedOnboardingWelcomeRouteImport } from './routes/_authed/onboarding/welcome'
+import { Route as AuthedStaffIndexRouteImport } from './routes/_authed/staff.index'
+import { Route as AuthedStaffIdRouteImport } from './routes/_authed/staff.$id'
+import { Route as AuthedSupportIndexRouteImport } from './routes/_authed/support.index'
+import { Route as AuthedSupportTicketIdRouteImport } from './routes/_authed/support.$ticketId'
+import { Route as AuthedSupportNewRouteImport } from './routes/_authed/support.new'
 
-const StaffInvitesRoute = StaffInvitesRouteImport.update({
-  id: '/staff-invites',
-  path: '/staff-invites',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SelectSalonRoute = SelectSalonRouteImport.update({
-  id: '/select-salon',
-  path: '/select-salon',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -75,83 +64,29 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedRoute = AuthedRouteImport.update({
-  id: '/_authed',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SelectSalonRoute = SelectSalonRouteImport.update({
+  id: '/select-salon',
+  path: '/select-salon',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HandoffTokenRoute = HandoffTokenRouteImport.update({
-  id: '/handoff/$token',
-  path: '/handoff/$token',
+const StaffInvitesRoute = StaffInvitesRouteImport.update({
+  id: '/staff-invites',
+  path: '/staff-invites',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedTodayRoute = AuthedTodayRouteImport.update({
-  id: '/today',
-  path: '/today',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedSupportRoute = AuthedSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedStaffRoute = AuthedStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedServicesRoute = AuthedServicesRouteImport.update({
-  id: '/services',
-  path: '/services',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedRetentionRoute = AuthedRetentionRouteImport.update({
-  id: '/retention',
-  path: '/retention',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedRequestsRoute = AuthedRequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedPublicPageRoute = AuthedPublicPageRouteImport.update({
-  id: '/public-page',
-  path: '/public-page',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedOnboardingRoute = AuthedOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedEarningsRoute = AuthedEarningsRouteImport.update({
-  id: '/earnings',
-  path: '/earnings',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedCommissionsRoute = AuthedCommissionsRouteImport.update({
-  id: '/commissions',
-  path: '/commissions',
+const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedClientsRoute = AuthedClientsRouteImport.update({
@@ -159,54 +94,121 @@ const AuthedClientsRoute = AuthedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
+const AuthedCommissionsRoute = AuthedCommissionsRouteImport.update({
+  id: '/commissions',
+  path: '/commissions',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedSupportIndexRoute = AuthedSupportIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedSupportRoute,
+const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedStaffIndexRoute = AuthedStaffIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedStaffRoute,
+const AuthedEarningsRoute = AuthedEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedOnboardingIndexRoute = AuthedOnboardingIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedOnboardingRoute,
+const AuthedOnboardingRoute = AuthedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedPublicPageRoute = AuthedPublicPageRouteImport.update({
+  id: '/public-page',
+  path: '/public-page',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRequestsRoute = AuthedRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRetentionRoute = AuthedRetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedServicesRoute = AuthedServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedStaffRoute = AuthedStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSupportRoute = AuthedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedTodayRoute = AuthedTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const HandoffTokenRoute = HandoffTokenRouteImport.update({
+  id: '/handoff/$token',
+  path: '/handoff/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedClientsIndexRoute = AuthedClientsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedClientsRoute,
 } as any)
-const AuthedSupportNewRoute = AuthedSupportNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthedSupportRoute,
-} as any)
-const AuthedSupportTicketIdRoute = AuthedSupportTicketIdRouteImport.update({
-  id: '/$ticketId',
-  path: '/$ticketId',
-  getParentRoute: () => AuthedSupportRoute,
-} as any)
-const AuthedStaffIdRoute = AuthedStaffIdRouteImport.update({
+const AuthedClientsIdRoute = AuthedClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => AuthedStaffRoute,
+  getParentRoute: () => AuthedClientsRoute,
 } as any)
-const AuthedOnboardingWelcomeRoute = AuthedOnboardingWelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
+const AuthedClientsImportRoute = AuthedClientsImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthedClientsRoute,
+} as any)
+const AuthedOnboardingIndexRoute = AuthedOnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => AuthedOnboardingRoute,
 } as any)
-const AuthedOnboardingStaffRoute = AuthedOnboardingStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
+const AuthedOnboardingDoneRoute = AuthedOnboardingDoneRouteImport.update({
+  id: '/done',
+  path: '/done',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingHoursRoute = AuthedOnboardingHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
+  getParentRoute: () => AuthedOnboardingRoute,
+} as any)
+const AuthedOnboardingNotificationsRoute =
+  AuthedOnboardingNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthedOnboardingRoute,
+  } as any)
+const AuthedOnboardingPresenceRoute =
+  AuthedOnboardingPresenceRouteImport.update({
+    id: '/presence',
+    path: '/presence',
+    getParentRoute: () => AuthedOnboardingRoute,
+  } as any)
+const AuthedOnboardingPublicRoute = AuthedOnboardingPublicRouteImport.update({
+  id: '/public',
+  path: '/public',
   getParentRoute: () => AuthedOnboardingRoute,
 } as any)
 const AuthedOnboardingServicesRoute =
@@ -215,42 +217,40 @@ const AuthedOnboardingServicesRoute =
     path: '/services',
     getParentRoute: () => AuthedOnboardingRoute,
   } as any)
-const AuthedOnboardingPublicRoute = AuthedOnboardingPublicRouteImport.update({
-  id: '/public',
-  path: '/public',
+const AuthedOnboardingStaffRoute = AuthedOnboardingStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => AuthedOnboardingRoute,
 } as any)
-const AuthedOnboardingPresenceRoute =
-  AuthedOnboardingPresenceRouteImport.update({
-    id: '/presence',
-    path: '/presence',
-    getParentRoute: () => AuthedOnboardingRoute,
-  } as any)
-const AuthedOnboardingNotificationsRoute =
-  AuthedOnboardingNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthedOnboardingRoute,
-  } as any)
-const AuthedOnboardingHoursRoute = AuthedOnboardingHoursRouteImport.update({
-  id: '/hours',
-  path: '/hours',
+const AuthedOnboardingWelcomeRoute = AuthedOnboardingWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => AuthedOnboardingRoute,
 } as any)
-const AuthedOnboardingDoneRoute = AuthedOnboardingDoneRouteImport.update({
-  id: '/done',
-  path: '/done',
-  getParentRoute: () => AuthedOnboardingRoute,
+const AuthedStaffIndexRoute = AuthedStaffIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedStaffRoute,
 } as any)
-const AuthedClientsImportRoute = AuthedClientsImportRouteImport.update({
-  id: '/import',
-  path: '/import',
-  getParentRoute: () => AuthedClientsRoute,
-} as any)
-const AuthedClientsIdRoute = AuthedClientsIdRouteImport.update({
+const AuthedStaffIdRoute = AuthedStaffIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => AuthedClientsRoute,
+  getParentRoute: () => AuthedStaffRoute,
+} as any)
+const AuthedSupportIndexRoute = AuthedSupportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedSupportRoute,
+} as any)
+const AuthedSupportTicketIdRoute = AuthedSupportTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => AuthedSupportRoute,
+} as any)
+const AuthedSupportNewRoute = AuthedSupportNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthedSupportRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -511,39 +511,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/staff-invites': {
-      id: '/staff-invites'
-      path: '/staff-invites'
-      fullPath: '/staff-invites'
-      preLoaderRoute: typeof StaffInvitesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/select-salon': {
-      id: '/select-salon'
-      path: '/select-salon'
-      fullPath: '/select-salon'
-      preLoaderRoute: typeof SelectSalonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed': {
@@ -553,109 +525,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/handoff/$token': {
-      id: '/handoff/$token'
-      path: '/handoff/$token'
-      fullPath: '/handoff/$token'
-      preLoaderRoute: typeof HandoffTokenRouteImport
+    '/select-salon': {
+      id: '/select-salon'
+      path: '/select-salon'
+      fullPath: '/select-salon'
+      preLoaderRoute: typeof SelectSalonRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/today': {
-      id: '/_authed/today'
-      path: '/today'
-      fullPath: '/today'
-      preLoaderRoute: typeof AuthedTodayRouteImport
-      parentRoute: typeof AuthedRoute
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authed/support': {
-      id: '/_authed/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof AuthedSupportRouteImport
-      parentRoute: typeof AuthedRoute
+    '/staff-invites': {
+      id: '/staff-invites'
+      path: '/staff-invites'
+      fullPath: '/staff-invites'
+      preLoaderRoute: typeof StaffInvitesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authed/staff': {
-      id: '/_authed/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof AuthedStaffRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/settings': {
-      id: '/_authed/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthedSettingsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/services': {
-      id: '/_authed/services'
-      path: '/services'
-      fullPath: '/services'
-      preLoaderRoute: typeof AuthedServicesRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/retention': {
-      id: '/_authed/retention'
-      path: '/retention'
-      fullPath: '/retention'
-      preLoaderRoute: typeof AuthedRetentionRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/requests': {
-      id: '/_authed/requests'
-      path: '/requests'
-      fullPath: '/requests'
-      preLoaderRoute: typeof AuthedRequestsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/public-page': {
-      id: '/_authed/public-page'
-      path: '/public-page'
-      fullPath: '/public-page'
-      preLoaderRoute: typeof AuthedPublicPageRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/onboarding': {
-      id: '/_authed/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof AuthedOnboardingRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/earnings': {
-      id: '/_authed/earnings'
-      path: '/earnings'
-      fullPath: '/earnings'
-      preLoaderRoute: typeof AuthedEarningsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/dashboard': {
-      id: '/_authed/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthedDashboardRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/commissions': {
-      id: '/_authed/commissions'
-      path: '/commissions'
-      fullPath: '/commissions'
-      preLoaderRoute: typeof AuthedCommissionsRouteImport
+    '/_authed/calendar': {
+      id: '/_authed/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthedCalendarRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/clients': {
@@ -665,33 +574,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedClientsRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/calendar': {
-      id: '/_authed/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof AuthedCalendarRouteImport
+    '/_authed/commissions': {
+      id: '/_authed/commissions'
+      path: '/commissions'
+      fullPath: '/commissions'
+      preLoaderRoute: typeof AuthedCommissionsRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/support/': {
-      id: '/_authed/support/'
-      path: '/'
-      fullPath: '/support/'
-      preLoaderRoute: typeof AuthedSupportIndexRouteImport
-      parentRoute: typeof AuthedSupportRoute
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/_authed/staff/': {
-      id: '/_authed/staff/'
-      path: '/'
-      fullPath: '/staff/'
-      preLoaderRoute: typeof AuthedStaffIndexRouteImport
-      parentRoute: typeof AuthedStaffRoute
+    '/_authed/earnings': {
+      id: '/_authed/earnings'
+      path: '/earnings'
+      fullPath: '/earnings'
+      preLoaderRoute: typeof AuthedEarningsRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/_authed/onboarding/': {
-      id: '/_authed/onboarding/'
-      path: '/'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof AuthedOnboardingIndexRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
+    '/_authed/onboarding': {
+      id: '/_authed/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthedOnboardingRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/public-page': {
+      id: '/_authed/public-page'
+      path: '/public-page'
+      fullPath: '/public-page'
+      preLoaderRoute: typeof AuthedPublicPageRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/requests': {
+      id: '/_authed/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof AuthedRequestsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/retention': {
+      id: '/_authed/retention'
+      path: '/retention'
+      fullPath: '/retention'
+      preLoaderRoute: typeof AuthedRetentionRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/services': {
+      id: '/_authed/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof AuthedServicesRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/settings': {
+      id: '/_authed/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthedSettingsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/staff': {
+      id: '/_authed/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AuthedStaffRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/support': {
+      id: '/_authed/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthedSupportRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/today': {
+      id: '/_authed/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof AuthedTodayRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/handoff/$token': {
+      id: '/handoff/$token'
+      path: '/handoff/$token'
+      fullPath: '/handoff/$token'
+      preLoaderRoute: typeof HandoffTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authed/clients/': {
       id: '/_authed/clients/'
@@ -700,74 +679,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedClientsIndexRouteImport
       parentRoute: typeof AuthedClientsRoute
     }
-    '/_authed/support/new': {
-      id: '/_authed/support/new'
-      path: '/new'
-      fullPath: '/support/new'
-      preLoaderRoute: typeof AuthedSupportNewRouteImport
-      parentRoute: typeof AuthedSupportRoute
-    }
-    '/_authed/support/$ticketId': {
-      id: '/_authed/support/$ticketId'
-      path: '/$ticketId'
-      fullPath: '/support/$ticketId'
-      preLoaderRoute: typeof AuthedSupportTicketIdRouteImport
-      parentRoute: typeof AuthedSupportRoute
-    }
-    '/_authed/staff/$id': {
-      id: '/_authed/staff/$id'
+    '/_authed/clients/$id': {
+      id: '/_authed/clients/$id'
       path: '/$id'
-      fullPath: '/staff/$id'
-      preLoaderRoute: typeof AuthedStaffIdRouteImport
-      parentRoute: typeof AuthedStaffRoute
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof AuthedClientsIdRouteImport
+      parentRoute: typeof AuthedClientsRoute
     }
-    '/_authed/onboarding/welcome': {
-      id: '/_authed/onboarding/welcome'
-      path: '/welcome'
-      fullPath: '/onboarding/welcome'
-      preLoaderRoute: typeof AuthedOnboardingWelcomeRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
+    '/_authed/clients/import': {
+      id: '/_authed/clients/import'
+      path: '/import'
+      fullPath: '/clients/import'
+      preLoaderRoute: typeof AuthedClientsImportRouteImport
+      parentRoute: typeof AuthedClientsRoute
     }
-    '/_authed/onboarding/staff': {
-      id: '/_authed/onboarding/staff'
-      path: '/staff'
-      fullPath: '/onboarding/staff'
-      preLoaderRoute: typeof AuthedOnboardingStaffRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
-    }
-    '/_authed/onboarding/services': {
-      id: '/_authed/onboarding/services'
-      path: '/services'
-      fullPath: '/onboarding/services'
-      preLoaderRoute: typeof AuthedOnboardingServicesRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
-    }
-    '/_authed/onboarding/public': {
-      id: '/_authed/onboarding/public'
-      path: '/public'
-      fullPath: '/onboarding/public'
-      preLoaderRoute: typeof AuthedOnboardingPublicRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
-    }
-    '/_authed/onboarding/presence': {
-      id: '/_authed/onboarding/presence'
-      path: '/presence'
-      fullPath: '/onboarding/presence'
-      preLoaderRoute: typeof AuthedOnboardingPresenceRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
-    }
-    '/_authed/onboarding/notifications': {
-      id: '/_authed/onboarding/notifications'
-      path: '/notifications'
-      fullPath: '/onboarding/notifications'
-      preLoaderRoute: typeof AuthedOnboardingNotificationsRouteImport
-      parentRoute: typeof AuthedOnboardingRoute
-    }
-    '/_authed/onboarding/hours': {
-      id: '/_authed/onboarding/hours'
-      path: '/hours'
-      fullPath: '/onboarding/hours'
-      preLoaderRoute: typeof AuthedOnboardingHoursRouteImport
+    '/_authed/onboarding/': {
+      id: '/_authed/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof AuthedOnboardingIndexRouteImport
       parentRoute: typeof AuthedOnboardingRoute
     }
     '/_authed/onboarding/done': {
@@ -777,19 +707,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedOnboardingDoneRouteImport
       parentRoute: typeof AuthedOnboardingRoute
     }
-    '/_authed/clients/import': {
-      id: '/_authed/clients/import'
-      path: '/import'
-      fullPath: '/clients/import'
-      preLoaderRoute: typeof AuthedClientsImportRouteImport
-      parentRoute: typeof AuthedClientsRoute
+    '/_authed/onboarding/hours': {
+      id: '/_authed/onboarding/hours'
+      path: '/hours'
+      fullPath: '/onboarding/hours'
+      preLoaderRoute: typeof AuthedOnboardingHoursRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
     }
-    '/_authed/clients/$id': {
-      id: '/_authed/clients/$id'
+    '/_authed/onboarding/notifications': {
+      id: '/_authed/onboarding/notifications'
+      path: '/notifications'
+      fullPath: '/onboarding/notifications'
+      preLoaderRoute: typeof AuthedOnboardingNotificationsRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/presence': {
+      id: '/_authed/onboarding/presence'
+      path: '/presence'
+      fullPath: '/onboarding/presence'
+      preLoaderRoute: typeof AuthedOnboardingPresenceRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/public': {
+      id: '/_authed/onboarding/public'
+      path: '/public'
+      fullPath: '/onboarding/public'
+      preLoaderRoute: typeof AuthedOnboardingPublicRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/services': {
+      id: '/_authed/onboarding/services'
+      path: '/services'
+      fullPath: '/onboarding/services'
+      preLoaderRoute: typeof AuthedOnboardingServicesRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/staff': {
+      id: '/_authed/onboarding/staff'
+      path: '/staff'
+      fullPath: '/onboarding/staff'
+      preLoaderRoute: typeof AuthedOnboardingStaffRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/onboarding/welcome': {
+      id: '/_authed/onboarding/welcome'
+      path: '/welcome'
+      fullPath: '/onboarding/welcome'
+      preLoaderRoute: typeof AuthedOnboardingWelcomeRouteImport
+      parentRoute: typeof AuthedOnboardingRoute
+    }
+    '/_authed/staff/': {
+      id: '/_authed/staff/'
+      path: '/'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof AuthedStaffIndexRouteImport
+      parentRoute: typeof AuthedStaffRoute
+    }
+    '/_authed/staff/$id': {
+      id: '/_authed/staff/$id'
       path: '/$id'
-      fullPath: '/clients/$id'
-      preLoaderRoute: typeof AuthedClientsIdRouteImport
-      parentRoute: typeof AuthedClientsRoute
+      fullPath: '/staff/$id'
+      preLoaderRoute: typeof AuthedStaffIdRouteImport
+      parentRoute: typeof AuthedStaffRoute
+    }
+    '/_authed/support/': {
+      id: '/_authed/support/'
+      path: '/'
+      fullPath: '/support/'
+      preLoaderRoute: typeof AuthedSupportIndexRouteImport
+      parentRoute: typeof AuthedSupportRoute
+    }
+    '/_authed/support/$ticketId': {
+      id: '/_authed/support/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/support/$ticketId'
+      preLoaderRoute: typeof AuthedSupportTicketIdRouteImport
+      parentRoute: typeof AuthedSupportRoute
+    }
+    '/_authed/support/new': {
+      id: '/_authed/support/new'
+      path: '/new'
+      fullPath: '/support/new'
+      preLoaderRoute: typeof AuthedSupportNewRouteImport
+      parentRoute: typeof AuthedSupportRoute
     }
   }
 }
