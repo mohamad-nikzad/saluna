@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
 
-import type { StatusActionFeedback } from '#/components/today/staff-today-context'
 import { useUpdateAppointmentStatusMutation } from '#/lib/appointments-queries'
+
+export type StatusActionFeedback = {
+  appointmentId: string
+  status: AppointmentWithDetails['status']
+  mode: 'saving' | 'saved' | 'error'
+  message: string
+} | null
 
 export function useStaffTodayStatusMutation(onAfterSuccess: () => void) {
   const [statusFeedback, setStatusFeedback] =

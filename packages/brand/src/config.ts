@@ -21,7 +21,6 @@ export const brand = {
     markClean: '/brand/saluna-mark.png',
     markCleanFilename: 'saluna-mark.png',
     markSourceFilename: 'saluna-mark-gradient.png',
-    logoCleanFilename: 'saluna-logo-horizontal-fa-en.png',
     landingMark: '/landing/saluna-mark.png',
   },
   storage: {

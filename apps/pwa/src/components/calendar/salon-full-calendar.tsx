@@ -27,7 +27,7 @@ import {
   formatPersianTimeHm,
 } from '@repo/salon-core/jalali-display'
 import { cn } from '@repo/ui/utils'
-import { formatCompactServiceLabel } from '#/components/services/service-catalog-groups'
+import { formatCompactServiceLabel } from '@repo/salon-core/service-catalog'
 import {
   formatPersianTime,
   toPersianDigits,

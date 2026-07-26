@@ -60,9 +60,3 @@ export function MessagingConnectCard({
     </>
   )
 }
-
-export function TelegramConnectCard(
-  props: Omit<Parameters<typeof MessagingConnectCard>[0], 'provider'>,
-) {
-  return <MessagingConnectCard provider="telegram" {...props} />
-}

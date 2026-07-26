@@ -16,14 +16,6 @@ import {
   emptyCreateIntent,
 } from '#/lib/appointment-intake'
 
-export type AppointmentFlowState = {
-  createOpen: boolean
-  createFormRevision: number
-  availabilityOpen: boolean
-  detailAppointment: AppointmentWithDetails | null
-  createIntent: AppointmentCreateIntent
-}
-
 export function useAppointmentFlow(defaults?: {
   defaultDate?: string
   defaultTime?: string

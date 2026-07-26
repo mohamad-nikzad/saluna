@@ -16,10 +16,6 @@ import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 export { getApiV1OnboardingQueryKey }
 export type { OnboardingAction, OnboardingResponse, OnboardingStatus }
 
-export function onboardingInvalidationKeys() {
-  return [[{ _id: 'getApiV1Onboarding' }]] as const
-}
-
 export function onboardingQueryOptions() {
   return queryOptions({
     queryKey: getApiV1OnboardingQueryKey(),

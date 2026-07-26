@@ -15,12 +15,6 @@ export type ImportGuidePlatform = {
   notRecommended?: boolean
 }
 
-export const DIFFICULTY_LABEL: Record<ImportGuideDifficulty, string> = {
-  easy: 'آسان',
-  medium: 'متوسط',
-  hard: 'دشوار',
-}
-
 const en = (text: string): GuideSegment => ({ type: 'en', text })
 const fa = (text: string): GuideSegment => ({ type: 'fa', text })
 
@@ -372,7 +366,3 @@ export const IMPORT_GUIDE_PLATFORMS: ImportGuidePlatform[] = [
     notRecommended: true,
   },
 ]
-
-export function getImportGuide(id: string): ImportGuidePlatform | undefined {
-  return IMPORT_GUIDE_PLATFORMS.find((p) => p.id === id)
-}

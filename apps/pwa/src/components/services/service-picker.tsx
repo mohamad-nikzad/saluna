@@ -23,7 +23,7 @@ import { cn } from '@repo/ui/utils'
 import type { Service } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { ResponsivePicker } from '#/components/responsive-picker'
-import { formatCompactServiceLabel } from '#/components/services/service-catalog-groups'
+import { formatCompactServiceLabel } from '@repo/salon-core/service-catalog'
 
 interface ServicePickerProps {
   services: Service[]

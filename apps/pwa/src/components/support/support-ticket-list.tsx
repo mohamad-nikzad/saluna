@@ -172,7 +172,3 @@ export function SupportTicketListError({ retry }: { retry: () => void }) {
     </div>
   )
 }
-
-export function UnreadCount({ count }: { count: number }) {
-  return <>{toPersianDigits(count > 99 ? '99+' : count)}</>
-}

@@ -37,5 +37,3 @@ export const apiClient = {
 export const api = {
   auth: createAuthApi(apiClient),
 }
-
-export type Api = typeof api

@@ -19,7 +19,7 @@ import { staffServiceIdsSchema } from '@repo/salon-core/forms/staff'
 import type { StaffServiceIdsInput } from '@repo/salon-core/forms/staff'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { cn } from '@repo/ui/utils'
-import { serviceCategoryName } from '#/components/services/service-catalog-groups'
+import { serviceCategoryName } from '@repo/salon-core/service-catalog'
 import { useUpdateStaffServicesMutation } from '#/lib/staff-queries'
 import { useDismissGuard } from '#/lib/use-dismiss-guard'
 
