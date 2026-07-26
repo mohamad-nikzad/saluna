@@ -21,6 +21,7 @@ No active backlog items.
 
 ## Inbox
 
+- [BL-0068 Let managers make one date unavailable](inbox/BL-0068-make-one-date-unavailable.md)
 - [BL-0011 Campaign support](inbox/BL-0011-campaign-support.md)
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
