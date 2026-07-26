@@ -8,6 +8,8 @@ import DashboardPreview from '@/components/landing/DashboardPreview.astro'
 import PricingFaq from '@/components/landing/PricingFaq.astro'
 import Cta from '@/components/landing/Cta.astro'
 import Footer from '@/components/landing/Footer.astro'
+import LandingPrototype from '@/components/landing/prototype/LandingPrototype.astro'
+import PrototypeSwitcher from '@/components/landing/prototype/PrototypeSwitcher.astro'
 import {
   features,
   productSignals,
@@ -51,6 +53,7 @@ const jsonLd = [
     })),
   },
 ]
+const landingPrototypeEnabled = import.meta.env.DEV
 ---
 
 <Base
@@ -62,27 +65,41 @@ const jsonLd = [
   jsonLd={jsonLd}
   preloadLalezar={true}
 >
-  <main
-    dir="rtl"
-    class="saloora-landing relative box-border min-h-dvh overflow-hidden bg-[#fdf5f8] text-[#3f2730]"
+  <div
+    data-prototype-variant={landingPrototypeEnabled ? 'current' : undefined}
+    hidden={landingPrototypeEnabled}
   >
-    <style>
-      .saloora-landing {
-        max-width: 100%;
-        overflow-x: hidden;
-      }
-    </style>
+    <main
+      dir="rtl"
+      class="saloora-landing relative box-border min-h-dvh overflow-hidden bg-[#fdf5f8] text-[#3f2730]"
+    >
+      <style>
+        .saloora-landing {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+      </style>
 
-    <Hero loginHref={loginHref} signupHref={signupHref} />
-    <Features features={features} />
-    <DashboardPreview
-      managementAreas={managementAreas}
-      requestFlow={requestFlow}
-      productSignals={productSignals}
-      seoTopics={seoTopics}
-    />
-    <PricingFaq pricingPoints={pricingPoints} faqItems={faqItems} />
-    <Cta loginHref={loginHref} signupHref={signupHref} />
-    <Footer />
-  </main>
+      <Hero loginHref={loginHref} signupHref={signupHref} />
+      <Features features={features} />
+      <DashboardPreview
+        managementAreas={managementAreas}
+        requestFlow={requestFlow}
+        productSignals={productSignals}
+        seoTopics={seoTopics}
+      />
+      <PricingFaq pricingPoints={pricingPoints} faqItems={faqItems} />
+      <Cta loginHref={loginHref} signupHref={signupHref} />
+      <Footer />
+    </main>
+  </div>
+
+  {
+    landingPrototypeEnabled && (
+      <>
+        <LandingPrototype loginHref={loginHref} signupHref={signupHref} />
+        <PrototypeSwitcher />
+      </>
+    )
+  }
 </Base>

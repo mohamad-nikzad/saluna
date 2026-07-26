@@ -1,0 +1,27 @@
+---
+interface Props {
+  src: string
+  alt: string
+}
+
+const { src, alt } = Astro.props
+---
+
+<figure class="mx-auto w-full max-w-[22rem]">
+  <div
+    class="relative box-border w-full overflow-hidden rounded-[2.4rem] bg-[#302329] p-[7px] shadow-[0_30px_80px_rgba(46,25,33,.28)]"
+  >
+    <span
+      class="absolute left-1/2 top-3 z-10 h-4 w-24 -translate-x-1/2 rounded-full bg-[#302329]"
+      aria-hidden="true"></span>
+    <img
+      src={src}
+      alt={alt}
+      width="390"
+      height="844"
+      loading="eager"
+      decoding="async"
+      class="block h-auto w-full max-w-full rounded-[1.95rem] object-cover object-center"
+    />
+  </div>
+</figure>
