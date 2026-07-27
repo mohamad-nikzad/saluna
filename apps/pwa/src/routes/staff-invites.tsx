@@ -16,7 +16,6 @@ export const Route = createFileRoute('/staff-invites')({
       queryKey: authQueryKey,
     })
     if (!session) throw redirect({ to: '/auth' })
-    if (session.status === 'needs_workspace') throw redirect({ to: '/signup' })
     if (session.status === 'needs_staff_password')
       throw redirect({ to: '/auth' })
     if (session.status === 'ready' && session.user.role !== 'staff') {
@@ -40,6 +39,10 @@ function StaffInvitesPage() {
     const next = await refresh()
     if (next?.status === 'needs_salon_selection') {
       await navigate({ to: '/select-salon', replace: true })
+    } else if (next?.status === 'needs_staff_password') {
+      await navigate({ to: '/auth', replace: true })
+    } else if (next?.status === 'needs_workspace') {
+      await navigate({ to: '/signup', replace: true })
     } else if (next?.status === 'ready') {
       await navigate({ to: homePathForRole(next.user.role), replace: true })
     }

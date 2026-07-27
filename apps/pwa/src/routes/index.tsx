@@ -18,6 +18,9 @@ export const Route = createFileRoute('/')({
     if (session.status === 'needs_staff_password') {
       throw redirect({ to: '/auth' })
     }
+    if (session.status === 'needs_staff_invite') {
+      throw redirect({ to: '/staff-invites' })
+    }
     if (session.status === 'needs_salon_selection') {
       throw redirect({ to: '/select-salon' })
     }

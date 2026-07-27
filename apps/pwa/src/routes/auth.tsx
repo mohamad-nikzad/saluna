@@ -72,6 +72,9 @@ export const Route = createFileRoute('/auth')({
     if (session?.status === 'needs_salon_selection') {
       throw redirect({ to: '/staff-invites' })
     }
+    if (session?.status === 'needs_staff_invite') {
+      throw redirect({ to: '/staff-invites' })
+    }
     if (
       session &&
       session.status !== 'needs_workspace' &&
@@ -145,6 +148,11 @@ function AuthPage() {
       if (session.status === 'needs_staff_password') {
         setSession(session)
         setMode('staffPassword')
+        return
+      }
+      if (session.status === 'needs_staff_invite') {
+        setSession(session)
+        await navigate({ to: '/staff-invites' })
         return
       }
       if (session.status === 'needs_salon_selection') {
@@ -233,6 +241,11 @@ function AuthPage() {
         setNewPassword('')
         setConfirmPassword('')
         setMode('staffPassword')
+        return
+      }
+      if (session?.status === 'needs_staff_invite') {
+        setSession(session)
+        await navigate({ to: '/staff-invites', replace: true })
         return
       }
       if (session?.status === 'needs_salon_selection') {

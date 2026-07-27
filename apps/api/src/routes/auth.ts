@@ -366,6 +366,19 @@ export const authRoute = new Hono<AppEnv>()
 
     const salonOptions = await listStaffSalonOptionsForUser(sessionUser.id)
     if (salonOptions.length === 0) {
+      const pendingInvites = await listPendingStaffInvitesForUser(
+        sessionUser.id,
+      )
+      if (pendingInvites.length > 0) {
+        return ok(c, {
+          status: 'needs_staff_invite',
+          user: {
+            id: sessionUser.id,
+            name: sessionUser.name,
+            phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+          },
+        })
+      }
       const member = await getMemberForUser(sessionUser.id)
       if (!member) {
         const userHasPassword = await hasCredentialPassword(sessionUser.id)
@@ -701,6 +714,15 @@ export const authRoute = new Hono<AppEnv>()
           },
           redirectTo: '/onboarding',
         })
+      }
+
+      if ((await listPendingStaffInvitesForUser(sessionUser.id)).length > 0) {
+        return error(
+          c,
+          'ابتدا دعوت پرسنل خود را بپذیرید یا رد کنید',
+          409,
+          'PENDING_STAFF_INVITE',
+        )
       }
 
       const { salonName, slug: requestedSlug } = c.req.valid('json')

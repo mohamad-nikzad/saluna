@@ -293,6 +293,34 @@ describe('auth /me shim', () => {
     expect(getUserWithServiceIds).not.toHaveBeenCalled()
   })
 
+  it('routes a verified identity with a pending Staff Invite to acceptance', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Sara',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
+    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([
+      { id: 'invite-1' },
+    ] as never)
+
+    const res = await app.request('/api/v1/auth/me')
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      status: 'needs_staff_invite',
+      user: {
+        id: 'u1',
+        name: 'Sara',
+        phone: '09121234567',
+      },
+    })
+    expect(getMemberForUser).not.toHaveBeenCalled()
+  })
+
   it('marks pre-workspace users that already have a credential password', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
@@ -1100,6 +1128,34 @@ describe('OTP signup continuation routes', () => {
       user: { id: 'u1', name: 'Ali', phone: '09121234567' },
       redirectTo: '/onboarding',
     })
+  })
+
+  it('does not create a workspace while a Staff Invite awaits a response', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Sara',
+        phoneNumber: '09121234567',
+        username: '09121234567',
+      },
+    } as never)
+    vi.mocked(getMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([
+      { id: 'invite-1' },
+    ] as never)
+
+    const res = await app.request('/api/v1/auth/signup/workspace', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ salonName: 'Accidental Salon' }),
+    })
+
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'ابتدا دعوت پرسنل خود را بپذیرید یا رد کنید',
+      code: 'PENDING_STAFF_INVITE',
+    })
+    expect(authServer.api.createOrganization).not.toHaveBeenCalled()
   })
 
   it('returns existing workspace state instead of creating another workspace', async () => {

@@ -118,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user =
     session?.status === 'needs_workspace' ||
     session?.status === 'needs_staff_password' ||
+    session?.status === 'needs_staff_invite' ||
     session?.status === 'needs_salon_selection'
       ? null
       : (session?.user ?? null)

@@ -21,6 +21,10 @@ export type MeResponse =
       user: PreWorkspaceUser & { salonId: string }
     }
   | {
+      status: 'needs_staff_invite'
+      user: PreWorkspaceUser
+    }
+  | {
       status: 'needs_salon_selection'
       user: PreWorkspaceUser
       salons: StaffSalonOption[]
@@ -290,6 +294,7 @@ export function createAuthApi(client: ApiClient) {
       if (
         response.status === 'needs_workspace' ||
         response.status === 'needs_staff_password' ||
+        response.status === 'needs_staff_invite' ||
         response.status === 'needs_salon_selection'
       ) {
         throw new Error('signup did not create a workspace')

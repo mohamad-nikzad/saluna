@@ -23,6 +23,9 @@ export const Route = createFileRoute('/select-salon')({
     if (session.status === 'needs_staff_password') {
       throw redirect({ to: '/auth' })
     }
+    if (session.status === 'needs_staff_invite') {
+      throw redirect({ to: '/staff-invites' })
+    }
     if (session.status === 'ready') {
       throw redirect({ to: homePathForRole(session.user.role) })
     }
