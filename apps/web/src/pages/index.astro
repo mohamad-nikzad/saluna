@@ -2,25 +2,8 @@
 export const prerender = true
 
 import Base from '@/layouts/Base.astro'
-import Hero from '@/components/landing/Hero.astro'
-import Features from '@/components/landing/Features.astro'
-import DashboardPreview from '@/components/landing/DashboardPreview.astro'
-import PricingFaq from '@/components/landing/PricingFaq.astro'
-import Cta from '@/components/landing/Cta.astro'
-import Footer from '@/components/landing/Footer.astro'
 import LandingPrototype from '@/components/landing/prototype/LandingPrototype.astro'
-import PrototypeSwitcher from '@/components/landing/prototype/PrototypeSwitcher.astro'
-import {
-  features,
-  productSignals,
-  managementAreas,
-  requestFlow,
-  seoTopics,
-  pricingPoints,
-  faqItems,
-  loginHref,
-  signupHref,
-} from '@/content/landing'
+import { faqItems, loginHref, signupHref } from '@/content/landing'
 import { brand } from '@repo/brand'
 
 const title = `${brand.name.fa} | نرم‌افزار مدیریت سالن زیبایی و نوبت‌ها`
@@ -53,7 +36,6 @@ const jsonLd = [
     })),
   },
 ]
-const landingPrototypeEnabled = import.meta.env.DEV
 ---
 
 <Base
@@ -65,41 +47,5 @@ const landingPrototypeEnabled = import.meta.env.DEV
   jsonLd={jsonLd}
   preloadLalezar={true}
 >
-  <div
-    data-prototype-variant={landingPrototypeEnabled ? 'current' : undefined}
-    hidden={landingPrototypeEnabled}
-  >
-    <main
-      dir="rtl"
-      class="saloora-landing relative box-border min-h-dvh overflow-hidden bg-[#fdf5f8] text-[#3f2730]"
-    >
-      <style>
-        .saloora-landing {
-          max-width: 100%;
-          overflow-x: hidden;
-        }
-      </style>
-
-      <Hero loginHref={loginHref} signupHref={signupHref} />
-      <Features features={features} />
-      <DashboardPreview
-        managementAreas={managementAreas}
-        requestFlow={requestFlow}
-        productSignals={productSignals}
-        seoTopics={seoTopics}
-      />
-      <PricingFaq pricingPoints={pricingPoints} faqItems={faqItems} />
-      <Cta loginHref={loginHref} signupHref={signupHref} />
-      <Footer />
-    </main>
-  </div>
-
-  {
-    landingPrototypeEnabled && (
-      <>
-        <LandingPrototype loginHref={loginHref} signupHref={signupHref} />
-        <PrototypeSwitcher />
-      </>
-    )
-  }
+  <LandingPrototype loginHref={loginHref} signupHref={signupHref} />
 </Base>
