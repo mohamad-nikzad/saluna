@@ -53,6 +53,7 @@ const authHeaders = { Authorization: 'Bearer testtoken' }
 const sampleResult = {
   slug: 'salon-x',
   salonName: 'Salon X',
+  phone: '09120000000',
   settings: {
     enabled: true,
     bioText: null,

@@ -981,6 +981,7 @@ const stubSalonPresence = {
 const stubManagerPublicSettings = {
   slug: 'stub-salon',
   salonName: 'stub',
+  phone: null,
   settings: {
     enabled: false,
     bioText: null,

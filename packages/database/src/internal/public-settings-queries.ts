@@ -8,6 +8,7 @@ import { getDb } from '../client'
 import type { MessagingProviderId } from '../messaging-provider-id'
 import {
   organization,
+  salonProfile,
   salonPublicSettings,
   servicePublicVisibility,
 } from '../schema'
@@ -29,6 +30,7 @@ export type ManagerServiceVisibilityView = {
 export type ManagerPublicSettingsResult = {
   slug: string
   salonName: string
+  phone: string | null
   settings: ManagerPublicSettingsView
   services: ManagerServiceVisibilityView[]
 }
@@ -69,12 +71,18 @@ export async function getManagerPublicSettings(
 ): Promise<ManagerPublicSettingsResult> {
   const db = getDb()
   const salonRows = await db
-    .select({ slug: organization.slug, name: organization.name })
+    .select({
+      slug: organization.slug,
+      name: organization.name,
+      phone: salonProfile.phone,
+    })
     .from(organization)
+    .leftJoin(salonProfile, eq(salonProfile.organizationId, organization.id))
     .where(eq(organization.id, salonId))
     .limit(1)
   const slug = salonRows[0]?.slug ?? ''
   const salonName = salonRows[0]?.name ?? ''
+  const phone = salonRows[0]?.phone ?? null
   const settingsRows = await db
     .select()
     .from(salonPublicSettings)
@@ -108,7 +116,7 @@ export async function getManagerPublicSettings(
 
   items.sort((a, b) => a.service.name.localeCompare(b.service.name, 'fa'))
 
-  return { slug, salonName, settings, services: items }
+  return { slug, salonName, phone, settings, services: items }
 }
 
 /**

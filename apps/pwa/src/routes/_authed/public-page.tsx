@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { Globe, Layers, MapPin } from 'lucide-react'
+import { Layers, MapPin } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Spinner } from '@repo/ui/spinner'
 import { Switch } from '@repo/ui/switch'
-import { cn } from '@repo/ui/utils'
 import type {
   ManagerPublicSettingsResult,
   ManagerServiceVisibility,
@@ -31,6 +30,7 @@ import { countFilledPresenceFields } from '#/components/public-page/presence-fie
 import { PresenceEditor } from '#/components/public-page/presence-form'
 import { LayoutPicker } from '#/components/public-page/layout-picker'
 import { LivePreview } from '#/components/public-page/live-preview'
+import { PublicationCard } from '#/components/public-page/publication-card'
 import { monogramFor, publicUrlFor } from '#/components/public-page/public-url'
 import { ServicesPanel } from '#/components/public-page/services-panel'
 import { SlugEditor } from '#/components/public-page/slug-editor'
@@ -102,6 +102,18 @@ function PublicPageRoute() {
     return countFilledPresenceFields(presenceToInput(p))
   }, [presenceQuery.data])
 
+  const missingDetails = useMemo(() => {
+    const presence = presenceQuery.data?.presence
+    return [
+      !presence?.province && 'استان',
+      !presence?.city && 'شهر',
+      !presence?.address && 'نشانی',
+      !data?.phone && 'شماره تماس',
+      !bio.trim() && 'معرفی کوتاه',
+      !services.some((service) => service.visible) && 'خدمات قابل نمایش',
+    ].filter((label): label is string => Boolean(label))
+  }, [bio, data?.phone, presenceQuery.data, services])
+
   const savePublicSettings = useUpdateSalonPublicSettingsMutation()
 
   useEffect(() => {
@@ -133,8 +145,11 @@ function PublicPageRoute() {
     markDirty()
   }
 
+  const canShare = Boolean(data?.settings.enabled && enabled && url)
+
   const copyLink = async () => {
-    if (!url) return
+    if (!canShare) return
+    setCopyErrMsg(null)
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
@@ -142,6 +157,36 @@ function PublicPageRoute() {
     } catch {
       setCopyErrMsg('کپی لینک انجام نشد')
     }
+  }
+
+  const shareLink = async () => {
+    if (!canShare) return
+    setCopyErrMsg(null)
+    if (!navigator.share) {
+      await copyLink()
+      return
+    }
+    try {
+      await navigator.share({
+        title: salonName,
+        text: 'خدمات سالن را ببینید و درخواست نوبت ثبت کنید.',
+        url,
+      })
+    } catch (error) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('name' in error) ||
+        error.name !== 'AbortError'
+      ) {
+        setCopyErrMsg('اشتراک‌گذاری لینک انجام نشد')
+      }
+    }
+  }
+
+  const openPublicPage = () => {
+    if (!canShare) return
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const save = () => {
@@ -183,44 +228,22 @@ function PublicPageRoute() {
       </header>
 
       <div className="flex flex-1 flex-col gap-3 overflow-auto p-3 pb-32">
-        <div
-          className={cn(
-            'flex items-center justify-between gap-3 rounded-2xl border-2 p-4 transition',
-            enabled
-              ? 'border-emerald-500/40 bg-emerald-500/5'
-              : 'border-muted-foreground/20 bg-muted/30',
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                'grid h-10 w-10 place-items-center rounded-full',
-                enabled
-                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-                  : 'bg-muted text-muted-foreground',
-              )}
-            >
-              <Globe className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">
-                {enabled ? 'صفحه عمومی فعال است' : 'صفحه عمومی غیرفعال است'}
-              </div>
-              <div className="mt-0.5 text-[11px] text-muted-foreground">
-                {enabled
-                  ? 'برای همه قابل مشاهده'
-                  : 'با فعال‌سازی، لینک عمومی منتشر می‌شود'}
-              </div>
-            </div>
-          </div>
-          <Switch
-            checked={enabled}
-            onCheckedChange={(v) => {
-              setEnabled(v)
-              markDirty()
-            }}
-          />
-        </div>
+        <PublicationCard
+          draftEnabled={enabled}
+          savedEnabled={data.settings.enabled}
+          url={url}
+          missingDetails={missingDetails}
+          copied={copied}
+          error={copyErrMsg}
+          onEnabledChange={(value) => {
+            setEnabled(value)
+            setCopyErrMsg(null)
+            markDirty()
+          }}
+          onShare={() => void shareLink()}
+          onCopy={() => void copyLink()}
+          onOpen={openPublicPage}
+        />
 
         <BottomDrawer
           title="ویرایش هویت سالن"
@@ -276,9 +299,6 @@ function PublicPageRoute() {
             </p>
             <SlugEditor
               currentSlug={data.slug}
-              publicUrl={url}
-              copied={copied}
-              onCopy={copyLink}
               onSaved={(result) => {
                 applyData(result)
                 void queryClient.invalidateQueries({
@@ -446,11 +466,6 @@ function PublicPageRoute() {
       </div>
 
       <div className="sticky bottom-0 border-t bg-background/95 px-4 py-3 backdrop-blur">
-        {copyErrMsg && (
-          <p className="mb-2 text-center text-xs text-destructive">
-            {copyErrMsg}
-          </p>
-        )}
         <Button
           className="w-full"
           disabled={savePublicSettings.isPending || !dirty || bioOver}

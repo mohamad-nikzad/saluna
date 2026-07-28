@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Check, Copy, Link2 } from 'lucide-react'
 import { ApiError } from '@repo/api-client'
 import type { ManagerPublicSettingsResult } from '@repo/api-client/types'
 import { Button } from '@repo/ui/button'
@@ -13,15 +12,9 @@ import { publicSlugPrefix } from './public-url'
 
 export function SlugEditor({
   currentSlug,
-  publicUrl,
-  copied,
-  onCopy,
   onSaved,
 }: {
   currentSlug: string
-  publicUrl: string
-  copied: boolean
-  onCopy: () => void
   onSaved: (result: ManagerPublicSettingsResult) => void
 }) {
   const [slugDraft, setSlugDraft] = useState(currentSlug)
@@ -102,33 +95,6 @@ export function SlugEditor({
       >
         {saveSlug.isPending ? 'در حال ذخیره…' : 'ذخیره آدرس'}
       </Button>
-      <div>
-        <div className="mb-1 text-sm font-medium">لینک کامل</div>
-        <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-2.5">
-          <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span dir="ltr" className="min-w-0 flex-1 truncate text-xs">
-            {publicUrl}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 shrink-0"
-            onClick={onCopy}
-          >
-            {copied ? (
-              <>
-                <Check className="ml-1 h-3 w-3" />
-                کپی شد
-              </>
-            ) : (
-              <>
-                <Copy className="ml-1 h-3 w-3" />
-                کپی
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }

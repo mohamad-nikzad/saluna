@@ -5516,6 +5516,10 @@
           "salonName": {
             "type": "string"
           },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
           "settings": {
             "$ref": "#/components/schemas/ManagerPublicSettingsView"
           },
@@ -5526,7 +5530,7 @@
             }
           }
         },
-        "required": ["slug", "salonName", "settings", "services"]
+        "required": ["slug", "salonName", "phone", "settings", "services"]
       },
       "ManagerPublicSettingsView": {
         "type": "object",

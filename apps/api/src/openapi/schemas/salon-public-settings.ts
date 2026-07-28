@@ -65,6 +65,7 @@ export const managerPublicSettingsResultSchema = z
   .object({
     slug: z.string(),
     salonName: z.string(),
+    phone: z.string().nullable(),
     settings: managerPublicSettingsViewSchema,
     services: z.array(managerServiceVisibilitySchema),
   })

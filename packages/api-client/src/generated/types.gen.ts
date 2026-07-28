@@ -1624,6 +1624,7 @@ export type SalonPresencePatchRequest = {
 export type ManagerPublicSettingsResult = {
   slug: string
   salonName: string
+  phone: string | null
   settings: ManagerPublicSettingsView
   services: Array<ManagerServiceVisibility>
 }
