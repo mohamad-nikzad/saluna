@@ -1,6 +1,7 @@
 import type { PublicTheme } from '@repo/salon-core/public-themes'
 import type { Service } from '@repo/salon-core/types'
 import type { SalonPresenceFields } from '@repo/salon-core/forms/presence'
+import type { PublicSalonBusinessHours } from '@repo/api-client/types'
 
 export type PublicLayoutProps = {
   slug: string
@@ -12,4 +13,5 @@ export type PublicLayoutProps = {
   phone: string | null
   bio: string | null
   presence: Required<SalonPresenceFields>
+  businessHours: PublicSalonBusinessHours | null
 }

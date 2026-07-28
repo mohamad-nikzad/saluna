@@ -86,6 +86,9 @@ describe('public routes', () => {
           appointmentRequestsEnabled: true,
         },
         presence: {
+          province: 'تهران',
+          city: 'تهران',
+          neighborhood: 'سعادت‌آباد',
           address: 'خیابان ولیعصر',
           mapGoogle: 'https://maps.app.goo.gl/example',
           mapNeshan: null,
@@ -95,6 +98,11 @@ describe('public routes', () => {
           socialWhatsapp: '09121234567',
           website: 'https://foo.example',
         },
+        businessHours: {
+          workingStart: '09:00',
+          workingEnd: '19:00',
+          workingDays: 126,
+        },
         services: [],
       },
     } as never)
@@ -102,11 +110,71 @@ describe('public routes', () => {
     expect(res.status).toBe(200)
     const body = (await res.json()) as {
       salon: { slug: string }
-      presence: { address: string; socialInstagram: string }
+      presence: {
+        city: string
+        neighborhood: string
+        address: string
+        socialInstagram: string
+      }
+      businessHours: { workingDays: number }
     }
     expect(body.salon.slug).toBe('foo')
+    expect(body.presence.city).toBe('تهران')
+    expect(body.presence.neighborhood).toBe('سعادت‌آباد')
     expect(body.presence.address).toBe('خیابان ولیعصر')
     expect(body.presence.socialInstagram).toBe('@foo')
+    expect(body.businessHours.workingDays).toBe(126)
+  })
+
+  it('GET /salons/:slug preserves missing optional presence and hours', async () => {
+    vi.mocked(publicDb.getPublicSalon).mockResolvedValue({
+      ok: true,
+      view: {
+        salon: {
+          id: 's1',
+          slug: 'foo',
+          name: 'Foo',
+          phone: null,
+          timezone: 'Asia/Tehran',
+          locale: 'fa',
+        },
+        publicSettings: {
+          enabled: true,
+          bioText: null,
+          themeId: 'rose',
+          layoutId: 'agenda',
+          appointmentRequestsEnabled: true,
+        },
+        presence: {
+          province: null,
+          city: null,
+          neighborhood: null,
+          address: null,
+          mapGoogle: null,
+          mapNeshan: null,
+          mapBalad: null,
+          socialInstagram: null,
+          socialTelegram: null,
+          socialWhatsapp: null,
+          website: null,
+        },
+        businessHours: null,
+        services: [],
+      },
+    })
+
+    const res = await app.request('/api/v1/public/salons/foo')
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      presence: {
+        province: null,
+        city: null,
+        neighborhood: null,
+        address: null,
+      },
+      businessHours: null,
+    })
   })
 
   it('GET /salons/:slug 404 when not found', async () => {

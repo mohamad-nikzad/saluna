@@ -83,11 +83,20 @@ export const publicSalonSettingsSchema = z
   })
   .openapi('PublicSalonSettings')
 
+export const publicSalonBusinessHoursSchema = z
+  .object({
+    workingStart: z.string(),
+    workingEnd: z.string(),
+    workingDays: z.number().int(),
+  })
+  .openapi('PublicSalonBusinessHours')
+
 export const publicSalonViewSchema = z
   .object({
     salon: publicSalonInfoSchema,
     publicSettings: publicSalonSettingsSchema,
     presence: salonPresenceSchema,
+    businessHours: publicSalonBusinessHoursSchema.nullable(),
     services: z.array(serviceSchema),
   })
   .openapi('PublicSalonView')

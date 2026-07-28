@@ -1,5 +1,6 @@
 import {
   Camera,
+  Clock,
   ExternalLink,
   Globe,
   MapPin,
@@ -10,10 +11,16 @@ import {
 import type { PublicTheme } from '@repo/salon-core/public-themes'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { SalonPresenceFields } from '@repo/salon-core/forms/presence'
+import type { PublicSalonBusinessHours } from '@repo/api-client/types'
 import {
   buildPresenceLinks,
   type PresenceLink,
 } from '@repo/salon-core/presence-links'
+import { formatPersianTime } from '@repo/salon-core/persian-digits'
+import {
+  isWorkingDayOpen,
+  WORKING_DAY_PILLS,
+} from '@repo/salon-core/working-days'
 
 function monogramFor(name: string): string {
   return Array.from(name.trim())[0] ?? '?'
@@ -25,6 +32,7 @@ export type SalonInfoCardProps = {
   bio?: string | null
   theme: PublicTheme
   presence: SalonPresenceFields
+  businessHours?: PublicSalonBusinessHours | null
   compact?: boolean
 }
 
@@ -47,9 +55,24 @@ export function SalonInfoCard({
   bio,
   theme,
   presence,
+  businessHours,
   compact = false,
 }: SalonInfoCardProps) {
   const contactLinks = buildPresenceLinks(presence)
+  const locality = [
+    presence.province ? `استان ${presence.province}` : null,
+    presence.city ? `شهر ${presence.city}` : null,
+    presence.neighborhood ? `محله ${presence.neighborhood}` : null,
+  ]
+    .filter(Boolean)
+    .join('، ')
+  const workingDays = businessHours
+    ? WORKING_DAY_PILLS.filter((day) =>
+        isWorkingDayOpen(businessHours.workingDays, day.bit),
+      )
+        .map((day) => day.fullLabel)
+        .join('، ')
+    : ''
 
   return (
     <header className="relative isolate">
@@ -83,15 +106,30 @@ export function SalonInfoCard({
                     {toPersianDigits(phone)}
                   </a>
                 ) : null}
-                {presence.address ? (
+                {locality ? (
                   <span className="inline-flex items-center gap-1.5 opacity-80">
                     <MapPin className="h-4 w-4" aria-hidden="true" />
-                    {presence.address}
+                    {locality}
                   </span>
                 ) : null}
               </div>
             </div>
           </div>
+          {presence.address ? (
+            <p className="mt-4 text-sm leading-7 opacity-80">
+              نشانی: {presence.address}
+            </p>
+          ) : null}
+          {businessHours && workingDays ? (
+            <p className="mt-2 flex items-start gap-1.5 text-sm leading-7 opacity-80">
+              <Clock className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                روزهای کاری: {workingDays}، ساعت{' '}
+                {formatPersianTime(businessHours.workingStart)} تا{' '}
+                {formatPersianTime(businessHours.workingEnd)}
+              </span>
+            </p>
+          ) : null}
           {bio ? (
             <p className="mt-4 whitespace-pre-line text-sm leading-7 opacity-80">
               {bio}

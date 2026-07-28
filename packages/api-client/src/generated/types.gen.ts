@@ -1937,6 +1937,7 @@ export type PublicSalonView = {
   salon: PublicSalonInfo
   publicSettings: PublicSalonSettings
   presence: SalonPresence
+  businessHours: PublicSalonBusinessHours | null
   services: Array<Service>
 }
 
@@ -1955,6 +1956,12 @@ export type PublicSalonSettings = {
   themeId: string
   layoutId: string
   appointmentRequestsEnabled: boolean
+}
+
+export type PublicSalonBusinessHours = {
+  workingStart: string
+  workingEnd: string
+  workingDays: number
 }
 
 export type PublicAppointmentRequestCreated = {

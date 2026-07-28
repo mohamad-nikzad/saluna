@@ -43,7 +43,7 @@ export const getPublicSalonRoute = createRoute({
   tags: ['Public booking'],
   summary: 'Get public salon page data',
   description:
-    'Unauthenticated salon profile, public page settings, and visible services for the booking site.',
+    'Unauthenticated Salon profile, Presence, saved business hours, and visible services for the public site.',
   request: { params: publicSlugParamSchema },
   responses: {
     200: {

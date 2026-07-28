@@ -1,6 +1,13 @@
 ---
-import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import {
+  formatPersianTime,
+  toPersianDigits,
+} from '@repo/salon-core/persian-digits'
 import { buildPresenceLinks } from '@repo/salon-core/presence-links'
+import {
+  isWorkingDayOpen,
+  WORKING_DAY_PILLS,
+} from '@repo/salon-core/working-days'
 import type { PublicSalonView } from '@/lib/public-api'
 import { formatDuration, formatPrice } from '@/lib/format'
 
@@ -14,6 +21,21 @@ const activeServices = services.filter((s) => s.active)
 const presenceLinks = buildPresenceLinks(presence)
 const mapLinks = presenceLinks.filter((link) => link.kind === 'map')
 const contactLinks = presenceLinks.filter((link) => link.kind !== 'map')
+const locality = [
+  presence.province ? `استان ${presence.province}` : null,
+  presence.city ? `شهر ${presence.city}` : null,
+  presence.neighborhood ? `محله ${presence.neighborhood}` : null,
+]
+  .filter(Boolean)
+  .join('، ')
+const businessHours = view.businessHours
+const workingDays = businessHours
+  ? WORKING_DAY_PILLS.filter((day) =>
+      isWorkingDayOpen(businessHours.workingDays, day.bit),
+    )
+      .map((day) => day.fullLabel)
+      .join('، ')
+  : ''
 ---
 
 <!--
@@ -31,7 +53,17 @@ const contactLinks = presenceLinks.filter((link) => link.kind !== 'map')
         </a>
       ) : null
     }
-    {presence.address ? <p>{presence.address}</p> : null}
+    {locality ? <p>{locality}</p> : null}
+    {presence.address ? <p>نشانی: {presence.address}</p> : null}
+    {
+      businessHours && workingDays ? (
+        <p>
+          روزهای کاری: {workingDays}، ساعت{' '}
+          {formatPersianTime(businessHours.workingStart)} تا{' '}
+          {formatPersianTime(businessHours.workingEnd)}
+        </p>
+      ) : null
+    }
     {
       mapLinks.length > 0 ? (
         <nav aria-label="لینک‌های نقشه سالن">

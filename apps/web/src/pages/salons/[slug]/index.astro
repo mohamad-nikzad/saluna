@@ -7,8 +7,13 @@ import { resolvePublicTheme } from '@repo/salon-core/public-themes'
 import { resolvePublicLayout } from '@repo/salon-core/public-layouts'
 import { fetchPublicSalon, PublicApiError } from '@/lib/public-api'
 import { setSalonShellCache } from '@/lib/cache-headers'
-import { titleWithBrand } from '@repo/brand'
-import { buildSalonBreadcrumbJsonLd, buildSalonJsonLd } from '@/lib/seo'
+import {
+  buildSalonBreadcrumbJsonLd,
+  buildSalonCanonicalUrl,
+  buildSalonDescription,
+  buildSalonJsonLd,
+  buildSalonTitle,
+} from '@/lib/seo'
 import SalonLayout from '@/layouts/SalonLayout.astro'
 import SalonShell from '@/components/SalonShell.astro'
 import { InlineLayout } from '@/components/react/InlineLayout'
@@ -34,12 +39,11 @@ const today = salonTodayYmd()
 const dates = Array.from({ length: PUBLIC_REQUEST_WINDOW_DAYS + 1 }, (_, i) =>
   addDaysYmd(today, i),
 )
-const pageUrl = Astro.url
-const description =
-  view.publicSettings.bioText ??
-  `مشاهده خدمات و رزرو نوبت آنلاین ${view.salon.name}${
-    view.presence.address ? ` در ${view.presence.address}` : ''
-  }`
+const pageUrl = buildSalonCanonicalUrl(
+  view.salon.slug,
+  Astro.site ?? Astro.url.origin,
+)
+const description = buildSalonDescription(view)
 const jsonLd = [
   buildSalonJsonLd(view, pageUrl),
   buildSalonBreadcrumbJsonLd(view.salon.name, pageUrl),
@@ -55,11 +59,12 @@ const islandProps = {
   phone: view.salon.phone,
   bio: view.publicSettings.bioText,
   presence: view.presence,
+  businessHours: view.businessHours,
 }
 ---
 
 <SalonLayout
-  title={titleWithBrand(view.salon.name)}
+  title={buildSalonTitle(view)}
   description={description}
   canonical={pageUrl.toString()}
   ogImage={ogImage}

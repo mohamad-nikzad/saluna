@@ -58,6 +58,7 @@ export function InlineLayout(props: PublicLayoutProps) {
         bio={bio}
         theme={theme}
         presence={props.presence}
+        businessHours={props.businessHours}
       />
 
       <section className="mx-auto mt-6 w-full max-w-3xl px-5 sm:px-8">

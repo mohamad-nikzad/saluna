@@ -1224,6 +1224,11 @@ const stubPublicSalonView = {
     appointmentRequestsEnabled: true,
   },
   presence: stubSalonPresence,
+  businessHours: {
+    workingStart: '09:00',
+    workingEnd: '19:00',
+    workingDays: 63,
+  },
   services: [] as Array<typeof stubService>,
 }
 

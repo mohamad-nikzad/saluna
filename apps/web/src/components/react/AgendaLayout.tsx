@@ -68,6 +68,7 @@ export function AgendaLayout(props: PublicLayoutProps) {
         bio={bio}
         theme={theme}
         presence={props.presence}
+        businessHours={props.businessHours}
       />
 
       <div className="mx-auto mt-5 w-full max-w-3xl space-y-3 px-5 sm:px-8">

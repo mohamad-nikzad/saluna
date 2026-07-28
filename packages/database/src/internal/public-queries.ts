@@ -32,6 +32,7 @@ import { normalizePhone } from '@repo/salon-core/phone'
 import { getDb } from '../client'
 import {
   appointmentRequests,
+  businessSettings,
   organization,
   salonProfile,
   salonPublicSettings,
@@ -67,6 +68,11 @@ export type PublicSalonView = {
     appointmentRequestsEnabled: boolean
   }
   presence: SalonPresenceView
+  businessHours: {
+    workingStart: string
+    workingEnd: string
+    workingDays: number
+  } | null
   services: Service[]
 }
 
@@ -145,8 +151,22 @@ export async function getPublicSalon(
   }
 
   const [settingsRow] = await db
-    .select()
+    .select({
+      enabled: salonPublicSettings.enabled,
+      bioText: salonPublicSettings.bioText,
+      themeId: salonPublicSettings.themeId,
+      layoutId: salonPublicSettings.layoutId,
+      appointmentRequestsEnabled:
+        salonPublicSettings.appointmentRequestsEnabled,
+      workingStart: businessSettings.workingStart,
+      workingEnd: businessSettings.workingEnd,
+      workingDays: businessSettings.workingDays,
+    })
     .from(salonPublicSettings)
+    .leftJoin(
+      businessSettings,
+      eq(businessSettings.salonId, salonPublicSettings.salonId),
+    )
     .where(eq(salonPublicSettings.salonId, salonRow.id))
     .limit(1)
 
@@ -181,6 +201,16 @@ export async function getPublicSalon(
         appointmentRequestsEnabled: settingsRow.appointmentRequestsEnabled,
       },
       presence: toSalonPresenceView(salonRow),
+      businessHours:
+        settingsRow.workingStart &&
+        settingsRow.workingEnd &&
+        settingsRow.workingDays != null
+          ? {
+              workingStart: settingsRow.workingStart,
+              workingEnd: settingsRow.workingEnd,
+              workingDays: settingsRow.workingDays,
+            }
+          : null,
       services: visible,
     },
   }

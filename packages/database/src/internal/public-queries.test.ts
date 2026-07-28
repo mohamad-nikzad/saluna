@@ -24,6 +24,7 @@ import {
   createAppointmentRequest,
   filterPublicBookableServices,
   getPublicAvailability,
+  getPublicSalon,
   isPublicBookableService,
   isPublicSalonStatus,
 } from './public-queries'
@@ -82,6 +83,8 @@ function selectWhereBuilder<T>(rows: T[]) {
 function setupPublicSalonDb(input?: {
   services?: Service[]
   visibilityRows?: Array<{ serviceId: string; visible: boolean }>
+  salon?: Record<string, unknown>
+  settings?: Record<string, unknown>
 }) {
   const salonRow = {
     id: 'salon-1',
@@ -102,6 +105,7 @@ function setupPublicSalonDb(input?: {
     timezone: 'Asia/Tehran',
     locale: 'fa-IR',
     status: 'active',
+    ...input?.salon,
   }
   const settingsRow = {
     enabled: true,
@@ -109,6 +113,10 @@ function setupPublicSalonDb(input?: {
     themeId: 'rose',
     layoutId: 'agenda',
     appointmentRequestsEnabled: true,
+    workingStart: '09:00',
+    workingEnd: '19:00',
+    workingDays: 126,
+    ...input?.settings,
   }
   const selectBuilders = [
     selectLimitBuilder([salonRow]),
@@ -148,6 +156,86 @@ function setupPublicSalonDb(input?: {
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('public salon view', () => {
+  it('returns saved location and Salon hours for an active, enabled Salon', async () => {
+    setupPublicSalonDb({
+      salon: {
+        phone: '02112345678',
+        province: 'تهران',
+        city: 'تهران',
+        neighborhood: 'سعادت‌آباد',
+        address: 'خیابان سرو غربی، پلاک ۱۰',
+      },
+      settings: {
+        workingStart: '10:00',
+        workingEnd: '18:00',
+        workingDays: 62,
+      },
+    })
+
+    const result = await getPublicSalon('salon')
+
+    expect(result).toMatchObject({
+      ok: true,
+      view: {
+        presence: {
+          province: 'تهران',
+          city: 'تهران',
+          neighborhood: 'سعادت‌آباد',
+          address: 'خیابان سرو غربی، پلاک ۱۰',
+        },
+        businessHours: {
+          workingStart: '10:00',
+          workingEnd: '18:00',
+          workingDays: 62,
+        },
+      },
+    })
+  })
+
+  it('keeps an enabled Salon public when optional presence and hours are absent', async () => {
+    setupPublicSalonDb({
+      settings: {
+        workingStart: null,
+        workingEnd: null,
+        workingDays: null,
+      },
+    })
+
+    const result = await getPublicSalon('salon')
+
+    expect(result).toMatchObject({
+      ok: true,
+      view: {
+        presence: {
+          province: null,
+          city: null,
+          neighborhood: null,
+          address: null,
+        },
+        businessHours: null,
+      },
+    })
+  })
+
+  it.each([
+    [{ salon: { status: 'suspended' } }, 1],
+    [{ settings: { enabled: false } }, 2],
+  ])('returns 404 before loading public services', async (input, selects) => {
+    const { db } = setupPublicSalonDb(input)
+
+    const result = await getPublicSalon('salon')
+
+    expect(result).toEqual({
+      ok: false,
+      status: 404,
+      error: 'سالن یافت نشد',
+    })
+    expect(db.select).toHaveBeenCalledTimes(selects)
+    expect(mocks.getAllServices).not.toHaveBeenCalled()
+  })
 })
 
 describe('public booking service filter', () => {

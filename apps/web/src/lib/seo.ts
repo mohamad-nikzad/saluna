@@ -1,6 +1,10 @@
-import { brand } from '@repo/brand'
+import { brand, titleWithBrand } from '@repo/brand'
 import { presenceSameAs } from '@repo/salon-core/presence-links'
 import type { Service } from '@repo/salon-core/types'
+import {
+  isWorkingDayOpen,
+  WORKING_DAY_PILLS,
+} from '@repo/salon-core/working-days'
 import type { PublicSalonView } from './public-api'
 
 type JsonLdOffer = {
@@ -26,9 +30,21 @@ type SalonJsonLd = {
   url: string
   image: string
   description?: string
-  address?: string
+  address?: {
+    '@type': 'PostalAddress'
+    streetAddress?: string
+    addressLocality?: string
+    addressRegion?: string
+    addressCountry: 'IR'
+  }
   sameAs?: string[]
-  makesOffer: JsonLdOffer[]
+  makesOffer?: JsonLdOffer[]
+  openingHoursSpecification?: {
+    '@type': 'OpeningHoursSpecification'
+    dayOfWeek: string[]
+    opens: string
+    closes: string
+  }[]
 }
 
 function isoDurationMinutes(minutes: number): string {
@@ -56,9 +72,27 @@ export function buildSalonJsonLd(
   view: PublicSalonView,
   pageUrl: URL,
 ): SalonJsonLd {
-  const { salon, services, publicSettings, presence } = view
+  const { salon, services, publicSettings, presence, businessHours } = view
   const image = new URL(`/og/${salon.slug}.png`, pageUrl.origin).toString()
   const sameAs = presenceSameAs(presence)
+  const offers = services
+    .filter((service) => service.active)
+    .map(buildServiceOffer)
+  const address =
+    presence.address || presence.city || presence.province
+      ? {
+          '@type': 'PostalAddress' as const,
+          ...(presence.address ? { streetAddress: presence.address } : {}),
+          ...(presence.city ? { addressLocality: presence.city } : {}),
+          ...(presence.province ? { addressRegion: presence.province } : {}),
+          addressCountry: 'IR' as const,
+        }
+      : undefined
+  const openDays = businessHours
+    ? WORKING_DAY_PILLS.filter((day) =>
+        isWorkingDayOpen(businessHours.workingDays, day.bit),
+      ).map((day) => `https://schema.org/${day.schema}`)
+    : []
 
   return {
     '@context': 'https://schema.org',
@@ -68,10 +102,70 @@ export function buildSalonJsonLd(
     url: pageUrl.toString(),
     image,
     ...(publicSettings.bioText ? { description: publicSettings.bioText } : {}),
-    ...(presence.address ? { address: presence.address } : {}),
+    ...(address ? { address } : {}),
     ...(sameAs.length > 0 ? { sameAs } : {}),
-    makesOffer: services.filter((s) => s.active).map(buildServiceOffer),
+    ...(offers.length > 0 ? { makesOffer: offers } : {}),
+    ...(businessHours && openDays.length > 0
+      ? {
+          openingHoursSpecification: [
+            {
+              '@type': 'OpeningHoursSpecification' as const,
+              dayOfWeek: openDays,
+              opens: businessHours.workingStart,
+              closes: businessHours.workingEnd,
+            },
+          ],
+        }
+      : {}),
   }
+}
+
+export function buildSalonCanonicalUrl(
+  slug: string,
+  publicOrigin: URL | string,
+): URL {
+  return new URL(`/salons/${slug}`, new URL(publicOrigin).origin)
+}
+
+export function buildSalonTitle(view: PublicSalonView): string {
+  const locality = [
+    view.presence.neighborhood,
+    view.presence.city ?? view.presence.province,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join('، ')
+  return titleWithBrand(
+    locality ? `${view.salon.name} در ${locality}` : view.salon.name,
+  )
+}
+
+export function buildSalonDescription(view: PublicSalonView): string {
+  if (view.publicSettings.bioText) return view.publicSettings.bioText
+
+  const locality = [
+    ...new Set([
+      view.presence.neighborhood,
+      view.presence.city,
+      view.presence.province,
+    ]),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join('، ')
+  // ponytail: three services keep the search snippet compact; make this
+  // length-aware only if real snippets truncate useful service names.
+  const services = view.services
+    .filter((service) => service.active)
+    .slice(0, 3)
+    .map((service) => service.name)
+
+  return [
+    `خدمات ${view.salon.name}`,
+    locality ? `در ${locality}` : null,
+    services.length > 0 ? `شامل ${services.join('، ')}` : null,
+    'و ثبت درخواست نوبت آنلاین.',
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export type BreadcrumbJsonLd = {

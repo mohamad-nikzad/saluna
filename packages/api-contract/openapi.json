@@ -6481,6 +6481,9 @@
           "presence": {
             "$ref": "#/components/schemas/SalonPresence"
           },
+          "businessHours": {
+            "$ref": "#/components/schemas/PublicSalonBusinessHours"
+          },
           "services": {
             "type": "array",
             "items": {
@@ -6488,7 +6491,13 @@
             }
           }
         },
-        "required": ["salon", "publicSettings", "presence", "services"]
+        "required": [
+          "salon",
+          "publicSettings",
+          "presence",
+          "businessHours",
+          "services"
+        ]
       },
       "PublicSalonInfo": {
         "type": "object",
@@ -6542,6 +6551,22 @@
           "layoutId",
           "appointmentRequestsEnabled"
         ]
+      },
+      "PublicSalonBusinessHours": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "workingStart": {
+            "type": "string"
+          },
+          "workingEnd": {
+            "type": "string"
+          },
+          "workingDays": {
+            "type": "integer"
+          }
+        },
+        "required": ["workingStart", "workingEnd", "workingDays"]
       },
       "PublicAppointmentRequestCreated": {
         "type": "object",
@@ -18008,7 +18033,7 @@
       "get": {
         "tags": ["Public booking"],
         "summary": "Get public salon page data",
-        "description": "Unauthenticated salon profile, public page settings, and visible services for the booking site.",
+        "description": "Unauthenticated Salon profile, Presence, saved business hours, and visible services for the public site.",
         "parameters": [
           {
             "schema": {

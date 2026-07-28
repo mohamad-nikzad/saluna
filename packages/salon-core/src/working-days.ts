@@ -1,16 +1,15 @@
 // Working-days bitmask — bit 0 = Saturday … bit 6 = Friday (ADR-0004)
 export const DEFAULT_WORKING_DAYS = 126
 
-export const WORKING_DAY_PILLS: ReadonlyArray<{ bit: number; label: string }> =
-  [
-    { bit: 0, label: 'ش' },
-    { bit: 1, label: 'ی' },
-    { bit: 2, label: 'د' },
-    { bit: 3, label: 'س' },
-    { bit: 4, label: 'چ' },
-    { bit: 5, label: 'پ' },
-    { bit: 6, label: 'ج' },
-  ]
+export const WORKING_DAY_PILLS = [
+  { bit: 0, label: 'ش', fullLabel: 'شنبه', schema: 'Saturday' },
+  { bit: 1, label: 'ی', fullLabel: 'یکشنبه', schema: 'Sunday' },
+  { bit: 2, label: 'د', fullLabel: 'دوشنبه', schema: 'Monday' },
+  { bit: 3, label: 'س', fullLabel: 'سه‌شنبه', schema: 'Tuesday' },
+  { bit: 4, label: 'چ', fullLabel: 'چهارشنبه', schema: 'Wednesday' },
+  { bit: 5, label: 'پ', fullLabel: 'پنجشنبه', schema: 'Thursday' },
+  { bit: 6, label: 'ج', fullLabel: 'جمعه', schema: 'Friday' },
+] as const
 
 export function toggleWorkingDay(mask: number, bit: number): number {
   return mask ^ (1 << bit)

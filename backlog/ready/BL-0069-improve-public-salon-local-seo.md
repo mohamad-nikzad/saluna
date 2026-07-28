@@ -207,7 +207,7 @@ URL for a social bio or channel.
 ## Subtasks
 
 - [BL-0070 Capture structured Salon Presence location](../done/BL-0070-capture-structured-salon-location.md) — done
-- [BL-0071 Publish local Salon details and structured data](BL-0071-publish-local-salon-details-and-structured-data.md) — blocked by BL-0070
+- [BL-0071 Publish local Salon details and structured data](../done/BL-0071-publish-local-salon-details-and-structured-data.md) — done
 - [BL-0072 Discover published Salons through a runtime sitemap](BL-0072-discover-published-salons-through-runtime-sitemap.md) — blocked by none
 - [BL-0073 Keep AppointmentRequest status pages out of search](BL-0073-keep-appointment-request-status-pages-out-of-search.md) — blocked by none
 - [BL-0074 Help managers complete and share their public page](BL-0074-help-managers-complete-and-share-public-page.md) — blocked by BL-0070
