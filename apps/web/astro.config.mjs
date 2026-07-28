@@ -4,6 +4,7 @@ import { defineConfig, envField, fontProviders } from 'astro/config'
 import node from '@astrojs/node'
 import react from '@astrojs/react'
 import sitemap from '@astrojs/sitemap'
+import { buildRobotsTxt } from './src/lib/robots.ts'
 
 const publicApiUrl = process.env.PUBLIC_API_URL ?? 'http://localhost:3002'
 
@@ -22,14 +23,9 @@ function robotsSitemapIntegration() {
     hooks: {
       /** @param {{ dir: URL }} params */
       'astro:build:done': async ({ dir }) => {
-        const site = (
-          process.env.PUBLIC_APP_URL ?? 'http://localhost:3001'
-        ).replace(/\/$/, '')
-        const robots = `User-agent: *
-Allow: /
-
-Sitemap: ${site}/sitemap-index.xml
-`
+        const robots = buildRobotsTxt(
+          process.env.PUBLIC_APP_URL ?? 'http://localhost:3001',
+        )
         await fs.writeFile(new URL('robots.txt', dir), robots)
       },
     },

@@ -1,4 +1,5 @@
 export {
+  listPublishedSalonSlugs,
   getPublicSalon,
   getPublicAvailability,
   createAppointmentRequest,

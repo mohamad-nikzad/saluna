@@ -7,6 +7,7 @@ import {
   publicAvailabilityQuerySchema,
   publicAvailabilityResponseSchema,
   publicCancelAppointmentRequestResponseSchema,
+  publishedSalonSlugsSchema,
   publicSalonViewSchema,
   publicSlugParamSchema,
   publicSlugTokenParamSchema,
@@ -36,6 +37,20 @@ const conflictResponse = {
   description: 'Appointment request cannot be cancelled in its current state',
   content: { 'application/json': { schema: apiErrorSchema } },
 } as const
+
+export const listPublishedSalonSlugsRoute = createRoute({
+  method: 'get',
+  path: '/salons',
+  tags: ['Public booking'],
+  summary: 'List published Salon slugs',
+  description: 'Returns slugs for active Salons whose public page is enabled.',
+  responses: {
+    200: {
+      description: 'Published Salon slugs',
+      content: { 'application/json': { schema: publishedSalonSlugsSchema } },
+    },
+  },
+})
 
 export const getPublicSalonRoute = createRoute({
   method: 'get',

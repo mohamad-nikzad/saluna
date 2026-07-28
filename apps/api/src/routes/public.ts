@@ -6,6 +6,7 @@ import {
   getAppointmentRequestByToken,
   getPublicAvailability,
   getPublicSalon,
+  listPublishedSalonSlugs,
 } from '@repo/database/public'
 import { checkAndRecordPublicSubmit } from '@repo/database/rate-limit'
 import { publicAppointmentRequestSchema } from '@repo/salon-core/forms/public'
@@ -43,6 +44,9 @@ function extractIp(req: Request): string {
 }
 
 export const publicRoutes = new Hono<AppEnv>()
+  .get('/salons', async (c) =>
+    ok(c, { slugs: await listPublishedSalonSlugs() }),
+  )
   .get('/salons/:slug', zValidator('param', slugParamSchema), async (c) => {
     const { slug } = c.req.valid('param')
     const result = await getPublicSalon(slug)

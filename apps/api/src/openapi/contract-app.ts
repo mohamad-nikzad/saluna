@@ -140,6 +140,7 @@ import {
   getPublicAppointmentRequestRoute,
   getPublicAvailabilityRoute,
   getPublicSalonRoute,
+  listPublishedSalonSlugsRoute,
 } from './routes/public'
 import {
   applyAdminSetupCatalogPresetRoute,
@@ -1250,6 +1251,10 @@ const stubPublicAppointmentRequestStatus = {
 const getPublicSalonStub: RouteHandler<typeof getPublicSalonRoute> = (c) =>
   c.json(stubPublicSalonView, 200)
 
+const listPublishedSalonSlugsStub: RouteHandler<
+  typeof listPublishedSalonSlugsRoute
+> = (c) => c.json({ slugs: [] }, 200)
+
 const getPublicAvailabilityStub: RouteHandler<
   typeof getPublicAvailabilityRoute
 > = (c) => c.json({ mode: 'day' as const, slots: [] }, 200)
@@ -1676,6 +1681,7 @@ export const contractApp = new OpenAPIHono()
   .route(
     '/api/v1/public',
     new OpenAPIHono()
+      .openapi(listPublishedSalonSlugsRoute, listPublishedSalonSlugsStub)
       .openapi(getPublicSalonRoute, getPublicSalonStub)
       .openapi(getPublicAvailabilityRoute, getPublicAvailabilityStub)
       .openapi(

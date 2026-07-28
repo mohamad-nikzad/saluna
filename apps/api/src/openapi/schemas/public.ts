@@ -73,6 +73,12 @@ export const publicSalonInfoSchema = z
   })
   .openapi('PublicSalonInfo')
 
+export const publishedSalonSlugsSchema = z
+  .object({
+    slugs: z.array(z.string()),
+  })
+  .openapi('PublishedSalonSlugs')
+
 export const publicSalonSettingsSchema = z
   .object({
     enabled: z.boolean(),

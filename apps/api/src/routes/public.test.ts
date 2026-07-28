@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/public', () => ({
   getPublicSalon: vi.fn(),
+  listPublishedSalonSlugs: vi.fn(),
   getPublicAvailability: vi.fn(),
   createAppointmentRequest: vi.fn(),
   getAppointmentRequestByToken: vi.fn(),
@@ -66,6 +67,18 @@ beforeEach(() => {
 })
 
 describe('public routes', () => {
+  it('GET /salons returns published Salon slugs without authentication', async () => {
+    vi.mocked(publicDb.listPublishedSalonSlugs).mockResolvedValue([
+      'aftab',
+      'rose',
+    ])
+
+    const res = await app.request('/api/v1/public/salons')
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ slugs: ['aftab', 'rose'] })
+  })
+
   it('GET /salons/:slug returns the public view', async () => {
     vi.mocked(publicDb.getPublicSalon).mockResolvedValue({
       ok: true,

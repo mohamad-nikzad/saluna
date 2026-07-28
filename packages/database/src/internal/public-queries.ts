@@ -84,6 +84,26 @@ export function isPublicSalonStatus(status: string | null): boolean {
   return status === 'active'
 }
 
+export async function listPublishedSalonSlugs(): Promise<string[]> {
+  const rows = await getDb()
+    .select({ slug: organization.slug })
+    .from(organization)
+    .innerJoin(salonProfile, eq(salonProfile.organizationId, organization.id))
+    .innerJoin(
+      salonPublicSettings,
+      eq(salonPublicSettings.salonId, organization.id),
+    )
+    .where(
+      and(
+        eq(salonProfile.status, 'active'),
+        eq(salonPublicSettings.enabled, true),
+      ),
+    )
+    .orderBy(organization.slug)
+
+  return rows.map(({ slug }) => slug)
+}
+
 export function isPublicBookableService(
   service: Pick<Service, 'active' | 'kind'>,
 ): boolean {

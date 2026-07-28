@@ -3,3 +3,4 @@ User-agent: *
 Allow: /
 
 Sitemap: http://localhost:3001/sitemap-index.xml
+Sitemap: http://localhost:3001/salons-sitemap.xml

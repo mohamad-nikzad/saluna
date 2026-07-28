@@ -6469,6 +6469,18 @@
           }
         }
       },
+      "PublishedSalonSlugs": {
+        "type": "object",
+        "properties": {
+          "slugs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["slugs"]
+      },
       "PublicSalonView": {
         "type": "object",
         "properties": {
@@ -18022,6 +18034,25 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/salons": {
+      "get": {
+        "tags": ["Public booking"],
+        "summary": "List published Salon slugs",
+        "description": "Returns slugs for active Salons whose public page is enabled.",
+        "responses": {
+          "200": {
+            "description": "Published Salon slugs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedSalonSlugs"
                 }
               }
             }

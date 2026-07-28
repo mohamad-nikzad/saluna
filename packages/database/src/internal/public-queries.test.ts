@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { PgDialect } from 'drizzle-orm/pg-core'
 import type { Service } from '@repo/salon-core/types'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { organization, salonProfile, salonPublicSettings } from '../schema'
 
 const mocks = vi.hoisted(() => ({
   getDb: vi.fn(),
@@ -27,6 +29,7 @@ import {
   getPublicSalon,
   isPublicBookableService,
   isPublicSalonStatus,
+  listPublishedSalonSlugs,
 } from './public-queries'
 
 describe('public salon status gate', () => {
@@ -35,6 +38,44 @@ describe('public salon status gate', () => {
     expect(isPublicSalonStatus('suspended')).toBe(false)
     expect(isPublicSalonStatus('archived')).toBe(false)
     expect(isPublicSalonStatus('active')).toBe(true)
+  })
+
+  it('lists slugs through the active-and-enabled publication gate', async () => {
+    const builder = {
+      from: vi.fn(),
+      innerJoin: vi.fn(),
+      where: vi.fn(),
+      orderBy: vi.fn(),
+    }
+    builder.from.mockReturnValue(builder)
+    builder.innerJoin.mockReturnValue(builder)
+    builder.where.mockReturnValue(builder)
+    builder.orderBy.mockResolvedValue([
+      { slug: 'active-complete' },
+      { slug: 'active-incomplete' },
+    ])
+    const db = { select: vi.fn(() => builder) }
+    mocks.getDb.mockReturnValue(db)
+
+    await expect(listPublishedSalonSlugs()).resolves.toEqual([
+      'active-complete',
+      'active-incomplete',
+    ])
+    expect(db.select).toHaveBeenCalledWith({ slug: organization.slug })
+    expect(builder.innerJoin).toHaveBeenNthCalledWith(
+      1,
+      salonProfile,
+      expect.anything(),
+    )
+    expect(builder.innerJoin).toHaveBeenNthCalledWith(
+      2,
+      salonPublicSettings,
+      expect.anything(),
+    )
+    const where = builder.where.mock.calls[0]![0]
+    expect(new PgDialect().sqlToQuery(where)).toMatchObject({
+      params: ['active', true],
+    })
   })
 })
 
