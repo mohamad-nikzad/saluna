@@ -9,60 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminSupportTicketsRouteImport } from './routes/_admin/support-tickets'
-import { Route as AdminSettingsRouteImport } from './routes/_admin/settings'
-import { Route as AdminSalonsRouteImport } from './routes/_admin/salons'
-import { Route as AdminOverviewRouteImport } from './routes/_admin/overview'
-import { Route as AdminCatalogPresetsRouteImport } from './routes/_admin/catalog-presets'
+import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminAuditLogRouteImport } from './routes/_admin/audit-log'
-import { Route as AdminSupportTicketsIndexRouteImport } from './routes/_admin/support-tickets.index'
+import { Route as AdminCatalogPresetsRouteImport } from './routes/_admin/catalog-presets'
+import { Route as AdminOverviewRouteImport } from './routes/_admin/overview'
+import { Route as AdminSalonsRouteImport } from './routes/_admin/salons'
+import { Route as AdminSettingsRouteImport } from './routes/_admin/settings'
+import { Route as AdminSupportTicketsRouteImport } from './routes/_admin/support-tickets'
 import { Route as AdminSalonsIndexRouteImport } from './routes/_admin/salons.index'
-import { Route as AdminSupportTicketsTicketIdRouteImport } from './routes/_admin/support-tickets.$ticketId'
 import { Route as AdminSalonsSalonIdRouteImport } from './routes/_admin/salons.$salonId'
-import { Route as AdminSalonsSalonIdStaffRouteImport } from './routes/_admin/salons.$salonId.staff'
-import { Route as AdminSalonsSalonIdServicesRouteImport } from './routes/_admin/salons.$salonId.services'
-import { Route as AdminSalonsSalonIdRequestsRouteImport } from './routes/_admin/salons.$salonId.requests'
-import { Route as AdminSalonsSalonIdPresenceRouteImport } from './routes/_admin/salons.$salonId.presence'
-import { Route as AdminSalonsSalonIdHoursRouteImport } from './routes/_admin/salons.$salonId.hours'
-import { Route as AdminSalonsSalonIdHandoffRouteImport } from './routes/_admin/salons.$salonId.handoff'
-import { Route as AdminSalonsSalonIdEditRouteImport } from './routes/_admin/salons.$salonId.edit'
+import { Route as AdminSupportTicketsIndexRouteImport } from './routes/_admin/support-tickets.index'
+import { Route as AdminSupportTicketsTicketIdRouteImport } from './routes/_admin/support-tickets.$ticketId'
 import { Route as AdminSalonsSalonIdClientsRouteImport } from './routes/_admin/salons.$salonId.clients'
+import { Route as AdminSalonsSalonIdEditRouteImport } from './routes/_admin/salons.$salonId.edit'
+import { Route as AdminSalonsSalonIdHandoffRouteImport } from './routes/_admin/salons.$salonId.handoff'
+import { Route as AdminSalonsSalonIdHoursRouteImport } from './routes/_admin/salons.$salonId.hours'
+import { Route as AdminSalonsSalonIdPresenceRouteImport } from './routes/_admin/salons.$salonId.presence'
+import { Route as AdminSalonsSalonIdRequestsRouteImport } from './routes/_admin/salons.$salonId.requests'
+import { Route as AdminSalonsSalonIdServicesRouteImport } from './routes/_admin/salons.$salonId.services'
+import { Route as AdminSalonsSalonIdStaffRouteImport } from './routes/_admin/salons.$salonId.staff'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSupportTicketsRoute = AdminSupportTicketsRouteImport.update({
-  id: '/support-tickets',
-  path: '/support-tickets',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSalonsRoute = AdminSalonsRouteImport.update({
-  id: '/salons',
-  path: '/salons',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminOverviewRoute = AdminOverviewRouteImport.update({
-  id: '/overview',
-  path: '/overview',
+const AdminAuditLogRoute = AdminAuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCatalogPresetsRoute = AdminCatalogPresetsRouteImport.update({
@@ -70,10 +55,35 @@ const AdminCatalogPresetsRoute = AdminCatalogPresetsRouteImport.update({
   path: '/catalog-presets',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAuditLogRoute = AdminAuditLogRouteImport.update({
-  id: '/audit-log',
-  path: '/audit-log',
+const AdminOverviewRoute = AdminOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalonsRoute = AdminSalonsRouteImport.update({
+  id: '/salons',
+  path: '/salons',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportTicketsRoute = AdminSupportTicketsRouteImport.update({
+  id: '/support-tickets',
+  path: '/support-tickets',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalonsIndexRoute = AdminSalonsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminSalonsRoute,
+} as any)
+const AdminSalonsSalonIdRoute = AdminSalonsSalonIdRouteImport.update({
+  id: '/$salonId',
+  path: '/$salonId',
+  getParentRoute: () => AdminSalonsRoute,
 } as any)
 const AdminSupportTicketsIndexRoute =
   AdminSupportTicketsIndexRouteImport.update({
@@ -81,48 +91,21 @@ const AdminSupportTicketsIndexRoute =
     path: '/',
     getParentRoute: () => AdminSupportTicketsRoute,
   } as any)
-const AdminSalonsIndexRoute = AdminSalonsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminSalonsRoute,
-} as any)
 const AdminSupportTicketsTicketIdRoute =
   AdminSupportTicketsTicketIdRouteImport.update({
     id: '/$ticketId',
     path: '/$ticketId',
     getParentRoute: () => AdminSupportTicketsRoute,
   } as any)
-const AdminSalonsSalonIdRoute = AdminSalonsSalonIdRouteImport.update({
-  id: '/$salonId',
-  path: '/$salonId',
-  getParentRoute: () => AdminSalonsRoute,
-} as any)
-const AdminSalonsSalonIdStaffRoute = AdminSalonsSalonIdStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AdminSalonsSalonIdRoute,
-} as any)
-const AdminSalonsSalonIdServicesRoute =
-  AdminSalonsSalonIdServicesRouteImport.update({
-    id: '/services',
-    path: '/services',
+const AdminSalonsSalonIdClientsRoute =
+  AdminSalonsSalonIdClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
     getParentRoute: () => AdminSalonsSalonIdRoute,
   } as any)
-const AdminSalonsSalonIdRequestsRoute =
-  AdminSalonsSalonIdRequestsRouteImport.update({
-    id: '/requests',
-    path: '/requests',
-    getParentRoute: () => AdminSalonsSalonIdRoute,
-  } as any)
-const AdminSalonsSalonIdPresenceRoute =
-  AdminSalonsSalonIdPresenceRouteImport.update({
-    id: '/presence',
-    path: '/presence',
-    getParentRoute: () => AdminSalonsSalonIdRoute,
-  } as any)
-const AdminSalonsSalonIdHoursRoute = AdminSalonsSalonIdHoursRouteImport.update({
-  id: '/hours',
-  path: '/hours',
+const AdminSalonsSalonIdEditRoute = AdminSalonsSalonIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
   getParentRoute: () => AdminSalonsSalonIdRoute,
 } as any)
 const AdminSalonsSalonIdHandoffRoute =
@@ -131,17 +114,34 @@ const AdminSalonsSalonIdHandoffRoute =
     path: '/handoff',
     getParentRoute: () => AdminSalonsSalonIdRoute,
   } as any)
-const AdminSalonsSalonIdEditRoute = AdminSalonsSalonIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
+const AdminSalonsSalonIdHoursRoute = AdminSalonsSalonIdHoursRouteImport.update({
+  id: '/hours',
+  path: '/hours',
   getParentRoute: () => AdminSalonsSalonIdRoute,
 } as any)
-const AdminSalonsSalonIdClientsRoute =
-  AdminSalonsSalonIdClientsRouteImport.update({
-    id: '/clients',
-    path: '/clients',
+const AdminSalonsSalonIdPresenceRoute =
+  AdminSalonsSalonIdPresenceRouteImport.update({
+    id: '/presence',
+    path: '/presence',
     getParentRoute: () => AdminSalonsSalonIdRoute,
   } as any)
+const AdminSalonsSalonIdRequestsRoute =
+  AdminSalonsSalonIdRequestsRouteImport.update({
+    id: '/requests',
+    path: '/requests',
+    getParentRoute: () => AdminSalonsSalonIdRoute,
+  } as any)
+const AdminSalonsSalonIdServicesRoute =
+  AdminSalonsSalonIdServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AdminSalonsSalonIdRoute,
+  } as any)
+const AdminSalonsSalonIdStaffRoute = AdminSalonsSalonIdStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AdminSalonsSalonIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -285,11 +285,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin': {
@@ -299,39 +299,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_admin/support-tickets': {
-      id: '/_admin/support-tickets'
-      path: '/support-tickets'
-      fullPath: '/support-tickets'
-      preLoaderRoute: typeof AdminSupportTicketsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/settings': {
-      id: '/_admin/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/salons': {
-      id: '/_admin/salons'
-      path: '/salons'
-      fullPath: '/salons'
-      preLoaderRoute: typeof AdminSalonsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/overview': {
-      id: '/_admin/overview'
-      path: '/overview'
-      fullPath: '/overview'
-      preLoaderRoute: typeof AdminOverviewRouteImport
+    '/_admin/audit-log': {
+      id: '/_admin/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AdminAuditLogRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/catalog-presets': {
@@ -341,19 +320,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCatalogPresetsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/audit-log': {
-      id: '/_admin/audit-log'
-      path: '/audit-log'
-      fullPath: '/audit-log'
-      preLoaderRoute: typeof AdminAuditLogRouteImport
+    '/_admin/overview': {
+      id: '/_admin/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AdminOverviewRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/support-tickets/': {
-      id: '/_admin/support-tickets/'
-      path: '/'
-      fullPath: '/support-tickets/'
-      preLoaderRoute: typeof AdminSupportTicketsIndexRouteImport
-      parentRoute: typeof AdminSupportTicketsRoute
+    '/_admin/salons': {
+      id: '/_admin/salons'
+      path: '/salons'
+      fullPath: '/salons'
+      preLoaderRoute: typeof AdminSalonsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/settings': {
+      id: '/_admin/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/support-tickets': {
+      id: '/_admin/support-tickets'
+      path: '/support-tickets'
+      fullPath: '/support-tickets'
+      preLoaderRoute: typeof AdminSupportTicketsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/salons/': {
       id: '/_admin/salons/'
@@ -362,13 +355,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalonsIndexRouteImport
       parentRoute: typeof AdminSalonsRoute
     }
-    '/_admin/support-tickets/$ticketId': {
-      id: '/_admin/support-tickets/$ticketId'
-      path: '/$ticketId'
-      fullPath: '/support-tickets/$ticketId'
-      preLoaderRoute: typeof AdminSupportTicketsTicketIdRouteImport
-      parentRoute: typeof AdminSupportTicketsRoute
-    }
     '/_admin/salons/$salonId': {
       id: '/_admin/salons/$salonId'
       path: '/$salonId'
@@ -376,46 +362,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalonsSalonIdRouteImport
       parentRoute: typeof AdminSalonsRoute
     }
-    '/_admin/salons/$salonId/staff': {
-      id: '/_admin/salons/$salonId/staff'
-      path: '/staff'
-      fullPath: '/salons/$salonId/staff'
-      preLoaderRoute: typeof AdminSalonsSalonIdStaffRouteImport
-      parentRoute: typeof AdminSalonsSalonIdRoute
+    '/_admin/support-tickets/': {
+      id: '/_admin/support-tickets/'
+      path: '/'
+      fullPath: '/support-tickets/'
+      preLoaderRoute: typeof AdminSupportTicketsIndexRouteImport
+      parentRoute: typeof AdminSupportTicketsRoute
     }
-    '/_admin/salons/$salonId/services': {
-      id: '/_admin/salons/$salonId/services'
-      path: '/services'
-      fullPath: '/salons/$salonId/services'
-      preLoaderRoute: typeof AdminSalonsSalonIdServicesRouteImport
-      parentRoute: typeof AdminSalonsSalonIdRoute
+    '/_admin/support-tickets/$ticketId': {
+      id: '/_admin/support-tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/support-tickets/$ticketId'
+      preLoaderRoute: typeof AdminSupportTicketsTicketIdRouteImport
+      parentRoute: typeof AdminSupportTicketsRoute
     }
-    '/_admin/salons/$salonId/requests': {
-      id: '/_admin/salons/$salonId/requests'
-      path: '/requests'
-      fullPath: '/salons/$salonId/requests'
-      preLoaderRoute: typeof AdminSalonsSalonIdRequestsRouteImport
-      parentRoute: typeof AdminSalonsSalonIdRoute
-    }
-    '/_admin/salons/$salonId/presence': {
-      id: '/_admin/salons/$salonId/presence'
-      path: '/presence'
-      fullPath: '/salons/$salonId/presence'
-      preLoaderRoute: typeof AdminSalonsSalonIdPresenceRouteImport
-      parentRoute: typeof AdminSalonsSalonIdRoute
-    }
-    '/_admin/salons/$salonId/hours': {
-      id: '/_admin/salons/$salonId/hours'
-      path: '/hours'
-      fullPath: '/salons/$salonId/hours'
-      preLoaderRoute: typeof AdminSalonsSalonIdHoursRouteImport
-      parentRoute: typeof AdminSalonsSalonIdRoute
-    }
-    '/_admin/salons/$salonId/handoff': {
-      id: '/_admin/salons/$salonId/handoff'
-      path: '/handoff'
-      fullPath: '/salons/$salonId/handoff'
-      preLoaderRoute: typeof AdminSalonsSalonIdHandoffRouteImport
+    '/_admin/salons/$salonId/clients': {
+      id: '/_admin/salons/$salonId/clients'
+      path: '/clients'
+      fullPath: '/salons/$salonId/clients'
+      preLoaderRoute: typeof AdminSalonsSalonIdClientsRouteImport
       parentRoute: typeof AdminSalonsSalonIdRoute
     }
     '/_admin/salons/$salonId/edit': {
@@ -425,11 +390,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalonsSalonIdEditRouteImport
       parentRoute: typeof AdminSalonsSalonIdRoute
     }
-    '/_admin/salons/$salonId/clients': {
-      id: '/_admin/salons/$salonId/clients'
-      path: '/clients'
-      fullPath: '/salons/$salonId/clients'
-      preLoaderRoute: typeof AdminSalonsSalonIdClientsRouteImport
+    '/_admin/salons/$salonId/handoff': {
+      id: '/_admin/salons/$salonId/handoff'
+      path: '/handoff'
+      fullPath: '/salons/$salonId/handoff'
+      preLoaderRoute: typeof AdminSalonsSalonIdHandoffRouteImport
+      parentRoute: typeof AdminSalonsSalonIdRoute
+    }
+    '/_admin/salons/$salonId/hours': {
+      id: '/_admin/salons/$salonId/hours'
+      path: '/hours'
+      fullPath: '/salons/$salonId/hours'
+      preLoaderRoute: typeof AdminSalonsSalonIdHoursRouteImport
+      parentRoute: typeof AdminSalonsSalonIdRoute
+    }
+    '/_admin/salons/$salonId/presence': {
+      id: '/_admin/salons/$salonId/presence'
+      path: '/presence'
+      fullPath: '/salons/$salonId/presence'
+      preLoaderRoute: typeof AdminSalonsSalonIdPresenceRouteImport
+      parentRoute: typeof AdminSalonsSalonIdRoute
+    }
+    '/_admin/salons/$salonId/requests': {
+      id: '/_admin/salons/$salonId/requests'
+      path: '/requests'
+      fullPath: '/salons/$salonId/requests'
+      preLoaderRoute: typeof AdminSalonsSalonIdRequestsRouteImport
+      parentRoute: typeof AdminSalonsSalonIdRoute
+    }
+    '/_admin/salons/$salonId/services': {
+      id: '/_admin/salons/$salonId/services'
+      path: '/services'
+      fullPath: '/salons/$salonId/services'
+      preLoaderRoute: typeof AdminSalonsSalonIdServicesRouteImport
+      parentRoute: typeof AdminSalonsSalonIdRoute
+    }
+    '/_admin/salons/$salonId/staff': {
+      id: '/_admin/salons/$salonId/staff'
+      path: '/staff'
+      fullPath: '/salons/$salonId/staff'
+      preLoaderRoute: typeof AdminSalonsSalonIdStaffRouteImport
       parentRoute: typeof AdminSalonsSalonIdRoute
     }
   }

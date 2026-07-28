@@ -21,6 +21,12 @@ import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { User } from '@repo/salon-core/types'
 import { Button } from '@repo/ui/button'
 import { Field, FieldError, FieldLabel } from '@repo/ui/field'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@repo/ui/empty'
 import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
 import {
   Select,
@@ -702,24 +708,29 @@ export function ConvertDraftSheet({
           </Field>
           <Field>
             <FieldLabel>پرسنل</FieldLabel>
-            <Select value={staffId} onValueChange={setStaffId}>
-              <SelectTrigger className="w-full" aria-label="پرسنل">
-                <SelectValue placeholder="انتخاب پرسنل" />
-              </SelectTrigger>
-              <SelectContent>
-                {capableStaff.length > 0 ? (
-                  capableStaff.map((member) => (
+            {capableStaff.length === 0 ? (
+              <Empty className="border border-dashed p-4 md:p-4">
+                <EmptyHeader>
+                  <EmptyTitle className="text-sm">پرسنلی یافت نشد</EmptyTitle>
+                  <EmptyDescription>
+                    پرسنل فعالی برای این خدمت وجود ندارد.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <Select value={staffId} onValueChange={setStaffId}>
+                <SelectTrigger className="w-full" aria-label="پرسنل">
+                  <SelectValue placeholder="انتخاب پرسنل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {capableStaff.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.name}
                     </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="__none__" disabled>
-                    پرسنل فعالی برای این خدمت وجود ندارد
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </Field>
         </FormSheetBody>
         <FormSheetFooter>

@@ -5,6 +5,9 @@ export type PresenceField = keyof PresenceInput
 
 /** Display order for address, map, and social rows in the presence form. */
 export const PRESENCE_FIELD_ORDER = [
+  'province',
+  'city',
+  'neighborhood',
   'address',
   'mapGoogle',
   'mapNeshan',
@@ -33,12 +36,22 @@ export function revealInvalidPresenceField(
     setFocus: UseFormSetFocus<PresenceInput>
   },
 ) {
-  actions.setOpen(field)
+  const structuredLocation =
+    field === 'province' || field === 'city' || field === 'neighborhood'
+  if (!structuredLocation) actions.setOpen(field)
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      actions.setFocus(field)
+      if (structuredLocation) {
+        document.getElementById(presenceFieldInputId(field))?.focus()
+      } else {
+        actions.setFocus(field)
+      }
       document
-        .querySelector(`[data-presence-field="${field}"]`)
+        .querySelector(
+          structuredLocation
+            ? `#${presenceFieldInputId(field)}`
+            : `[data-presence-field="${field}"]`,
+        )
         ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     })
   })

@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 
+import { DefaultRouteError } from '#/components/default-route-error'
 import { routeTree } from './routeTree.gen'
 
 export type RouterContext = {
@@ -14,6 +15,7 @@ export function getRouter(context: RouterContext) {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    defaultErrorComponent: DefaultRouteError,
   })
 
   return router

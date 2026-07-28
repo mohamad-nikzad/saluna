@@ -16,7 +16,6 @@ it('warns that deleting a completed Appointment permanently removes commission h
       useTemporaryClient={false}
       temporaryClientName=""
       clientId="client-1"
-      onSave={vi.fn()}
       onCancelEdit={vi.fn()}
       onConfirmDelete={vi.fn()}
       onCancelDelete={vi.fn()}

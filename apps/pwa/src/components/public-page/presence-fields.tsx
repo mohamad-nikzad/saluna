@@ -13,8 +13,10 @@ import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { Input } from '@repo/ui/input'
 import { Textarea } from '@repo/ui/textarea'
 import { FieldError } from '@repo/ui/field'
+import { SalonLocationFields } from '@repo/ui/salon-location-fields'
 import { cn } from '@repo/ui/utils'
 import type { PresenceInput } from '@repo/salon-core/forms/presence'
+import type { SalonLocation } from '@repo/salon-core/iran-locations'
 
 import { presenceFieldInputId, type PresenceField } from './presence-validation'
 
@@ -104,6 +106,7 @@ export type PresenceFieldsProps = {
   values: PresenceInput
   open: PresenceField | null
   setOpen: (field: PresenceField | null) => void
+  onLocationChange: (value: SalonLocation) => void
 }
 
 export function PresenceFields({
@@ -112,6 +115,7 @@ export function PresenceFields({
   values,
   open,
   setOpen,
+  onLocationChange,
 }: PresenceFieldsProps) {
   const renderRow = (config: RowConfig) => {
     const value = values[config.field] ?? ''
@@ -211,6 +215,29 @@ export function PresenceFields({
 
   return (
     <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2 px-1 text-[11px] font-extrabold text-sage-deep">
+        <span>موقعیت سالن</span>
+        <span className="h-px flex-1 bg-line-soft" />
+      </div>
+      <SalonLocationFields
+        value={{
+          province: values.province ?? '',
+          city: values.city ?? '',
+          neighborhood: values.neighborhood ?? '',
+        }}
+        onChange={onLocationChange}
+        ids={{
+          province: presenceFieldInputId('province'),
+          city: presenceFieldInputId('city'),
+          neighborhood: presenceFieldInputId('neighborhood'),
+        }}
+        errors={{
+          province: errors.province?.message,
+          city: errors.city?.message,
+          neighborhood: errors.neighborhood?.message,
+        }}
+      />
+
       <div className="flex items-center gap-2 px-1 text-[11px] font-extrabold text-sage-deep">
         <span>آدرس و نقشه</span>
         <span className="h-px flex-1 bg-line-soft" />

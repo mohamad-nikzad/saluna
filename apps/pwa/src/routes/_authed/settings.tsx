@@ -21,6 +21,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
 import { Card, CardContent, CardHeader } from '@repo/ui/card'
+import { FieldError } from '@repo/ui/field'
 import { Skeleton } from '@repo/ui/skeleton'
 import { brand } from '@repo/brand'
 import { SakuraMark } from '@repo/ui/sakura-mark'
@@ -282,6 +283,9 @@ function SettingsPage() {
 
   return (
     <div className="flex h-full flex-col bg-background">
+      {businessHoursErrors.root ? (
+        <FieldError>{businessHoursErrors.root.message}</FieldError>
+      ) : null}
       <header className="border-b border-line-soft bg-card px-5 pt-3.5 pb-4">
         <div className="text-[22px] font-extrabold tracking-tight text-foreground">
           {isManager ? 'بیشتر' : 'تنظیمات'}

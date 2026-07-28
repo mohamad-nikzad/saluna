@@ -423,6 +423,18 @@
       "AdminSetupSalonPresence": {
         "type": "object",
         "properties": {
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
           "address": {
             "type": "string",
             "nullable": true
@@ -457,6 +469,9 @@
           }
         },
         "required": [
+          "province",
+          "city",
+          "neighborhood",
           "address",
           "mapGoogle",
           "mapNeshan",
@@ -570,6 +585,18 @@
       "AdminSetupSalonPresencePatchRequest": {
         "type": "object",
         "properties": {
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
           "address": {
             "type": "string",
             "nullable": true
@@ -5383,6 +5410,18 @@
       "SalonPresence": {
         "type": "object",
         "properties": {
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
           "address": {
             "type": "string",
             "nullable": true
@@ -5417,6 +5456,9 @@
           }
         },
         "required": [
+          "province",
+          "city",
+          "neighborhood",
           "address",
           "mapGoogle",
           "mapNeshan",
@@ -5430,6 +5472,15 @@
       "SalonPresencePatchRequest": {
         "type": "object",
         "properties": {
+          "province": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
           "address": {
             "type": "string"
           },

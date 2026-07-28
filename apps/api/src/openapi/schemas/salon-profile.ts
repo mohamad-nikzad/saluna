@@ -26,6 +26,9 @@ function bodyFromCoreSchema<T extends z.ZodType>(
 
 export const salonPresenceSchema = z
   .object({
+    province: z.string().nullable(),
+    city: z.string().nullable(),
+    neighborhood: z.string().nullable(),
     address: z.string().nullable(),
     mapGoogle: z.string().nullable(),
     mapNeshan: z.string().nullable(),
@@ -46,6 +49,9 @@ export const salonPresenceResponseSchema = z
 export const salonPresencePatchBodySchema = bodyFromCoreSchema(
   'SalonPresencePatchRequest',
   {
+    province: z.string().optional(),
+    city: z.string().optional(),
+    neighborhood: z.string().optional(),
     address: z.string().optional(),
     mapGoogle: z.string().optional(),
     mapNeshan: z.string().optional(),

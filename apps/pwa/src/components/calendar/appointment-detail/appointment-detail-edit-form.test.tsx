@@ -26,7 +26,7 @@ function PriceForm({ priceEditable }: { priceEditable: boolean }) {
   return (
     <AppointmentDetailEditForm
       editForm={editForm}
-      onSubmit={() => {}}
+      onValidSubmit={async () => {}}
       localClients={[]}
       onClientCreated={() => {}}
       useTemporaryClient={false}

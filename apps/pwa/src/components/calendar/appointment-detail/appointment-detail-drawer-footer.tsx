@@ -13,7 +13,6 @@ interface AppointmentDetailDrawerFooterProps {
   useTemporaryClient: boolean
   temporaryClientName: string
   clientId: string
-  onSave: () => void
   onCancelEdit: () => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
@@ -31,7 +30,6 @@ export function AppointmentDetailDrawerFooter({
   useTemporaryClient,
   temporaryClientName,
   clientId,
-  onSave,
   onCancelEdit,
   onConfirmDelete,
   onCancelDelete,
@@ -49,7 +47,8 @@ export function AppointmentDetailDrawerFooter({
       ) : isEditing ? (
         <>
           <Button
-            onClick={onSave}
+            type="submit"
+            form="appointment-detail-edit-form"
             disabled={
               isMutating ||
               isEditSubmitting ||

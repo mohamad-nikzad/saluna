@@ -650,17 +650,39 @@ function ServicePackageDrawer({
         <FormSheetFooter>
           <Button
             onClick={onSubmit}
-            disabled={saving || !nameValue || componentIds.length === 0}
+            disabled={
+              isSubmitting ||
+              savePackage.isPending ||
+              saveComponents.isPending ||
+              saveStaff.isPending ||
+              !nameValue ||
+              componentIds.length === 0
+            }
             className="touch-manipulation"
           >
-            {saving && <Spinner className="ms-2" />}
-            {saving ? '…' : isEditing ? 'ذخیره' : 'افزودن'}
+            {(isSubmitting ||
+              savePackage.isPending ||
+              saveComponents.isPending ||
+              saveStaff.isPending) && <Spinner className="ms-2" />}
+            {isSubmitting ||
+            savePackage.isPending ||
+            saveComponents.isPending ||
+            saveStaff.isPending
+              ? '…'
+              : isEditing
+                ? 'ذخیره'
+                : 'افزودن'}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => requestClose(false)}
-            disabled={saving}
+            disabled={
+              isSubmitting ||
+              savePackage.isPending ||
+              saveComponents.isPending ||
+              saveStaff.isPending
+            }
           >
             انصراف
           </Button>

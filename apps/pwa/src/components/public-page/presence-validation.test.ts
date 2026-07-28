@@ -15,10 +15,11 @@ describe('getFirstInvalidPresenceField', () => {
     const errors: FieldErrors<PresenceInput> = {
       mapBalad: { type: 'custom', message: 'لینک بلد معتبر نیست' },
       mapGoogle: { type: 'custom', message: 'لینک گوگل مپ معتبر نیست' },
+      city: { type: 'custom', message: 'شهر معتبر نیست' },
       website: { type: 'custom', message: 'آدرس وب‌سایت معتبر نیست' },
     }
 
-    expect(getFirstInvalidPresenceField(errors)).toBe('mapGoogle')
+    expect(getFirstInvalidPresenceField(errors)).toBe('city')
   })
 
   it('returns null when there are no field errors', () => {
@@ -31,6 +32,9 @@ describe('getFirstInvalidPresenceField', () => {
 
   it('covers every presence field in order', () => {
     expect(PRESENCE_FIELD_ORDER).toEqual([
+      'province',
+      'city',
+      'neighborhood',
       'address',
       'mapGoogle',
       'mapNeshan',

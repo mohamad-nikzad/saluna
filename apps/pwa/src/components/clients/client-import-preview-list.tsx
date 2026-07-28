@@ -233,6 +233,7 @@ function EligibleImportRow({
         />
         <Input
           type="tel"
+          autoComplete="tel"
           value={displayPhone(row.phone)}
           onChange={(event) =>
             onUpdate({ phone: normalizePhone(event.target.value) })

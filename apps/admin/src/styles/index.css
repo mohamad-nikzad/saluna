@@ -2,6 +2,7 @@
 @import './fonts.css';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant touch (@media (pointer: coarse));
 
 @source "../**/*.{ts,tsx}";
 

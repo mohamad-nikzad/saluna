@@ -589,6 +589,9 @@ const setupHoursStub = {
 }
 
 const setupPresenceStub = {
+  province: null,
+  city: null,
+  neighborhood: null,
   address: null,
   mapGoogle: null,
   mapNeshan: null,
@@ -961,6 +964,9 @@ const cancelAppointmentRequestStub: RouteHandler<
 > = (c) => c.json({ ok: true as const }, 200)
 
 const stubSalonPresence = {
+  province: null,
+  city: null,
+  neighborhood: null,
   address: null,
   mapGoogle: null,
   mapNeshan: null,

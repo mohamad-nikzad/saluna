@@ -11,12 +11,17 @@ describe('presenceToInput', () => {
     expect(presenceToInput(null)).toEqual(EMPTY_PRESENCE_INPUT)
     expect(
       presenceToInput({
+        province: 'تهران',
+        city: 'تهران',
+        neighborhood: null,
         address: 'تهران',
         mapGoogle: null,
         website: undefined,
       }),
     ).toEqual({
       ...EMPTY_PRESENCE_INPUT,
+      province: 'تهران',
+      city: 'تهران',
       address: 'تهران',
     })
   })
@@ -37,6 +42,30 @@ describe('presenceSchema', () => {
     expect(result.address).toBeUndefined()
     expect(result.website).toBeUndefined()
     expect(result.mapGoogle).toBeUndefined()
+  })
+
+  it('trims and validates structured location values', () => {
+    expect(
+      presenceSchema.parse({
+        province: ' تهران ',
+        city: ' تهران ',
+        neighborhood: ' ونک ',
+      }),
+    ).toMatchObject({
+      province: 'تهران',
+      city: 'تهران',
+      neighborhood: 'ونک',
+    })
+    expect(
+      presenceSchema.safeParse({ province: 'فارس', city: 'تهران' }).success,
+    ).toBe(false)
+    expect(
+      presenceSchema.safeParse({
+        province: 'تهران',
+        city: 'تهران',
+        neighborhood: 'م'.repeat(121),
+      }).success,
+    ).toBe(false)
   })
 
   it('rejects mapNeshan when host is nshn.ir instead of neshan.org', () => {

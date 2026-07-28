@@ -86,6 +86,7 @@ export function AppointmentDetailPlaceholderClient({
               <Input
                 id="complete-client-phone"
                 type="tel"
+                autoComplete="tel"
                 value={displayPhone(completeClientPhone, '')}
                 onChange={(e) => setCompleteValue('phone', e.target.value)}
                 placeholder="۰۹۱۲…"

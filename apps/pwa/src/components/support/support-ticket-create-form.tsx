@@ -10,6 +10,7 @@ import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
+import { Spinner } from '@repo/ui/spinner'
 import { Textarea } from '@repo/ui/textarea'
 import {
   Select,
@@ -137,8 +138,20 @@ export function SupportTicketCreateForm() {
           ارسال درخواست انجام نشد. متن شما حفظ شده است؛ دوباره تلاش کنید.
         </p>
       ) : null}
-      <Button type="submit" size="lg" className="w-full" disabled={busy}>
-        {busy ? 'در حال ارسال…' : 'ارسال درخواست'}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={isSubmitting || mutation.isPending}
+      >
+        {isSubmitting || mutation.isPending ? (
+          <>
+            <Spinner className="size-4" />
+            در حال ارسال…
+          </>
+        ) : (
+          'ارسال درخواست'
+        )}
       </Button>
     </form>
   )

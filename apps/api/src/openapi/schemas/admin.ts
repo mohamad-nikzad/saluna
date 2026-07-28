@@ -275,6 +275,9 @@ export const adminSetupHoursSchema = z
 
 export const adminSetupPresenceSchema = z
   .object({
+    province: z.string().nullable(),
+    city: z.string().nullable(),
+    neighborhood: z.string().nullable(),
     address: z.string().nullable(),
     mapGoogle: z.string().nullable(),
     mapNeshan: z.string().nullable(),

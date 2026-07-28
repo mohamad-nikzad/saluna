@@ -1,5 +1,4 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import {
   Banknote,
   CalendarDays,
@@ -11,8 +10,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@repo/ui/utils'
 
-import { pendingAppointmentRequestsQueryOptions } from '#/lib/appointment-requests-queries'
-import { supportTicketSummaryQueryOptions } from '#/lib/support-ticket-queries'
+import { useBottomNavBadges } from '#/lib/use-bottom-nav-badges'
 import { useAuth } from '#/lib/auth'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 
@@ -58,17 +56,9 @@ export function BottomNav() {
 
   const isManager = user?.role === 'manager'
   const onOnboarding = pathname.startsWith('/onboarding')
-  const { data: pendingData } = useQuery({
-    ...pendingAppointmentRequestsQueryOptions(),
-    enabled: isManager && !onOnboarding,
-    refetchInterval: 60_000,
-  })
-  const pendingCount = pendingData?.requests.length ?? 0
-  const { data: supportSummary } = useQuery({
-    ...supportTicketSummaryQueryOptions(),
-    enabled: isManager && !onOnboarding,
-  })
-  const supportUnreadCount = supportSummary?.unreadCount ?? 0
+  const { pendingCount, supportUnreadCount } = useBottomNavBadges(
+    isManager && !onOnboarding,
+  )
 
   return (
     <nav className="shrink-0 border-t border-border/60 bg-card safe-area-pb">

@@ -200,6 +200,7 @@ export function StaffDrawer({
                   <Input
                     id="staff-phone"
                     type="tel"
+                    autoComplete="tel"
                     value={displayPhone(field.value)}
                     onChange={(e) =>
                       field.onChange(normalizePhone(e.target.value))

@@ -56,7 +56,7 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
                 name="percentage"
                 type="text"
                 inputMode="decimal"
-                required
+                required={true}
                 defaultValue={formatLocalizedNumberInput(agreement?.percentage)}
                 onChange={(event) => {
                   event.currentTarget.value = formatLocalizedNumberInput(

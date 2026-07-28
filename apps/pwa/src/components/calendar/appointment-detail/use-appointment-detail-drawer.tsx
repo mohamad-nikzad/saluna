@@ -44,6 +44,16 @@ import {
   useAppointmentIntakeMutations,
 } from '#/lib/use-appointment-intake-mutations'
 import { parseOptionalLocalizedInteger } from '#/components/localized-number-input'
+import { FieldError } from '@repo/ui/field'
+
+export function AppointmentDetailEditFieldError({
+  message,
+}: {
+  message?: string
+}) {
+  if (!message) return null
+  return <FieldError>{message}</FieldError>
+}
 
 type StatusActionState = AppointmentStatusActionState
 
@@ -411,7 +421,7 @@ export function useAppointmentDetailDrawer({
     }
   })
 
-  const handleUpdate = handleEditSubmit(async (values) => {
+  const onValidEditSubmit = async (values: AppointmentFormInput) => {
     if (!appointment) return
 
     const validationError = validateAppointmentIntakeSubmit({
@@ -440,7 +450,9 @@ export function useAppointmentDetailDrawer({
     } catch {
       // Toast handled by mutation cache.
     }
-  })
+  }
+
+  const handleUpdate = handleEditSubmit(onValidEditSubmit)
 
   const handleDelete = async () => {
     if (!appointment) return
@@ -507,6 +519,8 @@ export function useAppointmentDetailDrawer({
     void submitCompleteClient()
   }
 
+  void (editForm.formState.errors && completeForm.formState.errors)
+
   return {
     readOnly,
     statusAction,
@@ -522,6 +536,7 @@ export function useAppointmentDetailDrawer({
     openCompleteClientDrawer,
     handleStatusChange,
     handleUpdate,
+    onValidEditSubmit,
     handleDelete,
     handleClientCreated,
     handleEditServiceChange,

@@ -12,8 +12,7 @@ import { AvailabilityDrawer } from '#/components/calendar/availability-drawer'
 import type { AppointmentDetailChange } from '#/lib/appointment-surface'
 
 import type { useAppointmentFlow } from '#/components/appointments/use-appointment-flow'
-import { useQuery } from '@tanstack/react-query'
-import { salonClosuresQueryOptions } from '#/lib/settings-queries'
+import { useSalonUnavailableDates } from '#/lib/use-salon-unavailable-dates'
 
 type AppointmentFlow = ReturnType<typeof useAppointmentFlow>
 
@@ -48,7 +47,7 @@ export function AppointmentFlowDrawers({
   canChangeStatus,
   intakeEnabled = true,
 }: AppointmentFlowDrawersProps) {
-  const unavailableDates = useQuery(salonClosuresQueryOptions()).data ?? []
+  const unavailableDates = useSalonUnavailableDates()
   const { state, actions } = flow
   const {
     createIntent,

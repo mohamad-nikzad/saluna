@@ -79,7 +79,8 @@ export function AppointmentDetailDrawer({
         {drawer.isEditingCurrentAppointment ? (
           <AppointmentDetailEditForm
             editForm={drawer.editForm}
-            onSubmit={drawer.handleUpdate}
+            onValidSubmit={drawer.onValidEditSubmit}
+            isSubmitting={drawer.isMutating || drawer.isEditSubmitting}
             localClients={drawer.localClients}
             onClientCreated={drawer.handleClientCreated}
             useTemporaryClient={drawer.useTemporaryClient}
@@ -141,7 +142,6 @@ export function AppointmentDetailDrawer({
           useTemporaryClient={drawer.useTemporaryClient}
           temporaryClientName={drawer.temporaryClientName}
           clientId={drawer.clientId}
-          onSave={drawer.handleUpdate}
           onCancelEdit={drawer.cancelEditing}
           onConfirmDelete={drawer.handleDelete}
           onCancelDelete={() => drawer.setShowDeleteConfirm(false)}

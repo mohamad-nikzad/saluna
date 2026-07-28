@@ -355,6 +355,9 @@ describe('admin runtime data source', () => {
       workingDays: 126,
     })
     vi.mocked(getSalonPresence).mockResolvedValue({
+      province: null,
+      city: null,
+      neighborhood: null,
       address: null,
       mapGoogle: null,
       mapNeshan: null,
@@ -418,6 +421,9 @@ describe('admin runtime data source', () => {
       workingDays: 126,
     })
     vi.mocked(getSalonPresence).mockResolvedValue({
+      province: null,
+      city: null,
+      neighborhood: null,
       address: null,
       mapGoogle: null,
       mapNeshan: null,
@@ -678,6 +684,9 @@ describe('admin runtime data source', () => {
       stats: {},
     } as never)
     vi.mocked(updateSalonPresence).mockResolvedValue({
+      province: 'تهران',
+      city: 'تهران',
+      neighborhood: 'ونک',
       address: 'Tehran',
       mapGoogle: 'https://maps.app.goo.gl/abc',
       mapNeshan: null,
@@ -694,6 +703,9 @@ describe('admin runtime data source', () => {
         method: 'PATCH',
         headers: { ...authHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          province: ' تهران ',
+          city: ' تهران ',
+          neighborhood: ' ونک ',
           address: '  Tehran  ',
           mapGoogle: ' https://maps.app.goo.gl/abc ',
           socialInstagram: ' @aftab ',
@@ -704,6 +716,9 @@ describe('admin runtime data source', () => {
 
     expect(res.status).toBe(200)
     expect(updateSalonPresence).toHaveBeenCalledWith(salonId, {
+      province: 'تهران',
+      city: 'تهران',
+      neighborhood: 'ونک',
       address: 'Tehran',
       mapGoogle: 'https://maps.app.goo.gl/abc',
       socialInstagram: '@aftab',

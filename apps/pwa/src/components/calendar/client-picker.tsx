@@ -383,6 +383,7 @@ export function ClientPicker({
         onChange={(e) => setValue('phone', e.target.value)}
         placeholder="شماره تماس (۰۹…)"
         type="tel"
+        autoComplete="tel"
         inputMode="numeric"
         dir="ltr"
         className="text-left tabular-nums"

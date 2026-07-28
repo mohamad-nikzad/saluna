@@ -5,6 +5,9 @@ import { getDb } from '../client'
 import { salonProfile } from '../schema'
 
 export type SalonPresenceView = {
+  province: string | null
+  city: string | null
+  neighborhood: string | null
   address: string | null
   mapGoogle: string | null
   mapNeshan: string | null
@@ -16,6 +19,9 @@ export type SalonPresenceView = {
 }
 
 const PRESENCE_FIELDS = [
+  'province',
+  'city',
+  'neighborhood',
   'address',
   'mapGoogle',
   'mapNeshan',
@@ -28,6 +34,9 @@ const PRESENCE_FIELDS = [
 
 type SalonPresenceRow = Pick<
   typeof salonProfile.$inferSelect,
+  | 'province'
+  | 'city'
+  | 'neighborhood'
   | 'address'
   | 'mapGoogle'
   | 'mapNeshan'
@@ -42,6 +51,9 @@ export function toSalonPresenceView(
   row: SalonPresenceRow | null | undefined,
 ): SalonPresenceView {
   return {
+    province: row?.province ?? null,
+    city: row?.city ?? null,
+    neighborhood: row?.neighborhood ?? null,
     address: row?.address ?? null,
     mapGoogle: row?.mapGoogle ?? null,
     mapNeshan: row?.mapNeshan ?? null,

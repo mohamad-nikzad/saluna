@@ -102,7 +102,7 @@ export const CatalogPresetPicker = forwardRef<
   ref,
 ) {
   const presetsQuery = useQuery(catalogPresetsQueryOptions())
-  const presets = presetsQuery.data ?? []
+  const data = presetsQuery.data ?? []
   const [selected, setSelected] = useState<CatalogPresetListItem | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [openCategories, setOpenCategories] = useState<Record<number, boolean>>(
@@ -353,13 +353,13 @@ export const CatalogPresetPicker = forwardRef<
 
   return (
     <div className={cn('space-y-3', className)} dir="rtl">
-      {presets.length === 0 ? (
+      {data.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center">
           <p className="text-sm font-medium">قالب آماده‌ای موجود نیست.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {presets.map((preset) => {
+          {data.map((preset) => {
             const serviceTotal = allServiceKeys(preset.tree).length
             return (
               <Card

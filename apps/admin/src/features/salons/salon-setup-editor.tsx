@@ -22,6 +22,7 @@ import { Input } from '#/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 
 import { Panel } from '#/components/admin/panel'
+import { SalonLocationFields } from '#/components/admin/salon-location-fields'
 import type { MutationSubmitOptions } from './salon-governance'
 
 const WEEKDAYS = [
@@ -156,10 +157,17 @@ export function SalonSetupPresenceForm({
     options?: MutationSubmitOptions,
   ) => void
 }) {
+  const [location, setLocation] = useState({
+    province: configuration.presence.province ?? '',
+    city: configuration.presence.city ?? '',
+    neighborhood: configuration.presence.neighborhood ?? '',
+  })
+
   function submitPresence(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     onSave({
+      ...location,
       address: String(form.get('address') ?? ''),
       mapGoogle: String(form.get('mapGoogle') ?? ''),
       mapNeshan: String(form.get('mapNeshan') ?? ''),
@@ -178,6 +186,7 @@ export function SalonSetupPresenceForm({
           show={isLiveData}
           message="تغییر حضور سالن روی داده‌های زنده اعمال می‌شود."
         />
+        <SalonLocationFields value={location} onChange={setLocation} />
         <TextAreaField
           label="آدرس"
           name="address"

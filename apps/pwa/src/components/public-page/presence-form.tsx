@@ -12,6 +12,7 @@ import type {
   PresenceInput,
   PresencePayload,
 } from '@repo/salon-core/forms/presence'
+import type { SalonLocation } from '@repo/salon-core/iran-locations'
 import { Button } from '@repo/ui/button'
 import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
@@ -45,6 +46,7 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
     reset,
     setError,
     setFocus,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<PresenceInput, unknown, PresencePayload>({
@@ -53,6 +55,20 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
   })
 
   const values = watch()
+  const onLocationChange = (location: SalonLocation) => {
+    setValue('province', location.province, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setValue('city', location.city, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setValue('neighborhood', location.neighborhood, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
 
   useEffect(() => {
     const presence = presenceQuery.data?.presence
@@ -71,7 +87,8 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
     revealInvalidPresenceField(firstInvalidField, { setOpen, setFocus })
   }
 
-  const onSubmit = handleSubmit((formValues) => {
+  const submitPresence = handleSubmit((formValues) => {
+    if (savePresence.isPending) return
     savePresence.mutate(formValues, {
       onSuccess: () => options.onSuccess?.(),
       onError: (err) => {
@@ -88,7 +105,8 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
     register,
     errors,
     values,
-    onSubmit,
+    onLocationChange,
+    onSubmit: submitPresence,
     isPending: savePresence.isPending,
     isLoading: presenceQuery.isPending,
     rootError: errors.root?.message,
@@ -97,7 +115,13 @@ export function usePresenceForm(options: UsePresenceFormOptions = {}) {
 
 export type PresenceFormBodyProps = Pick<
   ReturnType<typeof usePresenceForm>,
-  'open' | 'setOpen' | 'register' | 'errors' | 'values' | 'rootError'
+  | 'open'
+  | 'setOpen'
+  | 'register'
+  | 'errors'
+  | 'values'
+  | 'onLocationChange'
+  | 'rootError'
 >
 
 export function PresenceFormBody({
@@ -106,6 +130,7 @@ export function PresenceFormBody({
   register,
   errors,
   values,
+  onLocationChange,
   rootError,
 }: PresenceFormBodyProps) {
   return (
@@ -116,6 +141,7 @@ export function PresenceFormBody({
         values={values}
         open={open}
         setOpen={setOpen}
+        onLocationChange={onLocationChange}
       />
       <FormRootError message={rootError} />
     </>
@@ -139,8 +165,10 @@ export function PresenceEditor({ onSaved }: { onSaved: () => void }) {
       noValidate
       className="flex flex-col gap-5"
     >
+      <input type="hidden" required={true} defaultValue="1" />
       <PresenceFormBody {...presence} />
       <Button type="submit" disabled={presence.isPending}>
+        {presence.isPending ? <Spinner className="size-4" /> : null}
         {presence.isPending ? 'در حال ذخیره…' : 'ذخیره'}
       </Button>
     </form>

@@ -35,10 +35,12 @@ import {
   tomansFormatter,
 } from '#/lib/appointment-surface'
 import { LocalizedNumberInput } from '#/components/localized-number-input'
+import { AppointmentDetailEditFieldError } from '#/components/calendar/appointment-detail/use-appointment-detail-drawer'
 
 interface AppointmentDetailEditFormProps {
   editForm: UseFormReturn<AppointmentFormInput>
-  onSubmit: () => void
+  onValidSubmit: (values: AppointmentFormInput) => Promise<void>
+  isSubmitting?: boolean
   localClients: Client[]
   onClientCreated: (client: Client) => void
   useTemporaryClient: boolean
@@ -80,7 +82,8 @@ interface AppointmentDetailEditFormProps {
 
 export function AppointmentDetailEditForm({
   editForm,
-  onSubmit,
+  onValidSubmit,
+  isSubmitting = false,
   localClients,
   onClientCreated,
   useTemporaryClient,
@@ -121,16 +124,26 @@ export function AppointmentDetailEditForm({
 }: AppointmentDetailEditFormProps) {
   const {
     register: registerEdit,
+    handleSubmit,
     setValue: setEditValue,
     formState: { errors: editErrors },
   } = editForm
 
   return (
     <form
-      onSubmit={onSubmit}
+      id="appointment-detail-edit-form"
+      noValidate
+      onSubmit={handleSubmit(async (values) => {
+        if (isSubmitting) return
+        await onValidSubmit(values)
+      })}
       className="min-h-0 flex-1 flex flex-col gap-4 overflow-y-auto px-4"
       onFocus={handleFormFocusScroll}
     >
+      <fieldset
+        disabled={isSubmitting}
+        className="min-h-0 flex-1 flex flex-col gap-4 border-0 p-0 m-0 min-w-0"
+      >
       <FieldGroup>
         <Field>
           <FieldLabel>مشتری</FieldLabel>
@@ -184,6 +197,11 @@ export function AppointmentDetailEditForm({
                 return undefined
               }}
             />
+            {editErrors.staffId ? (
+              <AppointmentDetailEditFieldError
+                message={editErrors.staffId.message}
+              />
+            ) : null}
           </Field>
 
           <Field>
@@ -194,6 +212,11 @@ export function AppointmentDetailEditForm({
               onChange={onEditServiceChange}
               onClear={onClearEditService}
             />
+            {editErrors.serviceId ? (
+              <AppointmentDetailEditFieldError
+                message={editErrors.serviceId.message}
+              />
+            ) : null}
           </Field>
 
           {selectedEditService ? (
@@ -260,7 +283,7 @@ export function AppointmentDetailEditForm({
                   shouldValidate: true,
                 })
               }
-              required
+              required={true}
             />
             {editErrors.date && (
               <FieldError>{editErrors.date.message}</FieldError>
@@ -373,6 +396,7 @@ export function AppointmentDetailEditForm({
 
         <FormRootError message={editErrors.root?.message} />
       </FieldGroup>
+      </fieldset>
     </form>
   )
 }

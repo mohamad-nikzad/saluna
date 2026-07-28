@@ -35,6 +35,9 @@ const { app } = await import('../app')
 const authHeaders = { Authorization: 'Bearer testtoken' }
 
 const emptyPresence = {
+  province: null,
+  city: null,
+  neighborhood: null,
   address: null,
   mapGoogle: null,
   mapNeshan: null,
@@ -124,6 +127,9 @@ describe('salon-profile router', () => {
   it('manager PATCH with a single field sends only that key', async () => {
     vi.mocked(db.updateSalonPresence).mockResolvedValue({
       ...emptyPresence,
+      province: 'تهران',
+      city: 'تهران',
+      neighborhood: 'ونک',
       address: 'خیابان ولیعصر',
     } as never)
     const res = await app.request('/api/v1/salon-profile/presence', {
@@ -146,6 +152,9 @@ describe('salon-profile router', () => {
       website: 'https://saluna.ir',
     } as never)
     const payload = {
+      province: ' تهران ',
+      city: ' تهران ',
+      neighborhood: ' ونک ',
       address: 'خیابان ولیعصر',
       mapGoogle: 'https://maps.app.goo.gl/abc',
       socialInstagram: '@saluna',
@@ -161,6 +170,9 @@ describe('salon-profile router', () => {
     expect(db.updateSalonPresence).toHaveBeenCalledWith(
       's1',
       expect.objectContaining({
+        province: 'تهران',
+        city: 'تهران',
+        neighborhood: 'ونک',
         address: 'خیابان ولیعصر',
         mapGoogle: 'https://maps.app.goo.gl/abc',
         socialInstagram: '@saluna',

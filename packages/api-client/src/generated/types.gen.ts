@@ -117,6 +117,9 @@ export type AdminSetupSalonHours = {
 }
 
 export type AdminSetupSalonPresence = {
+  province: string | null
+  city: string | null
+  neighborhood: string | null
   address: string | null
   mapGoogle: string | null
   mapNeshan: string | null
@@ -164,6 +167,9 @@ export type AdminSetupSalonPresenceResponse = {
 }
 
 export type AdminSetupSalonPresencePatchRequest = {
+  province?: string | null
+  city?: string | null
+  neighborhood?: string | null
   address?: string | null
   mapGoogle?: string | null
   mapNeshan?: string | null
@@ -1588,6 +1594,9 @@ export type SalonPresenceResponse = {
 }
 
 export type SalonPresence = {
+  province: string | null
+  city: string | null
+  neighborhood: string | null
   address: string | null
   mapGoogle: string | null
   mapNeshan: string | null
@@ -1599,6 +1608,9 @@ export type SalonPresence = {
 }
 
 export type SalonPresencePatchRequest = {
+  province?: string
+  city?: string
+  neighborhood?: string
   address?: string
   mapGoogle?: string
   mapNeshan?: string

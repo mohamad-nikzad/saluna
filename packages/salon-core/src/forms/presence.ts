@@ -13,6 +13,7 @@
  */
 import { z } from 'zod'
 
+import { getIranCities, IRAN_PROVINCES } from '../iran-locations'
 import { formMessages } from './messages'
 import { iranianMobilePhoneSchema } from './public'
 
@@ -84,7 +85,23 @@ export const MAP_GOOGLE_DOMAIN = 'maps.app.goo.gl'
 export const MAP_NESHAN_DOMAIN = 'neshan.org'
 export const MAP_BALAD_DOMAIN = 'balad.ir'
 
-export const presenceSchema = z.object({
+const provinceSchema = z
+  .string()
+  .max(80, 'نام استان نمی‌تواند بیشتر از ۸۰ کاراکتر باشد')
+  .refine((value) => IRAN_PROVINCES.includes(value), 'استان معتبر نیست')
+
+const cityNames = new Set(IRAN_PROVINCES.flatMap(getIranCities))
+const citySchema = z
+  .string()
+  .max(80, 'نام شهر نمی‌تواند بیشتر از ۸۰ کاراکتر باشد')
+  .refine((value) => cityNames.has(value), 'شهر معتبر نیست')
+
+const presenceShape = {
+  province: optionalWith(provinceSchema),
+  city: optionalWith(citySchema),
+  neighborhood: optionalWith(
+    z.string().max(120, 'نام محله نمی‌تواند بیشتر از ۱۲۰ کاراکتر باشد'),
+  ),
   address: optionalWith(z.string()),
   mapGoogle: optionalWith(mapUrlSchema(MAP_GOOGLE_DOMAIN)),
   mapNeshan: optionalWith(mapUrlSchema(MAP_NESHAN_DOMAIN)),
@@ -93,10 +110,26 @@ export const presenceSchema = z.object({
   socialTelegram: optionalWith(socialHandleSchema),
   socialWhatsapp: optionalWith(iranianMobilePhoneSchema),
   website: optionalWith(httpsUrlSchema),
-})
+}
+
+export const presenceSchema = z
+  .object(presenceShape)
+  .superRefine((value, ctx) => {
+    if (
+      value.province &&
+      value.city &&
+      !getIranCities(value.province).includes(value.city)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['city'],
+        message: 'شهر با استان انتخاب‌شده هماهنگ نیست',
+      })
+    }
+  })
 
 /** Partial PATCH — only keys present in the request body are validated and returned. */
-export const presencePatchSchema = presenceSchema.partial()
+export const presencePatchSchema = z.object(presenceShape).partial()
 
 export type PresenceInput = z.input<typeof presenceSchema>
 export type PresencePayload = z.output<typeof presenceSchema>
@@ -105,6 +138,9 @@ export type PresencePatchPayload = z.output<typeof presencePatchSchema>
 
 /** Nullable presence columns as returned by the API / database layer. */
 export type SalonPresenceFields = {
+  province?: string | null
+  city?: string | null
+  neighborhood?: string | null
   address?: string | null
   mapGoogle?: string | null
   mapNeshan?: string | null
@@ -116,6 +152,9 @@ export type SalonPresenceFields = {
 }
 
 export const EMPTY_PRESENCE_INPUT = {
+  province: '',
+  city: '',
+  neighborhood: '',
   address: '',
   mapGoogle: '',
   mapNeshan: '',
@@ -131,6 +170,9 @@ export function presenceToInput(
   presence: SalonPresenceFields | null | undefined,
 ): PresenceInput {
   return {
+    province: presence?.province ?? '',
+    city: presence?.city ?? '',
+    neighborhood: presence?.neighborhood ?? '',
     address: presence?.address ?? '',
     mapGoogle: presence?.mapGoogle ?? '',
     mapNeshan: presence?.mapNeshan ?? '',

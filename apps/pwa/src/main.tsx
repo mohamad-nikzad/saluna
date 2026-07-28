@@ -7,6 +7,8 @@ import { getRouter } from './router'
 import { AuthProvider, registerAuthQueryDefaults } from './lib/auth'
 import { queryClient } from './lib/query-client'
 import { ThemeProvider } from './lib/theme'
+import { AppErrorBoundary } from './components/app-error-boundary'
+import { Toaster } from './components/ui/sonner'
 
 registerAuthQueryDefaults(queryClient)
 
@@ -19,9 +21,12 @@ if (!rootElement.innerHTML) {
   root.render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
+        <AppErrorBoundary>
+          <AuthProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </AuthProvider>
+        </AppErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>,
   )

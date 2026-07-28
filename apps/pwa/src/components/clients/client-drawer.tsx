@@ -239,6 +239,7 @@ export function ClientDrawer({
                   <Input
                     id="client-phone"
                     type="tel"
+                    autoComplete="tel"
                     value={displayPhone(field.value)}
                     onChange={(e) =>
                       field.onChange(normalizePhone(e.target.value))
