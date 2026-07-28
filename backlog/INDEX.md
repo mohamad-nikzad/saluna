@@ -22,7 +22,7 @@ No active backlog items.
   - [BL-0070 Capture structured Salon Presence location](done/BL-0070-capture-structured-salon-location.md)
   - [BL-0071 Publish local Salon details and structured data](done/BL-0071-publish-local-salon-details-and-structured-data.md)
   - [BL-0072 Discover published Salons through a runtime sitemap](done/BL-0072-discover-published-salons-through-runtime-sitemap.md)
-  - [BL-0073 Keep AppointmentRequest status pages out of search](ready/BL-0073-keep-appointment-request-status-pages-out-of-search.md)
+  - [BL-0073 Keep AppointmentRequest status pages out of search](done/BL-0073-keep-appointment-request-status-pages-out-of-search.md)
   - [BL-0074 Help managers complete and share their public page](ready/BL-0074-help-managers-complete-and-share-public-page.md)
   - [BL-0075 Prove the complete local-search journey](ready/BL-0075-prove-complete-local-search-journey.md)
 

@@ -11,6 +11,7 @@ interface Props {
   ogImageAlt?: string
   jsonLd?: unknown | unknown[]
   preloadLalezar?: boolean
+  noIndex?: boolean
 }
 
 const {
@@ -21,6 +22,7 @@ const {
   ogImageAlt,
   jsonLd,
   preloadLalezar = false,
+  noIndex = false,
 } = Astro.props
 ---
 
@@ -39,6 +41,7 @@ const {
       ogImage={ogImage}
       ogImageAlt={ogImageAlt}
       jsonLd={jsonLd}
+      noIndex={noIndex}
     />
   </head>
   <body class="font-sans antialiased">
