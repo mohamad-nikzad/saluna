@@ -4,11 +4,8 @@
  *   pnpm db:seed  (scripts/db-seed.ts)
  */
 import { and, count, eq, inArray, like, or } from 'drizzle-orm'
-import {
-  addDaysYmd,
-  salonCurrentHm,
-  salonTodayYmd,
-} from '@repo/salon-core/salon-local-time'
+import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { commissionAmount } from '@repo/salon-core/commissions'
 import { auth } from '@repo/auth/server'
 import { mapRole } from '@repo/auth/permissions'
 import type { UserRole } from '@repo/salon-core/types'
@@ -20,6 +17,7 @@ import {
   clientFollowUps,
   clientTags,
   clients,
+  commissionAgreements,
   locations,
   member,
   organization,
@@ -35,6 +33,7 @@ import {
   serviceAddonServiceScopes,
   services,
   staffSchedules,
+  staffCommissions,
   staffServices,
   staffProfileAccesses,
   staffProfiles,
@@ -353,23 +352,6 @@ const primarySeedAddons: SeedAddonRow[] = [
 
 function salonYmdTehran(): string {
   return salonTodayYmd()
-}
-
-function currentHmTehran(): string {
-  return salonCurrentHm()
-}
-
-function hmToMinutes(hm: string): number {
-  const [h, m] = hm.split(':').map(Number)
-  return h * 60 + m
-}
-
-function minutesToHm(total: number): string {
-  let n = total % (24 * 60)
-  if (n < 0) n += 24 * 60
-  const h = Math.floor(n / 60)
-  const min = n % 60
-  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
 }
 
 function appointmentSnapshot(service: {
@@ -1051,7 +1033,6 @@ async function seedServiceAddons(salonId: string, rows: SeedAddonRow[]) {
 /** Phones 09129900*** — removed and reinserted each run for retention / today / tags demos. */
 async function seedRetentionAndFeaturesDemo(salonId: string) {
   const todayStr = salonYmdTehran()
-  const yesterdayStr = addDaysYmd(todayStr, -1)
   const d10 = addDaysYmd(todayStr, -10)
   const d20 = addDaysYmd(todayStr, -20)
   const d45 = addDaysYmd(todayStr, -45)
@@ -1085,8 +1066,14 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
   const staffB =
     staffOrdered.find((staff) => staff.phone === '09120000002') ??
     staffOrdered[1]
-  if (!manager || !staffA || !staffB) {
-    console.warn('Skip feature demo seed: need manager + 2 staff.')
+  const staffC =
+    staffOrdered.find((staff) => staff.phone === '09120000003') ??
+    staffOrdered[2]
+  const staffD =
+    staffOrdered.find((staff) => staff.phone === '09120000004') ??
+    staffOrdered[3]
+  if (!manager || !staffA || !staffB || !staffC || !staffD) {
+    console.warn('Skip feature demo seed: need manager + 4 staff.')
     return
   }
 
@@ -1104,65 +1091,45 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     return
   }
 
-  const nowMin = hmToMinutes(currentHmTehran())
-  let overdueDate = todayStr
-  let overdueStart: string
-  let overdueEnd: string
-  if (nowMin < 120) {
-    overdueDate = yesterdayStr
-    overdueStart = '15:00'
-    overdueEnd = '16:30'
-  } else {
-    overdueStart = minutesToHm(nowMin - 75)
-    overdueEnd = minutesToHm(nowMin - 15)
-  }
-
-  let soonStart = minutesToHm(nowMin + 35)
-  let soonEnd = minutesToHm(nowMin + 95)
-  if (hmToMinutes(soonEnd) > 18 * 60 + 30 || hmToMinutes(soonStart) < 9 * 60) {
-    soonStart = '11:00'
-    soonEnd = '11:45'
-  }
-
   const demoClientSpecs = [
     {
       phone: '09129900101',
-      name: 'دمو غیرفعال',
+      name: 'مونا رستگار',
       notes: '[seed-demo] آخرین مراجعهٔ تکمیل‌شده بیش از ۶۰ روز پیش',
     },
     {
       phone: '09129900102',
-      name: 'دمو بدون نوبت دوم',
+      name: 'ترانه نادری',
       notes: '[seed-demo] فقط یک مراجعهٔ انجام‌شده',
     },
     {
       phone: '09129900103',
-      name: 'دمو غیبت',
+      name: 'سحر محمدی',
       notes: '[seed-demo] دو غیبت برای پیگیری',
     },
     {
       phone: '09129900104',
-      name: 'دمو VIP امروز',
+      name: 'رها صادقی',
       notes: '[seed-demo] برچسب VIP + نوبت امروز',
     },
     {
       phone: '09129900105',
-      name: 'دمو بار اول',
+      name: 'نگار فراهانی',
       notes: '[seed-demo] اولین نوبت فقط امروز',
     },
     {
       phone: '09129900106',
-      name: 'دمو آمار',
+      name: 'آوا کریمی',
       notes: '[seed-demo] لغو و انجام‌شده',
     },
     {
       phone: '09129900107',
-      name: 'دمو ارزشمند',
+      name: 'یلدا مرادی',
       notes: '[seed-demo] چند مراجعهٔ پرهزینه',
     },
     {
       phone: '09129900108',
-      name: 'دمو پیگیری ردشده',
+      name: 'شیدا موسوی',
       notes: '[seed-demo] follow-up dismissed',
     },
   ] as const
@@ -1194,8 +1161,8 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     {
       salonId,
       clientId: cHighValue.id,
-      label: 'بدقول',
-      color: tagColors['بدقول'],
+      label: 'رنگ خاص',
+      color: tagColors['رنگ خاص'],
     },
   ])
 
@@ -1227,6 +1194,40 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     dueDate: todayStr,
     reviewedAt: null,
   })
+
+  await db.insert(appointmentRequests).values([
+    {
+      salonId,
+      serviceId: lash.id,
+      clientId: cDismissed.id,
+      timingMode: 'exact',
+      requestedDate: addDaysYmd(todayStr, 1),
+      requestedStartTime: '11:00',
+      requestedEndTime: '12:00',
+      customerName: cDismissed.name,
+      customerPhone: cDismissed.phone,
+      notes: 'ترجیح مشتری برای وقت قبل از ظهر',
+      bookedServiceName: lash.name,
+      bookedServiceDuration: lash.duration,
+      bookedServicePrice: lash.price,
+      status: 'pending',
+    },
+    {
+      salonId,
+      serviceId: skincare.id,
+      clientId: cStats.id,
+      timingMode: 'flexible',
+      acceptableDates: [addDaysYmd(todayStr, 1), addDaysYmd(todayStr, 3)],
+      timePreference: 'afternoon',
+      customerName: cStats.name,
+      customerPhone: cStats.phone,
+      notes: 'بعدازظهر برای مشتری مناسب‌تر است',
+      bookedServiceName: skincare.name,
+      bookedServiceDuration: skincare.duration,
+      bookedServicePrice: skincare.price,
+      status: 'pending',
+    },
+  ])
 
   const aptRows: Array<
     Omit<
@@ -1300,14 +1301,38 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     },
     {
       salonId,
-      clientId: cNoShow.id,
+      clientId: cNewOnly.id,
       staffId: staffB.id,
+      serviceId: manicure.id,
+      date: todayStr,
+      startTime: '09:00',
+      endTime: '09:30',
+      status: 'completed',
+      notes: '[seed-demo] نوبت صبح',
+      createdByUserId: manager.id,
+    },
+    {
+      salonId,
+      clientId: cStats.id,
+      staffId: staffC.id,
+      serviceId: skincare.id,
+      date: todayStr,
+      startTime: '10:00',
+      endTime: '11:00',
+      status: 'completed',
+      notes: '[seed-demo] پاکسازی کامل',
+      createdByUserId: manager.id,
+    },
+    {
+      salonId,
+      clientId: cNoShow.id,
+      staffId: staffA.id,
       serviceId: hair.id,
       date: todayStr,
-      startTime: '13:00',
-      endTime: '13:45',
-      status: 'scheduled',
-      notes: '[seed-demo] سابقهٔ غیبت + نوبت امروز',
+      startTime: '11:15',
+      endTime: '12:00',
+      status: 'confirmed',
+      notes: '[seed-demo] نیاز به ثبت نتیجه',
       createdByUserId: manager.id,
     },
     {
@@ -1316,8 +1341,8 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       staffId: staffA.id,
       serviceId: color.id,
       date: todayStr,
-      startTime: '12:00',
-      endTime: '14:00',
+      startTime: '12:15',
+      endTime: '14:15',
       status: 'scheduled',
       notes: '[seed-demo] VIP امروز',
       createdByUserId: manager.id,
@@ -1325,13 +1350,25 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     {
       salonId,
       clientId: cFirstToday.id,
-      staffId: staffB.id,
-      serviceId: hair.id,
+      staffId: staffD.id,
+      serviceId: lash.id,
       date: todayStr,
-      startTime: soonStart,
-      endTime: soonEnd,
+      startTime: '14:30',
+      endTime: '15:30',
       status: 'scheduled',
-      notes: '[seed-demo] زمان نسبی برای «نزدیک است»',
+      notes: '[seed-demo] اولین مراجعه',
+      createdByUserId: manager.id,
+    },
+    {
+      salonId,
+      clientId: cHighValue.id,
+      staffId: staffB.id,
+      serviceId: manicure.id,
+      date: todayStr,
+      startTime: '16:00',
+      endTime: '16:30',
+      status: 'scheduled',
+      notes: '[seed-demo] مشتری وفادار',
       createdByUserId: manager.id,
     },
     {
@@ -1406,27 +1443,74 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       notes: '[seed-demo]',
       createdByUserId: manager.id,
     },
-    {
-      salonId,
-      clientId: cInactive.id,
-      staffId: staffB.id,
-      serviceId: skincare.id,
-      date: overdueDate,
-      startTime: overdueStart,
-      endTime: overdueEnd,
-      status: 'confirmed',
-      notes: '[seed-demo] برای «نیاز به ثبت نتیجه»',
-      createdByUserId: manager.id,
-    },
   ]
 
   const servicesById = new Map(svcRows.map((service) => [service.id, service]))
-  await db.insert(appointments).values(
-    aptRows.map((row) => ({
-      ...row,
-      ...appointmentSnapshot(servicesById.get(row.serviceId)!),
-    })),
+  const insertedAppointments = await db
+    .insert(appointments)
+    .values(
+      aptRows.map((row) => ({
+        ...row,
+        ...appointmentSnapshot(servicesById.get(row.serviceId)!),
+      })),
+    )
+    .returning()
+
+  const commissionRates = new Map([
+    [staffA.id, 3_000],
+    [staffB.id, 2_500],
+    [staffC.id, 3_000],
+    [staffD.id, 2_800],
+  ])
+  for (const [staffProfileId, percentageBasisPoints] of commissionRates) {
+    await db
+      .insert(commissionAgreements)
+      .values({
+        salonId,
+        staffProfileId,
+        percentageBasisPoints,
+        active: true,
+        activatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [
+          commissionAgreements.salonId,
+          commissionAgreements.staffProfileId,
+        ],
+        set: {
+          percentageBasisPoints,
+          active: true,
+          disabledAt: null,
+          updatedAt: new Date(),
+        },
+      })
+  }
+
+  const completedAppointments = insertedAppointments.filter(
+    (appointment) => appointment.status === 'completed',
   )
+  if (completedAppointments.length > 0) {
+    await db
+      .insert(staffCommissions)
+      .values(
+        completedAppointments.map((appointment) => {
+          const percentageBasisPoints =
+            commissionRates.get(appointment.staffId) ?? 3_000
+          return {
+            salonId,
+            staffProfileId: appointment.staffId,
+            appointmentId: appointment.id,
+            basis: appointment.bookedTotalPrice,
+            percentageBasisPoints,
+            amount: commissionAmount(
+              appointment.bookedTotalPrice,
+              percentageBasisPoints,
+            ),
+          }
+        }),
+      )
+      .onConflictDoNothing({ target: staffCommissions.appointmentId })
+  }
 
   const days = [0, 1, 2, 3, 4, 5, 6] as const
   for (const dayOfWeek of days) {

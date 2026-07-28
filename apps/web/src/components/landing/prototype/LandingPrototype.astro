@@ -1,0 +1,485 @@
+---
+// Approved landing direction.
+import { brand } from '@repo/brand'
+import { displayClass } from '@/content/landing'
+import PrototypeProductCapture from './PrototypeProductCapture.astro'
+
+interface Props {
+  loginHref: string
+  signupHref: string
+}
+
+const { loginHref, signupHref } = Astro.props
+const brandFa = brand.name.fa
+
+const workflowSteps = [
+  {
+    number: '۰۱',
+    title: 'دریافت و ثبت درخواست',
+    text: 'درخواست‌های آنلاین، تلفنی و پیام‌رسان در یک محل جمع می‌شوند.',
+  },
+  {
+    number: '۰۲',
+    title: 'بررسی زمان و پرسنل',
+    text: 'زمان پیشنهادی با برنامه کاری، نوبت‌های موجود و تخصص پرسنل بررسی می‌شود.',
+  },
+  {
+    number: '۰۳',
+    title: 'تأیید و ثبت در تقویم',
+    text: 'فقط پس از تأیید مدیر، درخواست به نوبت تبدیل می‌شود.',
+  },
+] as const
+
+const baleHighlights = [
+  'اعلان فوری درخواست جدید',
+  'تأیید یا رد درخواست در بله',
+  'انتخاب پرسنل مناسب',
+  'مشاهده درخواست‌های در انتظار',
+  'مشاهده برنامه امروز',
+] as const
+
+const featureSections = [
+  {
+    id: 'calendar',
+    eyebrow: 'تقویم سالن',
+    title: 'برنامه سالن همیشه جلوی چشم شماست',
+    description:
+      'نمای روز، هفته یا ماه را انتخاب کنید، برنامه کامل سالن را ببینید و پیش از ثبت یا تغییر نوبت، ساعت کاری، تداخل‌ها و خدمات قابل انجام هر فرد را بررسی کنید. هر عضو تیم نیز به برنامه خودش دسترسی دارد.',
+    items: [
+      'تقویم روزانه، هفتگی و ماهانه',
+      'بررسی زمان و تخصص پرسنل',
+      'برنامه شخصی و اعلان نوبت جدید برای هر عضو تیم',
+    ],
+  },
+  {
+    id: 'clients',
+    eyebrow: 'مشتریان',
+    title: 'مشتری‌ها فقط یک شماره تلفن نیستند',
+    description:
+      'اطلاعات تماس، یادداشت‌ها، برچسب‌ها و سابقه مراجعه هر مشتری را یک‌جا نگه دارید؛ مشتریانی را که نیاز به پیگیری دارند بشناسید و ارتباط شخصی‌تری با آن‌ها داشته باشید.',
+    items: [
+      'اطلاعات، یادداشت‌ها و برچسب‌های مشتری',
+      'سابقه نوبت‌ها و خدمات',
+      'ورود گروهی مشتریان با بررسی موارد تکراری',
+      'پیگیری مشتریان برای مراجعه دوباره',
+      'ارسال پیام پیگیری در بله برای مشتریان منتخب',
+    ],
+  },
+  {
+    id: 'staff',
+    eyebrow: 'تیم سالن',
+    title: 'هر عضو تیم، برنامه و دسترسی خودش را دارد',
+    description:
+      'خدمات قابل انجام و ساعت کاری هر فرد را مشخص کنید و برای او دسترسی شخصی بسازید. با ثبت نوبت جدید، سالونا به‌صورت خودکار به فرد مربوط اعلان می‌فرستد. مدیر برنامه کامل سالن را می‌بیند و هر فرد به برنامه خودش دسترسی دارد.',
+    items: [
+      'ساعت کاری و خدمات قابل انجام هر فرد',
+      'دسترسی شخصی بدون حساب مشترک',
+      'اعلان خودکار نوبت‌های جدید',
+      'گزارش شخصی کمیسیون، در صورت استفاده سالن',
+    ],
+  },
+  {
+    id: 'services',
+    eyebrow: 'خدمات و پکیج‌ها',
+    title: 'خدمات مشخص‌تر، نوبت‌های دقیق‌تر',
+    description:
+      'خدمات سالن را دسته‌بندی کنید و برای هرکدام قیمت، مدت زمان، پرسنل قابل انتخاب و افزودنی‌های مرتبط را مشخص کنید. برای خدمات چندمرحله‌ای نیز می‌توانید پکیج بسازید و هر مرحله را با زمان و فرد مناسب برنامه‌ریزی کنید.',
+    items: [
+      'دسته‌بندی خدمات سالن',
+      'قیمت و مدت زمان هر خدمت',
+      'افزودنی‌های قابل انتخاب',
+      'پکیج‌های خدمات چندمرحله‌ای',
+    ],
+  },
+  {
+    id: 'public-page',
+    eyebrow: 'صفحه آنلاین سالن',
+    title: 'خدماتتان را آنلاین نشان دهید؛ درخواست‌ها را منظم دریافت کنید',
+    description:
+      'صفحه سالن را با خدمات، اطلاعات تماس، آدرس، نقشه و شبکه‌های اجتماعی کامل کنید و لینک آن را با مشتریان به اشتراک بگذارید. مشتری خدمات و زمان‌های قابل درخواست را می‌بیند و بدون تماس، درخواست نوبت ثبت می‌کند.',
+    items: [
+      'صفحه عمومی اختصاصی سالن',
+      'نمایش خدمات و اطلاعات سالن',
+      'بررسی زمان‌های قابل درخواست',
+      'ثبت درخواست نوبت بدون تماس تلفنی',
+      'تأیید نهایی هر درخواست توسط مدیر',
+    ],
+  },
+  {
+    id: 'reports',
+    eyebrow: 'داشبورد و گزارش‌ها',
+    title: 'فقط نوبت‌ها را ثبت نکنید؛ عملکرد سالن را هم ببینید',
+    description:
+      'تعداد و وضعیت نوبت‌ها، مشتریان جدید، خدمات پرطرفدار و حجم کاری هر فرد را در داشبورد دنبال کنید و ارزش نوبت‌های انجام‌شده را برای هر دوره ببینید.',
+    items: [
+      'آمار نوبت‌های روز، هفته و ماه',
+      'خدمات پرطرفدار',
+      'حجم کاری پرسنل',
+      'ارزش نوبت‌های انجام‌شده',
+      'گزارش کمیسیون و مبلغ باقی‌مانده سالن، در صورت استفاده',
+    ],
+  },
+] as const
+
+const setupHighlights = [
+  'قالب‌های آماده برای خدمات',
+  'ورود گروهی اطلاعات مشتریان',
+  'بررسی موارد تکراری پیش از ثبت',
+  'راه‌اندازی مرحله‌ای سالن',
+] as const
+
+const faqItems = [
+  {
+    question: 'آیا درخواست آنلاین مشتری بلافاصله وارد تقویم می‌شود؟',
+    answer:
+      'خیر. مدیر ابتدا درخواست را بررسی می‌کند و فقط پس از تأیید، آن را به نوبت داخل تقویم تبدیل می‌کند.',
+  },
+  {
+    question: 'آیا مشتری باید برنامه‌ای نصب کند؟',
+    answer:
+      'خیر. مشتری از طریق صفحه آنلاین سالن، خدمات و زمان‌های قابل درخواست را می‌بیند و درخواستش را ثبت می‌کند.',
+  },
+  {
+    question: 'آیا همه پرسنل به برنامه کامل سالن دسترسی دارند؟',
+    answer:
+      'خیر. مدیر برنامه کامل سالن را می‌بیند و هر عضو تیم به برنامه مربوط به خودش دسترسی دارد.',
+  },
+  {
+    question: 'آیا همه سالن‌ها باید از بخش کمیسیون استفاده کنند؟',
+    answer:
+      'خیر. این بخش کاملاً اختیاری است. اگر سالن شما با درصد کمیسیون کار می‌کند، می‌توانید برای هر عضو تیم درصد تعیین کنید و گزارش دوره‌ای کمیسیون او را ببینید.',
+  },
+  {
+    question: 'آیا سالونا درآمد سالن را محاسبه می‌کند؟',
+    answer:
+      'سالونا جمع مبلغ نوبت‌های انجام‌شده را محاسبه می‌کند. در صورت استفاده از کمیسیون، کمیسیون پرسنل و مبلغ باقی‌مانده سالن نیز مشخص می‌شود. این ارقام به معنی مبلغ وصول‌شده یا سود خالص حسابداری نیستند.',
+  },
+  {
+    question: 'هزینه استفاده از سالونا چقدر است؟',
+    answer:
+      'استفاده از نسخه آزمایشی فعلاً رایگان است. پیش از شروع پلن‌های پولی، به کاربران اطلاع‌رسانی می‌کنیم.',
+  },
+] as const
+---
+
+<!-- Warm, familiar and benefit-led -->
+<main dir="rtl" class="min-h-dvh overflow-hidden bg-[#fdf5f8] text-[#3f2730]">
+  <section class="relative isolate overflow-hidden">
+    <img
+      src="/landing/hero-bg.webp"
+      alt=""
+      width="1920"
+      height="1080"
+      class="absolute inset-0 -z-20 hidden h-full w-full object-cover sm:block"
+    />
+    <img
+      src="/landing/hero-bg-mobile.webp"
+      alt=""
+      width="750"
+      height="1334"
+      class="absolute inset-0 -z-20 h-full w-full object-cover sm:hidden"
+    />
+    <div
+      class="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(253,245,248,.08)_0%,rgba(253,245,248,.72)_58%,#fdf5f8_100%)]"
+    >
+    </div>
+
+    <header
+      class="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8"
+    >
+      <a href="#d-top" class="flex items-center gap-2.5" aria-label={brandFa}>
+        <img
+          src={brand.assets.landingMark}
+          alt=""
+          class="size-10 object-contain sm:size-11"
+        />
+        <span class={`${displayClass} text-2xl text-[#7a2a40] sm:text-3xl`}>
+          {brandFa}
+        </span>
+      </a>
+      <nav class="hidden items-center gap-7 text-sm text-[#6b4955] md:flex">
+        <a href="#d-flow">نحوه کار</a>
+        <a href="#d-features">امکانات</a>
+        <a href="#d-setup">شروع کار</a>
+        <a href="#d-faq">پرسش‌ها</a>
+      </nav>
+      <a
+        href={loginHref}
+        class="rounded-md border border-[#d68aa0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7a2a40] backdrop-blur"
+      >
+        ورود
+      </a>
+    </header>
+
+    <div
+      id="d-top"
+      class="mx-auto grid max-w-7xl gap-12 px-5 pb-24 pt-10 sm:px-8 sm:pt-16 lg:grid-cols-[.9fr_1.1fr] lg:items-center"
+    >
+      <div class="text-center lg:text-right">
+        <p
+          class="inline-flex rounded-full border border-[#e9b4c2] bg-white/75 px-4 py-1.5 text-xs font-bold text-[#7a2a40] backdrop-blur"
+        >
+          مدیریت روزانه سالن، ساده‌تر از همیشه
+        </p>
+        <h1
+          class={`${displayClass} mt-6 text-5xl leading-[1.15] text-[#4a1e2e] sm:text-7xl`}
+        >
+          هماهنگی کمتر؛
+          <span class="block text-[#9b2f4a]">مدیریت منظم‌تر</span>
+        </h1>
+        <p
+          class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#6b4955] lg:mx-0 sm:text-lg"
+        >
+          نوبت‌ها، برنامه پرسنل، مشتریان و درخواست‌های جدید را یک‌جا مدیریت کنید
+          و به مشتریان اجازه دهید خدمات را آنلاین ببینند و درخواست نوبت ثبت
+          کنند.
+        </p>
+        <div
+          class="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
+        >
+          <a
+            href={signupHref}
+            class="rounded-md bg-[#c3425b] px-7 py-3 text-center font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,.28)]"
+          >
+            رایگان شروع کنید
+          </a>
+          <a
+            href="#d-flow"
+            class="rounded-md border border-[#d68aa0] bg-white/70 px-7 py-3 text-center font-bold text-[#7a2a40] backdrop-blur"
+          >
+            دیدن نحوه کار
+          </a>
+        </div>
+      </div>
+      <div class="relative mx-auto w-full max-w-xl">
+        <div
+          class="absolute inset-x-6 bottom-6 top-16 -z-10 rounded-full bg-[#c3425b]/20 blur-3xl"
+        >
+        </div>
+        <PrototypeProductCapture
+          src="/landing/prototype/calendar-mobile.jpg"
+          alt="تقویم روزانه سالونا با نوبت‌های ثبت‌شده"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section id="d-flow" class="px-5 py-20 sm:px-8 sm:py-24">
+    <div class="mx-auto max-w-7xl">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class={`${displayClass} text-4xl leading-tight sm:text-6xl`}>
+          هیچ درخواست نوبتی میان پیام‌ها گم نمی‌شود
+        </h2>
+        <p class="mt-4 text-base font-extrabold text-[#9b3348]">
+          از درخواست تا نوبت، در یک مسیر مشخص
+        </p>
+        <p class="mt-4 text-base leading-8 text-[#6b4955]">
+          درخواست‌های آنلاین را مستقیم دریافت کنید، درخواست‌های تلفنی و
+          پیام‌رسان را همان‌جا ثبت کنید و پس از بررسی زمان و پرسنل، آن‌ها را به
+          نوبت تأییدشده تبدیل کنید.
+        </p>
+      </div>
+      <ol class="mt-12 grid gap-4 sm:grid-cols-3">
+        {
+          workflowSteps.map((step) => (
+            <li class="rounded-2xl border border-[#f3d5dd] bg-white/80 p-6 shadow-[0_18px_50px_rgba(155,51,72,.06)]">
+              <span class="grid size-10 place-items-center rounded-xl bg-[#fce5ec] text-xs font-extrabold text-[#9b2f4a]">
+                {step.number}
+              </span>
+              <h3 class="mt-8 text-xl font-extrabold">{step.title}</h3>
+              <p class="mt-3 text-sm leading-7 text-[#6b4955]">{step.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="px-5 py-8 sm:px-8 sm:py-12">
+    <div
+      class="mx-auto grid max-w-7xl gap-8 overflow-hidden rounded-[2rem] bg-[#4a1e2e] p-7 text-white sm:p-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center"
+    >
+      <div>
+        <p class="text-sm font-extrabold text-[#efacbd]">ربات بله سالونا</p>
+        <h2 class={`${displayClass} mt-3 text-4xl leading-tight sm:text-5xl`}>
+          برای رسیدگی به درخواست‌ها، لازم نیست همیشه سالونا را باز کنید
+        </h2>
+        <p class="mt-5 text-sm leading-8 text-white/70 sm:text-base">
+          ربات بله سالونا، درخواست نوبت جدید را همان لحظه برای مدیر می‌فرستد.
+          اطلاعات مشتری، خدمت و زمان را ببینید، درخواست را تأیید یا رد کنید و در
+          صورت نیاز، پرسنل را همان‌جا انتخاب کنید.
+        </p>
+      </div>
+      <ul class="grid gap-3 sm:grid-cols-2">
+        {
+          baleHighlights.map((item) => (
+            <li class="flex min-h-16 items-center gap-3 rounded-2xl bg-white/10 p-4 text-sm">
+              <span class="size-2 shrink-0 rounded-full bg-[#efacbd]" />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="d-features" class="px-5 py-20 sm:px-8 sm:py-24">
+    <div class="mx-auto max-w-7xl">
+      <div class="grid gap-5 lg:grid-cols-2">
+        {
+          featureSections.map((section, index) => (
+            <article
+              id={`d-${section.id}`}
+              class:list={[
+                'rounded-3xl border border-[#f3d5dd] p-6 shadow-[0_18px_50px_rgba(155,51,72,.06)] sm:p-8',
+                index === 0 || index === 5 ? 'bg-[#f8e7ec]' : 'bg-white/80',
+              ]}
+            >
+              <p class="text-xs font-extrabold text-[#9b3348]">
+                {section.eyebrow}
+              </p>
+              <h3 class="mt-4 text-2xl font-extrabold leading-10">
+                {section.title}
+              </h3>
+              <p class="mt-3 text-sm leading-7 text-[#6b4955]">
+                {section.description}
+              </p>
+              <ul class="mt-6 grid gap-2 sm:grid-cols-2">
+                {section.items.map((item) => (
+                  <li class="flex gap-2 rounded-xl bg-[#fdf5f8] p-3 text-xs leading-6 text-[#6b4955]">
+                    <span class="mt-2 size-1.5 shrink-0 rounded-full bg-[#c3425b]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="mt-12 grid items-start gap-8 sm:grid-cols-2">
+        <PrototypeProductCapture
+          src="/landing/prototype/today-mobile.jpg"
+          alt="صفحه امروز سالونا با خلاصه نوبت‌ها و درخواست‌ها"
+        />
+        <PrototypeProductCapture
+          src="/landing/prototype/dashboard-mobile.jpg"
+          alt="داشبورد سالونا با خلاصه ارزش نوبت‌ها و آمار سالن"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section id="d-setup" class="px-5 py-20 sm:px-8 sm:py-24">
+    <div
+      class="mx-auto grid max-w-7xl gap-8 rounded-[2rem] border border-[#f0ccd6] bg-white/80 p-7 sm:p-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center"
+    >
+      <div>
+        <p class="text-sm font-extrabold text-[#9b3348]">راه‌اندازی سالن</p>
+        <h2 class={`${displayClass} mt-3 text-4xl leading-tight sm:text-6xl`}>
+          برای شروع، لازم نیست همه‌چیز را از نو وارد کنید
+        </h2>
+        <p class="mt-5 text-sm leading-8 text-[#6b4955] sm:text-base">
+          از قالب‌های آماده خدمات استفاده کنید، اطلاعات مشتریان را گروهی وارد
+          کنید و ساعت کاری، پرسنل و صفحه سالن را قدم‌به‌قدم آماده کنید.
+        </p>
+      </div>
+      <ul class="grid gap-3 sm:grid-cols-2">
+        {
+          setupHighlights.map((item) => (
+            <li class="flex min-h-20 items-center gap-3 rounded-2xl bg-[#fdf5f8] p-4 text-sm font-bold">
+              <span class="size-2 shrink-0 rounded-full bg-[#c3425b]" />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="px-5 py-8 sm:px-8 sm:py-12">
+    <div
+      class="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 rounded-[2rem] bg-[#c3425b] p-8 text-white sm:p-12 lg:flex-row lg:items-center"
+    >
+      <div>
+        <h2 class={`${displayClass} text-4xl sm:text-6xl`}>
+          سالونا را با سالن واقعی خودتان امتحان کنید
+        </h2>
+        <p class="mt-3 text-sm leading-7 text-white/75">
+          استفاده از نسخه آزمایشی سالونا فعلاً رایگان است. پیش از شروع پلن‌های
+          پولی، به کاربران اطلاع‌رسانی می‌کنیم.
+        </p>
+      </div>
+      <a
+        href={signupHref}
+        class="shrink-0 rounded-md bg-white px-8 py-3 font-bold text-[#9b2f4a]"
+      >
+        ساخت رایگان سالن
+      </a>
+    </div>
+  </section>
+
+  <section id="d-faq" class="px-5 py-20 sm:px-8 sm:py-24">
+    <div class="mx-auto max-w-4xl">
+      <h2
+        class={`${displayClass} text-center text-4xl leading-tight sm:text-6xl`}
+      >
+        پیش از شروع، شاید این سؤال‌ها را داشته باشید
+      </h2>
+      <div
+        class="mt-10 divide-y divide-[#f3d5dd] rounded-3xl border border-[#f3d5dd] bg-white/85 px-5 sm:px-7"
+      >
+        {
+          faqItems.map((item, index) => (
+            <details class="group py-5" open={index === 0}>
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-extrabold">
+                <span>{item.question}</span>
+                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-[#fdf5f8] text-[#9b2f4a] transition group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p class="mt-3 text-sm leading-8 text-[#6b4955]">{item.answer}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="px-5 pb-24 sm:px-8">
+    <div class="relative mx-auto max-w-7xl overflow-hidden rounded-3xl">
+      <img
+        src="/landing/cta-bg.webp"
+        alt=""
+        width="1920"
+        height="1080"
+        class="absolute inset-0 -z-10 h-full w-full object-cover"
+      />
+      <div
+        class="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,235,242,.45))]"
+      >
+      </div>
+      <div class="mx-auto max-w-3xl px-6 py-16 text-center sm:px-10 sm:py-20">
+        <h2
+          class={`${displayClass} text-4xl leading-tight text-[#4a1e2e] sm:text-6xl`}
+        >
+          هماهنگی کمتر، مدیریت منظم‌تر؛ از همین امروز
+        </h2>
+        <p class="mt-5 text-base leading-8 text-[#6b4955]">
+          سالن خود را در سالونا بسازید و نوبت‌ها، مشتریان، پرسنل و خدمات را در
+          یک فضای منظم مدیریت کنید.
+        </p>
+        <a
+          href={signupHref}
+          class="mt-8 inline-flex rounded-md bg-[#c3425b] px-8 py-3 font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,.32)]"
+        >
+          ساخت رایگان سالن
+        </a>
+        <p class="mt-5 text-sm text-[#6b4955]">
+          قبلاً ثبت‌نام کرده‌اید؟
+          <a href={loginHref} class="font-bold text-[#9b2f4a]">وارد شوید</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
