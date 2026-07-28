@@ -4,29 +4,14 @@ import satori from 'satori'
 import { Resvg } from '@resvg/resvg-js'
 import { fetchPublicSalon, PublicApiError } from '@/lib/public-api'
 import { resolvePublicTheme } from '@repo/salon-core/public-themes'
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import fontDataUrl from '@/assets/fonts/Vazirmatn-Bold.ttf?inline'
 
 export const prerender = false
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fontPath = path.resolve(
-  __dirname,
-  '../../assets/fonts/Vazirmatn-Bold.ttf',
+const vazirmatn = Buffer.from(
+  fontDataUrl.slice(fontDataUrl.indexOf(',') + 1),
+  'base64',
 )
-
-let vazirmatn: Buffer | null = null
-
-async function loadFont() {
-  if (vazirmatn) return vazirmatn
-  try {
-    vazirmatn = await fs.readFile(fontPath)
-    return vazirmatn
-  } catch {
-    return null
-  }
-}
 
 function monogram(name: string): string {
   return Array.from(name.trim())[0] ?? 'س'
@@ -49,7 +34,6 @@ export const GET: APIRoute = async ({ params }) => {
   }
 
   const theme = resolvePublicTheme(view.publicSettings.themeId)
-  const font = await loadFont()
 
   const svg = await satori(
     {
@@ -64,7 +48,7 @@ export const GET: APIRoute = async ({ params }) => {
           justifyContent: 'center',
           padding: '64px',
           background: `linear-gradient(135deg, ${theme.swatch} 0%, #fdf5f8 100%)`,
-          fontFamily: font ? 'Vazirmatn' : 'sans-serif',
+          fontFamily: 'Vazirmatn',
         },
         children: [
           {
@@ -108,9 +92,9 @@ export const GET: APIRoute = async ({ params }) => {
     {
       width: 1200,
       height: 630,
-      fonts: font
-        ? [{ name: 'Vazirmatn', data: font, weight: 700, style: 'normal' }]
-        : [],
+      fonts: [
+        { name: 'Vazirmatn', data: vazirmatn, weight: 700, style: 'normal' },
+      ],
     },
   )
 

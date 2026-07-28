@@ -6,13 +6,22 @@
  *   node scripts/smoke-web.mjs
  *   BASE_URL=http://127.0.0.1:3001 node scripts/smoke-web.mjs
  *   BASE_URL=http://127.0.0.1:3001 SLUG=my-salon node scripts/smoke-web.mjs
+ *   SLUG=saluna MANAGER_PHONE=09120000000 MANAGER_PASSWORD=admin123 node scripts/smoke-web.mjs
  */
 const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(
   /\/$/,
   '',
 )
+const apiBase = (process.env.API_URL ?? 'http://localhost:3002').replace(
+  /\/$/,
+  '',
+)
 const slug = process.env.SLUG
+const unpublishedSlug = process.env.UNPUBLISHED_SLUG
 const requestToken = process.env.REQUEST_TOKEN
+const managerPhone = process.env.MANAGER_PHONE
+const managerPassword = process.env.MANAGER_PASSWORD
+let cacheBust = 0
 
 /** @param {string} label */
 function pass(label) {
@@ -38,7 +47,187 @@ async function get(path, options = {}) {
   return { res, text, url }
 }
 
+/** @param {string} path */
+function uncached(path) {
+  const separator = path.includes('?') ? '&' : '?'
+  return get(`${path}${separator}smoke=${Date.now()}-${cacheBust++}`, {
+    cache: 'no-store',
+  })
+}
+
+/** @param {string} html */
+function canonicalFrom(html) {
+  return html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] ?? ''
+}
+
+/** @param {string} html */
+function beautySalonFrom(html) {
+  for (const match of html.matchAll(
+    /<script[^>]+type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs,
+  )) {
+    const value = JSON.parse(match[1])
+    if (value?.['@type'] === 'BeautySalon') return value
+  }
+  return null
+}
+
+/** @param {string} xml */
+function isSitemapXml(xml) {
+  const compact = xml.replace(/\s+/g, ' ').trim()
+  if (
+    !compact.startsWith('<?xml version="1.0" encoding="UTF-8"?>') ||
+    !compact.includes(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ) ||
+    !compact.endsWith('</urlset>')
+  ) {
+    return false
+  }
+  const urls = compact.match(/<url><loc>[^<>]+<\/loc><\/url>/g) ?? []
+  return (
+    (compact.match(/<url>/g) ?? []).length === urls.length &&
+    (compact.match(/<\/url>/g) ?? []).length === urls.length
+  )
+}
+
+async function signInManager() {
+  const response = await fetch(`${apiBase}/api/v1/auth/sign-in/phone-number`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      phoneNumber: managerPhone,
+      password: managerPassword,
+    }),
+  })
+  if (!response.ok) {
+    throw new Error(`Manager sign-in failed (${response.status})`)
+  }
+  const cookie = response.headers
+    .getSetCookie()
+    .map((value) => value.split(';', 1)[0])
+    .join('; ')
+  if (!cookie) throw new Error('Manager sign-in returned no session cookie')
+  return cookie
+}
+
+async function managerRequest(cookie, path, method = 'GET', body) {
+  const response = await fetch(`${apiBase}${path}`, {
+    method,
+    headers: {
+      Cookie: cookie,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  if (!response.ok) {
+    throw new Error(`${method} ${path} failed (${response.status})`)
+  }
+  return response.json()
+}
+
+async function checkPublishedSalon(salonSlug) {
+  const salonPath = `/salons/${salonSlug}`
+  const { res, text } = await uncached(salonPath)
+  if (res.status !== 200) fail(`GET ${salonPath}`, String(res.status))
+  else pass(`GET ${salonPath} → ${res.status}`)
+
+  const cache = header(res, 'cache-control')
+  if (cache.includes('s-maxage=300')) pass('salon Cache-Control s-maxage=300')
+  else fail('salon cache header', cache || '(missing)')
+
+  const canonical = canonicalFrom(text)
+  let canonicalUrl
+  try {
+    canonicalUrl = new URL(canonical)
+  } catch {
+    fail('salon canonical URL', canonical || '(missing)')
+  }
+  if (canonicalUrl && !canonicalUrl.search && !canonicalUrl.hash) {
+    pass('salon canonical excludes query and fragment')
+  } else if (canonicalUrl) {
+    fail('salon canonical includes query or fragment', canonical)
+  }
+
+  const schema = beautySalonFrom(text)
+  if (schema) pass('salon BeautySalon JSON-LD')
+  else fail('salon BeautySalon JSON-LD missing')
+
+  if (schema?.address?.['@type'] === 'PostalAddress') {
+    pass('salon JSON-LD has PostalAddress')
+  } else {
+    fail('salon JSON-LD PostalAddress missing')
+  }
+  if (
+    Array.isArray(schema?.openingHoursSpecification) &&
+    schema.openingHoursSpecification.length > 0
+  ) {
+    pass('salon JSON-LD has openingHoursSpecification')
+  } else {
+    fail('salon JSON-LD openingHoursSpecification missing')
+  }
+
+  const visibleHtml = text.replace(/<script\b[^>]*>.*?<\/script>/gs, '')
+  const locality = [
+    schema?.address?.addressRegion,
+    schema?.address?.addressLocality,
+  ]
+    .filter(Boolean)
+    .every((value) => visibleHtml.includes(value))
+  if (locality) pass('salon renders its locality')
+  else fail('salon visible locality missing')
+  if (visibleHtml.includes('روزهای کاری:') && visibleHtml.includes('ساعت')) {
+    pass('salon renders working days and hours')
+  } else {
+    fail('salon visible working hours missing')
+  }
+
+  const { res: sitemapRes, text: sitemap } = await uncached(
+    '/salons-sitemap.xml',
+  )
+  if (sitemapRes.status !== 200) {
+    fail('GET /salons-sitemap.xml', String(sitemapRes.status))
+  } else {
+    pass(`GET /salons-sitemap.xml → ${sitemapRes.status}`)
+  }
+  if (isSitemapXml(sitemap)) pass('Salon sitemap is valid XML')
+  else fail('Salon sitemap XML')
+  const sitemapCache = header(sitemapRes, 'cache-control')
+  if (sitemapCache === 'public, s-maxage=86400, stale-while-revalidate=3600') {
+    pass('Salon sitemap Cache-Control')
+  } else {
+    fail('Salon sitemap cache header', sitemapCache || '(missing)')
+  }
+  if (canonical && sitemap.includes(`<loc>${canonical}</loc>`)) {
+    pass('Salon sitemap contains canonical URL')
+  } else {
+    fail('Salon sitemap canonical URL missing', canonical)
+  }
+
+  return canonical
+}
+
+async function checkUnpublishedSalon(salonSlug, canonical) {
+  const salonPath = `/salons/${salonSlug}`
+  const [{ res }, { text: sitemap }] = await Promise.all([
+    uncached(salonPath),
+    uncached('/salons-sitemap.xml'),
+  ])
+  if (res.status === 404) pass(`unpublished ${salonPath} → 404`)
+  else fail(`unpublished ${salonPath} status`, String(res.status))
+
+  const location = canonical ? `<loc>${canonical}</loc>` : `${salonPath}</loc>`
+  if (!sitemap.includes(location)) {
+    pass('unpublished Salon absent from sitemap')
+  } else {
+    fail('unpublished Salon remains in sitemap', location)
+  }
+}
+
 async function main() {
+  if (Boolean(managerPhone) !== Boolean(managerPassword)) {
+    throw new Error('Set both MANAGER_PHONE and MANAGER_PASSWORD')
+  }
+
   console.log(`Smoke testing ${base}\n`)
 
   {
@@ -49,16 +238,28 @@ async function main() {
     else pass('landing has lang="fa"')
     if (!text.includes('سالونا')) fail('landing title copy')
     else pass('landing Persian copy present')
-    if (header(res, 'content-security-policy')) pass('landing has CSP header')
-    else fail('landing missing CSP header')
+    if (
+      header(res, 'content-security-policy') ||
+      text.includes('http-equiv="content-security-policy"')
+    ) {
+      pass('landing has CSP')
+    } else {
+      fail('landing missing CSP')
+    }
   }
 
   {
     const { res, text } = await get('/robots.txt')
     if (res.status !== 200) fail('GET /robots.txt', String(res.status))
     else pass(`GET /robots.txt → ${res.status}`)
-    if (!text.includes('Sitemap:')) fail('robots.txt sitemap line')
-    else pass('robots.txt references sitemap')
+    if (
+      text.includes('/sitemap-index.xml') &&
+      text.includes('/salons-sitemap.xml')
+    ) {
+      pass('robots.txt references static and Salon sitemaps')
+    } else {
+      fail('robots.txt sitemap declarations')
+    }
   }
 
   {
@@ -70,39 +271,110 @@ async function main() {
   }
 
   if (slug) {
-    const salonPath = `/salons/${slug}`
-    const { res, text } = await get(salonPath)
-    if (res.status !== 200) fail(`GET ${salonPath}`, String(res.status))
-    else pass(`GET ${salonPath} → ${res.status}`)
+    let cookie
+    let originalSettings
+    let originalPresence
+    try {
+      if (managerPhone) {
+        cookie = await signInManager()
+        originalSettings = await managerRequest(
+          cookie,
+          '/api/v1/salon-public-settings',
+        )
+        originalPresence = await managerRequest(
+          cookie,
+          '/api/v1/salon-profile/presence',
+        )
+        if (originalSettings.slug !== slug) {
+          throw new Error(
+            `Manager Salon slug is ${originalSettings.slug}, not ${slug}`,
+          )
+        }
+        await managerRequest(
+          cookie,
+          '/api/v1/salon-profile/presence',
+          'PATCH',
+          {
+            province: 'تهران',
+            city: 'تهران',
+            neighborhood: 'سعادت‌آباد',
+            address: 'خیابان سرو غربی، پلاک ۱۰',
+          },
+        )
+        await managerRequest(cookie, '/api/v1/salon-public-settings', 'PUT', {
+          enabled: true,
+        })
+      }
 
-    const cache = header(res, 'cache-control')
-    if (cache.includes('s-maxage=300')) pass('salon Cache-Control s-maxage=300')
-    else fail('salon cache header', cache || '(missing)')
+      const canonical = await checkPublishedSalon(slug)
 
-    if (text.includes('application/ld+json')) pass('salon JSON-LD in HTML')
-    else fail('salon JSON-LD missing')
+      const { res: ogRes } = await get(`/og/${slug}.png`, { method: 'HEAD' })
+      if (ogRes.status !== 200) {
+        fail(`HEAD /og/${slug}.png`, String(ogRes.status))
+      } else {
+        pass(`HEAD /og/${slug}.png → ${ogRes.status}`)
+      }
+      if ((ogRes.headers.get('content-type') ?? '').includes('image/png')) {
+        pass('OG content-type image/png')
+      } else {
+        fail('OG content-type', ogRes.headers.get('content-type') ?? '')
+      }
 
-    if (text.includes('BeautySalon')) pass('salon BeautySalon schema')
-    else fail('salon BeautySalon schema missing')
+      if (requestToken) {
+        const reqPath = `/salons/${slug}/requests/${requestToken}`
+        const { res: reqRes, text: reqText } = await uncached(reqPath)
+        if (reqRes.status !== 200) fail(`GET ${reqPath}`, String(reqRes.status))
+        else pass(`GET ${reqPath} → ${reqRes.status}`)
+        const reqCache = header(reqRes, 'cache-control')
+        if (reqCache.includes('no-store')) {
+          pass('request page Cache-Control no-store')
+        } else {
+          fail('request cache header', reqCache || '(missing)')
+        }
+        if (
+          /<meta name="robots" content="[^"]*noindex[^"]*nofollow[^"]*"/.test(
+            reqText,
+          )
+        ) {
+          pass('request page is noindex, nofollow')
+        } else {
+          fail('request page robots directives')
+        }
+      }
 
-    const { res: ogRes } = await get(`/og/${slug}.png`, { method: 'HEAD' })
-    if (ogRes.status !== 200) fail(`HEAD /og/${slug}.png`, String(ogRes.status))
-    else pass(`HEAD /og/${slug}.png → ${ogRes.status}`)
-    if ((ogRes.headers.get('content-type') ?? '').includes('image/png')) {
-      pass('OG content-type image/png')
-    } else {
-      fail('OG content-type', ogRes.headers.get('content-type') ?? '')
-    }
-
-    if (requestToken) {
-      const reqPath = `/salons/${slug}/requests/${requestToken}`
-      const { res: reqRes } = await get(reqPath)
-      if (reqRes.status !== 200) fail(`GET ${reqPath}`, String(reqRes.status))
-      else pass(`GET ${reqPath} → ${reqRes.status}`)
-      const reqCache = header(reqRes, 'cache-control')
-      if (reqCache.includes('no-store'))
-        pass('request page Cache-Control no-store')
-      else fail('request cache header', reqCache || '(missing)')
+      if (cookie) {
+        await managerRequest(cookie, '/api/v1/salon-public-settings', 'PUT', {
+          enabled: false,
+        })
+        await checkUnpublishedSalon(slug, canonical)
+        await managerRequest(cookie, '/api/v1/salon-public-settings', 'PUT', {
+          enabled: true,
+        })
+        const { text: sitemap } = await uncached('/salons-sitemap.xml')
+        if (sitemap.includes(`<loc>${canonical}</loc>`)) {
+          pass('newly enabled Salon appears without rebuilding')
+        } else {
+          fail('newly enabled Salon missing from uncached sitemap')
+        }
+      } else if (unpublishedSlug) {
+        await checkUnpublishedSalon(unpublishedSlug)
+      } else {
+        console.log(
+          '\n(skip publication-state journey: set manager credentials or UNPUBLISHED_SLUG)',
+        )
+      }
+    } finally {
+      if (cookie && originalSettings && originalPresence) {
+        await managerRequest(
+          cookie,
+          '/api/v1/salon-profile/presence',
+          'PATCH',
+          originalPresence.presence,
+        )
+        await managerRequest(cookie, '/api/v1/salon-public-settings', 'PUT', {
+          enabled: originalSettings.settings.enabled,
+        })
+      }
     }
   } else {
     console.log(

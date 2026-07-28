@@ -211,4 +211,4 @@ URL for a social bio or channel.
 - [BL-0072 Discover published Salons through a runtime sitemap](../done/BL-0072-discover-published-salons-through-runtime-sitemap.md) — done
 - [BL-0073 Keep AppointmentRequest status pages out of search](../done/BL-0073-keep-appointment-request-status-pages-out-of-search.md) — done
 - [BL-0074 Help managers complete and share their public page](../done/BL-0074-help-managers-complete-and-share-public-page.md) — done
-- [BL-0075 Prove the complete local-search journey](BL-0075-prove-complete-local-search-journey.md) — blocked by BL-0071, BL-0072, BL-0073, and BL-0074
+- [BL-0075 Prove the complete local-search journey](../done/BL-0075-prove-complete-local-search-journey.md) — done
