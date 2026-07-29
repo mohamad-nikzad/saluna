@@ -47,6 +47,7 @@ export function AppointmentDetailDrawerFooter({
       ) : isEditing ? (
         <>
           <Button
+            key="save"
             type="submit"
             form="appointment-detail-edit-form"
             disabled={
@@ -83,7 +84,12 @@ export function AppointmentDetailDrawerFooter({
         </>
       ) : (
         <>
-          <Button onClick={onStartEditing} className="touch-manipulation">
+          <Button
+            key="edit"
+            type="button"
+            onClick={onStartEditing}
+            className="touch-manipulation"
+          >
             ویرایش نوبت
           </Button>
           <div className="flex gap-2">

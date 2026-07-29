@@ -73,19 +73,6 @@ function snapshotFromService(service: {
   }
 }
 
-function attachAddonCounts<T extends Appointment>(
-  appointmentsList: T[],
-  lines: BookedAppointmentAddonLine[],
-): T[] {
-  const counts = new Map<string, number>()
-  for (const line of lines)
-    counts.set(line.appointmentId, (counts.get(line.appointmentId) ?? 0) + 1)
-  return appointmentsList.map((appointment) => ({
-    ...appointment,
-    bookedAddonCount: counts.get(appointment.id) ?? 0,
-  }))
-}
-
 async function getAddonLinesForAppointments(
   salonId: string,
   appointmentIds: string[],
@@ -108,7 +95,7 @@ async function getAddonLinesForAppointments(
   return rows.map(rowToAppointmentAddonLine)
 }
 
-function attachAddonDetails<T extends Appointment>(
+export function attachAddonDetails<T extends Appointment>(
   appointmentsList: T[],
   lines: BookedAppointmentAddonLine[],
 ): T[] {
@@ -222,7 +209,7 @@ export async function getAppointmentsByDateRange(
     salonId,
     mapped.map((appointment) => appointment.id),
   )
-  return attachAddonCounts(mapped, lines)
+  return attachAddonDetails(mapped, lines)
 }
 
 export async function getAppointmentsWithDetailsByDateRange(
@@ -281,7 +268,7 @@ export async function getAppointmentsWithDetailsByDateRange(
     salonId,
     mapped.map((appointment) => appointment.id),
   )
-  return attachAddonCounts(mapped, lines)
+  return attachAddonDetails(mapped, lines)
 }
 
 export async function getClientAppointmentsWithDetails(

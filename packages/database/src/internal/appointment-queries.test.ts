@@ -2,9 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { sameAddonIds } from '@repo/salon-core/appointment-time'
 import {
   addonLineValues,
+  attachAddonDetails,
   totalSnapshotFromServiceAndAddons,
 } from './appointment-queries'
-import type { ServiceAddon } from '@repo/salon-core/types'
+import type {
+  Appointment,
+  BookedAppointmentAddonLine,
+  ServiceAddon,
+} from '@repo/salon-core/types'
 
 describe('appointment update helpers', () => {
   it('treats add-on ids as unchanged regardless of order', () => {
@@ -12,6 +17,20 @@ describe('appointment update helpers', () => {
       true,
     )
     expect(sameAddonIds(['addon-a'], ['addon-b'])).toBe(false)
+  })
+
+  it('keeps booked add-ons in calendar appointment reads', () => {
+    const addon = {
+      appointmentId: 'appointment-1',
+      serviceAddonId: 'addon-1',
+    } as BookedAppointmentAddonLine
+
+    expect(
+      attachAddonDetails([{ id: 'appointment-1' } as Appointment], [addon])[0],
+    ).toMatchObject({
+      bookedAddonCount: 1,
+      bookedAddons: [addon],
+    })
   })
 })
 
