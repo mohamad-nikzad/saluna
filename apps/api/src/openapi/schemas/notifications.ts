@@ -9,6 +9,7 @@ export const notificationTypeSchema = z
     'appointment_request_approved',
     'appointment_request_rejected',
     'appointment_reminder',
+    'birthday_follow_up',
   ])
   .openapi('NotificationType')
 

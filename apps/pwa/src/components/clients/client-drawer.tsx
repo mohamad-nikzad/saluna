@@ -13,6 +13,13 @@ import { Badge } from '@repo/ui/badge'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@repo/ui/field'
 import { Spinner } from '@repo/ui/spinner'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/ui/select'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -24,8 +31,13 @@ import {
 } from '@repo/ui/alert-dialog'
 import { toast } from '@repo/ui/use-toast'
 import type { Client } from '@repo/salon-core/types'
+import { parseGregorianToJalali } from '@repo/salon-core/jalali'
 import { displayPhone, normalizePhone } from '@repo/salon-core/phone'
-import { clientFormSchema } from '@repo/salon-core/forms/client'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import {
+  clientFormSchema,
+  formatJalaliBirthDateInput,
+} from '@repo/salon-core/forms/client'
 import type { ClientFormInput } from '@repo/salon-core/forms/client'
 
 import {
@@ -52,6 +64,16 @@ const tagOptions = [
   'بدقول',
 ] as const
 
+const acquisitionSourceOptions = [
+  { value: 'instagram', label: 'اینستاگرام' },
+  { value: 'website', label: 'وب‌سایت' },
+  { value: 'google', label: 'گوگل یا جست‌وجوی اینترنتی' },
+  { value: 'referral', label: 'معرفی مشتری' },
+  { value: 'walk_in', label: 'مراجعه حضوری' },
+  { value: 'other', label: 'سایر' },
+  { value: 'unknown', label: 'نامشخص' },
+] as const
+
 interface ClientDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -63,14 +85,25 @@ interface ClientDrawerProps {
 const emptyValues: ClientFormInput = {
   name: '',
   phone: '',
+  birthDate: '',
+  acquisitionSource: 'unknown',
   notes: '',
   tags: [],
 }
 
 function toFormValues(client: Client): ClientFormInput {
+  const birthDate = client.birthDate
+    ? parseGregorianToJalali(client.birthDate)
+    : null
   return {
     name: client.name,
     phone: client.phone ?? '',
+    birthDate: birthDate
+      ? toPersianDigits(
+          `${birthDate.jy}/${String(birthDate.jm).padStart(2, '0')}/${String(birthDate.jd).padStart(2, '0')}`,
+        )
+      : '',
+    acquisitionSource: client.acquisitionSource ?? 'unknown',
     notes: client.notes ?? '',
     tags: client.tags?.map((tag) => tag.label) ?? [],
   }
@@ -261,6 +294,60 @@ export function ClientDrawer({
                 placeholder="یادداشت درباره این مشتری…"
                 {...register('notes')}
               />
+            </Field>
+
+            <Field>
+              <FieldLabel>چطور با سالن آشنا شد؟</FieldLabel>
+              <Controller
+                control={control}
+                name="acquisitionSource"
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? 'unknown'}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {acquisitionSourceOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="client-birth-date">
+                تاریخ تولد (اختیاری)
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="birthDate"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    id="client-birth-date"
+                    inputMode="numeric"
+                    dir="ltr"
+                    value={field.value ?? ''}
+                    onChange={(event) =>
+                      field.onChange(
+                        formatJalaliBirthDateInput(event.target.value),
+                      )
+                    }
+                    placeholder="۱۳۷۰/۰۵/۱۰"
+                    className="text-left tabular-nums"
+                  />
+                )}
+              />
+              {errors.birthDate ? (
+                <FieldError>{errors.birthDate.message}</FieldError>
+              ) : null}
             </Field>
 
             <Field>

@@ -143,6 +143,7 @@ import {
   postApiV1PublicSalonsBySlugAppointmentRequests,
   postApiV1PublicSalonsBySlugAppointmentRequestsByTokenCancel,
   postApiV1RetentionByIdBaleMessage,
+  postApiV1RetentionByIdSmsMessage,
   postApiV1ServiceAddons,
   postApiV1ServiceCategories,
   postApiV1ServicePackages,
@@ -559,6 +560,9 @@ import type {
   PostApiV1RetentionByIdBaleMessageData,
   PostApiV1RetentionByIdBaleMessageError,
   PostApiV1RetentionByIdBaleMessageResponse,
+  PostApiV1RetentionByIdSmsMessageData,
+  PostApiV1RetentionByIdSmsMessageError,
+  PostApiV1RetentionByIdSmsMessageResponse,
   PostApiV1ServiceAddonsData,
   PostApiV1ServiceAddonsError,
   PostApiV1ServiceAddonsResponse,
@@ -4687,6 +4691,35 @@ export const postApiV1RetentionByIdBaleMessageMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1RetentionByIdBaleMessage({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Send birthday retention SMS
+ *
+ * Sends a manager-confirmed SMS for an open Birthday Follow-Up.
+ */
+export const postApiV1RetentionByIdSmsMessageMutation = (
+  options?: Partial<Options<PostApiV1RetentionByIdSmsMessageData>>,
+): UseMutationOptions<
+  PostApiV1RetentionByIdSmsMessageResponse,
+  PostApiV1RetentionByIdSmsMessageError,
+  Options<PostApiV1RetentionByIdSmsMessageData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1RetentionByIdSmsMessageResponse,
+    PostApiV1RetentionByIdSmsMessageError,
+    Options<PostApiV1RetentionByIdSmsMessageData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1RetentionByIdSmsMessage({
         ...options,
         ...fnOptions,
         throwOnError: true,

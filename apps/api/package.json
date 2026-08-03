@@ -19,6 +19,7 @@
     "generate:openapi": "tsx src/openapi/generate-openapi.ts",
     "boundaries": "eslint . --max-warnings=0",
     "expire-requests": "node ../../scripts/with-root-env.mjs tsx src/cli/expire-requests.ts",
+    "sync-birthday-follow-ups": "node ../../scripts/with-root-env.mjs tsx src/cli/sync-birthday-follow-ups.ts",
     "cli:messaging-set-webhook": "node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts"
   },
   "dependencies": {

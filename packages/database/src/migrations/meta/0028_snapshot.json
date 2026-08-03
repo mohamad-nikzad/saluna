@@ -1,6 +1,6 @@
 {
-  "id": "8e9841d5-2e28-4852-a50e-c57f5c6f8ed0",
-  "prevId": "43489b3b-257b-431c-aaad-7f6db36421ac",
+  "id": "8e6f4df2-205e-41b5-ad45-5d06cc68cae0",
+  "prevId": "8e9841d5-2e28-4852-a50e-c57f5c6f8ed0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -611,6 +611,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "client_id": {
+          "name": "client_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timing_mode": {
+          "name": "timing_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'exact'"
+        },
         "staff_id": {
           "name": "staff_id",
           "type": "uuid",
@@ -621,19 +634,31 @@
           "name": "requested_date",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "requested_start_time": {
           "name": "requested_start_time",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "requested_end_time": {
           "name": "requested_end_time",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "acceptable_dates": {
+          "name": "acceptable_dates",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_preference": {
+          "name": "time_preference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "customer_name": {
           "name": "customer_name",
@@ -821,6 +846,15 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
+        "appointment_requests_client_id_clients_id_fk": {
+          "name": "appointment_requests_client_id_clients_id_fk",
+          "tableFrom": "appointment_requests",
+          "tableTo": "clients",
+          "columnsFrom": ["client_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
         "appointment_requests_reviewed_by_user_id_user_id_fk": {
           "name": "appointment_requests_reviewed_by_user_id_user_id_fk",
           "tableFrom": "appointment_requests",
@@ -843,7 +877,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "appointment_requests_timing_mode_check": {
+          "name": "appointment_requests_timing_mode_check",
+          "value": "(\n        (\"appointment_requests\".\"timing_mode\" = 'exact' and \"appointment_requests\".\"requested_date\" is not null and \"appointment_requests\".\"requested_start_time\" is not null and \"appointment_requests\".\"requested_end_time\" is not null and \"appointment_requests\".\"acceptable_dates\" is null and \"appointment_requests\".\"time_preference\" is null)\n        or\n        (\"appointment_requests\".\"timing_mode\" = 'flexible' and \"appointment_requests\".\"client_id\" is not null and \"appointment_requests\".\"requested_date\" is null and \"appointment_requests\".\"requested_start_time\" is null and \"appointment_requests\".\"requested_end_time\" is null and cardinality(\"appointment_requests\".\"acceptable_dates\") > 0 and \"appointment_requests\".\"time_preference\" is not null)\n      )"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.appointments": {
@@ -1555,6 +1594,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "occurrence_year": {
+          "name": "occurrence_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1577,8 +1622,8 @@
         }
       },
       "indexes": {
-        "client_follow_ups_salon_id_client_id_reason_unique": {
-          "name": "client_follow_ups_salon_id_client_id_reason_unique",
+        "client_follow_ups_non_birthday_unique": {
+          "name": "client_follow_ups_non_birthday_unique",
           "columns": [
             {
               "expression": "salon_id",
@@ -1600,6 +1645,47 @@
             }
           ],
           "isUnique": true,
+          "where": "\"client_follow_ups\".\"reason\" <> 'birthday'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "client_follow_ups_birthday_occurrence_unique": {
+          "name": "client_follow_ups_birthday_occurrence_unique",
+          "columns": [
+            {
+              "expression": "salon_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reason",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurrence_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "due_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"client_follow_ups\".\"reason\" = 'birthday'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1854,6 +1940,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
         },
         "notes": {
           "name": "notes",
@@ -2743,6 +2835,12 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
+        "source_key": {
+          "name": "source_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "read_at": {
           "name": "read_at",
           "type": "timestamp with time zone",
@@ -2808,6 +2906,34 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_user_type_source_key_unique": {
+          "name": "notifications_user_type_source_key_unique",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"notifications\".\"source_key\" is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -3425,6 +3551,53 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.salon_closure_dates": {
+      "name": "salon_closure_dates",
+      "schema": "",
+      "columns": {
+        "salon_id": {
+          "name": "salon_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "salon_closure_dates_salon_id_organization_id_fk": {
+          "name": "salon_closure_dates_salon_id_organization_id_fk",
+          "tableFrom": "salon_closure_dates",
+          "tableTo": "organization",
+          "columnsFrom": ["salon_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "salon_closure_dates_salon_id_date_pk": {
+          "name": "salon_closure_dates_salon_id_date_pk",
+          "columns": ["salon_id", "date"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.salon_handoff": {
       "name": "salon_handoff",
       "schema": "",
@@ -3759,6 +3932,24 @@
         },
         "phone": {
           "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "province": {
+          "name": "province",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "neighborhood": {
+          "name": "neighborhood",
           "type": "text",
           "primaryKey": false,
           "notNull": false

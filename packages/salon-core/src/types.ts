@@ -201,11 +201,26 @@ export interface BookedAppointmentAddonLine {
   createdAt: Date
 }
 
+export const CLIENT_ACQUISITION_SOURCES = [
+  'instagram',
+  'website',
+  'google',
+  'referral',
+  'walk_in',
+  'other',
+  'unknown',
+] as const
+
+export type ClientAcquisitionSource =
+  (typeof CLIENT_ACQUISITION_SOURCES)[number]
+
 export interface Client {
   id: string
   name: string
   phone: string | null
   isPlaceholder: boolean
+  birthDate?: string | null
+  acquisitionSource?: ClientAcquisitionSource | null
   notes?: string
   createdAt: Date
   tags?: ClientTag[]
@@ -287,7 +302,8 @@ export type FollowUpReason =
   | 'new-client'
   | 'vip'
   | 'manual'
-export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed'
+  | 'birthday'
+export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed' | 'expired'
 
 export interface ClientFollowUp {
   id: string
@@ -296,6 +312,7 @@ export interface ClientFollowUp {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   createdAt: Date
   updatedAt: Date
   reviewedAt: Date | null
@@ -359,6 +376,7 @@ export interface RetentionItem {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   lastVisitDate: string | null
   lastServiceName: string | null
   completedCount: number

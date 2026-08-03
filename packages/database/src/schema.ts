@@ -7,6 +7,7 @@ import {
   integer,
   serial,
   smallint,
+  date,
   timestamp,
   jsonb,
   index,
@@ -16,6 +17,7 @@ import {
 } from 'drizzle-orm/pg-core'
 
 import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
+import type { ClientAcquisitionSource } from '@repo/salon-core/types'
 import type {
   SupportMessageAuthorKind,
   SupportTicketCategory,
@@ -1130,6 +1132,9 @@ export const clients = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     isPlaceholder: boolean('is_placeholder').notNull().default(false),
+    birthDate: date('birth_date', { mode: 'string' }),
+    acquisitionSource:
+      text('acquisition_source').$type<ClientAcquisitionSource>(),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -1448,12 +1453,15 @@ export const clientFollowUps = pgTable(
       .references(() => clients.id, { onDelete: 'cascade' }),
     reason: text('reason')
       .notNull()
-      .$type<'inactive' | 'no-show' | 'new-client' | 'vip' | 'manual'>(),
+      .$type<
+        'inactive' | 'no-show' | 'new-client' | 'vip' | 'manual' | 'birthday'
+      >(),
     status: text('status')
       .notNull()
-      .$type<'open' | 'reviewed' | 'dismissed'>()
+      .$type<'open' | 'reviewed' | 'dismissed' | 'expired'>()
       .default('open'),
     dueDate: text('due_date').notNull(),
+    occurrenceYear: smallint('occurrence_year'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -1463,11 +1471,12 @@ export const clientFollowUps = pgTable(
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex('client_follow_ups_salon_id_client_id_reason_unique').on(
-      t.salonId,
-      t.clientId,
-      t.reason,
-    ),
+    uniqueIndex('client_follow_ups_non_birthday_unique')
+      .on(t.salonId, t.clientId, t.reason)
+      .where(sql`${t.reason} <> 'birthday'`),
+    uniqueIndex('client_follow_ups_birthday_occurrence_unique')
+      .on(t.salonId, t.clientId, t.reason, t.occurrenceYear, t.dueDate)
+      .where(sql`${t.reason} = 'birthday'`),
     index('client_follow_ups_salon_id_status_due_idx').on(
       t.salonId,
       t.status,
@@ -1490,7 +1499,7 @@ export const clientFollowUpMessageDeliveries = pgTable(
     clientId: uuid('client_id')
       .notNull()
       .references(() => clients.id, { onDelete: 'cascade' }),
-    provider: text('provider').notNull().$type<'bale_safir'>(),
+    provider: text('provider').notNull().$type<'bale_safir' | 'sms_ir'>(),
     phone: text('phone').notNull(),
     requestId: text('request_id').notNull(),
     status: text('status').notNull().$type<'sent' | 'failed' | 'skipped'>(),
@@ -1600,12 +1609,14 @@ export const notifications = pgTable(
         | 'appointment_request_approved'
         | 'appointment_request_rejected'
         | 'appointment_reminder'
+        | 'birthday_follow_up'
         | 'support_reply'
       >(),
     title: text('title').notNull(),
     body: text('body').notNull(),
     route: text('route').notNull(),
     data: jsonb('data').notNull().$type<Record<string, unknown>>().default({}),
+    sourceKey: text('source_key'),
     readAt: timestamp('read_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -1622,6 +1633,9 @@ export const notifications = pgTable(
       t.userId,
       t.readAt,
     ),
+    uniqueIndex('notifications_user_type_source_key_unique')
+      .on(t.userId, t.type, t.sourceKey)
+      .where(sql`${t.sourceKey} is not null`),
   ],
 )
 

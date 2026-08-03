@@ -99,6 +99,8 @@ export function rowToClient(row: typeof clients.$inferSelect): Client {
     name: row.name,
     phone: row.phone,
     isPlaceholder: row.isPlaceholder,
+    birthDate: row.birthDate,
+    acquisitionSource: row.acquisitionSource,
     notes: row.notes ?? undefined,
     createdAt: row.createdAt,
   }
@@ -125,6 +127,7 @@ export function rowToClientFollowUp(
     reason: row.reason,
     status: row.status,
     dueDate: row.dueDate,
+    occurrenceYear: row.occurrenceYear,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     reviewedAt: row.reviewedAt,

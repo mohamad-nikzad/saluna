@@ -88,6 +88,7 @@ import { getTodayRoute } from './routes/today'
 import {
   listRetentionRoute,
   sendRetentionBaleMessageRoute,
+  sendRetentionSmsMessageRoute,
   updateRetentionRoute,
 } from './routes/retention'
 import {
@@ -198,6 +199,8 @@ const stubClient = {
   name: 'stub',
   phone: null,
   isPlaceholder: false,
+  birthDate: null,
+  acquisitionSource: null,
   createdAt: new Date().toISOString(),
 }
 
@@ -208,6 +211,7 @@ const stubFollowUp = {
   reason: 'manual' as const,
   status: 'open' as const,
   dueDate: '2026-01-01',
+  occurrenceYear: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   reviewedAt: null,
@@ -1124,6 +1128,28 @@ const sendRetentionBaleMessageStub: RouteHandler<
     200,
   )
 
+const sendRetentionSmsMessageStub: RouteHandler<
+  typeof sendRetentionSmsMessageRoute
+> = (c) =>
+  c.json(
+    {
+      delivery: {
+        id: 'stub',
+        provider: 'sms_ir' as const,
+        status: 'sent' as const,
+        providerMessageId: null,
+        error: null,
+      },
+      result: {
+        status: 'sent' as const,
+        provider: 'sms_ir' as const,
+        providerMessageId: null,
+        error: null,
+      },
+    },
+    200,
+  )
+
 const stubMessagingAccount = {
   id: 'stub',
   provider: 'telegram' as const,
@@ -1652,7 +1678,8 @@ export const contractApp = new OpenAPIHono()
     new OpenAPIHono()
       .openapi(listRetentionRoute, listRetentionStub)
       .openapi(updateRetentionRoute, updateRetentionStub)
-      .openapi(sendRetentionBaleMessageRoute, sendRetentionBaleMessageStub),
+      .openapi(sendRetentionBaleMessageRoute, sendRetentionBaleMessageStub)
+      .openapi(sendRetentionSmsMessageRoute, sendRetentionSmsMessageStub),
   )
   .route(
     '/api/v1/messaging',

@@ -596,6 +596,16 @@ export type Client = {
   name: string
   phone: string | null
   isPlaceholder: boolean
+  birthDate?: string | null
+  acquisitionSource?:
+    | 'instagram'
+    | 'website'
+    | 'google'
+    | 'referral'
+    | 'walk_in'
+    | 'other'
+    | 'unknown'
+    | null
   notes?: string
   createdAt: string | string
   tags?: Array<ClientTag>
@@ -618,6 +628,21 @@ export type ClientCreateRequest = {
   name: string
   phone: string
   notes?: string
+  /**
+   * Optional complete Jalali birth date entered by the manager
+   */
+  birthDate?: string | null
+  /**
+   * How the client first heard about the salon
+   */
+  acquisitionSource?:
+    | 'instagram'
+    | 'website'
+    | 'google'
+    | 'referral'
+    | 'walk_in'
+    | 'other'
+    | 'unknown'
   tags?: Array<string>
   /**
    * Optional client-provided UUID for offline-first sync
@@ -646,6 +671,21 @@ export type ClientUpdateRequest = {
   name?: string
   phone?: string
   notes?: string
+  /**
+   * Optional complete Jalali birth date entered by the manager
+   */
+  birthDate?: string | null
+  /**
+   * How the client first heard about the salon
+   */
+  acquisitionSource?:
+    | 'instagram'
+    | 'website'
+    | 'google'
+    | 'referral'
+    | 'walk_in'
+    | 'other'
+    | 'unknown'
   tags?: Array<string>
 }
 
@@ -728,6 +768,7 @@ export type ClientFollowUp = {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   createdAt: string | string
   updatedAt: string | string
   reviewedAt: string | string | unknown
@@ -739,8 +780,9 @@ export type FollowUpReason =
   | 'new-client'
   | 'vip'
   | 'manual'
+  | 'birthday'
 
-export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed'
+export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed' | 'expired'
 
 export type ClientFollowUpResponse = {
   followUp: ClientFollowUp
@@ -1798,6 +1840,7 @@ export type RetentionItem = {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   lastVisitDate: string | null
   lastServiceName: string | null
   completedCount: number
@@ -1821,7 +1864,7 @@ export type RetentionBaleMessageResponse = {
 
 export type RetentionMessageDelivery = {
   id: string
-  provider: 'bale_safir'
+  provider: 'bale_safir' | 'sms_ir'
   status: 'sent' | 'failed' | 'skipped'
   providerMessageId: string | null
   error: string | null
@@ -1836,6 +1879,22 @@ export type RetentionBaleMessageResult = {
 
 export type RetentionBaleMessageRequest = {
   retry?: boolean
+  message?: string
+}
+
+export type RetentionSmsMessageResponse = {
+  delivery: RetentionMessageDelivery
+  result: {
+    status: 'sent' | 'failed' | 'skipped'
+    provider?: 'sms_ir' | null
+    providerMessageId?: string | null
+    error?: string | null
+  }
+}
+
+export type RetentionSmsMessageRequest = {
+  retry?: boolean
+  message: string
 }
 
 export type ListMessagingAccountsResponse = {
@@ -1904,6 +1963,7 @@ export type NotificationType =
   | 'appointment_request_approved'
   | 'appointment_request_rejected'
   | 'appointment_reminder'
+  | 'birthday_follow_up'
 
 export type MarkAllNotificationsReadResponse = {
   success: true
@@ -7005,6 +7065,51 @@ export type PostApiV1RetentionByIdBaleMessageResponses = {
 
 export type PostApiV1RetentionByIdBaleMessageResponse =
   PostApiV1RetentionByIdBaleMessageResponses[keyof PostApiV1RetentionByIdBaleMessageResponses]
+
+export type PostApiV1RetentionByIdSmsMessageData = {
+  body: RetentionSmsMessageRequest
+  path: {
+    id: string
+  }
+  query?: never
+  url: '/api/v1/retention/{id}/sms-message'
+}
+
+export type PostApiV1RetentionByIdSmsMessageErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_settings permission
+   */
+  403: ApiError
+  /**
+   * Follow-up not found
+   */
+  404: ApiError
+  /**
+   * Follow-up not open, message already sent, or retry required
+   */
+  409: ApiError
+}
+
+export type PostApiV1RetentionByIdSmsMessageError =
+  PostApiV1RetentionByIdSmsMessageErrors[keyof PostApiV1RetentionByIdSmsMessageErrors]
+
+export type PostApiV1RetentionByIdSmsMessageResponses = {
+  /**
+   * SMS delivery result
+   */
+  200: RetentionSmsMessageResponse
+}
+
+export type PostApiV1RetentionByIdSmsMessageResponse =
+  PostApiV1RetentionByIdSmsMessageResponses[keyof PostApiV1RetentionByIdSmsMessageResponses]
 
 export type GetApiV1MessagingAccountsData = {
   body?: never

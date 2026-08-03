@@ -1,6 +1,6 @@
 {
-  "id": "8e9841d5-2e28-4852-a50e-c57f5c6f8ed0",
-  "prevId": "43489b3b-257b-431c-aaad-7f6db36421ac",
+  "id": "35ca31f9-1254-43a3-a7c3-cfaa84c90f17",
+  "prevId": "8e6f4df2-205e-41b5-ad45-5d06cc68cae0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -112,8 +112,12 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -295,8 +299,12 @@
           "name": "admin_audit_events_actor_user_id_user_id_fk",
           "tableFrom": "admin_audit_events",
           "tableTo": "user",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -304,8 +312,12 @@
           "name": "admin_audit_events_salon_id_organization_id_fk",
           "tableFrom": "admin_audit_events",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -414,8 +426,12 @@
           "name": "admin_internal_notes_author_user_id_user_id_fk",
           "tableFrom": "admin_internal_notes",
           "tableTo": "user",
-          "columnsFrom": ["author_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -558,8 +574,12 @@
           "name": "appointment_addon_lines_salon_id_organization_id_fk",
           "tableFrom": "appointment_addon_lines",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -567,8 +587,12 @@
           "name": "appointment_addon_lines_appointment_id_appointments_id_fk",
           "tableFrom": "appointment_addon_lines",
           "tableTo": "appointments",
-          "columnsFrom": ["appointment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "appointment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -576,8 +600,12 @@
           "name": "appointment_addon_lines_service_addon_id_service_addons_id_fk",
           "tableFrom": "appointment_addon_lines",
           "tableTo": "service_addons",
-          "columnsFrom": ["service_addon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_addon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -611,6 +639,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "client_id": {
+          "name": "client_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timing_mode": {
+          "name": "timing_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'exact'"
+        },
         "staff_id": {
           "name": "staff_id",
           "type": "uuid",
@@ -621,19 +662,31 @@
           "name": "requested_date",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "requested_start_time": {
           "name": "requested_start_time",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "requested_end_time": {
           "name": "requested_end_time",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "acceptable_dates": {
+          "name": "acceptable_dates",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_preference": {
+          "name": "time_preference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "customer_name": {
           "name": "customer_name",
@@ -807,8 +860,12 @@
           "name": "appointment_requests_salon_id_organization_id_fk",
           "tableFrom": "appointment_requests",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -816,8 +873,25 @@
           "name": "appointment_requests_service_id_services_id_fk",
           "tableFrom": "appointment_requests",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "appointment_requests_client_id_clients_id_fk": {
+          "name": "appointment_requests_client_id_clients_id_fk",
+          "tableFrom": "appointment_requests",
+          "tableTo": "clients",
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -825,8 +899,12 @@
           "name": "appointment_requests_reviewed_by_user_id_user_id_fk",
           "tableFrom": "appointment_requests",
           "tableTo": "user",
-          "columnsFrom": ["reviewed_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reviewed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -834,8 +912,12 @@
           "name": "appointment_requests_appointment_id_appointments_id_fk",
           "tableFrom": "appointment_requests",
           "tableTo": "appointments",
-          "columnsFrom": ["appointment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "appointment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -843,7 +925,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "appointment_requests_timing_mode_check": {
+          "name": "appointment_requests_timing_mode_check",
+          "value": "(\n        (\"appointment_requests\".\"timing_mode\" = 'exact' and \"appointment_requests\".\"requested_date\" is not null and \"appointment_requests\".\"requested_start_time\" is not null and \"appointment_requests\".\"requested_end_time\" is not null and \"appointment_requests\".\"acceptable_dates\" is null and \"appointment_requests\".\"time_preference\" is null)\n        or\n        (\"appointment_requests\".\"timing_mode\" = 'flexible' and \"appointment_requests\".\"client_id\" is not null and \"appointment_requests\".\"requested_date\" is null and \"appointment_requests\".\"requested_start_time\" is null and \"appointment_requests\".\"requested_end_time\" is null and cardinality(\"appointment_requests\".\"acceptable_dates\") > 0 and \"appointment_requests\".\"time_preference\" is not null)\n      )"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.appointments": {
@@ -1092,8 +1179,12 @@
           "name": "appointments_salon_id_organization_id_fk",
           "tableFrom": "appointments",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1101,8 +1192,12 @@
           "name": "appointments_client_id_clients_id_fk",
           "tableFrom": "appointments",
           "tableTo": "clients",
-          "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1110,8 +1205,12 @@
           "name": "appointments_service_id_services_id_fk",
           "tableFrom": "appointments",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1119,8 +1218,12 @@
           "name": "appointments_created_by_user_id_user_id_fk",
           "tableFrom": "appointments",
           "tableTo": "user",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1198,8 +1301,12 @@
           "name": "business_settings_salon_id_organization_id_fk",
           "tableFrom": "business_settings",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1474,8 +1581,12 @@
           "name": "client_follow_up_message_deliveries_salon_id_organization_id_fk",
           "tableFrom": "client_follow_up_message_deliveries",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1483,8 +1594,12 @@
           "name": "client_follow_up_message_deliveries_follow_up_id_client_follow_ups_id_fk",
           "tableFrom": "client_follow_up_message_deliveries",
           "tableTo": "client_follow_ups",
-          "columnsFrom": ["follow_up_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "follow_up_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1492,8 +1607,12 @@
           "name": "client_follow_up_message_deliveries_client_id_clients_id_fk",
           "tableFrom": "client_follow_up_message_deliveries",
           "tableTo": "clients",
-          "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1501,8 +1620,12 @@
           "name": "client_follow_up_message_deliveries_sent_by_user_id_user_id_fk",
           "tableFrom": "client_follow_up_message_deliveries",
           "tableTo": "user",
-          "columnsFrom": ["sent_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "sent_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1555,6 +1678,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "occurrence_year": {
+          "name": "occurrence_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1577,8 +1706,8 @@
         }
       },
       "indexes": {
-        "client_follow_ups_salon_id_client_id_reason_unique": {
-          "name": "client_follow_ups_salon_id_client_id_reason_unique",
+        "client_follow_ups_non_birthday_unique": {
+          "name": "client_follow_ups_non_birthday_unique",
           "columns": [
             {
               "expression": "salon_id",
@@ -1600,6 +1729,47 @@
             }
           ],
           "isUnique": true,
+          "where": "\"client_follow_ups\".\"reason\" <> 'birthday'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "client_follow_ups_birthday_occurrence_unique": {
+          "name": "client_follow_ups_birthday_occurrence_unique",
+          "columns": [
+            {
+              "expression": "salon_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reason",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurrence_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "due_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"client_follow_ups\".\"reason\" = 'birthday'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1658,8 +1828,12 @@
           "name": "client_follow_ups_salon_id_organization_id_fk",
           "tableFrom": "client_follow_ups",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1667,8 +1841,12 @@
           "name": "client_follow_ups_client_id_clients_id_fk",
           "tableFrom": "client_follow_ups",
           "tableTo": "clients",
-          "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1798,8 +1976,12 @@
           "name": "client_tags_salon_id_organization_id_fk",
           "tableFrom": "client_tags",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1807,8 +1989,12 @@
           "name": "client_tags_client_id_clients_id_fk",
           "tableFrom": "client_tags",
           "tableTo": "clients",
-          "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1854,6 +2040,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acquisition_source": {
+          "name": "acquisition_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "notes": {
           "name": "notes",
@@ -1918,8 +2116,12 @@
           "name": "clients_salon_id_organization_id_fk",
           "tableFrom": "clients",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2021,8 +2223,12 @@
           "name": "commission_agreements_salon_id_organization_id_fk",
           "tableFrom": "commission_agreements",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2030,8 +2236,12 @@
           "name": "commission_agreements_staff_profile_id_staff_profiles_id_fk",
           "tableFrom": "commission_agreements",
           "tableTo": "staff_profiles",
-          "columnsFrom": ["staff_profile_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "staff_profile_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2140,8 +2350,12 @@
           "name": "invitation_organization_id_organization_id_fk",
           "tableFrom": "invitation",
           "tableTo": "organization",
-          "columnsFrom": ["organization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2149,8 +2363,12 @@
           "name": "invitation_inviter_id_user_id_fk",
           "tableFrom": "invitation",
           "tableTo": "user",
-          "columnsFrom": ["inviter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2267,8 +2485,12 @@
           "name": "locations_salon_id_organization_id_fk",
           "tableFrom": "locations",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2354,8 +2576,12 @@
           "name": "member_organization_id_organization_id_fk",
           "tableFrom": "member",
           "tableTo": "organization",
-          "columnsFrom": ["organization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2363,8 +2589,12 @@
           "name": "member_user_id_user_id_fk",
           "tableFrom": "member",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2452,8 +2682,12 @@
           "name": "messaging_link_tokens_user_id_user_id_fk",
           "tableFrom": "messaging_link_tokens",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2461,8 +2695,12 @@
           "name": "messaging_link_tokens_salon_id_organization_id_fk",
           "tableFrom": "messaging_link_tokens",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2577,8 +2815,12 @@
           "name": "notification_deliveries_notification_id_notifications_id_fk",
           "tableFrom": "notification_deliveries",
           "tableTo": "notifications",
-          "columnsFrom": ["notification_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "notification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2663,8 +2905,12 @@
           "name": "notification_preferences_salon_id_organization_id_fk",
           "tableFrom": "notification_preferences",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2672,8 +2918,12 @@
           "name": "notification_preferences_user_id_user_id_fk",
           "tableFrom": "notification_preferences",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2681,7 +2931,10 @@
       "compositePrimaryKeys": {
         "notification_preferences_salon_id_user_id_pk": {
           "name": "notification_preferences_salon_id_user_id_pk",
-          "columns": ["salon_id", "user_id"]
+          "columns": [
+            "salon_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -2742,6 +2995,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'::jsonb"
+        },
+        "source_key": {
+          "name": "source_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "read_at": {
           "name": "read_at",
@@ -2811,6 +3070,34 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "notifications_user_type_source_key_unique": {
+          "name": "notifications_user_type_source_key_unique",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"notifications\".\"source_key\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -2818,8 +3105,12 @@
           "name": "notifications_salon_id_organization_id_fk",
           "tableFrom": "notifications",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2827,8 +3118,12 @@
           "name": "notifications_user_id_user_id_fk",
           "tableFrom": "notifications",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2889,7 +3184,9 @@
         "organization_slug_unique": {
           "name": "organization_slug_unique",
           "nullsNotDistinct": false,
-          "columns": ["slug"]
+          "columns": [
+            "slug"
+          ]
         }
       },
       "policies": {},
@@ -3002,8 +3299,12 @@
           "name": "platform_admins_user_id_user_id_fk",
           "tableFrom": "platform_admins",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3011,8 +3312,12 @@
           "name": "platform_admins_created_by_user_id_user_id_fk",
           "tableFrom": "platform_admins",
           "tableTo": "user",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3020,8 +3325,12 @@
           "name": "platform_admins_revoked_by_user_id_user_id_fk",
           "tableFrom": "platform_admins",
           "tableTo": "user",
-          "columnsFrom": ["revoked_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "revoked_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3113,8 +3422,12 @@
           "name": "preset_applications_salon_id_organization_id_fk",
           "tableFrom": "preset_applications",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3122,8 +3435,12 @@
           "name": "preset_applications_preset_id_catalog_presets_id_fk",
           "tableFrom": "preset_applications",
           "tableTo": "catalog_presets",
-          "columnsFrom": ["preset_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "preset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3244,8 +3561,12 @@
           "name": "push_subscriptions_salon_id_organization_id_fk",
           "tableFrom": "push_subscriptions",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3253,8 +3574,12 @@
           "name": "push_subscriptions_user_id_user_id_fk",
           "tableFrom": "push_subscriptions",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3264,7 +3589,9 @@
         "push_subscriptions_endpoint_unique": {
           "name": "push_subscriptions_endpoint_unique",
           "nullsNotDistinct": false,
-          "columns": ["endpoint"]
+          "columns": [
+            "endpoint"
+          ]
         }
       },
       "policies": {},
@@ -3404,8 +3731,12 @@
           "name": "resources_salon_id_organization_id_fk",
           "tableFrom": "resources",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3413,13 +3744,71 @@
           "name": "resources_location_id_locations_id_fk",
           "tableFrom": "resources",
           "tableTo": "locations",
-          "columnsFrom": ["location_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.salon_closure_dates": {
+      "name": "salon_closure_dates",
+      "schema": "",
+      "columns": {
+        "salon_id": {
+          "name": "salon_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "salon_closure_dates_salon_id_organization_id_fk": {
+          "name": "salon_closure_dates_salon_id_organization_id_fk",
+          "tableFrom": "salon_closure_dates",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "salon_closure_dates_salon_id_date_pk": {
+          "name": "salon_closure_dates_salon_id_date_pk",
+          "columns": [
+            "salon_id",
+            "date"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -3518,8 +3907,12 @@
           "name": "salon_handoff_salon_id_organization_id_fk",
           "tableFrom": "salon_handoff",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3527,8 +3920,12 @@
           "name": "salon_handoff_created_by_user_id_user_id_fk",
           "tableFrom": "salon_handoff",
           "tableTo": "user",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3632,8 +4029,12 @@
           "name": "salon_member_user_id_user_id_fk",
           "tableFrom": "salon_member",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3641,8 +4042,12 @@
           "name": "salon_member_organization_id_organization_id_fk",
           "tableFrom": "salon_member",
           "tableTo": "organization",
-          "columnsFrom": ["organization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3708,8 +4113,12 @@
           "name": "salon_onboarding_salon_id_organization_id_fk",
           "tableFrom": "salon_onboarding",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3759,6 +4168,24 @@
         },
         "phone": {
           "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "province": {
+          "name": "province",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "neighborhood": {
+          "name": "neighborhood",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3818,8 +4245,12 @@
           "name": "salon_profile_organization_id_organization_id_fk",
           "tableFrom": "salon_profile",
           "tableTo": "organization",
-          "columnsFrom": ["organization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3901,8 +4332,12 @@
           "name": "salon_public_settings_salon_id_organization_id_fk",
           "tableFrom": "salon_public_settings",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4013,8 +4448,12 @@
           "name": "service_addon_category_scopes_salon_id_organization_id_fk",
           "tableFrom": "service_addon_category_scopes",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4022,8 +4461,12 @@
           "name": "service_addon_category_scopes_addon_id_service_addons_id_fk",
           "tableFrom": "service_addon_category_scopes",
           "tableTo": "service_addons",
-          "columnsFrom": ["addon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "addon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4031,8 +4474,12 @@
           "name": "service_addon_category_scopes_scope_id_service_categories_id_fk",
           "tableFrom": "service_addon_category_scopes",
           "tableTo": "service_categories",
-          "columnsFrom": ["scope_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scope_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4143,8 +4590,12 @@
           "name": "service_addon_family_scopes_salon_id_organization_id_fk",
           "tableFrom": "service_addon_family_scopes",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4152,8 +4603,12 @@
           "name": "service_addon_family_scopes_addon_id_service_addons_id_fk",
           "tableFrom": "service_addon_family_scopes",
           "tableTo": "service_addons",
-          "columnsFrom": ["addon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "addon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4161,8 +4616,12 @@
           "name": "service_addon_family_scopes_scope_id_service_families_id_fk",
           "tableFrom": "service_addon_family_scopes",
           "tableTo": "service_families",
-          "columnsFrom": ["scope_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scope_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4298,8 +4757,12 @@
           "name": "service_addon_scopes_salon_id_organization_id_fk",
           "tableFrom": "service_addon_scopes",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4307,8 +4770,12 @@
           "name": "service_addon_scopes_addon_id_service_addons_id_fk",
           "tableFrom": "service_addon_scopes",
           "tableTo": "service_addons",
-          "columnsFrom": ["addon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "addon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4419,8 +4886,12 @@
           "name": "service_addon_service_scopes_salon_id_organization_id_fk",
           "tableFrom": "service_addon_service_scopes",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4428,8 +4899,12 @@
           "name": "service_addon_service_scopes_addon_id_service_addons_id_fk",
           "tableFrom": "service_addon_service_scopes",
           "tableTo": "service_addons",
-          "columnsFrom": ["addon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "addon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4437,8 +4912,12 @@
           "name": "service_addon_service_scopes_scope_id_services_id_fk",
           "tableFrom": "service_addon_service_scopes",
           "tableTo": "services",
-          "columnsFrom": ["scope_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scope_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4582,8 +5061,12 @@
           "name": "service_addons_salon_id_organization_id_fk",
           "tableFrom": "service_addons",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4694,8 +5177,12 @@
           "name": "service_catalog_migration_issues_salon_id_organization_id_fk",
           "tableFrom": "service_catalog_migration_issues",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4703,8 +5190,12 @@
           "name": "service_catalog_migration_issues_legacy_service_id_services_id_fk",
           "tableFrom": "service_catalog_migration_issues",
           "tableTo": "services",
-          "columnsFrom": ["legacy_service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "legacy_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4809,8 +5300,12 @@
           "name": "service_categories_salon_id_organization_id_fk",
           "tableFrom": "service_categories",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4942,8 +5437,12 @@
           "name": "service_combo_components_salon_id_organization_id_fk",
           "tableFrom": "service_combo_components",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4951,8 +5450,12 @@
           "name": "service_combo_components_combo_service_id_services_id_fk",
           "tableFrom": "service_combo_components",
           "tableTo": "services",
-          "columnsFrom": ["combo_service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "combo_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4960,8 +5463,12 @@
           "name": "service_combo_components_component_service_id_services_id_fk",
           "tableFrom": "service_combo_components",
           "tableTo": "services",
-          "columnsFrom": ["component_service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "component_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5099,8 +5606,12 @@
           "name": "service_families_salon_id_organization_id_fk",
           "tableFrom": "service_families",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5108,8 +5619,12 @@
           "name": "service_families_category_id_service_categories_id_fk",
           "tableFrom": "service_families",
           "tableTo": "service_categories",
-          "columnsFrom": ["category_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5309,8 +5824,12 @@
           "name": "service_package_bookings_salon_id_organization_id_fk",
           "tableFrom": "service_package_bookings",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5318,8 +5837,12 @@
           "name": "service_package_bookings_package_id_service_packages_id_fk",
           "tableFrom": "service_package_bookings",
           "tableTo": "service_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5327,8 +5850,12 @@
           "name": "service_package_bookings_client_id_clients_id_fk",
           "tableFrom": "service_package_bookings",
           "tableTo": "clients",
-          "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5336,8 +5863,12 @@
           "name": "service_package_bookings_created_by_user_id_user_id_fk",
           "tableFrom": "service_package_bookings",
           "tableTo": "user",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5469,8 +6000,12 @@
           "name": "service_package_components_salon_id_organization_id_fk",
           "tableFrom": "service_package_components",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5478,8 +6013,12 @@
           "name": "service_package_components_package_id_service_packages_id_fk",
           "tableFrom": "service_package_components",
           "tableTo": "service_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5487,8 +6026,12 @@
           "name": "service_package_components_service_id_services_id_fk",
           "tableFrom": "service_package_components",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5665,8 +6208,12 @@
           "name": "service_package_tasks_salon_id_organization_id_fk",
           "tableFrom": "service_package_tasks",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5674,8 +6221,12 @@
           "name": "service_package_tasks_package_booking_id_service_package_bookings_id_fk",
           "tableFrom": "service_package_tasks",
           "tableTo": "service_package_bookings",
-          "columnsFrom": ["package_booking_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_booking_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5683,8 +6234,12 @@
           "name": "service_package_tasks_package_component_id_service_package_components_id_fk",
           "tableFrom": "service_package_tasks",
           "tableTo": "service_package_components",
-          "columnsFrom": ["package_component_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_component_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5692,8 +6247,12 @@
           "name": "service_package_tasks_service_id_services_id_fk",
           "tableFrom": "service_package_tasks",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5701,8 +6260,12 @@
           "name": "service_package_tasks_appointment_id_appointments_id_fk",
           "tableFrom": "service_package_tasks",
           "tableTo": "appointments",
-          "columnsFrom": ["appointment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "appointment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5886,8 +6449,12 @@
           "name": "service_packages_salon_id_organization_id_fk",
           "tableFrom": "service_packages",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5895,8 +6462,12 @@
           "name": "service_packages_category_id_service_categories_id_fk",
           "tableFrom": "service_packages",
           "tableTo": "service_categories",
-          "columnsFrom": ["category_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -5904,8 +6475,12 @@
           "name": "service_packages_source_legacy_service_id_services_id_fk",
           "tableFrom": "service_packages",
           "tableTo": "services",
-          "columnsFrom": ["source_legacy_service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_legacy_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -5953,8 +6528,12 @@
           "name": "service_public_visibility_salon_id_organization_id_fk",
           "tableFrom": "service_public_visibility",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5962,8 +6541,12 @@
           "name": "service_public_visibility_service_id_services_id_fk",
           "tableFrom": "service_public_visibility",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5971,7 +6554,10 @@
       "compositePrimaryKeys": {
         "service_public_visibility_salon_id_service_id_pk": {
           "name": "service_public_visibility_salon_id_service_id_pk",
-          "columns": ["salon_id", "service_id"]
+          "columns": [
+            "salon_id",
+            "service_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -6151,8 +6737,12 @@
           "name": "services_salon_id_organization_id_fk",
           "tableFrom": "services",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6160,8 +6750,12 @@
           "name": "services_category_id_service_categories_id_fk",
           "tableFrom": "services",
           "tableTo": "service_categories",
-          "columnsFrom": ["category_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6169,8 +6763,12 @@
           "name": "services_family_id_service_families_id_fk",
           "tableFrom": "services",
           "tableTo": "service_families",
-          "columnsFrom": ["family_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "family_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6265,8 +6863,12 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6276,7 +6878,9 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
@@ -6394,8 +6998,12 @@
           "name": "staff_commissions_salon_id_organization_id_fk",
           "tableFrom": "staff_commissions",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6403,8 +7011,12 @@
           "name": "staff_commissions_staff_profile_id_staff_profiles_id_fk",
           "tableFrom": "staff_commissions",
           "tableTo": "staff_profiles",
-          "columnsFrom": ["staff_profile_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "staff_profile_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6412,8 +7024,12 @@
           "name": "staff_commissions_appointment_id_appointments_id_fk",
           "tableFrom": "staff_commissions",
           "tableTo": "appointments",
-          "columnsFrom": ["appointment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "appointment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6637,8 +7253,12 @@
           "name": "staff_invites_salon_id_organization_id_fk",
           "tableFrom": "staff_invites",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6646,8 +7266,12 @@
           "name": "staff_invites_staff_profile_id_staff_profiles_id_fk",
           "tableFrom": "staff_invites",
           "tableTo": "staff_profiles",
-          "columnsFrom": ["staff_profile_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "staff_profile_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6655,8 +7279,12 @@
           "name": "staff_invites_invited_by_user_id_user_id_fk",
           "tableFrom": "staff_invites",
           "tableTo": "user",
-          "columnsFrom": ["invited_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "invited_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6761,8 +7389,12 @@
           "name": "staff_package_capabilities_package_id_service_packages_id_fk",
           "tableFrom": "staff_package_capabilities",
           "tableTo": "service_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6770,8 +7402,12 @@
           "name": "staff_package_capabilities_salon_id_organization_id_fk",
           "tableFrom": "staff_package_capabilities",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6779,7 +7415,10 @@
       "compositePrimaryKeys": {
         "staff_package_capabilities_staff_id_package_id_pk": {
           "name": "staff_package_capabilities_staff_id_package_id_pk",
-          "columns": ["staff_id", "package_id"]
+          "columns": [
+            "staff_id",
+            "package_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -6924,8 +7563,12 @@
           "name": "staff_profile_accesses_salon_id_organization_id_fk",
           "tableFrom": "staff_profile_accesses",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6933,8 +7576,12 @@
           "name": "staff_profile_accesses_staff_profile_id_staff_profiles_id_fk",
           "tableFrom": "staff_profile_accesses",
           "tableTo": "staff_profiles",
-          "columnsFrom": ["staff_profile_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "staff_profile_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6942,8 +7589,12 @@
           "name": "staff_profile_accesses_user_id_user_id_fk",
           "tableFrom": "staff_profile_accesses",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6951,8 +7602,12 @@
           "name": "staff_profile_accesses_staff_invite_id_staff_invites_id_fk",
           "tableFrom": "staff_profile_accesses",
           "tableTo": "staff_invites",
-          "columnsFrom": ["staff_invite_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "staff_invite_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -7145,8 +7800,12 @@
           "name": "staff_profiles_salon_id_organization_id_fk",
           "tableFrom": "staff_profiles",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7154,8 +7813,12 @@
           "name": "staff_profiles_user_id_user_id_fk",
           "tableFrom": "staff_profiles",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -7311,8 +7974,12 @@
           "name": "staff_schedules_salon_id_organization_id_fk",
           "tableFrom": "staff_schedules",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7410,8 +8077,12 @@
           "name": "staff_services_service_id_services_id_fk",
           "tableFrom": "staff_services",
           "tableTo": "services",
-          "columnsFrom": ["service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7419,8 +8090,12 @@
           "name": "staff_services_salon_id_organization_id_fk",
           "tableFrom": "staff_services",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7428,7 +8103,10 @@
       "compositePrimaryKeys": {
         "staff_services_staff_user_id_service_id_pk": {
           "name": "staff_services_staff_user_id_service_id_pk",
-          "columns": ["staff_user_id", "service_id"]
+          "columns": [
+            "staff_user_id",
+            "service_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -7518,8 +8196,12 @@
           "name": "support_messages_ticket_id_support_tickets_id_fk",
           "tableFrom": "support_messages",
           "tableTo": "support_tickets",
-          "columnsFrom": ["ticket_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "ticket_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7527,8 +8209,12 @@
           "name": "support_messages_author_user_id_user_id_fk",
           "tableFrom": "support_messages",
           "tableTo": "user",
-          "columnsFrom": ["author_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7722,8 +8408,12 @@
           "name": "support_tickets_salon_id_organization_id_fk",
           "tableFrom": "support_tickets",
           "tableTo": "organization",
-          "columnsFrom": ["salon_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "salon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7731,8 +8421,12 @@
           "name": "support_tickets_submitted_by_user_id_user_id_fk",
           "tableFrom": "support_tickets",
           "tableTo": "user",
-          "columnsFrom": ["submitted_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "submitted_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7740,8 +8434,12 @@
           "name": "support_tickets_resolved_by_user_id_user_id_fk",
           "tableFrom": "support_tickets",
           "tableTo": "user",
-          "columnsFrom": ["resolved_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "resolved_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7851,12 +8549,16 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         },
         "user_username_unique": {
           "name": "user_username_unique",
           "nullsNotDistinct": false,
-          "columns": ["username"]
+          "columns": [
+            "username"
+          ]
         }
       },
       "policies": {},
@@ -7984,8 +8686,12 @@
           "name": "user_messaging_accounts_user_id_user_id_fk",
           "tableFrom": "user_messaging_accounts",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

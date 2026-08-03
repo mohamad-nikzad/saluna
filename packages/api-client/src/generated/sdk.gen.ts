@@ -407,6 +407,9 @@ import type {
   PostApiV1RetentionByIdBaleMessageData,
   PostApiV1RetentionByIdBaleMessageErrors,
   PostApiV1RetentionByIdBaleMessageResponses,
+  PostApiV1RetentionByIdSmsMessageData,
+  PostApiV1RetentionByIdSmsMessageErrors,
+  PostApiV1RetentionByIdSmsMessageResponses,
   PostApiV1ServiceAddonsData,
   PostApiV1ServiceAddonsErrors,
   PostApiV1ServiceAddonsResponses,
@@ -3034,6 +3037,33 @@ export const postApiV1RetentionByIdBaleMessage = <
     ThrowOnError
   >({
     url: '/api/v1/retention/{id}/bale-message',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Send birthday retention SMS
+ *
+ * Sends a manager-confirmed SMS for an open Birthday Follow-Up.
+ */
+export const postApiV1RetentionByIdSmsMessage = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1RetentionByIdSmsMessageData, ThrowOnError>,
+): RequestResult<
+  PostApiV1RetentionByIdSmsMessageResponses,
+  PostApiV1RetentionByIdSmsMessageErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1RetentionByIdSmsMessageResponses,
+    PostApiV1RetentionByIdSmsMessageErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/retention/{id}/sms-message',
     ...options,
     headers: {
       'Content-Type': 'application/json',

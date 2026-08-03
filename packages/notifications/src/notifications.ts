@@ -257,6 +257,7 @@ export const dispatchNotification = recordNotificationDelivery
 export {
   buildSmsDeliveryConfigFromEnv,
   initSmsDelivery,
+  normalizeIranianMobile,
   sendSmsBulk,
   sendSmsNotification,
   sendSmsOtp,

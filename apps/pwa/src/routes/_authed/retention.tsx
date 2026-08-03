@@ -22,6 +22,7 @@ import { PageHeaderBackButton } from '#/components/page-header-back-button'
 import { Button } from '@repo/ui/button'
 import { Card, CardContent } from '@repo/ui/card'
 import { Spinner } from '@repo/ui/spinner'
+import { Textarea } from '@repo/ui/textarea'
 import { displayPhone } from '@repo/salon-core/phone'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { FollowUpReason, RetentionItem } from '@repo/salon-core/types'
@@ -29,6 +30,7 @@ import type { FollowUpReason, RetentionItem } from '@repo/salon-core/types'
 import {
   retentionListQueryOptions,
   useSendRetentionBaleMessageMutation,
+  useSendRetentionSmsMessageMutation,
   useUpdateRetentionStatusMutation,
 } from '#/lib/retention-queries'
 
@@ -76,19 +78,25 @@ function reasonLabel(reason: FollowUpReason): string {
       return 'ارزشمند'
     case 'manual':
       return 'دستی'
+    case 'birthday':
+      return 'تولد'
     default:
       return reason
   }
 }
 
-function baleDeliveryLabel(status: 'sent' | 'failed' | 'skipped'): string {
+function deliveryLabel(
+  channel: 'bale' | 'sms',
+  status: 'sent' | 'failed' | 'skipped',
+): string {
+  const label = channel === 'sms' ? 'پیامک' : 'پیام بله'
   switch (status) {
     case 'sent':
-      return 'پیام بله ارسال شد'
+      return `${label} ارسال شد`
     case 'failed':
-      return 'ارسال بله ناموفق بود'
+      return `ارسال ${label} ناموفق بود`
     case 'skipped':
-      return 'ارسال بله انجام نشد'
+      return `ارسال ${label} انجام نشد`
     default:
       return status
   }
@@ -97,10 +105,13 @@ function baleDeliveryLabel(status: 'sent' | 'failed' | 'skipped'): string {
 function RetentionPage() {
   const navigate = useNavigate()
   const [confirmItem, setConfirmItem] = useState<RetentionItem | null>(null)
-  const [baleDeliveryById, setBaleDeliveryById] = useState<
+  const [messageChannel, setMessageChannel] = useState<'bale' | 'sms'>('bale')
+  const [message, setMessage] = useState('')
+  const [deliveryById, setDeliveryById] = useState<
     Record<
       string,
       {
+        channel: 'bale' | 'sms'
         status: 'sent' | 'failed' | 'skipped'
         error?: string | null
       }
@@ -114,12 +125,26 @@ function RetentionPage() {
 
   const updateStatus = useUpdateRetentionStatusMutation()
   const sendBaleMessage = useSendRetentionBaleMessageMutation()
+  const sendSmsMessage = useSendRetentionSmsMessageMutation()
 
   const items = data.items as unknown as RetentionItem[]
   const busyId = updateStatus.isPending ? updateStatus.variables.id : null
   const baleBusyId = sendBaleMessage.isPending
     ? sendBaleMessage.variables.id
     : null
+  const smsBusyId = sendSmsMessage.isPending
+    ? sendSmsMessage.variables.id
+    : null
+
+  const openMessageDialog = (item: RetentionItem, channel: 'bale' | 'sms') => {
+    setConfirmItem(item)
+    setMessageChannel(channel)
+    setMessage(
+      item.reason === 'birthday'
+        ? `${item.client.name} عزیز، تولدتان مبارک! آرزومند سالی پر از شادی و سلامتی برای شما هستیم.`
+        : '',
+    )
+  }
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -163,20 +188,23 @@ function RetentionPage() {
                   {item.suggestedReason}
                 </p>
 
-                {baleDeliveryById[item.id] ? (
+                {deliveryById[item.id] ? (
                   <div
                     className={
-                      baleDeliveryById[item.id].status === 'sent'
+                      deliveryById[item.id].status === 'sent'
                         ? 'rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800'
                         : 'rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive'
                     }
                   >
                     <span className="font-medium">
-                      {baleDeliveryLabel(baleDeliveryById[item.id].status)}
+                      {deliveryLabel(
+                        deliveryById[item.id].channel,
+                        deliveryById[item.id].status,
+                      )}
                     </span>
-                    {baleDeliveryById[item.id].error ? (
+                    {deliveryById[item.id].error ? (
                       <span className="ms-1">
-                        {baleDeliveryById[item.id].error}
+                        {deliveryById[item.id].error}
                       </span>
                     ) : null}
                   </div>
@@ -233,14 +261,26 @@ function RetentionPage() {
                     className="touch-manipulation gap-1"
                     disabled={
                       baleBusyId === item.id ||
-                      baleDeliveryById[item.id]?.status === 'sent' ||
+                      deliveryById[item.id]?.status === 'sent' ||
                       !item.client.phone
                     }
-                    onClick={() => setConfirmItem(item)}
+                    onClick={() => openMessageDialog(item, 'bale')}
                   >
                     <Send className="h-3.5 w-3.5" />
                     پیام بله
                   </Button>
+                  {item.reason === 'birthday' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="touch-manipulation gap-1"
+                      disabled={smsBusyId === item.id || !item.client.phone}
+                      onClick={() => openMessageDialog(item, 'sms')}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      پیامک
+                    </Button>
+                  ) : null}
                   <Button
                     size="sm"
                     variant="secondary"
@@ -261,7 +301,7 @@ function RetentionPage() {
                     }
                   >
                     <Check className="h-3.5 w-3.5" />
-                    بررسی شد
+                    {item.reason === 'birthday' ? 'انجام شد' : 'بررسی شد'}
                   </Button>
                   <Button
                     size="sm"
@@ -298,54 +338,89 @@ function RetentionPage() {
       >
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader className="text-start">
-            <AlertDialogTitle>ارسال پیام بله؟</AlertDialogTitle>
+            <AlertDialogTitle>
+              {messageChannel === 'sms' ? 'ارسال پیامک؟' : 'ارسال پیام بله؟'}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-start">
               {confirmItem ? (
                 <>
-                  برای {confirmItem.client.name} یک پیام کوتاه پیگیری از طرف
-                  سالن ارسال می‌شود. این پیام در صف پیگیری ثبت می‌شود و ارسال
-                  خودکار دوره‌ای فعال نمی‌کند.
+                  برای {confirmItem.client.name} یک پیام کوتاه از طرف سالن ارسال
+                  می‌شود. ارسال خودکار دوره‌ای فعال نمی‌کند.
                 </>
               ) : null}
             </AlertDialogDescription>
+            {confirmItem?.reason === 'birthday' ? (
+              <Textarea
+                value={message}
+                maxLength={500}
+                rows={5}
+                aria-label="متن پیام تولد"
+                onChange={(event) => setMessage(event.target.value)}
+              />
+            ) : null}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={sendBaleMessage.isPending}>
+            <AlertDialogCancel
+              disabled={sendBaleMessage.isPending || sendSmsMessage.isPending}
+            >
               انصراف
             </AlertDialogCancel>
             <AlertDialogAction
-              disabled={!confirmItem || sendBaleMessage.isPending}
+              disabled={
+                !confirmItem ||
+                sendBaleMessage.isPending ||
+                sendSmsMessage.isPending ||
+                (confirmItem.reason === 'birthday' && !message.trim())
+              }
               onClick={(event) => {
                 event.preventDefault()
                 if (!confirmItem) return
-                sendBaleMessage.mutate(
-                  {
-                    id: confirmItem.id,
-                    retry:
-                      baleDeliveryById[confirmItem.id]?.status === 'failed',
+                const retry = deliveryById[confirmItem.id]?.status === 'failed'
+                const options = {
+                  onSuccess: (response: {
+                    delivery: {
+                      status: 'sent' | 'failed' | 'skipped'
+                      error: string | null
+                    }
+                  }) => {
+                    setDeliveryById((current) => ({
+                      ...current,
+                      [confirmItem.id]: {
+                        channel: messageChannel,
+                        status: response.delivery.status,
+                        error: response.delivery.error,
+                      },
+                    }))
                   },
-                  {
-                    onSuccess: (response) => {
-                      setBaleDeliveryById((current) => ({
-                        ...current,
-                        [confirmItem.id]: {
-                          status: response.delivery.status,
-                          error: response.delivery.error,
-                        },
-                      }))
-                    },
-                    onError: (error) => {
-                      setBaleDeliveryById((current) => ({
-                        ...current,
-                        [confirmItem.id]: {
-                          status: 'failed',
-                          error: error instanceof Error ? error.message : null,
-                        },
-                      }))
-                    },
-                    onSettled: () => setConfirmItem(null),
+                  onError: (error: unknown) => {
+                    setDeliveryById((current) => ({
+                      ...current,
+                      [confirmItem.id]: {
+                        channel: messageChannel,
+                        status: 'failed',
+                        error: error instanceof Error ? error.message : null,
+                      },
+                    }))
                   },
-                )
+                  onSettled: () => setConfirmItem(null),
+                }
+                if (messageChannel === 'sms') {
+                  sendSmsMessage.mutate(
+                    { id: confirmItem.id, message: message.trim(), retry },
+                    options,
+                  )
+                } else {
+                  sendBaleMessage.mutate(
+                    {
+                      id: confirmItem.id,
+                      retry,
+                      ...(confirmItem.reason === 'birthday'
+                        ? { message: message.trim() }
+                        : {}),
+                    },
+                    options,
+                  )
+                }
               }}
             >
               ارسال پیام

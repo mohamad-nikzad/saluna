@@ -5,6 +5,7 @@ import {
   clientCreateSchema,
   clientUpdateSchema,
 } from '@repo/salon-core/forms/client'
+import { CLIENT_ACQUISITION_SOURCES } from '@repo/salon-core/types'
 
 function bodyFromCoreSchema<T extends z.ZodType>(
   name: string,
@@ -38,6 +39,14 @@ export const clientCreateBodySchema = bodyFromCoreSchema(
       .string()
       .optional()
       .openapi({ example: 'ترجیح می‌دهد صبح‌ها بیاید' }),
+    birthDate: z.string().nullable().optional().openapi({
+      example: '1370/05/10',
+      description: 'Optional complete Jalali birth date entered by the manager',
+    }),
+    acquisitionSource: z.enum(CLIENT_ACQUISITION_SOURCES).optional().openapi({
+      example: 'instagram',
+      description: 'How the client first heard about the salon',
+    }),
     tags: z
       .array(z.string())
       .optional()
@@ -56,6 +65,14 @@ export const clientUpdateBodySchema = bodyFromCoreSchema(
     name: z.string().optional().openapi({ example: 'علی رضایی' }),
     phone: z.string().optional().openapi({ example: '09121234567' }),
     notes: z.string().optional(),
+    birthDate: z.string().nullable().optional().openapi({
+      example: '1370/05/10',
+      description: 'Complete Jalali birth date; null or empty clears it',
+    }),
+    acquisitionSource: z.enum(CLIENT_ACQUISITION_SOURCES).optional().openapi({
+      example: 'referral',
+      description: 'How the client first heard about the salon',
+    }),
     tags: z
       .array(z.string())
       .optional()
@@ -98,7 +115,7 @@ export const clientBulkSkippedSchema = z
   .openapi('ClientBulkCreateSkipped')
 
 export const followUpReasonSchema = z
-  .enum(['inactive', 'no-show', 'new-client', 'vip', 'manual'])
+  .enum(['inactive', 'no-show', 'new-client', 'vip', 'manual', 'birthday'])
   .openapi('FollowUpReason')
 
 export const followUpBodySchema = z
@@ -131,6 +148,8 @@ export const clientSchema = z
     name: z.string(),
     phone: z.string().nullable(),
     isPlaceholder: z.boolean(),
+    birthDate: z.string().nullable().optional(),
+    acquisitionSource: z.enum(CLIENT_ACQUISITION_SOURCES).nullable().optional(),
     notes: z.string().optional(),
     createdAt: isoDateTimeSchema,
     tags: z.array(clientTagSchema).optional(),
@@ -157,7 +176,7 @@ export const clientResponseSchema = z
   .openapi('ClientResponse')
 
 export const followUpStatusSchema = z
-  .enum(['open', 'reviewed', 'dismissed'])
+  .enum(['open', 'reviewed', 'dismissed', 'expired'])
   .openapi('FollowUpStatus')
 
 export const clientFollowUpSchema = z
@@ -168,6 +187,7 @@ export const clientFollowUpSchema = z
     reason: followUpReasonSchema,
     status: followUpStatusSchema,
     dueDate: z.string(),
+    occurrenceYear: z.number().int().nullable(),
     createdAt: isoDateTimeSchema,
     updatedAt: isoDateTimeSchema,
     reviewedAt: isoDateTimeSchema.nullable(),

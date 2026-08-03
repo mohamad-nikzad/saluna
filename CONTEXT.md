@@ -87,6 +87,14 @@ The appointment-owned total duration and price after applying the `BookedService
 A salon's customer record — name, phone, notes, tags — used for appointments, retention, and messaging. Persian UI: `مشتری`.
 _Avoid_: contact (phone address book), customer (public booking copy)
 
+**Client Birth Date**:
+An optional, complete Jalali calendar date—year, month, and day—recorded manually on a `Client`. It may be used to determine the age the Client reaches on an annual birthday; a month/day-only birthday is not a Client Birth Date. In a non-leap Jalali year, a birth date of ۳۰ اسفند recurs on ۲۹ اسفند.
+_Avoid_: Gregorian birth date, age (derived and changes over time)
+
+**Birthday Follow-Up**:
+A distinct annual `Client` follow-up for one Jalali birthday year. A daily check at 07:00 Salon-local time opens it seven days before the birthday; it remains actionable through seven days after the birthday and then expires if the manager has not handled or dismissed it. Each year's follow-up keeps its own status and outreach history.
+_Avoid_: reusable birthday reminder, reopening last year's follow-up
+
 A manager-recorded **AppointmentRequest** belongs to exactly one **Client**; a customer-recorded **AppointmentRequest** may remain unlinked until approval.
 
 For an **AppointmentRequest**, “next week” means the Saturday–Friday calendar week immediately following the current Salon-local week.
