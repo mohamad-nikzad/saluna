@@ -22,9 +22,8 @@ export function phoneLookupVariants(input: string): string[] {
   const canonical = canonicalSalonPhone(input)
   const variants = new Set([canonical])
   if (/^09\d{9}$/.test(canonical)) {
-    const rest = canonical.slice(2)
-    variants.add(`98${rest.slice(1)}`)
-    variants.add(`989${rest.slice(1)}`)
+    variants.add(canonical.slice(1))
+    variants.add(`98${canonical.slice(1)}`)
   }
   return [...variants]
 }
