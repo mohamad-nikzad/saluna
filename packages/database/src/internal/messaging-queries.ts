@@ -193,9 +193,6 @@ export async function consumeLinkTokenIfValid(
   return row ? rowToToken(row) : undefined
 }
 
-/** @deprecated Use {@link consumeLinkTokenIfValid}. */
-export const consumeLinkToken = consumeLinkTokenIfValid
-
 async function upsertAccountWithExecutor(
   executor: DbExecutor,
   input: UpsertAccountInput,
