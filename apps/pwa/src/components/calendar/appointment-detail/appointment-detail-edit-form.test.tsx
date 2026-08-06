@@ -81,7 +81,7 @@ describe('AppointmentDetailEditForm price window', () => {
         .disabled,
     ).toBe(true)
     expect(
-      screen.getByText('مهلت ۲۴ ساعته ویرایش مبلغ به پایان رسیده است.'),
+      screen.getByText('مهلت ۳۰ روزه ویرایش مبلغ به پایان رسیده است.'),
     ).toBeTruthy()
   })
 })

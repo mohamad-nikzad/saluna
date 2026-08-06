@@ -46,6 +46,6 @@ export function canEditAppointmentPrice(
   now: Date = new Date(),
 ): boolean {
   const deadline =
-    salonDateTimeInstant(date, endTime).getTime() + 24 * 60 * 60_000
+    salonDateTimeInstant(date, endTime).getTime() + 30 * 24 * 60 * 60_000
   return now.getTime() <= deadline
 }

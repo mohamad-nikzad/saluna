@@ -710,7 +710,7 @@ describe('appointments router', () => {
 
   it.each([
     ['before the scheduled end', '2026-06-01T06:29:00.000Z'],
-    ['at the 24-hour boundary', '2026-06-02T06:30:00.000Z'],
+    ['at the 30-day boundary', '2026-07-01T06:30:00.000Z'],
   ])('PATCH /:id allows a manager price change %s', async (_, now) => {
     vi.setSystemTime(now)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
@@ -749,8 +749,8 @@ describe('appointments router', () => {
     )
   })
 
-  it('PATCH /:id rejects a manager price change after the 24-hour boundary', async () => {
-    vi.setSystemTime('2026-06-02T06:30:00.001Z')
+  it('PATCH /:id rejects a manager price change after the 30-day boundary', async () => {
+    vi.setSystemTime('2026-07-01T06:30:00.001Z')
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
       staffId: 'u1',

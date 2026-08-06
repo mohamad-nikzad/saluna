@@ -348,7 +348,7 @@ export function AppointmentDetailEditForm({
           />
           {!priceEditable ? (
             <p className="text-xs text-muted-foreground">
-              مهلت ۲۴ ساعته ویرایش مبلغ به پایان رسیده است.
+              مهلت ۳۰ روزه ویرایش مبلغ به پایان رسیده است.
             </p>
           ) : null}
           {editErrors.finalPrice && (
