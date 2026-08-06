@@ -130,6 +130,73 @@ Bulk or single flow that turns owner-supplied VCF or CSV data, or `Device Contac
 
 ### Salon
 
+**Salon-Funded SaaS**:
+Saluna's commercial model: the `Salon Owner` pays Saluna for software and related services, while the salon retains its relationship with each `Client`. Customer-facing Saluna features act on behalf of the salon; Saluna is not a consumer marketplace, lead broker, or advertising network, and its core revenue does not depend on taking a share of salon transactions.
+_Avoid_: marketplace, consumer platform
+
+**Trial**:
+A verified `Salon Owner`'s one-time, 30-day period of full commercial access, applied to the first Salon they activate. Preparing a `Setup Salon` does not consume Trial time, and activating another Salon does not grant another Trial. When an unpaid Trial ends, the Salon keeps read access to its data but cannot perform ordinary operational writes until it pays. The billing-launch transition for already-active Salons is a one-time exception.
+_Avoid_: free plan, freemium tier
+
+**Salon Subscription**:
+A paid term that grants exactly one Salon commercial access to Saluna. Public Salon Subscription tiers differ by their maximum number of active `Staff Profiles`, not by login identities, Appointments, Clients, revenue, or access to existing core product features. Subscription limits and SMS balances are not pooled across Salons.
+_Avoid_: per-user plan, feature tier
+
+**Staff Profile Limit**:
+The maximum active `Staff Profiles` permitted by a Salon Subscription. Creating or reactivating a profile cannot exceed the limit. A downgrade cannot take effect until the manager deactivates enough profiles; Saluna never automatically deactivates or deletes them.
+_Avoid_: user limit, automatic staff removal
+
+**Subscription Purchase**:
+One paid Salon Subscription term with an immutable snapshot of its price and limits. A renewal is a new Subscription Purchase using the currently published offer; buying once does not grant lifetime pricing.
+_Avoid_: lifetime price, grandfathered plan
+
+**Subscription Renewal**:
+A Salon-initiated Subscription Purchase that extends commercial access for another prepaid term. Saluna stores no payment mandate and does not automatically charge the Salon.
+_Avoid_: auto-renewal, recurring charge
+
+**Grace Period**:
+The three days after a paid Salon Subscription ends in which the Salon retains normal operational access but receives no new plan SMS Allowance. An unpaid Trial has no Grace Period. When the Grace Period ends without renewal, the Salon becomes read-only.
+_Avoid_: extended Trial
+
+**Read-Only Access**:
+Commercial access after an unpaid Trial expires or a Grace Period ends. Existing Salon data remains readable and is never automatically deleted for nonpayment, while ordinary operational writes and salon-funded SMS are blocked. The public Salon page and contact information remain visible, but it cannot accept new `AppointmentRequests`. The `Salon Owner` may still export data or explicitly request account deletion.
+_Avoid_: suspended Salon, deleted account
+
+**Verified Payment**:
+A payment provider's server-to-server confirmation for the exact snapshotted amount of a Subscription Purchase. Only a Verified Payment activates customer paid access; a browser return, receipt image, bank-transfer claim, or manual admin action does not.
+_Avoid_: manual activation, payment screenshot
+
+**Payment Provider**:
+The external gateway that creates checkout and verifies payment. Zarinpal is Saluna's launch Payment Provider, while Subscription Purchases store a provider identifier and opaque provider references so commercial records are not Zarinpal-specific.
+_Avoid_: multi-gateway router
+
+**Unlimited Access**:
+A permanent commercial entitlement for an internal Salon, such as Saluna's own Salon or a test Salon. It requires no Salon Subscription, has no active Staff Profile limit, has no expiry, and is not accompanied by a recorded justification.
+_Avoid_: Complimentary Access, temporary override
+
+**SMS Credit**:
+Permission for a commercially active Salon to send one provider-billable SMS segment for a salon-funded purpose. A retained balance does not let a read-only Salon send; it becomes usable again after renewal. Authentication, account recovery, and identity-verification SMS are Saluna-funded and do not consume SMS Credits.
+_Avoid_: message count, unlimited SMS
+
+**SMS Allowance**:
+A capped monthly grant of plan SMS Credits included with a Salon Subscription. Unused plan credits expire at the end of that monthly allowance period and are replaced by a fresh allowance only while the Salon Subscription remains active. Annual Salon Subscriptions also grant the allowance monthly rather than upfront.
+
+**SMS Credit Bundle**:
+Prepaid SMS Credits purchased separately when a Salon needs more than its SMS Allowance. Purchased SMS Credits are held in a separate balance and never expire.
+_Avoid_: SMS subscription
+
+**SMS Credit Grant**:
+Non-expiring SMS Credits added directly by a `Platform Owner` without a Salon purchase, including credits for a Salon with `Unlimited Access`. They join the same non-expiring balance as purchased SMS Credits while the ledger records their grant source.
+_Avoid_: unlimited SMS
+
+**SMS Billing Profile**:
+The active SMS provider's replaceable rules for estimating how final message text becomes provider-billable segments and for reconciling the provider's reported cost after sending. Subscription and SMS Credit rules do not depend on a particular provider's character limits.
+_Avoid_: global SMS character limit
+
+**Client Payment**:
+Money a `Client` pays a Salon for salon services, including a deposit or full payment. The Salon is the merchant and beneficiary. Saluna may facilitate the payment flow but does not take custody of, pool, or settle Client Payments.
+_Avoid_: Saluna payment, platform-held funds
+
 **Assisted Salon Setup**:
 A path in which authorized platform staff creates and prepares a `Setup Salon`, then hands it to the verified `Salon Owner`.
 _Avoid_: admin onboarding, impersonation
