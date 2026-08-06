@@ -37,7 +37,3 @@ export function resolvePublicLayout(
   const found = PUBLIC_LAYOUTS.find((l) => l.id === id)
   return found ?? PUBLIC_LAYOUTS[0]!
 }
-
-export function isPublicLayoutId(value: unknown): value is PublicLayoutId {
-  return typeof value === 'string' && PUBLIC_LAYOUTS.some((l) => l.id === value)
-}
