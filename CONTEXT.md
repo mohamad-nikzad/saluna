@@ -5,8 +5,12 @@
 ### Appointments
 
 **Appointment**:
-A scheduled service on the staff calendar, with a validated client, assigned staff, time window, and `BookedServiceSnapshot`.
+A scheduled service on the staff calendar, with a validated client, one or more assigned `Staff Profiles`, one shared time window, and `BookedServiceSnapshot`.
 _Avoid_: booking (verb only, customer UI copy)
+
+**Appointment Staff Assignment**:
+One `Staff Profile` assigned to an `Appointment`. An Appointment has one lead assignment and may have additional assignments only when its `ServiceVariant` allows multiple staff; every assignment occupies the Appointment's entire time window.
+_Avoid_: separate appointment, assistant shift
 
 **AppointmentRequest**:
 A proposal for an `Appointment` or `Service Package`, recorded by a customer or manager and awaiting manager review. Carries customer contact, desired timing, and snapshot-shaped service/package fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
@@ -42,6 +46,10 @@ _Avoid_: package, bundle, group, type, subtype, item, offering, option
 
 **Standard ServiceVariant**:
 A `ServiceVariant` sold as one standalone salon service.
+
+**Multi-Staff ServiceVariant**:
+A `ServiceVariant` that permits a manager to assign more than one `Staff Profile` to an `Appointment`. Multiple staff are optional rather than required; a service that does not allow multiple staff has exactly one Appointment Staff Assignment.
+_Avoid_: multi-staff appointment type, required staff count
 
 **Service Package**:
 A sellable bundle composed from multiple staff-assigned package tasks, often across categories, for manager-side booking as one offering. Its duration comes from the scheduled tasks; its total price may be calculated from included services or overridden by the manager. Package scheduling creates a `service_package_bookings` header, normal `appointments` rows for each task, and `service_package_tasks` links. Public booking remains service-only.
@@ -255,33 +263,47 @@ Ending one Staff Profile Access link without deleting or deactivating the salon-
 _Avoid_: delete staff, transfer staff, deactivate profile
 
 **Staff Commission**:
-The share of a completed `Appointment`'s Eligible Commission Basis earned by its assigned `Staff Profile` under the applicable commission agreement.
+The share of a completed `Appointment`'s Eligible Commission Basis earned by one assigned `Staff Profile` under the applicable commission agreement.
 _Avoid_: staff cut, salary, wage
 
+**Work Allocation**:
+The percentage of a multi-staff `Appointment`'s authoritative total attributed to one Appointment Staff Assignment before applying that Staff Profile's Commission Agreement. Allocations total 100% and default to an equal split; a single-staff Appointment has a 100% allocation.
+_Avoid_: commission rate, duplicated appointment price
+
 **Eligible Commission Basis**:
-The value used to calculate a `Staff Commission`: a regular `Appointment`'s authoritative total, or a `Service Package` task's deterministic proportional allocation of the booked package price.
+The value used to calculate a `Staff Commission`: an assigned Staff Profile's Work Allocation of a regular `Appointment`'s authoritative total, or a `Service Package` task's deterministic proportional allocation of the booked package price.
 _Avoid_: collected revenue, task price, package component price
 
 **Commission Agreement**:
-A salon-specific percentage agreed for one `Staff Profile` and applied to all of that profile's eligible appointments.
-_Avoid_: commission rule, service commission, appointment commission
+A salon-specific agreement for one `Staff Profile`, containing one default percentage and optional `Service Commission Overrides`.
+_Avoid_: commission rule, appointment commission
+
+**Service Commission Override**:
+An optional percentage in a `Commission Agreement` for one `ServiceVariant`. It replaces the agreement's default percentage when that Staff Profile completes an Appointment for the specified service.
+_Avoid_: separate commission agreement, category commission
 
 **Salon Retained Amount**:
-The remainder of an eligible completed `Appointment`'s Eligible Commission Basis after its `Staff Commission`, without implying payment collection or profit.
+The remainder of an eligible completed `Appointment`'s authoritative total after all of its Staff Commissions, without implying payment collection or profit.
 _Avoid_: salon profit, salon commission, salon income
 
-A completed **Appointment** may produce one **Staff Commission** for its assigned **Staff Profile**.
+A completed **Appointment** may produce one **Staff Commission** for each assigned **Staff Profile** with an applicable Commission Agreement.
 Each **Commission Agreement** belongs to exactly one salon and one **Staff Profile**.
 One salon and **Staff Profile** may have at most one active **Commission Agreement**.
+A **Service Commission Override** belongs to one Commission Agreement and one **ServiceVariant**; services without an override use the agreement's default percentage.
 A **Commission Agreement** applies only to appointments completed while it is active; activation does not backfill earlier completions.
-A **Staff Commission** retains the percentage that produced it when the agreement later changes, and disabling the agreement preserves existing commissions.
-Active **Staff Profile Access** reveals only that profile's own commission history; it is not required for the profile to earn commissions.
+A disabled **Commission Agreement** produces no Staff Commissions; disabling it preserves its Service Commission Overrides and existing commissions.
+A **Staff Commission** retains the percentage that produced it when the agreement or its Service Commission Overrides later change.
+Active **Staff Profile Access** reveals only that profile's own Commission Agreement and commission history; it is not required for the profile to earn commissions.
 
 **Example dialogue**:
 
 > **Manager:** “I activated a 20% Commission Agreement for Mina today.”
 >
 > **Developer:** “Her appointments completed from now on can earn Staff Commission. Earlier completions are not backfilled, and a later rate change will not rewrite these earnings.”
+>
+> **Manager:** “Mina earns 30% for coloring.”
+>
+> **Developer:** “Coloring appointments use her 30% Service Commission Override; her other services continue to use the 20% default.”
 
 ### Product Support
 

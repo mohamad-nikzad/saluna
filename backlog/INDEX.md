@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-28 (BL-0074 completed)
+Last organized: 2026-08-07 (BL-0077 added)
 
 ## Now
 
@@ -25,6 +25,8 @@ No active backlog items.
   - [BL-0073 Keep AppointmentRequest status pages out of search](done/BL-0073-keep-appointment-request-status-pages-out-of-search.md)
   - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
   - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
+- [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
+- [BL-0077 Set per-service Staff Commission overrides](ready/BL-0077-set-per-service-staff-commission-overrides.md)
 
 ## Inbox
 
