@@ -167,4 +167,19 @@ describe('today placeholder attention', () => {
       data.attentionItems.find((item) => item.type === 'incomplete-client'),
     ).toBeUndefined()
   })
+
+  it('includes Staff Profile load when the staff filter contains legacy and profile ids', async () => {
+    mocks.getAppointmentsWithDetailsByDateRange
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    const data = await getTodayData('salon-1', '2026-05-01', [
+      'legacy-user-1',
+      'staff-1',
+    ])
+
+    expect(data.staffLoad).toEqual([
+      expect.objectContaining({ staffId: 'staff-1' }),
+    ])
+  })
 })

@@ -179,7 +179,10 @@ export async function getTodayData(
     .filter(
       (member) =>
         member.role === 'staff' &&
-        (!staffIdFilter || member.id === staffIdFilter),
+        (!staffIdFilter ||
+          (typeof staffIdFilter === 'string'
+            ? member.id === staffIdFilter
+            : staffIdFilter.includes(member.id))),
     )
     .map((member) => {
       const rows = appointmentsForDay.filter(
