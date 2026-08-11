@@ -10,7 +10,9 @@ import {
   commissionAgreementResponseSchema,
   commissionPeriodQuerySchema,
   salonCommissionReportResponseSchema,
+  serviceCommissionOverrideBodySchema,
   staffCommissionReportResponseSchema,
+  staffServiceOverrideParamSchema,
 } from '../schemas/commissions'
 
 const errors = {
@@ -68,6 +70,50 @@ export const deleteCommissionAgreementRoute = createRoute({
   responses: {
     200: {
       description: 'Disabled Commission Agreement',
+      content: {
+        'application/json': { schema: commissionAgreementResponseSchema },
+      },
+    },
+    ...errors,
+  },
+})
+
+export const putServiceCommissionOverrideRoute = createRoute({
+  method: 'put',
+  path: '/staff/{id}/agreement/overrides/{serviceId}',
+  tags: ['Staff Commissions'],
+  summary: 'Add or update a Service Commission Override',
+  security: tenantSecurity,
+  request: {
+    params: staffServiceOverrideParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': { schema: serviceCommissionOverrideBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Commission Agreement with Service Commission Overrides',
+      content: {
+        'application/json': { schema: commissionAgreementResponseSchema },
+      },
+    },
+    ...errors,
+  },
+})
+
+export const deleteServiceCommissionOverrideRoute = createRoute({
+  method: 'delete',
+  path: '/staff/{id}/agreement/overrides/{serviceId}',
+  tags: ['Staff Commissions'],
+  summary: 'Remove a Service Commission Override',
+  security: tenantSecurity,
+  request: { params: staffServiceOverrideParamSchema },
+  responses: {
+    200: {
+      description: 'Commission Agreement without the removed override',
       content: {
         'application/json': { schema: commissionAgreementResponseSchema },
       },

@@ -12,8 +12,10 @@ import {
   appointmentStaffAssignments,
   clients,
   commissionAgreements,
+  serviceCommissionOverrides,
   servicePackageBookings,
   servicePackageTasks,
+  services,
   staffCommissions,
   staffProfiles,
 } from '../schema'
@@ -21,6 +23,14 @@ import {
 type Db = ReturnType<typeof getDb>
 type DbTx = Parameters<Parameters<Db['transaction']>[0]>[0]
 type AppointmentRow = typeof appointments.$inferSelect
+type AgreementRow = typeof commissionAgreements.$inferSelect
+
+export type ServiceCommissionOverrideView = {
+  serviceId: string
+  serviceName: string
+  serviceActive: boolean
+  percentage: number
+}
 
 export type CommissionAgreementView = {
   staffProfileId: string
@@ -28,6 +38,7 @@ export type CommissionAgreementView = {
   active: boolean
   activatedAt: Date
   disabledAt: Date | null
+  overrides: ServiceCommissionOverrideView[]
 }
 
 export type StaffCommissionReportRow = {
@@ -72,15 +83,44 @@ export type SalonCommissionReport = {
   rows: Array<StaffCommissionReportRow & { staffProfileId: string }>
 }
 
-function agreementView(
-  row: typeof commissionAgreements.$inferSelect,
-): CommissionAgreementView {
+async function listAgreementOverrides(
+  salonId: string,
+  agreementId: string,
+): Promise<ServiceCommissionOverrideView[]> {
+  const rows = await getDb()
+    .select({
+      serviceId: serviceCommissionOverrides.serviceId,
+      serviceName: services.name,
+      serviceActive: services.active,
+      percentageBasisPoints: serviceCommissionOverrides.percentageBasisPoints,
+    })
+    .from(serviceCommissionOverrides)
+    .innerJoin(services, eq(services.id, serviceCommissionOverrides.serviceId))
+    .where(
+      and(
+        eq(serviceCommissionOverrides.salonId, salonId),
+        eq(serviceCommissionOverrides.commissionAgreementId, agreementId),
+      ),
+    )
+    .orderBy(asc(services.name))
+  return rows.map((row) => ({
+    serviceId: row.serviceId,
+    serviceName: row.serviceName,
+    serviceActive: row.serviceActive,
+    percentage: row.percentageBasisPoints / 100,
+  }))
+}
+
+async function agreementView(
+  row: AgreementRow,
+): Promise<CommissionAgreementView> {
   return {
     staffProfileId: row.staffProfileId,
     percentage: row.percentageBasisPoints / 100,
     active: row.active,
     activatedAt: row.activatedAt,
     disabledAt: row.disabledAt,
+    overrides: await listAgreementOverrides(row.salonId, row.id),
   }
 }
 
@@ -96,6 +136,29 @@ async function getStaffProfile(salonId: string, staffProfileId: string) {
     )
     .limit(1)
   return rows[0]
+}
+
+async function getAgreementRow(salonId: string, staffProfileId: string) {
+  const [row] = await getDb()
+    .select()
+    .from(commissionAgreements)
+    .where(
+      and(
+        eq(commissionAgreements.salonId, salonId),
+        eq(commissionAgreements.staffProfileId, staffProfileId),
+      ),
+    )
+    .limit(1)
+  return row
+}
+
+async function getSalonService(salonId: string, serviceId: string) {
+  const [row] = await getDb()
+    .select()
+    .from(services)
+    .where(and(eq(services.salonId, salonId), eq(services.id, serviceId)))
+    .limit(1)
+  return row
 }
 
 export async function setCommissionAgreement(input: {
@@ -155,6 +218,72 @@ export async function disableCommissionAgreement(input: {
     )
     .returning()
   return row ? agreementView(row) : null
+}
+
+export async function setServiceCommissionOverride(input: {
+  salonId: string
+  staffProfileId: string
+  serviceId: string
+  percentageBasisPoints: number
+  now?: Date
+}): Promise<
+  | { ok: true; agreement: CommissionAgreementView }
+  | { ok: false; reason: 'profile' | 'agreement' | 'service' }
+> {
+  const profile = await getStaffProfile(input.salonId, input.staffProfileId)
+  if (!profile) return { ok: false, reason: 'profile' }
+  const agreement = await getAgreementRow(input.salonId, profile.id)
+  if (!agreement) return { ok: false, reason: 'agreement' }
+  const service = await getSalonService(input.salonId, input.serviceId)
+  if (!service) return { ok: false, reason: 'service' }
+  const now = input.now ?? new Date()
+  await getDb()
+    .insert(serviceCommissionOverrides)
+    .values({
+      salonId: input.salonId,
+      commissionAgreementId: agreement.id,
+      serviceId: service.id,
+      percentageBasisPoints: input.percentageBasisPoints,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        serviceCommissionOverrides.commissionAgreementId,
+        serviceCommissionOverrides.serviceId,
+      ],
+      set: {
+        percentageBasisPoints: input.percentageBasisPoints,
+        updatedAt: now,
+      },
+    })
+  return { ok: true, agreement: await agreementView(agreement) }
+}
+
+export async function deleteServiceCommissionOverride(input: {
+  salonId: string
+  staffProfileId: string
+  serviceId: string
+}): Promise<
+  | { ok: true; agreement: CommissionAgreementView }
+  | { ok: false; reason: 'profile' | 'agreement' | 'override' }
+> {
+  const profile = await getStaffProfile(input.salonId, input.staffProfileId)
+  if (!profile) return { ok: false, reason: 'profile' }
+  const agreement = await getAgreementRow(input.salonId, profile.id)
+  if (!agreement) return { ok: false, reason: 'agreement' }
+  const deleted = await getDb()
+    .delete(serviceCommissionOverrides)
+    .where(
+      and(
+        eq(serviceCommissionOverrides.salonId, input.salonId),
+        eq(serviceCommissionOverrides.commissionAgreementId, agreement.id),
+        eq(serviceCommissionOverrides.serviceId, input.serviceId),
+      ),
+    )
+    .returning({ id: serviceCommissionOverrides.id })
+  if (deleted.length === 0) return { ok: false, reason: 'override' }
+  return { ok: true, agreement: await agreementView(agreement) }
 }
 
 async function appointmentCommissionBasis(
@@ -400,6 +529,20 @@ export async function syncAppointmentCommission(
         .where(eq(appointmentStaffAssignments.id, assignment.id))
       continue
     }
+    const [override] = await tx
+      .select({
+        percentageBasisPoints: serviceCommissionOverrides.percentageBasisPoints,
+      })
+      .from(serviceCommissionOverrides)
+      .where(
+        and(
+          eq(serviceCommissionOverrides.commissionAgreementId, agreement.id),
+          eq(serviceCommissionOverrides.serviceId, after.serviceId),
+        ),
+      )
+      .limit(1)
+    const percentageBasisPoints =
+      override?.percentageBasisPoints ?? agreement.percentageBasisPoints
     await tx
       .insert(staffCommissions)
       .values({
@@ -408,8 +551,8 @@ export async function syncAppointmentCommission(
         appointmentId: after.id,
         appointmentStaffAssignmentId: assignment.id,
         basis,
-        percentageBasisPoints: agreement.percentageBasisPoints,
-        amount: commissionAmount(basis, agreement.percentageBasisPoints),
+        percentageBasisPoints,
+        amount: commissionAmount(basis, percentageBasisPoints),
       })
       .onConflictDoNothing({
         target: staffCommissions.appointmentStaffAssignmentId,
@@ -497,7 +640,7 @@ export async function getStaffCommissionReport(input: {
   return {
     staffProfileId: profile.id,
     staffName: profile.name,
-    agreement: agreementRows[0] ? agreementView(agreementRows[0]) : null,
+    agreement: agreementRows[0] ? await agreementView(agreementRows[0]) : null,
     startDate: input.startDate,
     endDate: input.endDate,
     summary: {

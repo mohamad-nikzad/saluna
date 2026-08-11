@@ -26,7 +26,6 @@ No active backlog items.
   - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
   - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
 - [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
-- [BL-0077 Set per-service Staff Commission overrides](ready/BL-0077-set-per-service-staff-commission-overrides.md)
 
 ## Inbox
 
@@ -42,6 +41,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0077 Set per-service Staff Commission overrides](done/BL-0077-set-per-service-staff-commission-overrides.md)
 - [BL-0068 Let managers make dates unavailable](done/BL-0068-make-one-date-unavailable.md)
 - [BL-0019 Configure and report Staff Commissions](done/BL-0019-configure-and-report-staff-commissions.md)
   - [BL-0055 Activate Staff Commission for a regular Appointment](done/BL-0055-activate-staff-commission.md)

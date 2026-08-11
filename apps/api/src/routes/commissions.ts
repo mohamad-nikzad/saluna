@@ -1,9 +1,11 @@
 import { Hono } from 'hono'
 import {
+  deleteServiceCommissionOverride,
   disableCommissionAgreement,
   getSalonCommissionReport,
   getStaffCommissionReport,
   setCommissionAgreement,
+  setServiceCommissionOverride,
 } from '@repo/database/commissions'
 import {
   commissionPeriodRange,
@@ -18,6 +20,8 @@ import { idParamSchema } from '../openapi/schemas/common'
 import {
   commissionAgreementBodySchema,
   commissionPeriodQuerySchema,
+  serviceCommissionOverrideBodySchema,
+  staffServiceOverrideParamSchema,
 } from '../openapi/schemas/commissions'
 
 export const commissions = new Hono<AppEnv>()
@@ -52,6 +56,53 @@ export const commissions = new Hono<AppEnv>()
       })
       if (!agreement) return error(c, 'توافق کمیسیون یافت نشد', 404)
       return ok(c, { agreement })
+    },
+  )
+  .put(
+    '/staff/:id/agreement/overrides/:serviceId',
+    requireTenant('manage_settings'),
+    zValidator('param', staffServiceOverrideParamSchema),
+    zValidator('json', serviceCommissionOverrideBodySchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id, serviceId } = c.req.valid('param')
+      const { percentage } = c.req.valid('json')
+      const result = await setServiceCommissionOverride({
+        salonId,
+        staffProfileId: id,
+        serviceId,
+        percentageBasisPoints: percentageToBasisPoints(percentage),
+      })
+      if (!result.ok) {
+        if (result.reason === 'profile')
+          return error(c, 'پروفایل پرسنل یافت نشد', 404)
+        if (result.reason === 'agreement')
+          return error(c, 'توافق کمیسیون یافت نشد', 404)
+        return error(c, 'خدمت یافت نشد', 404)
+      }
+      return ok(c, { agreement: result.agreement })
+    },
+  )
+  .delete(
+    '/staff/:id/agreement/overrides/:serviceId',
+    requireTenant('manage_settings'),
+    zValidator('param', staffServiceOverrideParamSchema),
+    async (c) => {
+      const { salonId } = c.var.tenant
+      const { id, serviceId } = c.req.valid('param')
+      const result = await deleteServiceCommissionOverride({
+        salonId,
+        staffProfileId: id,
+        serviceId,
+      })
+      if (!result.ok) {
+        if (result.reason === 'profile')
+          return error(c, 'پروفایل پرسنل یافت نشد', 404)
+        if (result.reason === 'agreement')
+          return error(c, 'توافق کمیسیون یافت نشد', 404)
+        return error(c, 'استثنای کمیسیون خدمت یافت نشد', 404)
+      }
+      return ok(c, { agreement: result.agreement })
     },
   )
   .get(

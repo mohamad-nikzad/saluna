@@ -659,5 +659,314 @@ describe.skipIf(!runIntegration)(
       expect(claimed?.summary).toEqual(managerAfterRevocation?.summary)
       expect(managerAfterRevocation?.summary.completedCount).toBe(2)
     })
+
+    it('applies Service Commission Overrides prospectively without rewriting stored commissions', async () => {
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+      const defaulted = await insertAppointment({
+        serviceId: ids.serviceA,
+        date: '2026-10-01',
+        price: 100,
+      })
+      const overridden = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-02',
+        price: 100,
+      })
+      const afterDefaultChange = await insertAppointment({
+        serviceId: ids.serviceA,
+        date: '2026-10-03',
+        price: 100,
+      })
+      const afterOverrideRemoved = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-04',
+        price: 100,
+      })
+      const whileDisabled = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-05',
+        price: 100,
+      })
+      const multiStaff = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-06',
+        price: 100,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      const otherSalon = randomUUID()
+      const otherService = randomUUID()
+      const otherCategory = randomUUID()
+      await testSql!`
+        insert into organization (id, name, slug)
+        values (${otherSalon}, 'Other Salon', ${`other-${databaseName}`})
+      `
+      await testSql!`
+        insert into service_categories (id, salon_id, name)
+        values (${otherCategory}, ${otherSalon}, 'Other')
+      `
+      await testSql!`
+        insert into services (id, salon_id, category_id, name, duration, price, color)
+        values (${otherService}, ${otherSalon}, ${otherCategory}, 'Foreign', 30, 100, 'rose')
+      `
+
+      expect(
+        await commissions.setServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: otherService,
+          percentageBasisPoints: 4000,
+        }),
+      ).toEqual({ ok: false, reason: 'service' })
+
+      const created = await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 4000,
+      })
+      expect(created).toMatchObject({
+        ok: true,
+        agreement: {
+          percentage: 20,
+          overrides: [
+            expect.objectContaining({
+              serviceId: ids.serviceB,
+              serviceName: 'Service B',
+              serviceActive: true,
+              percentage: 40,
+            }),
+          ],
+        },
+      })
+
+      await appointmentQueries.updateAppointment(defaulted, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'completed',
+      })
+
+      let report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.rows).toEqual([
+        expect.objectContaining({
+          appointmentId: defaulted,
+          percentage: 20,
+          amount: 20,
+        }),
+        expect.objectContaining({
+          appointmentId: overridden,
+          percentage: 40,
+          amount: 40,
+        }),
+      ])
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 1000,
+      })
+      await appointmentQueries.updateAppointment(afterDefaultChange, ids.salon, {
+        status: 'completed',
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement).toMatchObject({
+        percentage: 10,
+        overrides: [
+          expect.objectContaining({ serviceId: ids.serviceB, percentage: 40 }),
+        ],
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ percentage: 40, amount: 40 })
+      expect(
+        report?.rows.find((row) => row.appointmentId === afterDefaultChange),
+      ).toMatchObject({ percentage: 10, amount: 10 })
+
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        finalPrice: 200,
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ basis: 200, percentage: 40, amount: 80 })
+
+      await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 5000,
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'cancelled',
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'completed',
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ percentage: 40, amount: 80 })
+
+      await expect(
+        commissions.deleteServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: ids.serviceB,
+        }),
+      ).resolves.toMatchObject({
+        ok: true,
+        agreement: { overrides: [] },
+      })
+      await appointmentQueries.updateAppointment(
+        afterOverrideRemoved,
+        ids.salon,
+        { status: 'completed' },
+      )
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === afterOverrideRemoved),
+      ).toMatchObject({ percentage: 10, amount: 10 })
+
+      await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 3000,
+      })
+      await commissions.disableCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+      })
+      await appointmentQueries.updateAppointment(whileDisabled, ids.salon, {
+        status: 'completed',
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement).toMatchObject({
+        active: false,
+        overrides: [
+          expect.objectContaining({ serviceId: ids.serviceB, percentage: 30 }),
+        ],
+      })
+      expect(
+        report?.rows.some((row) => row.appointmentId === whileDisabled),
+      ).toBe(false)
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 1000,
+      })
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
+      await appointmentQueries.updateAppointment(multiStaff, ids.salon, {
+        status: 'completed',
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileA,
+            startDate: '2026-10-06',
+            endDate: '2026-10-06',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId: multiStaff,
+          basis: 50,
+          percentage: 30,
+          amount: 15,
+        }),
+      ])
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-10-06',
+            endDate: '2026-10-06',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId: multiStaff,
+          basis: 50,
+          percentage: 20,
+          amount: 10,
+        }),
+      ])
+
+      await testSql!`
+        update services set active = false where id = ${ids.serviceB}
+      `
+      await testSql!`
+        delete from staff_services
+        where salon_id = ${ids.salon} and staff_user_id = ${ids.profileA}
+      `
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement?.overrides).toEqual([
+        expect.objectContaining({
+          serviceId: ids.serviceB,
+          serviceActive: false,
+          percentage: 30,
+        }),
+      ])
+      await expect(
+        commissions.deleteServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: ids.serviceB,
+        }),
+      ).resolves.toMatchObject({ ok: true, agreement: { overrides: [] } })
+    })
   },
 )

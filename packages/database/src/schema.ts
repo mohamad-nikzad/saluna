@@ -1447,6 +1447,43 @@ export const commissionAgreements = pgTable(
   ],
 )
 
+export const serviceCommissionOverrides = pgTable(
+  'service_commission_overrides',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    commissionAgreementId: uuid('commission_agreement_id')
+      .notNull()
+      .references(() => commissionAgreements.id, { onDelete: 'cascade' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'restrict' }),
+    percentageBasisPoints: integer('percentage_basis_points').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_commission_overrides_agreement_service_unique').on(
+      t.commissionAgreementId,
+      t.serviceId,
+    ),
+    index('service_commission_overrides_salon_agreement_idx').on(
+      t.salonId,
+      t.commissionAgreementId,
+    ),
+    check(
+      'service_commission_overrides_percentage_check',
+      sql`${t.percentageBasisPoints} > 0 and ${t.percentageBasisPoints} <= 10000`,
+    ),
+  ],
+)
+
 export const staffCommissions = pgTable(
   'staff_commissions',
   {

@@ -7,10 +7,12 @@ import type {
 } from '@repo/api-client/types'
 import {
   deleteApiV1CommissionsStaffByIdAgreementMutation,
+  deleteApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
   getApiV1CommissionsMeOptions,
   getApiV1CommissionsSalonOptions,
   getApiV1CommissionsStaffByIdReportOptions,
   putApiV1CommissionsStaffByIdAgreementMutation,
+  putApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
 } from '@repo/api-client/query'
 
 export type CommissionPeriodQuery = NonNullable<
@@ -90,6 +92,55 @@ export function useDisableCommissionAgreementMutation() {
     meta: {
       successMessage: 'توافق کمیسیون غیرفعال شد',
       errorMessage: 'غیرفعال‌کردن توافق کمیسیون انجام نشد',
+      invalidatesQuery: reportRoots,
+    },
+  })
+}
+
+export function useSaveServiceCommissionOverrideMutation() {
+  const generated =
+    putApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation()
+  return useMutation<
+    CommissionAgreement,
+    unknown,
+    { staffId: string; serviceId: string; percentage: number }
+  >({
+    mutationFn: async ({ staffId, serviceId, percentage }, context) => {
+      const response = await generated.mutationFn!(
+        {
+          path: { id: staffId, serviceId },
+          body: { percentage },
+        },
+        context,
+      )
+      return response.agreement
+    },
+    meta: {
+      successMessage: 'استثنای کمیسیون خدمت ذخیره شد',
+      errorMessage: 'ذخیره استثنای کمیسیون خدمت انجام نشد',
+      invalidatesQuery: reportRoots,
+    },
+  })
+}
+
+export function useDeleteServiceCommissionOverrideMutation() {
+  const generated =
+    deleteApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation()
+  return useMutation<
+    CommissionAgreement,
+    unknown,
+    { staffId: string; serviceId: string }
+  >({
+    mutationFn: async ({ staffId, serviceId }, context) => {
+      const response = await generated.mutationFn!(
+        { path: { id: staffId, serviceId } },
+        context,
+      )
+      return response.agreement
+    },
+    meta: {
+      successMessage: 'استثنای کمیسیون خدمت حذف شد',
+      errorMessage: 'حذف استثنای کمیسیون خدمت انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })

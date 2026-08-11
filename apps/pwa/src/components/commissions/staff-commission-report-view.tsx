@@ -19,27 +19,49 @@ export function StaffCommissionReportView({
 }: {
   report: StaffCommissionReport
 }) {
+  const overrides = report.agreement?.overrides ?? []
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 rounded-[14px] border border-line-soft bg-paper px-3.5 py-3">
-        <div>
-          <div className="text-xs font-bold text-foreground">توافق کمیسیون</div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">
-            درصد یکسان برای همه خدمات
+      <div className="rounded-[14px] border border-line-soft bg-paper px-3.5 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-bold text-foreground">توافق کمیسیون</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              درصد پیش‌فرض و استثناهای خدمت
+            </div>
           </div>
+          {report.agreement ? (
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-black text-primary">
+                {toPersianDigits(report.agreement.percentage)}٪
+              </span>
+              <Badge variant={report.agreement.active ? 'default' : 'secondary'}>
+                {report.agreement.active ? 'فعال' : 'غیرفعال'}
+              </Badge>
+            </div>
+          ) : (
+            <Badge variant="outline">تنظیم نشده</Badge>
+          )}
         </div>
-        {report.agreement ? (
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-black text-primary">
-              {toPersianDigits(report.agreement.percentage)}٪
-            </span>
-            <Badge variant={report.agreement.active ? 'default' : 'secondary'}>
-              {report.agreement.active ? 'فعال' : 'غیرفعال'}
-            </Badge>
+        {overrides.length > 0 ? (
+          <div className="mt-3 space-y-1.5 border-t border-line-soft pt-3">
+            {overrides.map((override) => (
+              <div
+                key={override.serviceId}
+                className="flex items-center justify-between gap-3 text-[11px]"
+              >
+                <span className="truncate text-muted-foreground">
+                  {override.serviceName}
+                  {!override.serviceActive ? ' (بایگانی‌شده)' : ''}
+                </span>
+                <span className="shrink-0 font-bold text-foreground">
+                  {toPersianDigits(override.percentage)}٪
+                </span>
+              </div>
+            ))}
           </div>
-        ) : (
-          <Badge variant="outline">تنظیم نشده</Badge>
-        )}
+        ) : null}
       </div>
 
       <div className="grid grid-cols-3 gap-2">

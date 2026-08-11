@@ -51,10 +51,12 @@ import {
 } from './routes/appointments'
 import {
   deleteCommissionAgreementRoute,
+  deleteServiceCommissionOverrideRoute,
   getMyCommissionReportRoute,
   getSalonCommissionReportRoute,
   getStaffCommissionReportRoute,
   putCommissionAgreementRoute,
+  putServiceCommissionOverrideRoute,
 } from './routes/commissions'
 import {
   approveAppointmentRequestRoute,
@@ -806,6 +808,12 @@ const stubCommissionAgreement = {
   active: true,
   activatedAt: new Date().toISOString(),
   disabledAt: null,
+  overrides: [] as Array<{
+    serviceId: string
+    serviceName: string
+    serviceActive: boolean
+    percentage: number
+  }>,
 }
 const stubStaffCommissionReport = {
   staffProfileId: 'stub',
@@ -827,6 +835,12 @@ const deleteCommissionAgreementStub: RouteHandler<
   typeof deleteCommissionAgreementRoute
 > = (c) =>
   c.json({ agreement: { ...stubCommissionAgreement, active: false } }, 200)
+const putServiceCommissionOverrideStub: RouteHandler<
+  typeof putServiceCommissionOverrideRoute
+> = (c) => c.json({ agreement: stubCommissionAgreement }, 200)
+const deleteServiceCommissionOverrideStub: RouteHandler<
+  typeof deleteServiceCommissionOverrideRoute
+> = (c) => c.json({ agreement: stubCommissionAgreement }, 200)
 const getStaffCommissionReportStub: RouteHandler<
   typeof getStaffCommissionReportRoute
 > = (c) => c.json({ report: stubStaffCommissionReport }, 200)
@@ -1610,6 +1624,14 @@ export const contractApp = new OpenAPIHono()
     new OpenAPIHono()
       .openapi(putCommissionAgreementRoute, putCommissionAgreementStub)
       .openapi(deleteCommissionAgreementRoute, deleteCommissionAgreementStub)
+      .openapi(
+        putServiceCommissionOverrideRoute,
+        putServiceCommissionOverrideStub,
+      )
+      .openapi(
+        deleteServiceCommissionOverrideRoute,
+        deleteServiceCommissionOverrideStub,
+      )
       .openapi(getStaffCommissionReportRoute, getStaffCommissionReportStub)
       .openapi(getMyCommissionReportRoute, getMyCommissionReportStub)
       .openapi(getSalonCommissionReportRoute, getSalonCommissionReportStub),
