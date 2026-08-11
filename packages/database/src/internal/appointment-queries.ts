@@ -1,10 +1,15 @@
-import { and, asc, desc, eq, gte, inArray, lte, or } from 'drizzle-orm'
+import { and, asc, desc, eq, exists, gte, inArray, lte, or } from 'drizzle-orm'
 import type {
   Appointment,
   AppointmentWithDetails,
+  AppointmentStaffAssignment,
   BookedAppointmentAddonLine,
   ServiceAddon,
 } from '@repo/salon-core/types'
+import {
+  equalWorkAllocations,
+  validateWorkAllocations,
+} from '@repo/salon-core/commissions'
 import { detectScheduleOverlaps } from '@repo/salon-core/appointment-conflict'
 import {
   durationMinutesFromRange,
@@ -14,6 +19,7 @@ import {
 import { getDb } from '../client'
 import {
   appointmentAddonLines,
+  appointmentStaffAssignments,
   appointments,
   clients,
   member,
@@ -34,6 +40,7 @@ import {
 } from './service-queries'
 import { syncAppointmentCommission } from './commission-queries'
 import { assertSalonDateOpen } from './salon-closure-queries'
+import { getAllStaff } from './staff-queries'
 
 type Db = ReturnType<typeof getDb>
 type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -46,6 +53,7 @@ type SnapshotKeys =
   | 'bookedTotalPrice'
   | 'bookedAddonCount'
   | 'bookedAddons'
+  | 'staffAssignments'
 
 type AppointmentCommand = Omit<
   Appointment,
@@ -53,12 +61,71 @@ type AppointmentCommand = Omit<
 > & {
   id?: string
   addonIds?: string[]
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
 }
 type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
   finalPrice?: number
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
+}
+
+async function attachStaffAssignmentDetails<T extends Appointment>(
+  appointmentsList: T[],
+  salonId: string,
+): Promise<T[]> {
+  if (appointmentsList.length === 0) return appointmentsList
+  const rows = await getDb()
+    .select()
+    .from(appointmentStaffAssignments)
+    .where(
+      and(
+        eq(appointmentStaffAssignments.salonId, salonId),
+        inArray(
+          appointmentStaffAssignments.appointmentId,
+          appointmentsList.map((appointment) => appointment.id),
+        ),
+      ),
+    )
+    .orderBy(
+      desc(appointmentStaffAssignments.isLead),
+      asc(appointmentStaffAssignments.createdAt),
+    )
+  const staff = await getAllStaff(salonId)
+  const staffById = new Map(staff.map((member) => [member.id, member]))
+  const byAppointment = new Map<string, AppointmentStaffAssignment[]>()
+  for (const row of rows) {
+    const assignments = byAppointment.get(row.appointmentId) ?? []
+    assignments.push({
+      id: row.id,
+      staffId: row.staffId,
+      isLead: row.isLead,
+      allocationBasisPoints: row.allocationBasisPoints,
+      staff: staffById.get(row.staffId),
+    })
+    byAppointment.set(row.appointmentId, assignments)
+  }
+  return appointmentsList.map((appointment) => ({
+    ...appointment,
+    staffAssignments: byAppointment.get(appointment.id) ?? [
+      {
+        id: `legacy:${appointment.id}`,
+        staffId: appointment.staffId,
+        isLead: true,
+        allocationBasisPoints: 10_000,
+        staff: staffById.get(appointment.staffId),
+      },
+    ],
+  }))
 }
 
 function snapshotFromService(service: {
@@ -174,13 +241,39 @@ export function addonLineValues(input: {
 function staffIdCondition(staffIdFilter?: string | readonly string[]) {
   if (staffIdFilter == null) return undefined
   if (typeof staffIdFilter === 'string') {
-    return eq(appointments.staffId, staffIdFilter)
+    return or(
+      eq(appointments.staffId, staffIdFilter),
+      exists(
+        getDb()
+          .select({ id: appointmentStaffAssignments.id })
+          .from(appointmentStaffAssignments)
+          .where(
+            and(
+              eq(appointmentStaffAssignments.appointmentId, appointments.id),
+              eq(appointmentStaffAssignments.staffId, staffIdFilter),
+            ),
+          ),
+      ),
+    )
   }
   if (staffIdFilter.length === 0) return undefined
   if (staffIdFilter.length === 1) {
-    return eq(appointments.staffId, staffIdFilter[0]!)
+    return staffIdCondition(staffIdFilter[0]!)
   }
-  return inArray(appointments.staffId, [...staffIdFilter])
+  return or(
+    inArray(appointments.staffId, [...staffIdFilter]),
+    exists(
+      getDb()
+        .select({ id: appointmentStaffAssignments.id })
+        .from(appointmentStaffAssignments)
+        .where(
+          and(
+            eq(appointmentStaffAssignments.appointmentId, appointments.id),
+            inArray(appointmentStaffAssignments.staffId, [...staffIdFilter]),
+          ),
+        ),
+    ),
+  )
 }
 
 export async function getAppointmentsByDateRange(
@@ -209,7 +302,10 @@ export async function getAppointmentsByDateRange(
     salonId,
     mapped.map((appointment) => appointment.id),
   )
-  return attachAddonDetails(mapped, lines)
+  return attachStaffAssignmentDetails(
+    attachAddonDetails(mapped, lines),
+    salonId,
+  )
 }
 
 export async function getAppointmentsWithDetailsByDateRange(
@@ -268,7 +364,10 @@ export async function getAppointmentsWithDetailsByDateRange(
     salonId,
     mapped.map((appointment) => appointment.id),
   )
-  return attachAddonDetails(mapped, lines)
+  return attachStaffAssignmentDetails(
+    attachAddonDetails(mapped, lines),
+    salonId,
+  )
 }
 
 export async function getClientAppointmentsWithDetails(
@@ -320,7 +419,10 @@ export async function getClientAppointmentsWithDetails(
     salonId,
     mapped.map((appointment) => appointment.id),
   )
-  return attachAddonDetails(mapped, lines)
+  return attachStaffAssignmentDetails(
+    attachAddonDetails(mapped, lines),
+    salonId,
+  )
 }
 
 export async function getAppointmentWithDetailsById(
@@ -368,7 +470,7 @@ export async function getAppointmentWithDetailsById(
     [attachAppointmentDetails(row)],
     await getAddonLinesForAppointments(salonId, [row.appointment.id]),
   )
-  return appointment
+  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
 }
 
 export async function getAppointmentById(
@@ -387,7 +489,7 @@ export async function getAppointmentById(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return appointment
+  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
 }
 
 export type CreateAppointmentOptions = {
@@ -452,6 +554,22 @@ export async function createAppointment(
     await assertSalonDateOpen(tx, salonId, apt.date)
     const [created] = await tx.insert(appointments).values(values).returning()
     if (!created) throw new Error('appointment creation failed')
+    const staffIds = [created.staffId, ...(apt.additionalStaffIds ?? [])]
+    const allocations = apt.workAllocations ?? equalWorkAllocations(staffIds)
+    if (!validateWorkAllocations(staffIds, allocations)) {
+      throw new Error('invalid appointment work allocations')
+    }
+    await tx.insert(appointmentStaffAssignments).values(
+      staffIds.map((staffId, index) => ({
+        salonId,
+        appointmentId: created.id,
+        staffId,
+        isLead: index === 0,
+        allocationBasisPoints: allocations.find(
+          (allocation) => allocation.staffId === staffId,
+        )!.allocationBasisPoints,
+      })),
+    )
     if (selectedAddons.length > 0) {
       await tx.insert(appointmentAddonLines).values(
         addonLineValues({
@@ -471,7 +589,7 @@ export async function createAppointment(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return appointment
+  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
 }
 
 export async function updateAppointment(
@@ -552,6 +670,10 @@ export async function updateAppointment(
     patch.bookedTotalPrice = existing.bookedTotalPrice
   }
 
+  const assignmentsChanged =
+    data.staffId !== undefined ||
+    data.additionalStaffIds !== undefined ||
+    data.workAllocations !== undefined
   const [row] = await db.transaction(async (tx) => {
     if (data.date !== undefined && data.date !== existing.date) {
       await assertSalonDateOpen(tx, salonId, data.date)
@@ -580,7 +702,42 @@ export async function updateAppointment(
         )
       }
     }
-    if (updated) await syncAppointmentCommission(tx, existing, updated)
+    if (updated && assignmentsChanged) {
+      const staffIds = [
+        updated.staffId,
+        ...(data.additionalStaffIds ??
+          (existing.staffAssignments
+            ? existing.staffAssignments
+                .filter((assignment) => !assignment.isLead)
+                .map((assignment) => assignment.staffId)
+            : [])),
+      ]
+      const allocations = data.workAllocations ?? equalWorkAllocations(staffIds)
+      if (!validateWorkAllocations(staffIds, allocations)) {
+        throw new Error('invalid appointment work allocations')
+      }
+      await tx
+        .delete(appointmentStaffAssignments)
+        .where(
+          and(
+            eq(appointmentStaffAssignments.salonId, salonId),
+            eq(appointmentStaffAssignments.appointmentId, id),
+          ),
+        )
+      await tx.insert(appointmentStaffAssignments).values(
+        staffIds.map((staffId, index) => ({
+          salonId,
+          appointmentId: id,
+          staffId,
+          isLead: index === 0,
+          allocationBasisPoints: allocations.find(
+            (allocation) => allocation.staffId === staffId,
+          )!.allocationBasisPoints,
+        })),
+      )
+    }
+    if (updated)
+      await syncAppointmentCommission(tx, existing, updated, assignmentsChanged)
     return [updated]
   })
   if (!row) return undefined
@@ -588,7 +745,7 @@ export async function updateAppointment(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return appointment
+  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
 }
 
 export async function deleteAppointment(
@@ -623,26 +780,45 @@ export async function getScheduleOverlapFlags(
       startTime: appointments.startTime,
       endTime: appointments.endTime,
       status: appointments.status,
+      assignedStaffId: appointmentStaffAssignments.staffId,
     })
     .from(appointments)
+    .leftJoin(
+      appointmentStaffAssignments,
+      and(
+        eq(appointmentStaffAssignments.appointmentId, appointments.id),
+        eq(appointmentStaffAssignments.salonId, salonId),
+      ),
+    )
     .where(
       and(
         eq(appointments.salonId, salonId),
         eq(appointments.date, date),
         or(
           eq(appointments.staffId, staffId),
+          eq(appointmentStaffAssignments.staffId, staffId),
           eq(appointments.clientId, clientId),
         ),
       ),
     )
 
-  return detectScheduleOverlaps(rows, {
-    staffId,
-    clientId,
-    date,
-    startTime,
-    endTime,
-    excludeId,
-    salonId,
-  })
+  return detectScheduleOverlaps(
+    rows.map((row) => ({
+      ...row,
+      staffId:
+        row.staffId === staffId || row.assignedStaffId == null
+          ? row.staffId
+          : row.assignedStaffId,
+      assignedStaffId: undefined,
+    })),
+    {
+      staffId,
+      clientId,
+      date,
+      startTime,
+      endTime,
+      excludeId,
+      salonId,
+    },
+  )
 }

@@ -55,9 +55,14 @@ export const SALON_CONTEXT_HEADER = 'X-Saluna-Salon-Id'
  * (or the legacy claimed user id used as appointments.staffId).
  */
 export function staffOwnsAppointment(
-  appointmentStaffId: string,
+  appointmentStaffId: string | readonly string[],
   tenant: Pick<TenantUser, 'userId' | 'staffProfileId'>,
 ): boolean {
+  if (Array.isArray(appointmentStaffId)) {
+    return appointmentStaffId.some((staffId) =>
+      staffOwnsAppointment(staffId, tenant),
+    )
+  }
   if (appointmentStaffId === tenant.userId) return true
   if (
     tenant.staffProfileId != null &&

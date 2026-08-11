@@ -26,6 +26,9 @@ import type {
   DeleteApiV1MessagingAccountsByIdData,
   DeleteApiV1MessagingAccountsByIdErrors,
   DeleteApiV1MessagingAccountsByIdResponses,
+  DeleteApiV1SettingsClosuresData,
+  DeleteApiV1SettingsClosuresErrors,
+  DeleteApiV1SettingsClosuresResponses,
   DeleteApiV1StaffByIdData,
   DeleteApiV1StaffByIdErrors,
   DeleteApiV1StaffByIdResponses,
@@ -167,6 +170,8 @@ import type {
   GetApiV1PublicSalonsBySlugData,
   GetApiV1PublicSalonsBySlugErrors,
   GetApiV1PublicSalonsBySlugResponses,
+  GetApiV1PublicSalonsData,
+  GetApiV1PublicSalonsResponses,
   GetApiV1RetentionData,
   GetApiV1RetentionErrors,
   GetApiV1RetentionResponses,
@@ -203,6 +208,9 @@ import type {
   GetApiV1SettingsBusinessData,
   GetApiV1SettingsBusinessErrors,
   GetApiV1SettingsBusinessResponses,
+  GetApiV1SettingsClosuresData,
+  GetApiV1SettingsClosuresErrors,
+  GetApiV1SettingsClosuresResponses,
   GetApiV1StaffBookingAvailabilityData,
   GetApiV1StaffBookingAvailabilityErrors,
   GetApiV1StaffBookingAvailabilityResponses,
@@ -428,6 +436,9 @@ import type {
   PostApiV1ServicesImportStarterTemplatesErrors,
   PostApiV1ServicesImportStarterTemplatesResponses,
   PostApiV1ServicesResponses,
+  PostApiV1SettingsClosuresData,
+  PostApiV1SettingsClosuresErrors,
+  PostApiV1SettingsClosuresResponses,
   PostApiV1StaffByIdInviteCancelData,
   PostApiV1StaffByIdInviteCancelErrors,
   PostApiV1StaffByIdInviteCancelResponses,
@@ -2789,6 +2800,70 @@ export const patchApiV1SettingsBusiness = <
   })
 
 /**
+ * Reopen a salon date range
+ */
+export const deleteApiV1SettingsClosures = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1SettingsClosuresData, ThrowOnError>,
+): RequestResult<
+  DeleteApiV1SettingsClosuresResponses,
+  DeleteApiV1SettingsClosuresErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteApiV1SettingsClosuresResponses,
+    DeleteApiV1SettingsClosuresErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/settings/closures',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * List salon closure dates
+ */
+export const getApiV1SettingsClosures = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1SettingsClosuresData, ThrowOnError>,
+): RequestResult<
+  GetApiV1SettingsClosuresResponses,
+  GetApiV1SettingsClosuresErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetApiV1SettingsClosuresResponses,
+    GetApiV1SettingsClosuresErrors,
+    ThrowOnError
+  >({ url: '/api/v1/settings/closures', ...options })
+
+/**
+ * Close a salon date range
+ */
+export const postApiV1SettingsClosures = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SettingsClosuresData, ThrowOnError>,
+): RequestResult<
+  PostApiV1SettingsClosuresResponses,
+  PostApiV1SettingsClosuresErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1SettingsClosuresResponses,
+    PostApiV1SettingsClosuresErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1/settings/closures',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
  * Get salon presence
  *
  * Address, maps, social links, and website shown on the public page.
@@ -3273,9 +3348,23 @@ export const patchApiV1NotificationPreferences = <
   })
 
 /**
+ * List published Salon slugs
+ *
+ * Returns slugs for active Salons whose public page is enabled.
+ */
+export const getApiV1PublicSalons = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1PublicSalonsData, ThrowOnError>,
+): RequestResult<GetApiV1PublicSalonsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    GetApiV1PublicSalonsResponses,
+    unknown,
+    ThrowOnError
+  >({ url: '/api/v1/public/salons', ...options })
+
+/**
  * Get public salon page data
  *
- * Unauthenticated salon profile, public page settings, and visible services for the booking site.
+ * Unauthenticated Salon profile, Presence, saved business hours, and visible services for the public site.
  */
 export const getApiV1PublicSalonsBySlug = <
   ThrowOnError extends boolean = false,

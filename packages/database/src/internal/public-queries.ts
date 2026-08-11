@@ -254,12 +254,16 @@ function buildAppointmentsByStaffAndDate(
 ): Map<string, Map<string, Appointment[]>> {
   const byStaff = new Map<string, Map<string, Appointment[]>>()
   for (const appointment of appointments) {
-    const byDate =
-      byStaff.get(appointment.staffId) ?? new Map<string, Appointment[]>()
-    const list = byDate.get(appointment.date) ?? []
-    list.push(appointment)
-    byDate.set(appointment.date, list)
-    byStaff.set(appointment.staffId, byDate)
+    const staffIds = appointment.staffAssignments?.map(
+      (row) => row.staffId,
+    ) ?? [appointment.staffId]
+    for (const staffId of staffIds) {
+      const byDate = byStaff.get(staffId) ?? new Map<string, Appointment[]>()
+      const list = byDate.get(appointment.date) ?? []
+      list.push(appointment)
+      byDate.set(appointment.date, list)
+      byStaff.set(staffId, byDate)
+    }
   }
   return byStaff
 }

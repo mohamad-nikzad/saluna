@@ -36,6 +36,7 @@ import {
 } from '#/lib/appointment-surface'
 import { LocalizedNumberInput } from '#/components/localized-number-input'
 import { AppointmentDetailEditFieldError } from '#/components/calendar/appointment-detail/use-appointment-detail-drawer'
+import { AdditionalStaffFields } from '#/components/calendar/additional-staff-fields'
 
 interface AppointmentDetailEditFormProps {
   editForm: UseFormReturn<AppointmentFormInput>
@@ -49,6 +50,11 @@ interface AppointmentDetailEditFormProps {
   temporaryClientNameRef: RefObject<HTMLInputElement | null>
   clientId: string
   staffId: string
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
   serviceId: string
   date: string | undefined
   startTime: string | undefined
@@ -92,6 +98,8 @@ export function AppointmentDetailEditForm({
   temporaryClientNameRef,
   clientId,
   staffId,
+  additionalStaffIds = [],
+  workAllocations = [],
   serviceId,
   date,
   startTime,
@@ -144,258 +152,293 @@ export function AppointmentDetailEditForm({
         disabled={isSubmitting}
         className="min-h-0 flex-1 flex flex-col gap-4 border-0 p-0 m-0 min-w-0"
       >
-      <FieldGroup>
-        <Field>
-          <FieldLabel>مشتری</FieldLabel>
-          <AppointmentClientField
-            checkboxId="edit-temporary-client-mode"
-            useTemporaryClient={useTemporaryClient}
-            onTemporaryClientModeChange={onTemporaryClientModeChange}
-            clients={localClients}
-            clientId={clientId}
-            onClientChange={(id) =>
-              setEditValue('clientId', id, {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-            onClientCreated={onClientCreated}
-            clientIdError={editErrors.clientId?.message}
-            temporaryClientName={temporaryClientName}
-            temporaryClientNameRef={temporaryClientNameRef}
-            onTemporaryClientNameChange={(value) =>
-              setEditValue('temporaryClientName', value, {
-                shouldDirty: true,
-                shouldValidate: false,
-              })
-            }
-            temporaryClientNameError={editErrors.temporaryClientName?.message}
-            temporaryClientNotes={temporaryClientNotes}
-            onTemporaryClientNotesChange={(value) =>
-              setEditValue('temporaryClientNotes', value, { shouldDirty: true })
-            }
-          />
-        </Field>
-
-        <div className="flex min-w-0 flex-col gap-7">
+        <FieldGroup>
           <Field>
-            <FieldLabel>پرسنل</FieldLabel>
-            <StaffPicker
-              staff={staffRoleOnly}
-              value={staffId || undefined}
-              onChange={onEditStaffChange}
-              onClear={onClearEditStaff}
-              getStatus={(member) => {
-                const serviceMismatch =
-                  !!serviceId &&
-                  !eligibleStaffForService([member], serviceId).length
-                if (serviceMismatch)
-                  return {
-                    disabled: true,
-                    reason: 'این خدمت را انجام نمی‌دهد',
-                  }
-                return undefined
-              }}
-            />
-            {editErrors.staffId ? (
-              <AppointmentDetailEditFieldError
-                message={editErrors.staffId.message}
-              />
-            ) : null}
-          </Field>
-
-          <Field>
-            <FieldLabel>خدمت</FieldLabel>
-            <ServicePicker
-              services={editableServices}
-              value={serviceId || undefined}
-              onChange={onEditServiceChange}
-              onClear={onClearEditService}
-            />
-            {editErrors.serviceId ? (
-              <AppointmentDetailEditFieldError
-                message={editErrors.serviceId.message}
-              />
-            ) : null}
-          </Field>
-
-          {selectedEditService ? (
-            <Field>
-              <FieldLabel>افزودنی‌ها</FieldLabel>
-              <div className="space-y-2 rounded-lg border border-border bg-card p-3">
-                {addonsLoading ? (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Spinner className="size-3.5" />
-                    در حال دریافت افزودنی‌ها...
-                  </div>
-                ) : addonOptions.length > 0 ? (
-                  addonOptions.map((addon) => (
-                    <label
-                      key={addon.id}
-                      className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 hover:bg-muted/60"
-                    >
-                      <Checkbox
-                        checked={addonIds.includes(addon.id)}
-                        onCheckedChange={() => onToggleAddon(addon)}
-                        className="mt-0.5"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">
-                          {addon.name}
-                          {isHistoricalAddon(addon.id, availableAddons) ? (
-                            <span className="mr-2 text-xs font-normal text-muted-foreground">
-                              تاریخی
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">
-                          +{toPersianDigits(addon.durationDelta)} دقیقه · +
-                          {tomansFormatter.format(addon.priceDelta)} تومان
-                        </span>
-                      </span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    برای این خدمت افزودنی فعالی تعریف نشده است.
-                  </p>
-                )}
-                <div className="border-t border-border/60 pt-2 text-xs text-muted-foreground">
-                  جمع پیش‌نمایش: {toPersianDigits(previewDuration)} دقیقه ·{' '}
-                  {formatTomans(previewPrice)}
-                </div>
-              </div>
-            </Field>
-          ) : null}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Field>
-            <FieldLabel htmlFor="edit-date">تاریخ</FieldLabel>
-            <JalaliDatePicker
-              id="edit-date"
-              value={date ?? ''}
-              unavailableDates={unavailableDates}
-              allowUnavailableValue
-              onChange={(value) =>
-                setEditValue('date', value, {
+            <FieldLabel>مشتری</FieldLabel>
+            <AppointmentClientField
+              checkboxId="edit-temporary-client-mode"
+              useTemporaryClient={useTemporaryClient}
+              onTemporaryClientModeChange={onTemporaryClientModeChange}
+              clients={localClients}
+              clientId={clientId}
+              onClientChange={(id) =>
+                setEditValue('clientId', id, {
                   shouldDirty: true,
                   shouldValidate: true,
                 })
               }
-              required={true}
+              onClientCreated={onClientCreated}
+              clientIdError={editErrors.clientId?.message}
+              temporaryClientName={temporaryClientName}
+              temporaryClientNameRef={temporaryClientNameRef}
+              onTemporaryClientNameChange={(value) =>
+                setEditValue('temporaryClientName', value, {
+                  shouldDirty: true,
+                  shouldValidate: false,
+                })
+              }
+              temporaryClientNameError={editErrors.temporaryClientName?.message}
+              temporaryClientNotes={temporaryClientNotes}
+              onTemporaryClientNotesChange={(value) =>
+                setEditValue('temporaryClientNotes', value, {
+                  shouldDirty: true,
+                })
+              }
             />
-            {editErrors.date && (
-              <FieldError>{editErrors.date.message}</FieldError>
+          </Field>
+
+          <div className="flex min-w-0 flex-col gap-7">
+            <Field>
+              <FieldLabel>پرسنل</FieldLabel>
+              <StaffPicker
+                staff={staffRoleOnly}
+                value={staffId || undefined}
+                onChange={onEditStaffChange}
+                onClear={onClearEditStaff}
+                getStatus={(member) => {
+                  const serviceMismatch =
+                    !!serviceId &&
+                    !eligibleStaffForService([member], serviceId).length
+                  if (serviceMismatch)
+                    return {
+                      disabled: true,
+                      reason: 'این خدمت را انجام نمی‌دهد',
+                    }
+                  return undefined
+                }}
+                disabled={status === 'completed'}
+              />
+              {editErrors.staffId ? (
+                <AppointmentDetailEditFieldError
+                  message={editErrors.staffId.message}
+                />
+              ) : null}
+            </Field>
+
+            {status !== 'completed' ? (
+              <AdditionalStaffFields
+                service={selectedEditService}
+                staff={staffRoleOnly}
+                leadStaffId={staffId}
+                additionalStaffIds={additionalStaffIds}
+                workAllocations={workAllocations}
+                getStatus={(member) => {
+                  const serviceMismatch =
+                    !!serviceId &&
+                    !eligibleStaffForService([member], serviceId).length
+                  return serviceMismatch
+                    ? { disabled: true, reason: 'این خدمت را انجام نمی‌دهد' }
+                    : undefined
+                }}
+                onAdditionalStaffIdsChange={(staffIds) =>
+                  setEditValue('additionalStaffIds', staffIds, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                onWorkAllocationsChange={(allocations) =>
+                  setEditValue('workAllocations', allocations, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
+            ) : null}
+
+            <Field>
+              <FieldLabel>خدمت</FieldLabel>
+              <ServicePicker
+                services={editableServices}
+                value={serviceId || undefined}
+                onChange={onEditServiceChange}
+                onClear={onClearEditService}
+              />
+              {editErrors.serviceId ? (
+                <AppointmentDetailEditFieldError
+                  message={editErrors.serviceId.message}
+                />
+              ) : null}
+            </Field>
+
+            {selectedEditService ? (
+              <Field>
+                <FieldLabel>افزودنی‌ها</FieldLabel>
+                <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+                  {addonsLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Spinner className="size-3.5" />
+                      در حال دریافت افزودنی‌ها...
+                    </div>
+                  ) : addonOptions.length > 0 ? (
+                    addonOptions.map((addon) => (
+                      <label
+                        key={addon.id}
+                        className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 hover:bg-muted/60"
+                      >
+                        <Checkbox
+                          checked={addonIds.includes(addon.id)}
+                          onCheckedChange={() => onToggleAddon(addon)}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">
+                            {addon.name}
+                            {isHistoricalAddon(addon.id, availableAddons) ? (
+                              <span className="mr-2 text-xs font-normal text-muted-foreground">
+                                تاریخی
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            +{toPersianDigits(addon.durationDelta)} دقیقه · +
+                            {tomansFormatter.format(addon.priceDelta)} تومان
+                          </span>
+                        </span>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      برای این خدمت افزودنی فعالی تعریف نشده است.
+                    </p>
+                  )}
+                  <div className="border-t border-border/60 pt-2 text-xs text-muted-foreground">
+                    جمع پیش‌نمایش: {toPersianDigits(previewDuration)} دقیقه ·{' '}
+                    {formatTomans(previewPrice)}
+                  </div>
+                </div>
+              </Field>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Field>
+              <FieldLabel htmlFor="edit-date">تاریخ</FieldLabel>
+              <JalaliDatePicker
+                id="edit-date"
+                value={date ?? ''}
+                unavailableDates={unavailableDates}
+                allowUnavailableValue
+                onChange={(value) =>
+                  setEditValue('date', value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                required={true}
+              />
+              {editErrors.date && (
+                <FieldError>{editErrors.date.message}</FieldError>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="edit-time">شروع</FieldLabel>
+              <TimePicker
+                id="edit-time"
+                value={startTime ?? ''}
+                onChange={(st) => {
+                  setEditValue('startTime', st, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                  setEditValue(
+                    'endTime',
+                    endTimeFromDuration(st, durationMinutes),
+                    {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    },
+                  )
+                }}
+                label="ساعت شروع"
+              />
+              {editErrors.startTime && (
+                <FieldError>{editErrors.startTime.message}</FieldError>
+              )}
+            </Field>
+          </div>
+
+          <Field>
+            <FieldLabel htmlFor="edit-duration">مدت (دقیقه)</FieldLabel>
+            <LocalizedNumberInput
+              id="edit-duration"
+              value={durationInput}
+              onValueChange={applyDurationInput}
+              onBlur={() => {
+                void triggerEdit('durationMinutes')
+              }}
+            />
+            {editErrors.durationMinutes && (
+              <FieldError>{editErrors.durationMinutes.message}</FieldError>
             )}
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="edit-time">شروع</FieldLabel>
-            <TimePicker
-              id="edit-time"
-              value={startTime ?? ''}
-              onChange={(st) => {
-                setEditValue('startTime', st, {
+            <FieldLabel htmlFor="edit-final-price">
+              قیمت نهایی (تومان)
+            </FieldLabel>
+            <LocalizedNumberInput
+              id="edit-final-price"
+              value={finalPrice}
+              disabled={!priceEditable}
+              onValueChange={(value) =>
+                setEditValue('finalPrice', value, {
                   shouldDirty: true,
                   shouldValidate: true,
                 })
-                setEditValue(
-                  'endTime',
-                  endTimeFromDuration(st, durationMinutes),
-                  {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  },
-                )
-              }}
-              label="ساعت شروع"
+              }
+              onBlur={() => void triggerEdit('finalPrice')}
             />
-            {editErrors.startTime && (
-              <FieldError>{editErrors.startTime.message}</FieldError>
+            {!priceEditable ? (
+              <p className="text-xs text-muted-foreground">
+                مهلت ۳۰ روزه ویرایش مبلغ به پایان رسیده است.
+              </p>
+            ) : null}
+            {editErrors.finalPrice && (
+              <FieldError>{editErrors.finalPrice.message}</FieldError>
             )}
           </Field>
-        </div>
 
-        <Field>
-          <FieldLabel htmlFor="edit-duration">مدت (دقیقه)</FieldLabel>
-          <LocalizedNumberInput
-            id="edit-duration"
-            value={durationInput}
-            onValueChange={applyDurationInput}
-            onBlur={() => {
-              void triggerEdit('durationMinutes')
-            }}
-          />
-          {editErrors.durationMinutes && (
-            <FieldError>{editErrors.durationMinutes.message}</FieldError>
-          )}
-        </Field>
+          <Field>
+            <FieldLabel htmlFor="edit-end">پایان</FieldLabel>
+            <TimePicker
+              id="edit-end"
+              value={endTime ?? ''}
+              onChange={applyEndTime}
+              label="ساعت پایان"
+            />
+            {editErrors.endTime && (
+              <FieldError>{editErrors.endTime.message}</FieldError>
+            )}
+          </Field>
 
-        <Field>
-          <FieldLabel htmlFor="edit-final-price">قیمت نهایی (تومان)</FieldLabel>
-          <LocalizedNumberInput
-            id="edit-final-price"
-            value={finalPrice}
-            disabled={!priceEditable}
-            onValueChange={(value) =>
-              setEditValue('finalPrice', value, {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-            onBlur={() => void triggerEdit('finalPrice')}
-          />
-          {!priceEditable ? (
-            <p className="text-xs text-muted-foreground">
-              مهلت ۳۰ روزه ویرایش مبلغ به پایان رسیده است.
-            </p>
-          ) : null}
-          {editErrors.finalPrice && (
-            <FieldError>{editErrors.finalPrice.message}</FieldError>
-          )}
-        </Field>
+          <Field>
+            <FieldLabel>وضعیت</FieldLabel>
+            <Select value={status} onValueChange={onStatusChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(APPOINTMENT_STATUS).map(([key, info]) => (
+                  <SelectItem key={key} value={key}>
+                    {info.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
-        <Field>
-          <FieldLabel htmlFor="edit-end">پایان</FieldLabel>
-          <TimePicker
-            id="edit-end"
-            value={endTime ?? ''}
-            onChange={applyEndTime}
-            label="ساعت پایان"
-          />
-          {editErrors.endTime && (
-            <FieldError>{editErrors.endTime.message}</FieldError>
-          )}
-        </Field>
+          <Field>
+            <FieldLabel htmlFor="edit-notes">توضیحات (اختیاری)</FieldLabel>
+            <Input
+              id="edit-notes"
+              placeholder="یادداشت درباره این نوبت…"
+              {...registerEdit('notes')}
+            />
+          </Field>
 
-        <Field>
-          <FieldLabel>وضعیت</FieldLabel>
-          <Select value={status} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(APPOINTMENT_STATUS).map(([key, info]) => (
-                <SelectItem key={key} value={key}>
-                  {info.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="edit-notes">توضیحات (اختیاری)</FieldLabel>
-          <Input
-            id="edit-notes"
-            placeholder="یادداشت درباره این نوبت…"
-            {...registerEdit('notes')}
-          />
-        </Field>
-
-        <FormRootError message={editErrors.root?.message} />
-      </FieldGroup>
+          <FormRootError message={editErrors.root?.message} />
+        </FieldGroup>
       </fieldset>
     </form>
   )

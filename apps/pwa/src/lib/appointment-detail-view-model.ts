@@ -9,6 +9,7 @@ import type {
   User,
 } from '@repo/salon-core/types'
 import type { AppointmentFormInput } from '@repo/salon-core/forms/appointment'
+import { equalWorkAllocations } from '@repo/salon-core/commissions'
 
 export const tomansFormatter = new Intl.NumberFormat('fa-IR')
 
@@ -122,6 +123,15 @@ export function appointmentEditFormDefaults(
       : '',
     clientId: appointment.client.isPlaceholder ? '' : appointment.clientId,
     staffId: appointment.staffId,
+    additionalStaffIds:
+      appointment.staffAssignments
+        ?.filter((assignment) => !assignment.isLead)
+        .map((assignment) => assignment.staffId) ?? [],
+    workAllocations:
+      appointment.staffAssignments?.map((assignment) => ({
+        staffId: assignment.staffId,
+        allocationBasisPoints: assignment.allocationBasisPoints,
+      })) ?? equalWorkAllocations([appointment.staffId]),
     serviceId: appointment.serviceId,
     date: appointment.date,
     startTime: appointment.startTime,

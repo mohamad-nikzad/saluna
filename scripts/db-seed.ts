@@ -12,6 +12,7 @@ import type { UserRole } from '@repo/salon-core/types'
 import { getDb } from '@repo/database/client'
 import {
   appointments,
+  appointmentStaffAssignments,
   appointmentRequests,
   businessSettings,
   clientFollowUps,
@@ -383,6 +384,7 @@ type SeedServiceRow = {
   duration: number
   price: number
   color: 'rose' | 'violet' | 'mint' | 'gold' | 'coral'
+  allowMultipleStaff?: boolean
 }
 
 type SeedComboRow = {
@@ -436,6 +438,7 @@ const primarySeedServices: SeedServiceRow[] = [
     duration: 150,
     price: 1_800_000,
     color: 'rose',
+    allowMultipleStaff: true,
   },
   {
     category: 'مو',
@@ -777,6 +780,7 @@ async function seedServiceCatalog(salonId: string, rows: SeedServiceRow[]) {
         price: row.price,
         color: row.color,
         active: true,
+        allowMultipleStaff: row.allowMultipleStaff ?? false,
       })
       .onConflictDoUpdate({
         target: [services.salonId, services.name],
@@ -788,6 +792,7 @@ async function seedServiceCatalog(salonId: string, rows: SeedServiceRow[]) {
           color: row.color,
           kind: 'standard',
           active: true,
+          allowMultipleStaff: row.allowMultipleStaff ?? false,
         },
       })
   }
@@ -1455,6 +1460,21 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       })),
     )
     .returning()
+  const insertedAssignments =
+    insertedAppointments.length === 0
+      ? []
+      : await db
+          .insert(appointmentStaffAssignments)
+          .values(
+            insertedAppointments.map((appointment) => ({
+              salonId,
+              appointmentId: appointment.id,
+              staffId: appointment.staffId,
+              isLead: true,
+              allocationBasisPoints: 10_000,
+            })),
+          )
+          .returning()
 
   const commissionRates = new Map([
     [staffA.id, 3_000],
@@ -1490,6 +1510,12 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     (appointment) => appointment.status === 'completed',
   )
   if (completedAppointments.length > 0) {
+    const assignmentByAppointment = new Map(
+      insertedAssignments.map((assignment) => [
+        assignment.appointmentId,
+        assignment,
+      ]),
+    )
     await db
       .insert(staffCommissions)
       .values(
@@ -1500,6 +1526,9 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
             salonId,
             staffProfileId: appointment.staffId,
             appointmentId: appointment.id,
+            appointmentStaffAssignmentId: assignmentByAppointment.get(
+              appointment.id,
+            )!.id,
             basis: appointment.bookedTotalPrice,
             percentageBasisPoints,
             amount: commissionAmount(
@@ -1509,7 +1538,9 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
           }
         }),
       )
-      .onConflictDoNothing({ target: staffCommissions.appointmentId })
+      .onConflictDoNothing({
+        target: staffCommissions.appointmentStaffAssignmentId,
+      })
   }
 
   const days = [0, 1, 2, 3, 4, 5, 6] as const
@@ -1928,60 +1959,72 @@ async function main() {
     skincareService &&
     allClients.length >= 4
   ) {
-    await db.insert(appointments).values([
-      {
+    const insertedAppointments = await db
+      .insert(appointments)
+      .values([
+        {
+          salonId: primarySalon.id,
+          clientId: allClients[0].id,
+          staffId: staffA.id,
+          serviceId: hairService.id,
+          ...appointmentSnapshot(hairService),
+          date: formatDate(today),
+          startTime: '09:00',
+          endTime: '09:45',
+          status: 'confirmed',
+          notes: 'کوتاهی کلاسیک',
+          createdByUserId: manager.id,
+        },
+        {
+          salonId: primarySalon.id,
+          clientId: allClients[1].id,
+          staffId: staffB.id,
+          serviceId: manicureService.id,
+          ...appointmentSnapshot(manicureService),
+          date: formatDate(today),
+          startTime: '10:00',
+          endTime: '10:30',
+          status: 'scheduled',
+          notes: null,
+          createdByUserId: manager.id,
+        },
+        {
+          salonId: primarySalon.id,
+          clientId: allClients[2].id,
+          staffId: staffA.id,
+          serviceId: colorService.id,
+          ...appointmentSnapshot(colorService),
+          date: formatDate(today),
+          startTime: '14:00',
+          endTime: '16:00',
+          status: 'scheduled',
+          notes: 'رنگ کامل',
+          createdByUserId: manager.id,
+        },
+        {
+          salonId: primarySalon.id,
+          clientId: allClients[3].id,
+          staffId: staffSkin.id,
+          serviceId: skincareService.id,
+          ...appointmentSnapshot(skincareService),
+          date: formatDate(tomorrow),
+          startTime: '11:00',
+          endTime: '12:00',
+          status: 'confirmed',
+          notes: null,
+          createdByUserId: manager.id,
+        },
+      ])
+      .returning()
+    await db.insert(appointmentStaffAssignments).values(
+      insertedAppointments.map((appointment) => ({
         salonId: primarySalon.id,
-        clientId: allClients[0].id,
-        staffId: staffA.id,
-        serviceId: hairService.id,
-        ...appointmentSnapshot(hairService),
-        date: formatDate(today),
-        startTime: '09:00',
-        endTime: '09:45',
-        status: 'confirmed',
-        notes: 'کوتاهی کلاسیک',
-        createdByUserId: manager.id,
-      },
-      {
-        salonId: primarySalon.id,
-        clientId: allClients[1].id,
-        staffId: staffB.id,
-        serviceId: manicureService.id,
-        ...appointmentSnapshot(manicureService),
-        date: formatDate(today),
-        startTime: '10:00',
-        endTime: '10:30',
-        status: 'scheduled',
-        notes: null,
-        createdByUserId: manager.id,
-      },
-      {
-        salonId: primarySalon.id,
-        clientId: allClients[2].id,
-        staffId: staffA.id,
-        serviceId: colorService.id,
-        ...appointmentSnapshot(colorService),
-        date: formatDate(today),
-        startTime: '14:00',
-        endTime: '16:00',
-        status: 'scheduled',
-        notes: 'رنگ کامل',
-        createdByUserId: manager.id,
-      },
-      {
-        salonId: primarySalon.id,
-        clientId: allClients[3].id,
-        staffId: staffSkin.id,
-        serviceId: skincareService.id,
-        ...appointmentSnapshot(skincareService),
-        date: formatDate(tomorrow),
-        startTime: '11:00',
-        endTime: '12:00',
-        status: 'confirmed',
-        notes: null,
-        createdByUserId: manager.id,
-      },
-    ])
+        appointmentId: appointment.id,
+        staffId: appointment.staffId,
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      })),
+    )
   }
 
   await seedServiceCatalog(secondSalon.id, secondSalonSeedServices)

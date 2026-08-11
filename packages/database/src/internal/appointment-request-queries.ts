@@ -356,11 +356,26 @@ export type ApproveAppointmentRequestInput = {
   id: string
   salonId: string
   staffId: string
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
   reviewedByUserId: string
 }
 
 export type ApproveAppointmentRequestResult =
-  | { ok: true; appointmentId: string; clientId: string }
+  | {
+      ok: true
+      appointmentId: string
+      clientId: string
+      notification?: {
+        appointment: Awaited<ReturnType<typeof createAppointment>>
+        staffIds: string[]
+        clientName: string
+        serviceName: string
+      }
+    }
   | { ok: false; status: number; error: string; code?: string }
 
 /**
@@ -412,6 +427,8 @@ export async function approveAppointmentRequest(
     salonId: input.salonId,
     clientId: client.id,
     staffId: input.staffId,
+    additionalStaffIds: input.additionalStaffIds,
+    workAllocations: input.workAllocations,
     serviceId: request.serviceId,
     date: request.requestedDate,
     startTime: request.requestedStartTime,
@@ -472,7 +489,19 @@ export async function approveAppointmentRequest(
     return { ok: false, status: 409, error: 'این درخواست قابل تأیید نیست' }
   }
 
-  return { ok: true, appointmentId: appointment.id, clientId: client.id }
+  return {
+    ok: true,
+    appointmentId: appointment.id,
+    clientId: client.id,
+    notification: {
+      appointment,
+      staffIds: (intake.staffMembers ?? [intake.staff]).map(
+        (member) => member.id,
+      ),
+      clientName: intake.client.name,
+      serviceName: intake.service.name,
+    },
+  }
 }
 
 export type ConvertFlexibleAppointmentRequestInput = {
@@ -481,11 +510,26 @@ export type ConvertFlexibleAppointmentRequestInput = {
   finalDate: string
   startTime: string
   staffId: string
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
   reviewedByUserId: string
 }
 
 export type ConvertFlexibleAppointmentRequestResult =
-  | { ok: true; appointmentId: string; clientId: string }
+  | {
+      ok: true
+      appointmentId: string
+      clientId: string
+      notification?: {
+        appointment: Awaited<ReturnType<typeof createAppointment>>
+        staffIds: string[]
+        clientName: string
+        serviceName: string
+      }
+    }
   | { ok: false; status: number; error: string; code?: string }
 
 export async function convertFlexibleAppointmentRequest(
@@ -526,6 +570,8 @@ export async function convertFlexibleAppointmentRequest(
     salonId: input.salonId,
     clientId,
     staffId: input.staffId,
+    additionalStaffIds: input.additionalStaffIds,
+    workAllocations: input.workAllocations,
     serviceId: request.serviceId,
     date: input.finalDate,
     startTime: input.startTime,
@@ -586,6 +632,14 @@ export async function convertFlexibleAppointmentRequest(
         ok: true,
         appointmentId: appointment.id,
         clientId,
+        notification: {
+          appointment,
+          staffIds: (intake.staffMembers ?? [intake.staff]).map(
+            (member) => member.id,
+          ),
+          clientName: intake.client.name,
+          serviceName: intake.service.name,
+        },
       }
     })
   } catch (error) {

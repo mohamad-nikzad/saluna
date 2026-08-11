@@ -147,6 +147,10 @@ describe('appointmentEditFormDefaults', () => {
       temporaryClientNotes: 'بعدا تماس',
       clientId: '',
       staffId: 's1',
+      additionalStaffIds: [],
+      workAllocations: [
+        { staffId: 's1', allocationBasisPoints: 10_000 },
+      ],
       serviceId: 'svc1',
       date: '2026-06-02',
       startTime: '10:00',

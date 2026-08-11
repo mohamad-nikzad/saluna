@@ -1,5 +1,9 @@
 import type { Appointment, Client, Service, User } from '@repo/salon-core/types'
 import {
+  equalWorkAllocations,
+  validateWorkAllocations,
+} from '@repo/salon-core/commissions'
+import {
   SCHEDULE_CONFLICT_CODES,
   isBlockingAppointmentStatus,
 } from '@repo/salon-core/appointment-conflict'
@@ -35,18 +39,29 @@ type SnapshotKeys =
   | 'bookedTotalPrice'
   | 'bookedAddonCount'
   | 'bookedAddons'
+  | 'staffAssignments'
 type AppointmentCommand = Omit<
   Appointment,
   'id' | 'createdAt' | 'updatedAt' | SnapshotKeys
 > & {
   id?: string
   addonIds?: string[]
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
 }
 type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
   finalPrice?: number
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
 }
 
 type AppointmentIntakeFailure = {
@@ -62,6 +77,7 @@ export type CreateAppointmentIntakeResult =
       command: AppointmentCommand
       client: Client
       staff: User
+      staffMembers: User[]
       service: Service
     }
   | AppointmentIntakeFailure
@@ -72,6 +88,7 @@ export type UpdateAppointmentIntakeResult =
       patch: AppointmentPatch
       client: Client
       staff: User
+      staffMembers: User[]
       service: Service
     }
   | AppointmentIntakeFailure
@@ -99,6 +116,83 @@ function explicitAddonIds(raw: unknown): string[] | null {
   return Array.isArray(raw) && raw.every((item) => typeof item === 'string')
     ? raw
     : null
+}
+
+function explicitStaffIds(raw: unknown): string[] | null {
+  return Array.isArray(raw) && raw.every((item) => typeof item === 'string')
+    ? raw
+    : null
+}
+
+function explicitWorkAllocations(raw: unknown) {
+  return Array.isArray(raw) &&
+    raw.every(
+      (item) =>
+        typeof item === 'object' &&
+        item != null &&
+        typeof (item as { staffId?: unknown }).staffId === 'string' &&
+        typeof (item as { allocationBasisPoints?: unknown })
+          .allocationBasisPoints === 'number',
+    )
+    ? (raw as Array<{ staffId: string; allocationBasisPoints: number }>)
+    : null
+}
+
+async function validateStaffAssignments(input: {
+  salonId: string
+  service: Service
+  leadStaff: User
+  additionalStaffIds: string[]
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }> | null
+}): Promise<
+  | {
+      ok: true
+      staffMembers: User[]
+      workAllocations: Array<{
+        staffId: string
+        allocationBasisPoints: number
+      }>
+    }
+  | AppointmentIntakeFailure
+> {
+  const staffIds = [input.leadStaff.id, ...input.additionalStaffIds]
+  if (new Set(staffIds).size !== staffIds.length) {
+    return fail(400, 'هر پرسنل فقط یک‌بار می‌تواند انتخاب شود')
+  }
+  if (staffIds.length > 1 && !input.service.allowMultipleStaff) {
+    return fail(400, 'این خدمت فقط یک پرسنل می‌پذیرد')
+  }
+
+  const allStaff = await getAllStaff(input.salonId)
+  const staffMembers = staffIds.map((id) =>
+    allStaff.find(
+      (candidate) => candidate.id === id && candidate.role === 'staff',
+    ),
+  )
+  if (staffMembers.some((member) => !member)) {
+    return fail(404, 'پرسنل یافت نشد')
+  }
+  for (const staffId of input.additionalStaffIds) {
+    if (
+      !(await staffMayPerformService(staffId, input.service.id, input.salonId))
+    ) {
+      return fail(400, 'یکی از پرسنل انتخاب‌شده این خدمت را انجام نمی‌دهد')
+    }
+  }
+
+  const workAllocations =
+    input.workAllocations ?? equalWorkAllocations(staffIds)
+  if (!validateWorkAllocations(staffIds, workAllocations)) {
+    return fail(400, 'سهم کار پرسنل باید کامل و در مجموع ۱۰۰٪ باشد')
+  }
+  return {
+    ok: true,
+    staffMembers: staffMembers as User[],
+    workAllocations,
+  }
 }
 
 async function validateSelectedAddons(input: {
@@ -247,6 +341,8 @@ export async function validateCreateAppointmentIntake(input: {
   endTime?: unknown
   durationMinutes?: unknown
   addonIds?: unknown
+  additionalStaffIds?: unknown
+  workAllocations?: unknown
   notes?: string
   requestedAppointmentId?: unknown
 }): Promise<CreateAppointmentIntakeResult> {
@@ -267,6 +363,26 @@ export async function validateCreateAppointmentIntake(input: {
     serviceId: input.serviceId,
   })
   if (!refs.ok) return refs
+
+  const additionalStaffIds = explicitStaffIds(input.additionalStaffIds) ?? []
+  if (
+    input.additionalStaffIds !== undefined &&
+    explicitStaffIds(input.additionalStaffIds) == null
+  ) {
+    return fail(400, 'فهرست پرسنل نامعتبر است')
+  }
+  const rawAllocations = explicitWorkAllocations(input.workAllocations)
+  if (input.workAllocations !== undefined && rawAllocations == null) {
+    return fail(400, 'سهم کار پرسنل نامعتبر است')
+  }
+  const assignments = await validateStaffAssignments({
+    salonId: input.salonId,
+    service: refs.service,
+    leadStaff: refs.staff,
+    additionalStaffIds,
+    workAllocations: rawAllocations,
+  })
+  if (!assignments.ok) return assignments
 
   const placeholderUsage = await validatePlaceholderClientUsage({
     salonId: input.salonId,
@@ -303,21 +419,25 @@ export async function validateCreateAppointmentIntake(input: {
     return fail(400, windowCheck.error)
   }
 
-  const schedule = await validateBlockingSchedule({
-    salonId: input.salonId,
-    staffId: input.staffId,
-    clientId: input.clientId,
-    date: input.date,
-    startTime: input.startTime,
-    endTime,
-  })
-  if (schedule !== true) return schedule
+  for (const staffMember of assignments.staffMembers) {
+    const schedule = await validateBlockingSchedule({
+      salonId: input.salonId,
+      staffId: staffMember.id,
+      clientId: input.clientId,
+      date: input.date,
+      startTime: input.startTime,
+      endTime,
+    })
+    if (schedule !== true) return schedule
+  }
 
   return {
     ok: true,
     command: {
       clientId: input.clientId,
       staffId: input.staffId,
+      additionalStaffIds,
+      workAllocations: assignments.workAllocations,
       serviceId: input.serviceId,
       date: input.date,
       startTime: input.startTime,
@@ -332,6 +452,7 @@ export async function validateCreateAppointmentIntake(input: {
     },
     client: refs.client,
     staff: refs.staff,
+    staffMembers: assignments.staffMembers,
     service: refs.service,
   }
 }
@@ -343,6 +464,8 @@ export async function validateUpdateAppointmentIntake(input: {
   body: {
     clientId?: unknown
     staffId?: unknown
+    additionalStaffIds?: unknown
+    workAllocations?: unknown
     serviceId?: unknown
     date?: unknown
     startTime?: unknown
@@ -364,6 +487,23 @@ export async function validateUpdateAppointmentIntake(input: {
   const resolvedClientId =
     typeof body.clientId === 'string' ? body.clientId : existing.clientId
   const resolvedDate = typeof body.date === 'string' ? body.date : existing.date
+  const existingAssignments = existing.staffAssignments?.length
+    ? existing.staffAssignments
+    : [
+        {
+          id: `legacy:${existing.id}`,
+          staffId: existing.staffId,
+          isLead: true,
+          allocationBasisPoints: 10_000,
+        },
+      ]
+  const additionalStaffIds =
+    body.additionalStaffIds === undefined
+      ? existingAssignments
+          .filter((assignment) => !assignment.isLead)
+          .map((assignment) => assignment.staffId)
+      : explicitStaffIds(body.additionalStaffIds)
+  if (additionalStaffIds == null) return fail(400, 'فهرست پرسنل نامعتبر است')
 
   const duration = positiveDurationMinutes(body.durationMinutes)
   const startChanged =
@@ -444,6 +584,47 @@ export async function validateUpdateAppointmentIntake(input: {
   })
   if (!refs.ok) return refs
 
+  const assignmentIdsChanged =
+    resolvedStaffId !== existing.staffId ||
+    additionalStaffIds.join('|') !==
+      existingAssignments
+        .filter((assignment) => !assignment.isLead)
+        .map((assignment) => assignment.staffId)
+        .join('|')
+  const rawAllocations = explicitWorkAllocations(body.workAllocations)
+  if (body.workAllocations !== undefined && rawAllocations == null) {
+    return fail(400, 'سهم کار پرسنل نامعتبر است')
+  }
+  const existingAllocations = existingAssignments.map((assignment) => ({
+    staffId: assignment.staffId,
+    allocationBasisPoints: assignment.allocationBasisPoints,
+  }))
+  const candidateAllocations =
+    rawAllocations ?? (assignmentIdsChanged ? null : existingAllocations)
+  const assignments = await validateStaffAssignments({
+    salonId: input.salonId,
+    service: refs.service,
+    leadStaff: refs.staff,
+    additionalStaffIds,
+    workAllocations: candidateAllocations,
+  })
+  if (!assignments.ok) return assignments
+  const allocationsChanged =
+    assignments.workAllocations.some((allocation) => {
+      const previous = existingAllocations.find(
+        (candidate) => candidate.staffId === allocation.staffId,
+      )
+      return (
+        previous?.allocationBasisPoints !== allocation.allocationBasisPoints
+      )
+    }) || assignments.workAllocations.length !== existingAllocations.length
+  if (
+    existing.status === 'completed' &&
+    (assignmentIdsChanged || allocationsChanged)
+  ) {
+    return fail(409, 'پس از تکمیل نوبت نمی‌توان پرسنل یا سهم کار را تغییر داد')
+  }
+
   const placeholderUsage = await validatePlaceholderClientUsage({
     salonId: input.salonId,
     clientId: refs.client.id,
@@ -463,21 +644,26 @@ export async function validateUpdateAppointmentIntake(input: {
       : existing.status
 
   if (isBlockingAppointmentStatus(resolvedStatus)) {
-    const schedule = await validateBlockingSchedule({
-      salonId: input.salonId,
-      staffId: resolvedStaffId,
-      clientId: resolvedClientId,
-      date: resolvedDate,
-      startTime: effectiveStart,
-      endTime,
-      excludeId: input.appointmentId,
-    })
-    if (schedule !== true) return schedule
+    for (const staffMember of assignments.staffMembers) {
+      const schedule = await validateBlockingSchedule({
+        salonId: input.salonId,
+        staffId: staffMember.id,
+        clientId: resolvedClientId,
+        date: resolvedDate,
+        startTime: effectiveStart,
+        endTime,
+        excludeId: input.appointmentId,
+      })
+      if (schedule !== true) return schedule
+    }
   }
 
   const patch: AppointmentPatch = { endTime }
   if (body.clientId !== undefined) patch.clientId = body.clientId as string
-  if (body.staffId !== undefined) patch.staffId = body.staffId as string
+  if (resolvedStaffId !== existing.staffId) patch.staffId = resolvedStaffId
+  if (assignmentIdsChanged) patch.additionalStaffIds = additionalStaffIds
+  if (assignmentIdsChanged || allocationsChanged)
+    patch.workAllocations = assignments.workAllocations
   if (serviceChanged) patch.serviceId = body.serviceId as string
   if (addonIdsChanged) patch.addonIds = addonIds ?? []
   if (body.date !== undefined) patch.date = body.date as string
@@ -493,6 +679,7 @@ export async function validateUpdateAppointmentIntake(input: {
     patch,
     client: refs.client,
     staff: refs.staff,
+    staffMembers: assignments.staffMembers,
     service: refs.service,
   }
 }

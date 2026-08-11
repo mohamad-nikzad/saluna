@@ -51,6 +51,7 @@ export interface Service {
   active: boolean
   description?: string | null
   kind?: 'standard' | 'combo'
+  allowMultipleStaff?: boolean
 }
 
 export interface ServiceCategory {
@@ -230,6 +231,7 @@ export interface Appointment {
   id: string
   clientId: string
   staffId: string
+  staffAssignments?: AppointmentStaffAssignment[]
   serviceId: string
   bookedServiceName: string
   bookedServiceDuration: number
@@ -245,6 +247,14 @@ export interface Appointment {
   notes?: string
   createdAt: Date
   updatedAt: Date
+}
+
+export interface AppointmentStaffAssignment {
+  id: string
+  staffId: string
+  isLead: boolean
+  allocationBasisPoints: number
+  staff?: User
 }
 
 export interface AppointmentWithDetails extends Appointment {

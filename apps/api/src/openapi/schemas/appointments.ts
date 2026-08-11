@@ -44,6 +44,15 @@ export const appointmentCreateBodySchema = bodyFromCoreSchema(
       })
       .optional(),
     staffId: z.string(),
+    additionalStaffIds: z.array(z.string()).optional(),
+    workAllocations: z
+      .array(
+        z.object({
+          staffId: z.string(),
+          allocationBasisPoints: z.number().int(),
+        }),
+      )
+      .optional(),
     serviceId: z.string(),
     addonIds: z.array(z.string()).optional(),
     date: z.string().openapi({ example: '2026-06-07' }),
@@ -67,6 +76,15 @@ export const appointmentUpdateBodySchema = bodyFromCoreSchema(
       })
       .optional(),
     staffId: z.string().optional(),
+    additionalStaffIds: z.array(z.string()).optional(),
+    workAllocations: z
+      .array(
+        z.object({
+          staffId: z.string(),
+          allocationBasisPoints: z.number().int(),
+        }),
+      )
+      .optional(),
     serviceId: z.string().optional(),
     addonIds: z.array(z.string()).optional(),
     date: z.string().optional(),

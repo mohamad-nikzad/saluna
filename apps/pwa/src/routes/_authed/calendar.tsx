@@ -198,7 +198,11 @@ function CalendarPage() {
     if (!isManager) return appointments
     return appointments.filter((a) => {
       const staffMatches =
-        selectedStaffIds.length === 0 || selectedStaffIds.includes(a.staffId)
+        selectedStaffIds.length === 0 ||
+        (a.staffAssignments?.some((assignment) =>
+          selectedStaffIds.includes(assignment.staffId),
+        ) ??
+          selectedStaffIds.includes(a.staffId))
       const serviceMatches =
         selectedServiceIds.length === 0 ||
         selectedServiceIds.includes(a.serviceId)
@@ -228,7 +232,11 @@ function CalendarPage() {
     return appointments
       .filter((a) => {
         const staffMatches =
-          selectedStaffIds.length === 0 || selectedStaffIds.includes(a.staffId)
+          selectedStaffIds.length === 0 ||
+          (a.staffAssignments?.some((assignment) =>
+            selectedStaffIds.includes(assignment.staffId),
+          ) ??
+            selectedStaffIds.includes(a.staffId))
         const serviceMatches =
           selectedServiceIds.length === 0 ||
           selectedServiceIds.includes(a.serviceId)

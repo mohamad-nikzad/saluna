@@ -235,11 +235,22 @@ const bookedAddonSchema = z
   .passthrough()
   .openapi('BookedAppointmentAddonLine')
 
+const appointmentStaffAssignmentSchema = z
+  .object({
+    id: z.string(),
+    staffId: z.string(),
+    isLead: z.boolean(),
+    allocationBasisPoints: z.number().int(),
+    staff: userSchema.optional(),
+  })
+  .openapi('AppointmentStaffAssignment')
+
 export const appointmentWithDetailsSchema = z
   .object({
     id: z.string(),
     clientId: z.string(),
     staffId: z.string(),
+    staffAssignments: z.array(appointmentStaffAssignmentSchema).optional(),
     serviceId: z.string(),
     bookedServiceName: z.string(),
     bookedServiceDuration: z.number(),

@@ -218,6 +218,7 @@ function toServiceBody(payload: ServiceFormPayload) {
     price: payload.price,
     color: normalizeCalendarColorId(payload.color),
     active: payload.active,
+    allowMultipleStaff: payload.allowMultipleStaff,
     description: payload.description,
   }
 }

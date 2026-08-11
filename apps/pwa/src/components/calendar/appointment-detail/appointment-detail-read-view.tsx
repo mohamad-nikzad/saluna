@@ -142,7 +142,16 @@ export function AppointmentDetailReadView({
             {appointment.bookedServiceName}
           </div>
           <div className="truncate text-[13px] text-muted-foreground">
-            {appointment.staff.name}
+            {appointment.staffAssignments?.length
+              ? appointment.staffAssignments
+                  .map(
+                    (assignment) =>
+                      assignment.staff?.name ??
+                      (assignment.isLead ? appointment.staff.name : ''),
+                  )
+                  .filter(Boolean)
+                  .join('، ')
+              : appointment.staff.name}
             {appointment.bookedAddonCount > 0
               ? ` · +${toPersianDigits(appointment.bookedAddonCount)} افزودنی`
               : ''}
@@ -152,6 +161,29 @@ export function AppointmentDetailReadView({
           <ChevronLeft className="size-4 shrink-0 text-muted-foreground" />
         ) : null}
       </button>
+
+      {(appointment.staffAssignments?.length ?? 0) > 1 ? (
+        <div className="rounded-2xl bg-blush-soft p-3.5 text-sm">
+          <p className="mb-2 font-medium">پرسنل و سهم کار</p>
+          <div className="space-y-1.5">
+            {appointment.staffAssignments?.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
+              >
+                <span>
+                  {assignment.staff?.name ??
+                    (assignment.isLead ? appointment.staff.name : 'پرسنل')}
+                  {assignment.isLead ? ' · مسئول اصلی' : ''}
+                </span>
+                <span>
+                  {toPersianDigits(assignment.allocationBasisPoints / 100)}٪
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {appointment.bookedAddons && appointment.bookedAddons.length > 0 ? (
         <div className="rounded-2xl bg-blush-soft p-3.5 text-sm">

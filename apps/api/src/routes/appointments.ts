@@ -31,11 +31,6 @@ import {
   completePlaceholderClientSchema,
 } from '@repo/salon-core/forms/appointment'
 import {
-  isWebPushConfigured,
-  notifyStaffOfAppointmentCreated,
-  sendWebPushToUser,
-} from '@repo/notifications'
-import {
   isManagerRole,
   staffAppointmentStaffIds,
   staffOwnsAppointment,
@@ -44,6 +39,7 @@ import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
+import { notifyAssignedStaff } from '../lib/appointment-notifications'
 
 const idParamSchema = z.object({ id: z.string().min(1) })
 
@@ -110,6 +106,8 @@ export const appointments = new Hono<AppEnv>()
         clientId,
         placeholderClient,
         staffId,
+        additionalStaffIds,
+        workAllocations,
         serviceId,
         addonIds,
         date,
@@ -139,6 +137,8 @@ export const appointments = new Hono<AppEnv>()
           salonId,
           clientId: resolvedClientId,
           staffId,
+          additionalStaffIds,
+          workAllocations,
           serviceId,
           date,
           startTime,
@@ -168,9 +168,11 @@ export const appointments = new Hono<AppEnv>()
           finalPrice,
         })
 
-        const staffNotification = await notifyStaffOfAppointmentCreated({
+        await notifyAssignedStaff({
           salonId,
-          staffId: intake.staff.id,
+          staffIds: (intake.staffMembers ?? [intake.staff]).map(
+            (member) => member.id,
+          ),
           actorUserId: userId,
           appointment: {
             id: appointment.id,
@@ -183,15 +185,6 @@ export const appointments = new Hono<AppEnv>()
           clientName: intake.client.name,
           serviceName: intake.service.name,
         })
-
-        if (isWebPushConfigured() && staffNotification) {
-          void sendWebPushToUser(staffNotification.userId, {
-            title: staffNotification.title,
-            body: staffNotification.body,
-            url: `/calendar?date=${appointment.date}&appointmentId=${appointment.id}`,
-            tag: `appointment-${appointment.id}`,
-          })
-        }
 
         const detail = await getAppointmentWithDetailsById(
           appointment.id,
@@ -263,7 +256,12 @@ export const appointments = new Hono<AppEnv>()
       if (!appointment) return error(c, 'نوبت یافت نشد', 404)
       if (
         tenant.role === 'staff' &&
-        !staffOwnsAppointment(appointment.staffId, tenant)
+        !staffOwnsAppointment(
+          appointment.staffAssignments?.map(
+            (assignment) => assignment.staffId,
+          ) ?? appointment.staffId,
+          tenant,
+        )
       ) {
         return error(c, 'دسترسی غیرمجاز', 403)
       }
@@ -294,7 +292,12 @@ export const appointments = new Hono<AppEnv>()
       if (!isManagerRole(role)) {
         const staffCanPatchOwnStatus =
           role === 'staff' &&
-          staffOwnsAppointment(existing.staffId, tenant) &&
+          staffOwnsAppointment(
+            existing.staffAssignments?.map(
+              (assignment) => assignment.staffId,
+            ) ?? existing.staffId,
+            tenant,
+          ) &&
           isStatusOnlyPatch &&
           STAFF_STATUS_UPDATES.has(status as Appointment['status'])
         if (!staffCanPatchOwnStatus) {
@@ -392,6 +395,27 @@ export const appointments = new Hono<AppEnv>()
         const appointment = await updateAppointment(id, salonId, intake.patch)
         if (!appointment) {
           return error(c, 'به‌روزرسانی انجام نشد', 500)
+        }
+
+        if (isManagerRole(role)) {
+          const previousStaffIds = new Set(
+            existing.staffAssignments?.map(
+              (assignment) => assignment.staffId,
+            ) ?? [existing.staffId],
+          )
+          const addedStaffIds = (intake.staffMembers ?? [intake.staff])
+            .map((member) => member.id)
+            .filter((staffId) => !previousStaffIds.has(staffId))
+          if (addedStaffIds.length > 0) {
+            await notifyAssignedStaff({
+              salonId,
+              actorUserId: tenant.userId,
+              staffIds: addedStaffIds,
+              appointment,
+              clientName: intake.client.name,
+              serviceName: intake.service.name,
+            })
+          }
         }
 
         if (existingPlaceholderPatch) {

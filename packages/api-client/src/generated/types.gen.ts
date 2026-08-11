@@ -672,7 +672,7 @@ export type ClientUpdateRequest = {
   phone?: string
   notes?: string
   /**
-   * Optional complete Jalali birth date entered by the manager
+   * Complete Jalali birth date; null or empty clears it
    */
   birthDate?: string | null
   /**
@@ -711,6 +711,7 @@ export type AppointmentWithDetails = {
   id: string
   clientId: string
   staffId: string
+  staffAssignments?: Array<AppointmentStaffAssignment>
   serviceId: string
   bookedServiceName: string
   bookedServiceDuration: number
@@ -732,6 +733,23 @@ export type AppointmentWithDetails = {
   [key: string]: unknown
 } | null
 
+export type AppointmentStaffAssignment = {
+  id: string
+  staffId: string
+  isLead: boolean
+  allocationBasisPoints: number
+  staff?: User
+}
+
+export type User = {
+  id: string
+  name: string
+  phone?: string | null
+  role?: string
+  createdAt?: string | string
+  [key: string]: unknown
+}
+
 export type BookedAppointmentAddonLine = {
   id: string
   appointmentId: string
@@ -741,15 +759,6 @@ export type BookedAppointmentAddonLine = {
   bookedAddonDurationDelta: number
   sortOrder: number
   createdAt: string | string
-  [key: string]: unknown
-}
-
-export type User = {
-  id: string
-  name: string
-  phone?: string | null
-  role?: string
-  createdAt?: string | string
   [key: string]: unknown
 }
 
@@ -945,6 +954,7 @@ export type ServiceCreateRequest = {
   price: number
   color?: string
   active?: boolean
+  allowMultipleStaff?: boolean
   description?: string
   id?: string
 }
@@ -972,6 +982,7 @@ export type ServiceUpdateRequest = {
   price?: number
   color?: string
   active?: boolean
+  allowMultipleStaff?: boolean
   description?: string
 }
 
@@ -1279,6 +1290,11 @@ export type AppointmentCreateRequest = {
     notes?: string
   }
   staffId: string
+  additionalStaffIds?: Array<string>
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
   serviceId: string
   addonIds?: Array<string>
   date: string
@@ -1338,6 +1354,11 @@ export type AppointmentUpdateRequest = {
     notes?: string
   }
   staffId?: string
+  additionalStaffIds?: Array<string>
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
   serviceId?: string
   addonIds?: Array<string>
   date?: string
@@ -1590,12 +1611,22 @@ export type ApproveAppointmentRequestRequest = {
    * Staff member assigned when converting the request to an appointment
    */
   staffId: string
+  additionalStaffIds?: Array<string>
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
 }
 
 export type ConvertFlexibleAppointmentRequestRequest = {
   finalDate: string
   startTime: string
   staffId: string
+  additionalStaffIds?: Array<string>
+  workAllocations?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+  }>
 }
 
 export type RejectAppointmentRequestResponse = {
@@ -1629,6 +1660,33 @@ export type BusinessSettingsUpdateRequest = {
   workingEnd?: string
   slotDurationMinutes?: number
   workingDays?: number
+}
+
+export type SalonClosuresResponse = {
+  closures: Array<string>
+}
+
+export type ChangedSalonClosureDatesResponse = {
+  dates: Array<string>
+}
+
+export type SalonClosureWarning = {
+  error: string
+  code: 'CLOSURE_CONFIRMATION_REQUIRED'
+  appointmentCount: number
+  appointmentsByDate: Array<{
+    date: string
+    count: number
+  }>
+}
+
+export type CloseSalonDatesRequest = SalonClosureRange & {
+  confirmed?: boolean
+}
+
+export type SalonClosureRange = {
+  startDate: string
+  endDate: string
 }
 
 export type SalonPresenceResponse = {
@@ -1886,7 +1944,7 @@ export type RetentionSmsMessageResponse = {
   delivery: RetentionMessageDelivery
   result: {
     status: 'sent' | 'failed' | 'skipped'
-    provider?: 'sms_ir' | null
+    provider?: 'sms_ir'
     providerMessageId?: string | null
     error?: string | null
   }
@@ -1994,11 +2052,15 @@ export type UpdateNotificationPreferencesRequest = {
   smsAlertsEnabled?: boolean
 }
 
+export type PublishedSalonSlugs = {
+  slugs: Array<string>
+}
+
 export type PublicSalonView = {
   salon: PublicSalonInfo
   publicSettings: PublicSalonSettings
   presence: SalonPresence
-  businessHours: PublicSalonBusinessHours | null
+  businessHours: PublicSalonBusinessHours
   services: Array<Service>
 }
 
@@ -2023,7 +2085,7 @@ export type PublicSalonBusinessHours = {
   workingStart: string
   workingEnd: string
   workingDays: number
-}
+} | null
 
 export type PublicAppointmentRequestCreated = {
   token: string
@@ -6646,6 +6708,107 @@ export type PatchApiV1SettingsBusinessResponses = {
 export type PatchApiV1SettingsBusinessResponse =
   PatchApiV1SettingsBusinessResponses[keyof PatchApiV1SettingsBusinessResponses]
 
+export type DeleteApiV1SettingsClosuresData = {
+  body: SalonClosureRange
+  path?: never
+  query?: never
+  url: '/api/v1/settings/closures'
+}
+
+export type DeleteApiV1SettingsClosuresErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_settings permission
+   */
+  403: ApiError
+}
+
+export type DeleteApiV1SettingsClosuresError =
+  DeleteApiV1SettingsClosuresErrors[keyof DeleteApiV1SettingsClosuresErrors]
+
+export type DeleteApiV1SettingsClosuresResponses = {
+  /**
+   * Reopened dates
+   */
+  200: ChangedSalonClosureDatesResponse
+}
+
+export type DeleteApiV1SettingsClosuresResponse =
+  DeleteApiV1SettingsClosuresResponses[keyof DeleteApiV1SettingsClosuresResponses]
+
+export type GetApiV1SettingsClosuresData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1/settings/closures'
+}
+
+export type GetApiV1SettingsClosuresErrors = {
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+}
+
+export type GetApiV1SettingsClosuresError =
+  GetApiV1SettingsClosuresErrors[keyof GetApiV1SettingsClosuresErrors]
+
+export type GetApiV1SettingsClosuresResponses = {
+  /**
+   * Future salon-wide closure dates
+   */
+  200: SalonClosuresResponse
+}
+
+export type GetApiV1SettingsClosuresResponse =
+  GetApiV1SettingsClosuresResponses[keyof GetApiV1SettingsClosuresResponses]
+
+export type PostApiV1SettingsClosuresData = {
+  body: CloseSalonDatesRequest
+  path?: never
+  query?: never
+  url: '/api/v1/settings/closures'
+}
+
+export type PostApiV1SettingsClosuresErrors = {
+  /**
+   * Invalid request body or parameters
+   */
+  400: ApiError
+  /**
+   * Missing or invalid session
+   */
+  401: ApiError
+  /**
+   * Authenticated but missing manage_settings permission
+   */
+  403: ApiError
+  /**
+   * Active appointments require confirmation
+   */
+  409: SalonClosureWarning
+}
+
+export type PostApiV1SettingsClosuresError =
+  PostApiV1SettingsClosuresErrors[keyof PostApiV1SettingsClosuresErrors]
+
+export type PostApiV1SettingsClosuresResponses = {
+  /**
+   * Newly closed dates
+   */
+  200: ChangedSalonClosureDatesResponse
+}
+
+export type PostApiV1SettingsClosuresResponse =
+  PostApiV1SettingsClosuresResponses[keyof PostApiV1SettingsClosuresResponses]
+
 export type GetApiV1SalonProfilePresenceData = {
   body?: never
   path?: never
@@ -7463,6 +7626,23 @@ export type PatchApiV1NotificationPreferencesResponses = {
 
 export type PatchApiV1NotificationPreferencesResponse =
   PatchApiV1NotificationPreferencesResponses[keyof PatchApiV1NotificationPreferencesResponses]
+
+export type GetApiV1PublicSalonsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1/public/salons'
+}
+
+export type GetApiV1PublicSalonsResponses = {
+  /**
+   * Published Salon slugs
+   */
+  200: PublishedSalonSlugs
+}
+
+export type GetApiV1PublicSalonsResponse =
+  GetApiV1PublicSalonsResponses[keyof GetApiV1PublicSalonsResponses]
 
 export type GetApiV1PublicSalonsBySlugData = {
   body?: never

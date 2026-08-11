@@ -70,6 +70,7 @@ export const serviceSchema = z
     price: z.number(),
     color: z.string(),
     active: z.boolean(),
+    allowMultipleStaff: z.boolean(),
     description: z.string().nullable().optional(),
   })
   .passthrough()
@@ -246,6 +247,7 @@ export const serviceCreateBodySchema = bodyFromCoreSchema(
     price: z.number().openapi({ example: 450000 }),
     color: z.string().optional(),
     active: z.boolean().optional(),
+    allowMultipleStaff: z.boolean().optional(),
     description: z.string().optional(),
     id: z.string().optional(),
   },
@@ -261,6 +263,7 @@ export const serviceUpdateBodySchema = bodyFromCoreSchema(
     price: z.number().optional(),
     color: z.string().optional(),
     active: z.boolean().optional(),
+    allowMultipleStaff: z.boolean().optional(),
     description: z.string().optional(),
   },
   serviceUpdateSchema,

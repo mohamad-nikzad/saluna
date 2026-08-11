@@ -17,8 +17,12 @@ import {
   parseGregorianToJalali,
 } from '@repo/salon-core/jalali'
 import { eligibleStaffForService } from '@repo/salon-core/staff-service-autofill'
+import {
+  equalWorkAllocations,
+  validateWorkAllocations,
+} from '@repo/salon-core/commissions'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import type { User } from '@repo/salon-core/types'
+import type { Service, User } from '@repo/salon-core/types'
 import { Button } from '@repo/ui/button'
 import { Field, FieldError, FieldLabel } from '@repo/ui/field'
 import {
@@ -55,6 +59,7 @@ import {
   FormSheetHeader,
   FormSheetTitle,
 } from '#/components/form-sheet'
+import { AdditionalStaffFields } from '#/components/calendar/additional-staff-fields'
 
 export const DRAFT_TIME_PREFERENCE_LABELS = {
   morning: 'صبح',
@@ -582,11 +587,13 @@ function ConvertFinalDatePicker({
 export function ConvertDraftSheet({
   draft,
   staff,
+  service,
   open,
   onOpenChange,
 }: {
   draft: FlexibleAppointmentRequestListItem
   staff: User[]
+  service?: Service
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -602,6 +609,10 @@ export function ConvertDraftSheet({
     draft.timePreference === 'any' ? '09:00' : bounds.min,
   )
   const [staffId, setStaffId] = useState('')
+  const [additionalStaffIds, setAdditionalStaffIds] = useState<string[]>([])
+  const [workAllocations, setWorkAllocations] = useState<
+    Array<{ staffId: string; allocationBasisPoints: number }>
+  >([])
   const convertDraft = useConvertDraftMutation()
   const unavailableDates = useQuery(salonClosuresQueryOptions()).data ?? []
   const finalDateClosed = unavailableDates.includes(finalDate)
@@ -611,11 +622,26 @@ export function ConvertDraftSheet({
   )
 
   const submit = () => {
-    if (!finalDate || !startTimeValid || !staffId) return
+    if (
+      !finalDate ||
+      !startTimeValid ||
+      !staffId ||
+      !validateWorkAllocations(
+        [staffId, ...additionalStaffIds],
+        workAllocations,
+      )
+    )
+      return
     convertDraft.mutate(
       {
         requestId: draft.id,
-        body: { finalDate, startTime, staffId },
+        body: {
+          finalDate,
+          startTime,
+          staffId,
+          additionalStaffIds,
+          workAllocations,
+        },
       },
       { onSuccess: () => onOpenChange(false) },
     )
@@ -718,7 +744,14 @@ export function ConvertDraftSheet({
                 </EmptyHeader>
               </Empty>
             ) : (
-              <Select value={staffId} onValueChange={setStaffId}>
+              <Select
+                value={staffId}
+                onValueChange={(nextStaffId) => {
+                  setStaffId(nextStaffId)
+                  setAdditionalStaffIds([])
+                  setWorkAllocations(equalWorkAllocations([nextStaffId]))
+                }}
+              >
                 <SelectTrigger className="w-full" aria-label="پرسنل">
                   <SelectValue placeholder="انتخاب پرسنل" />
                 </SelectTrigger>
@@ -732,6 +765,15 @@ export function ConvertDraftSheet({
               </Select>
             )}
           </Field>
+          <AdditionalStaffFields
+            service={service}
+            staff={capableStaff}
+            leadStaffId={staffId}
+            additionalStaffIds={additionalStaffIds}
+            workAllocations={workAllocations}
+            onAdditionalStaffIdsChange={setAdditionalStaffIds}
+            onWorkAllocationsChange={setWorkAllocations}
+          />
         </FormSheetBody>
         <FormSheetFooter>
           <Button
@@ -742,6 +784,10 @@ export function ConvertDraftSheet({
               !finalDate ||
               !startTimeValid ||
               !staffId ||
+              !validateWorkAllocations(
+                [staffId, ...additionalStaffIds],
+                workAllocations,
+              ) ||
               finalDateClosed ||
               capableStaff.length === 0
             }

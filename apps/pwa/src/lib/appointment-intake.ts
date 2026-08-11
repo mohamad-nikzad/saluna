@@ -12,6 +12,10 @@ import {
   validateAppointmentWindow,
 } from '@repo/salon-core/appointment-time'
 import type { AppointmentFormInput } from '@repo/salon-core/forms/appointment'
+import {
+  equalWorkAllocations,
+  validateWorkAllocations,
+} from '@repo/salon-core/commissions'
 import type {
   AppointmentWithDetails,
   Service,
@@ -116,6 +120,10 @@ export function appointmentCreateFormDefaults({
     useTemporaryClient: false,
     clientId: initialClientId ?? '',
     staffId: initialStaffId ?? '',
+    additionalStaffIds: [],
+    workAllocations: initialStaffId
+      ? equalWorkAllocations([initialStaffId])
+      : [],
     serviceId: initialServiceId ?? '',
     date: initialDate,
     startTime,
@@ -282,6 +290,7 @@ export type IntakeServiceChangeResult = {
   serviceId: string
   staffId: string
   addonIds: string[]
+  additionalStaffIds: string[]
   durationMinutes: number
 }
 
@@ -312,6 +321,7 @@ export function resolveIntakeServiceChange({
     serviceId,
     staffId: nextStaffId,
     addonIds: [],
+    additionalStaffIds: [],
     durationMinutes: svc?.duration ?? 45,
   }
 }
@@ -444,6 +454,7 @@ export type AppointmentIntakeValidationError =
   | { field: 'serviceId'; message: string }
   | { field: 'staffId'; message: string }
   | { field: 'root'; message: string }
+  | { field: 'workAllocations'; message: string }
 
 /** Eligibility + window checks shared by create and edit intake. */
 export function validateAppointmentIntakeSubmit({
@@ -454,7 +465,12 @@ export function validateAppointmentIntakeSubmit({
 }: {
   values: Pick<
     AppointmentFormInput,
-    'serviceId' | 'staffId' | 'startTime' | 'endTime'
+    | 'serviceId'
+    | 'staffId'
+    | 'additionalStaffIds'
+    | 'workAllocations'
+    | 'startTime'
+    | 'endTime'
   >
   activeServices: Service[]
   staffRoleOnly: User[]
@@ -481,6 +497,30 @@ export function validateAppointmentIntakeSubmit({
     return {
       field: 'staffId',
       message: 'برای این پرسنل هنوز خدمتی تعریف نشده است.',
+    }
+  }
+
+  const staffIds = [
+    values.staffId ?? '',
+    ...(values.additionalStaffIds ?? []),
+  ].filter(Boolean)
+  if (new Set(staffIds).size !== staffIds.length) {
+    return { field: 'staffId', message: 'هر پرسنل فقط یک‌بار انتخاب می‌شود.' }
+  }
+  if (
+    currentService &&
+    staffIds.length > 1 &&
+    !currentService.allowMultipleStaff
+  ) {
+    return { field: 'staffId', message: 'این خدمت فقط یک پرسنل می‌پذیرد.' }
+  }
+  if (
+    values.workAllocations &&
+    !validateWorkAllocations(staffIds, values.workAllocations)
+  ) {
+    return {
+      field: 'workAllocations',
+      message: 'سهم کار پرسنل باید در مجموع ۱۰۰٪ باشد.',
     }
   }
 

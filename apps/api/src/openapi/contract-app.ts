@@ -354,6 +354,7 @@ const stubService = {
   price: 0,
   color: 'plum',
   active: true,
+  allowMultipleStaff: false,
 }
 
 const stubServiceCategory = {

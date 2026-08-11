@@ -55,6 +55,7 @@ export const services = new Hono<AppEnv>()
         price,
         color,
         active,
+        allowMultipleStaff,
         id,
         description,
       } = c.req.valid('json')
@@ -79,6 +80,7 @@ export const services = new Hono<AppEnv>()
           price,
           color,
           active: active !== false,
+          allowMultipleStaff,
           description,
           salonId,
           ...(isClientProvidedEntityId(String(id)) ? { id: String(id) } : {}),
@@ -124,8 +126,16 @@ export const services = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const { name, categoryId, duration, price, color, active, description } =
-        c.req.valid('json')
+      const {
+        name,
+        categoryId,
+        duration,
+        price,
+        color,
+        active,
+        allowMultipleStaff,
+        description,
+      } = c.req.valid('json')
 
       const patch: Partial<Service> = {}
       if (name !== undefined) patch.name = name
@@ -134,6 +144,8 @@ export const services = new Hono<AppEnv>()
       if (price !== undefined) patch.price = price
       if (color !== undefined) patch.color = color
       if (active !== undefined) patch.active = Boolean(active)
+      if (allowMultipleStaff !== undefined)
+        patch.allowMultipleStaff = allowMultipleStaff
       if (description !== undefined) patch.description = description
 
       try {

@@ -9,6 +9,7 @@ import {
   durationMinutesFromRange,
 } from '../appointment-time'
 import { APPOINTMENT_STATUS } from '../types'
+import { validateWorkAllocations } from '../commissions'
 import { formMessages } from './messages'
 import {
   durationMinutesSchema,
@@ -22,6 +23,15 @@ import {
 
 const idSchema = z.string().trim().min(1)
 const addonIdsSchema = z.array(idSchema).optional()
+const additionalStaffIdsSchema = z.array(idSchema).optional()
+const workAllocationsSchema = z
+  .array(
+    z.object({
+      staffId: idSchema,
+      allocationBasisPoints: z.number().int().min(0).max(10_000),
+    }),
+  )
+  .optional()
 const appointmentStatusKeys = Object.keys(APPOINTMENT_STATUS) as [
   keyof typeof APPOINTMENT_STATUS,
   ...(keyof typeof APPOINTMENT_STATUS)[],
@@ -30,6 +40,8 @@ const appointmentStatusSchema = z.enum(appointmentStatusKeys)
 
 const appointmentBaseSchema = z.object({
   staffId: idSchema,
+  additionalStaffIds: additionalStaffIdsSchema,
+  workAllocations: workAllocationsSchema,
   serviceId: idSchema,
   addonIds: addonIdsSchema,
   date: gregorianDateSchema,
@@ -107,6 +119,8 @@ export const appointmentUpdateSchema = z.object({
     })
     .optional(),
   staffId: z.string().trim().optional(),
+  additionalStaffIds: additionalStaffIdsSchema,
+  workAllocations: workAllocationsSchema,
   serviceId: z.string().trim().optional(),
   addonIds: addonIdsSchema,
   date: gregorianDateSchema.optional(),
@@ -138,6 +152,8 @@ export const appointmentFormSchema = z
     temporaryClientName: z.string().optional(),
     temporaryClientNotes: z.string().optional(),
     staffId: z.string().optional(),
+    additionalStaffIds: z.array(z.string()).optional(),
+    workAllocations: workAllocationsSchema,
     serviceId: z.string().optional(),
     addonIds: z.array(z.string()).optional(),
     date: gregorianDateSchema,
@@ -177,6 +193,20 @@ export const appointmentFormSchema = z
         message: formMessages.serviceRequired,
       })
     }
+    const staffIds = [
+      values.staffId ?? '',
+      ...(values.additionalStaffIds ?? []),
+    ].filter(Boolean)
+    if (
+      values.workAllocations &&
+      !validateWorkAllocations(staffIds, values.workAllocations)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['workAllocations'],
+        message: 'سهم کار پرسنل باید در مجموع ۱۰۰٪ باشد',
+      })
+    }
     validateAppointmentRange(values, ctx)
   })
   .transform((values, ctx) => {
@@ -190,6 +220,8 @@ export const appointmentFormSchema = z
           }
         : { clientId: values.clientId }),
       staffId: values.staffId,
+      additionalStaffIds: values.additionalStaffIds,
+      workAllocations: values.workAllocations,
       serviceId: values.serviceId,
       addonIds: values.addonIds,
       date: values.date,

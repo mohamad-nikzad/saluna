@@ -2,10 +2,26 @@ import { describe, expect, it } from 'vitest'
 
 import {
   allocatePackagePrice,
+  allocateWorkBasis,
   commissionAmount,
+  equalWorkAllocations,
+  validateWorkAllocations,
   commissionPeriodRange,
   percentageToBasisPoints,
 } from './commissions'
+
+describe('Appointment Work Allocations', () => {
+  it('splits exactly and gives the rounding remainder to the lead', () => {
+    const allocations = equalWorkAllocations(['lead', 'second', 'third'])
+    expect(allocations.map((row) => row.allocationBasisPoints)).toEqual([
+      3334, 3333, 3333,
+    ])
+    expect(
+      validateWorkAllocations(['lead', 'second', 'third'], allocations),
+    ).toBe(true)
+    expect(allocateWorkBasis(100, allocations)).toEqual([34, 33, 33])
+  })
+})
 
 describe('Staff Commission calculations', () => {
   it('validates two-decimal percentages and rounds each Appointment to toman', () => {

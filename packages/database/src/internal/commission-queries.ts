@@ -1,5 +1,6 @@
-import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
 import {
+  allocateWorkBasis,
   allocatePackagePrice,
   commissionAmount,
 } from '@repo/salon-core/commissions'
@@ -8,6 +9,7 @@ import { getDb } from '../client'
 import { resolveAppointmentAssignmentStaffProfileId } from '../staff-profile-access'
 import {
   appointments,
+  appointmentStaffAssignments,
   clients,
   commissionAgreements,
   servicePackageBookings,
@@ -229,13 +231,51 @@ export async function getSalonFinancialSummary(input: {
         ),
       )
 
+    const appointmentIds = [...new Set(rows.map((row) => row.appointment.id))]
+    const assignmentRows =
+      appointmentIds.length === 0
+        ? []
+        : await tx
+            .select({ appointmentId: appointmentStaffAssignments.appointmentId })
+            .from(appointmentStaffAssignments)
+            .where(
+              inArray(
+                appointmentStaffAssignments.appointmentId,
+                appointmentIds,
+              ),
+            )
+    const assignmentCount = new Map<string, number>()
+    for (const assignment of assignmentRows) {
+      assignmentCount.set(
+        assignment.appointmentId,
+        (assignmentCount.get(assignment.appointmentId) ?? 0) + 1,
+      )
+    }
+    const byAppointment = new Map<string, typeof rows>()
+    for (const row of rows) {
+      const appointmentRows = byAppointment.get(row.appointment.id) ?? []
+      appointmentRows.push(row)
+      byAppointment.set(row.appointment.id, appointmentRows)
+    }
+
     // ponytail: monthly volumes are small; batch package lookups if this is measured as slow.
     const bases = await Promise.all(
-      rows.map(({ appointment, commissionBasis }) =>
-        commissionBasis == null
-          ? appointmentCommissionBasis(tx, appointment)
-          : commissionBasis,
-      ),
+      [...byAppointment.values()].map(async (appointmentRows) => {
+        const commissioned = appointmentRows.filter(
+          (row) => row.commissionBasis != null,
+        )
+        if (
+          commissioned.length > 0 &&
+          commissioned.length ===
+            (assignmentCount.get(appointmentRows[0]!.appointment.id) ?? 1)
+        ) {
+          return commissioned.reduce(
+            (sum, row) => sum + (row.commissionBasis ?? 0),
+            0,
+          )
+        }
+        return appointmentCommissionBasis(tx, appointmentRows[0]!.appointment)
+      }),
     )
     const grossAppointmentRevenue = bases.reduce((sum, basis) => sum + basis, 0)
     const staffCommissionTotal = rows.reduce(
@@ -254,6 +294,7 @@ export async function syncAppointmentCommission(
   tx: DbTx,
   before: Pick<AppointmentRow, 'status' | 'bookedTotalPrice'> | null,
   after: AppointmentRow,
+  assignmentsChanged = false,
 ): Promise<void> {
   const becameCompleted =
     after.status === 'completed' && before?.status !== 'completed'
@@ -263,84 +304,117 @@ export async function syncAppointmentCommission(
     before?.status === 'completed' &&
     after.status === 'completed' &&
     before.bookedTotalPrice !== after.bookedTotalPrice
-  if (!becameCompleted && !leftCompleted && !priceChanged) return
+  if (
+    !becameCompleted &&
+    !leftCompleted &&
+    !priceChanged &&
+    !assignmentsChanged
+  )
+    return
 
-  const [existing] = await tx
+  const existing = await tx
     .select()
     .from(staffCommissions)
     .where(eq(staffCommissions.appointmentId, after.id))
-    .limit(1)
     .for('update')
 
   if (after.status !== 'completed') {
-    if (existing && !existing.voidedAt) {
+    if (existing.some((commission) => !commission.voidedAt)) {
       const now = new Date()
       await tx
         .update(staffCommissions)
         .set({ voidedAt: now, updatedAt: now })
-        .where(eq(staffCommissions.id, existing.id))
+        .where(eq(staffCommissions.appointmentId, after.id))
     }
     return
   }
 
-  const basis = await appointmentCommissionBasis(tx, after)
-  if (existing) {
-    await tx
-      .update(staffCommissions)
-      .set({
-        basis,
-        amount: commissionAmount(basis, existing.percentageBasisPoints),
-        voidedAt: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(staffCommissions.id, existing.id))
-    return
+  const assignments = await tx
+    .select()
+    .from(appointmentStaffAssignments)
+    .where(
+      and(
+        eq(appointmentStaffAssignments.salonId, after.salonId),
+        eq(appointmentStaffAssignments.appointmentId, after.id),
+      ),
+    )
+    .orderBy(
+      asc(appointmentStaffAssignments.isLead),
+      asc(appointmentStaffAssignments.createdAt),
+    )
+  if (assignments.length === 0) return
+  const leadIndex = assignments.findIndex((assignment) => assignment.isLead)
+  if (leadIndex > 0) {
+    assignments.unshift(assignments.splice(leadIndex, 1)[0]!)
   }
-
-  if (after.commissionExcludedAt) return
-
-  const staffProfileId = await resolveAppointmentAssignmentStaffProfileId(
-    { salonId: after.salonId, staffId: after.staffId },
-    tx,
+  const bases = allocateWorkBasis(
+    await appointmentCommissionBasis(tx, after),
+    assignments,
+  )
+  const existingByAssignment = new Map(
+    existing.map((commission) => [
+      commission.appointmentStaffAssignmentId,
+      commission,
+    ]),
   )
 
-  const [agreement] = staffProfileId
-    ? await tx
-        .select()
-        .from(commissionAgreements)
-        .where(
-          and(
-            eq(commissionAgreements.salonId, after.salonId),
-            eq(commissionAgreements.staffProfileId, staffProfileId),
-            eq(commissionAgreements.active, true),
-          ),
-        )
-        .limit(1)
-    : []
-  if (!staffProfileId || !agreement) {
-    await tx
-      .update(appointments)
-      .set({ commissionExcludedAt: new Date() })
-      .where(
-        and(
-          eq(appointments.id, after.id),
-          isNull(appointments.commissionExcludedAt),
-        ),
-      )
-    return
-  }
+  for (let index = 0; index < assignments.length; index++) {
+    const assignment = assignments[index]!
+    const basis = bases[index]!
+    const prior = existingByAssignment.get(assignment.id)
+    if (prior) {
+      await tx
+        .update(staffCommissions)
+        .set({
+          basis,
+          amount: commissionAmount(basis, prior.percentageBasisPoints),
+          voidedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(staffCommissions.id, prior.id))
+      continue
+    }
+    if (assignment.commissionExcludedAt) continue
 
-  await tx
-    .insert(staffCommissions)
-    .values({
-      salonId: after.salonId,
-      staffProfileId,
-      appointmentId: after.id,
-      basis,
-      percentageBasisPoints: agreement.percentageBasisPoints,
-      amount: commissionAmount(basis, agreement.percentageBasisPoints),
-    })
-    .onConflictDoNothing({ target: staffCommissions.appointmentId })
+    const staffProfileId = await resolveAppointmentAssignmentStaffProfileId(
+      { salonId: after.salonId, staffId: assignment.staffId },
+      tx,
+    )
+    const [agreement] = staffProfileId
+      ? await tx
+          .select()
+          .from(commissionAgreements)
+          .where(
+            and(
+              eq(commissionAgreements.salonId, after.salonId),
+              eq(commissionAgreements.staffProfileId, staffProfileId),
+              eq(commissionAgreements.active, true),
+            ),
+          )
+          .limit(1)
+      : []
+    if (!staffProfileId || !agreement) {
+      await tx
+        .update(appointmentStaffAssignments)
+        .set({ commissionExcludedAt: new Date(), updatedAt: new Date() })
+        .where(eq(appointmentStaffAssignments.id, assignment.id))
+      continue
+    }
+    await tx
+      .insert(staffCommissions)
+      .values({
+        salonId: after.salonId,
+        staffProfileId,
+        appointmentId: after.id,
+        appointmentStaffAssignmentId: assignment.id,
+        basis,
+        percentageBasisPoints: agreement.percentageBasisPoints,
+        amount: commissionAmount(basis, agreement.percentageBasisPoints),
+      })
+      .onConflictDoNothing({
+        target: staffCommissions.appointmentStaffAssignmentId,
+      })
+  }
 }
 
 async function reportRows(input: {

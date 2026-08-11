@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@repo/ui/select'
 import { Spinner } from '@repo/ui/spinner'
+import { Switch } from '@repo/ui/switch'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import type { Service, ServiceCategory } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -50,6 +51,7 @@ function emptyValues(defaultCategoryId?: string | null): ServiceFormInput {
     price: 0,
     color: STAFF_COLORS[0],
     active: true,
+    allowMultipleStaff: false,
     description: '',
   }
 }
@@ -63,6 +65,7 @@ function serviceToFormValues(service: Service): ServiceFormInput {
     price: service.price,
     color: normalizeCalendarColorId(service.color),
     active: service.active,
+    allowMultipleStaff: service.allowMultipleStaff,
     description: service.description ?? '',
   }
 }
@@ -221,6 +224,24 @@ export function ServiceDrawer({
                 )}
               </Field>
             </div>
+            <Field>
+              <Controller
+                control={control}
+                name="allowMultipleStaff"
+                render={({ field }) => (
+                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl bg-blush-soft px-3 py-2">
+                    <span className="text-sm font-medium">
+                      اجازه انتخاب چند پرسنل برای این خدمت
+                    </span>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      aria-label="اجازه انتخاب چند پرسنل برای این خدمت"
+                    />
+                  </label>
+                )}
+              />
+            </Field>
             <Field>
               <FieldLabel htmlFor="svc-description">توضیح کوتاه</FieldLabel>
               <Textarea

@@ -719,6 +719,9 @@ export const services = pgTable(
     price: integer('price').notNull(),
     color: text('color').notNull(),
     active: boolean('active').notNull().default(true),
+    allowMultipleStaff: boolean('allow_multiple_staff')
+      .notNull()
+      .default(false),
     description: text('description'),
     kind: text('kind')
       .notNull()
@@ -1231,6 +1234,48 @@ export const appointments = pgTable(
   ],
 )
 
+export const appointmentStaffAssignments = pgTable(
+  'appointment_staff_assignments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    staffId: uuid('staff_id').notNull(),
+    isLead: boolean('is_lead').notNull().default(false),
+    allocationBasisPoints: integer('allocation_basis_points').notNull(),
+    commissionExcludedAt: timestamp('commission_excluded_at', {
+      withTimezone: true,
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('appointment_staff_assignments_appointment_staff_unique').on(
+      t.appointmentId,
+      t.staffId,
+    ),
+    uniqueIndex('appointment_staff_assignments_lead_unique')
+      .on(t.appointmentId)
+      .where(sql`${t.isLead} = true`),
+    index('appointment_staff_assignments_salon_staff_idx').on(
+      t.salonId,
+      t.staffId,
+    ),
+    check(
+      'appointment_staff_assignments_allocation_check',
+      sql`${t.allocationBasisPoints} >= 0 and ${t.allocationBasisPoints} <= 10000`,
+    ),
+  ],
+)
+
 export const servicePackageBookings = pgTable(
   'service_package_bookings',
   {
@@ -1415,6 +1460,11 @@ export const staffCommissions = pgTable(
     appointmentId: uuid('appointment_id')
       .notNull()
       .references(() => appointments.id, { onDelete: 'cascade' }),
+    appointmentStaffAssignmentId: uuid('appointment_staff_assignment_id')
+      .notNull()
+      .references(() => appointmentStaffAssignments.id, {
+        onDelete: 'cascade',
+      }),
     basis: integer('basis').notNull(),
     percentageBasisPoints: integer('percentage_basis_points').notNull(),
     amount: integer('amount').notNull(),
@@ -1427,7 +1477,9 @@ export const staffCommissions = pgTable(
       .defaultNow(),
   },
   (t) => [
-    uniqueIndex('staff_commissions_appointment_unique').on(t.appointmentId),
+    uniqueIndex('staff_commissions_assignment_unique').on(
+      t.appointmentStaffAssignmentId,
+    ),
     index('staff_commissions_salon_profile_idx').on(
       t.salonId,
       t.staffProfileId,

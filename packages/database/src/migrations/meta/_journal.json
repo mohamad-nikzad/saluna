@@ -211,6 +211,13 @@
       "when": 1785766789241,
       "tag": "0029_nifty_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786052227736,
+      "tag": "0030_lowly_boomer",
+      "breakpoints": true
     }
   ]
 }

@@ -150,13 +150,26 @@ export function useApproveAppointmentRequestMutation() {
 
   return useMutation({
     mutationFn: async (
-      { requestId, staffId }: { requestId: string; staffId: string },
+      {
+        requestId,
+        staffId,
+        additionalStaffIds,
+        workAllocations,
+      }: {
+        requestId: string
+        staffId: string
+        additionalStaffIds?: string[]
+        workAllocations?: Array<{
+          staffId: string
+          allocationBasisPoints: number
+        }>
+      },
       mutationContext,
     ) => {
       return generated.mutationFn!(
         {
           path: { id: requestId },
-          body: { staffId },
+          body: { staffId, additionalStaffIds, workAllocations },
         },
         mutationContext,
       )

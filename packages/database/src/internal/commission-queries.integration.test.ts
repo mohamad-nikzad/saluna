@@ -84,20 +84,39 @@ async function insertAppointment(input: {
   date: string
   status?: string
   price: number
+  staffAssignments?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+    isLead?: boolean
+  }>
 }) {
   const id = input.id ?? randomUUID()
   const serviceId = input.serviceId ?? ids.serviceA
+  const leadStaffId = input.staffId ?? ids.profileA
   await testSql!`
     insert into appointments (
       id, salon_id, client_id, staff_id, service_id, date, start_time, end_time,
       booked_service_name, booked_service_duration, booked_service_price,
       booked_total_duration, booked_total_price, status
     ) values (
-      ${id}, ${ids.salon}, ${ids.client}, ${input.staffId ?? ids.profileA},
+      ${id}, ${ids.salon}, ${ids.client}, ${leadStaffId},
       ${serviceId}, ${input.date}, '10:00', '10:30', 'Booked service', 30,
       ${input.price}, 30, ${input.price}, ${input.status ?? 'scheduled'}
     )
   `
+  const assignments = input.staffAssignments ?? [
+    { staffId: leadStaffId, allocationBasisPoints: 10_000, isLead: true },
+  ]
+  for (const assignment of assignments) {
+    await testSql!`
+      insert into appointment_staff_assignments (
+        id, salon_id, appointment_id, staff_id, is_lead, allocation_basis_points
+      ) values (
+        ${randomUUID()}, ${ids.salon}, ${id}, ${assignment.staffId},
+        ${assignment.isLead ?? false}, ${assignment.allocationBasisPoints}
+      )
+    `
+  }
   return id
 }
 
@@ -351,6 +370,90 @@ describe.skipIf(!runIntegration)(
           })
         )?.rows.map((row) => row.appointmentId),
       ).toEqual([eligible])
+    })
+
+    it('allocates one appointment across staff without multiplying salon revenue', async () => {
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 5000,
+      })
+      const appointmentId = await insertAppointment({
+        date: '2026-09-01',
+        price: 101,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'completed',
+      })
+
+      await expect(
+        commissions.getSalonFinancialSummary({
+          salonId: ids.salon,
+          startDate: '2026-09-01',
+          endDate: '2026-09-01',
+        }),
+      ).resolves.toEqual({
+        grossAppointmentRevenue: 101,
+        staffCommissionTotal: 26,
+        salonRetainedAmount: 75,
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileA,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId,
+          basis: 51,
+          percentage: 50,
+          amount: 26,
+        }),
+      ])
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([])
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'cancelled',
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'completed',
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([])
     })
 
     it('allocates an overridden package price exactly across unequal tasks and multiple Staff Profiles', async () => {

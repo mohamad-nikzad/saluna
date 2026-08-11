@@ -126,7 +126,7 @@ describe('appointment request approval', () => {
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: true,
       appointmentId: 'appointment-1',
       clientId: 'client-1',
@@ -204,7 +204,7 @@ describe('flexible appointment request conversion', () => {
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: true,
       appointmentId: 'appointment-1',
       clientId: 'client-1',
@@ -312,7 +312,7 @@ describe('flexible appointment request conversion', () => {
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: true,
       appointmentId: 'appointment-manual-date',
       clientId: 'client-1',

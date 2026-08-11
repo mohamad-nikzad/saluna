@@ -90,6 +90,7 @@ export function rowToService(row: typeof services.$inferSelect): Service {
     active: row.active,
     description: row.description,
     kind: row.kind,
+    allowMultipleStaff: row.allowMultipleStaff,
   }
 }
 
@@ -141,6 +142,7 @@ export function rowToAppointment(
     id: row.id,
     clientId: row.clientId,
     staffId: row.staffId,
+    staffAssignments: [],
     serviceId: row.serviceId,
     bookedServiceName: row.bookedServiceName,
     bookedServiceDuration: row.bookedServiceDuration,

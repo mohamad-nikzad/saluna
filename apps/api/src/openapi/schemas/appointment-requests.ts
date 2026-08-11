@@ -176,6 +176,15 @@ export const convertFlexibleAppointmentRequestBodySchema = z
     finalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
     staffId: z.string().min(1),
+    additionalStaffIds: z.array(z.string().min(1)).optional(),
+    workAllocations: z
+      .array(
+        z.object({
+          staffId: z.string().min(1),
+          allocationBasisPoints: z.number().int().min(0).max(10_000),
+        }),
+      )
+      .optional(),
   })
   .strict()
   .openapi('ConvertFlexibleAppointmentRequestRequest')
@@ -186,6 +195,15 @@ export const approveAppointmentRequestBodySchema = z
       description:
         'Staff member assigned when converting the request to an appointment',
     }),
+    additionalStaffIds: z.array(z.string().min(1)).optional(),
+    workAllocations: z
+      .array(
+        z.object({
+          staffId: z.string().min(1),
+          allocationBasisPoints: z.number().int().min(0).max(10_000),
+        }),
+      )
+      .optional(),
   })
   .openapi('ApproveAppointmentRequestRequest')
 

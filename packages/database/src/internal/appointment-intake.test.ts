@@ -277,6 +277,74 @@ describe('appointment intake placeholder rules', () => {
     )
   })
 
+  it('rejects extra staff unless the service enables it', async () => {
+    const result = await validateCreateAppointmentIntake({
+      salonId: 'salon-1',
+      clientId: 'placeholder-1',
+      staffId: 'staff-1',
+      additionalStaffIds: ['staff-2'],
+      serviceId: 'service-1',
+      date: '2026-05-01',
+      startTime: '10:00',
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'این خدمت فقط یک پرسنل می‌پذیرد',
+    })
+  })
+
+  it('validates every assigned staff member and defaults to an equal split', async () => {
+    mocks.getServiceById.mockResolvedValue({
+      id: 'service-1',
+      name: 'کات',
+      active: true,
+      allowMultipleStaff: true,
+      duration: 45,
+    })
+    mocks.getAllStaff.mockResolvedValue([
+      {
+        id: 'staff-1',
+        salonId: 'salon-1',
+        role: 'staff',
+        name: 'پرسنل اول',
+        active: true,
+      },
+      {
+        id: 'staff-2',
+        salonId: 'salon-1',
+        role: 'staff',
+        name: 'پرسنل دوم',
+        active: true,
+      },
+    ])
+
+    const result = await validateCreateAppointmentIntake({
+      salonId: 'salon-1',
+      clientId: 'placeholder-1',
+      staffId: 'staff-1',
+      additionalStaffIds: ['staff-2'],
+      serviceId: 'service-1',
+      date: '2026-05-01',
+      startTime: '10:00',
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      command: {
+        additionalStaffIds: ['staff-2'],
+        workAllocations: [
+          { staffId: 'staff-1', allocationBasisPoints: 5000 },
+          { staffId: 'staff-2', allocationBasisPoints: 5000 },
+        ],
+      },
+    })
+    expect(mocks.staffMayPerformService).toHaveBeenCalledTimes(2)
+    expect(mocks.checkStaffAvailabilityForAppointment).toHaveBeenCalledTimes(2)
+    expect(mocks.getScheduleOverlapFlags).toHaveBeenCalledTimes(2)
+  })
+
   it('uses explicit create end time instead of base service plus selected add-ons', async () => {
     mocks.getServiceById.mockResolvedValue({
       id: 'service-1',
