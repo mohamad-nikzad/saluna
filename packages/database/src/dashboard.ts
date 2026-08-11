@@ -1,5 +1,10 @@
-import { and, count, eq, gte, lte, ne, or, isNull, sql } from 'drizzle-orm'
+import { and, count, eq, gte, lt, lte, ne, or, isNull, sql } from 'drizzle-orm'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
+import {
+  addDaysYmd,
+  salonDateTimeInstant,
+  salonTodayYmd,
+} from '@repo/salon-core/salon-local-time'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { appointments, clients, member, salonMember, user } from './schema'
 import { getDb } from './client'
@@ -8,41 +13,31 @@ import { getTodayData } from './internal/today-queries'
 
 const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function weekBounds() {
-  const now = new Date()
-  const day = now.getDay()
+function weekBounds(today: string) {
+  const day = new Date(`${today}T12:00:00Z`).getUTCDay()
   const diffToSat = day === 6 ? 0 : -(day + 1)
-  const start = new Date(now)
-  start.setDate(now.getDate() + diffToSat)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
+  const start = addDaysYmd(today, diffToSat)
 
   return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
+    start,
+    end: addDaysYmd(start, 6),
   }
 }
 
-function monthBounds() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+function monthBounds(today: string) {
+  const [year, month] = today.split('-').map(Number)
 
   return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
+    start: `${today.slice(0, 7)}-01`,
+    end: new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10),
   }
 }
 
 export async function getDashboardData(salonId: string) {
   const db = getDb()
-  const today = todayStr()
-  const week = weekBounds()
-  const month = monthBounds()
+  const today = salonTodayYmd()
+  const week = weekBounds(today)
+  const month = monthBounds(today)
 
   const [
     clientCountResult,
@@ -198,8 +193,11 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(clients.salonId, salonId),
-          gte(clients.createdAt, new Date(month.start + 'T00:00:00')),
-          lte(clients.createdAt, new Date(month.end + 'T23:59:59')),
+          gte(clients.createdAt, salonDateTimeInstant(month.start, '00:00')),
+          lt(
+            clients.createdAt,
+            salonDateTimeInstant(addDaysYmd(month.end, 1), '00:00'),
+          ),
         ),
       ),
   ])
