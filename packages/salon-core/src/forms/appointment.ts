@@ -204,7 +204,7 @@ export const appointmentFormSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['workAllocations'],
-        message: 'سهم کار پرسنل باید در مجموع ۱۰۰٪ باشد',
+        message: 'مجموع سهم‌ها باید ۱۰۰٪ باشد',
       })
     }
     validateAppointmentRange(values, ctx)

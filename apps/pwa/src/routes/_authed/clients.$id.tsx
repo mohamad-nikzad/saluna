@@ -83,15 +83,19 @@ function followReasonLabel(reason: FollowUpReason): string {
       return 'ارزشمند'
     case 'manual':
       return 'دستی'
-    default:
-      return reason
+    case 'birthday':
+      return 'تولد'
+    default: {
+      const _exhaustive: never = reason
+      return _exhaustive
+    }
   }
 }
 
 const acquisitionSourceLabels: Record<ClientAcquisitionSource, string> = {
   instagram: 'اینستاگرام',
   website: 'وب‌سایت',
-  google: 'گوگل یا جست‌وجوی اینترنتی',
+  google: 'گوگل',
   referral: 'معرفی مشتری',
   walk_in: 'مراجعه حضوری',
   other: 'سایر',
@@ -269,7 +273,7 @@ function ClientDetailPage() {
           <Card className="gap-0 border-line-soft p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Megaphone className="h-4 w-4 text-primary" />
-              نحوه آشنایی با سالن
+              چطور با سالن آشنا شد؟
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {acquisitionSourceLabels[client.acquisitionSource]}

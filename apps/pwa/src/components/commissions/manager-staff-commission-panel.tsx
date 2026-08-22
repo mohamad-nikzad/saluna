@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Banknote, Percent, Trash2 } from 'lucide-react'
 import type { Service } from '@repo/salon-core/types'
@@ -43,11 +43,26 @@ export function ManagerStaffCommissionPanel({
   const reportQuery = useQuery(
     staffCommissionReportQueryOptions(staffId, period),
   )
+  const heldAgreement = useRef<{
+    staffId: string
+    agreement: NonNullable<typeof reportQuery.data>['agreement']
+  } | null>(null)
+  if (reportQuery.data !== undefined) {
+    heldAgreement.current = {
+      staffId,
+      agreement: reportQuery.data.agreement,
+    }
+  }
   const saveAgreement = useSaveCommissionAgreementMutation()
   const disableAgreement = useDisableCommissionAgreementMutation()
   const saveOverride = useSaveServiceCommissionOverrideMutation()
   const deleteOverride = useDeleteServiceCommissionOverrideMutation()
-  const agreement = reportQuery.data?.agreement
+  const agreement =
+    reportQuery.data !== undefined
+      ? reportQuery.data.agreement
+      : heldAgreement.current?.staffId === staffId
+        ? heldAgreement.current.agreement
+        : null
   const overrides = agreement?.overrides ?? []
   const availableServices = services.filter((service) => service.active)
 
@@ -86,7 +101,7 @@ export function ManagerStaffCommissionPanel({
 
   return (
     <>
-      <StaffDetailSection title="توافق کمیسیون" icon={Percent}>
+      <StaffDetailSection title="کمیسیون" icon={Percent}>
         <form
           key={`${agreement?.percentage ?? ''}-${agreement?.active ?? false}`}
           onSubmit={save}
@@ -115,12 +130,12 @@ export function ManagerStaffCommissionPanel({
             </div>
           </label>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            تغییر درصد فقط روی نوبت‌هایی اثر دارد که بعد از ذخیره انجام شوند.
-            برای خدمات خاص می‌توانید استثنا تعریف کنید.
+            تغییر درصد فقط برای نوبت‌های بعدی است. برای بعضی خدمات می‌توانید
+            درصد جدا بگذارید.
           </p>
           <div className="flex flex-col items-start gap-2">
             <Button type="submit" size="lg" disabled={saveAgreement.isPending}>
-              {agreement?.active ? 'ذخیره درصد جدید' : 'فعال‌کردن توافق'}
+              {agreement?.active ? 'ذخیره درصد جدید' : 'فعال‌کردن کمیسیون'}
             </Button>
             {agreement?.active ? (
               <Button
@@ -139,17 +154,16 @@ export function ManagerStaffCommissionPanel({
           <div className="mt-5 space-y-3 border-t border-line-soft pt-4">
             <div>
               <div className="text-xs font-bold text-foreground">
-                استثناهای کمیسیون خدمت
+                درصد جدا برای بعضی خدمات
               </div>
               <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                اگر برای خدمتی استثنا ثبت شود، همان درصد جایگزین درصد پیش‌فرض
-                می‌شود.
+                اگر برای یک خدمت درصد جدا بگذارید، همان استفاده می‌شود.
               </p>
             </div>
 
             {overrides.length === 0 ? (
               <div className="rounded-[14px] border border-dashed border-line p-3 text-[11px] text-muted-foreground">
-                هنوز استثنایی ثبت نشده است.
+                هنوز درصد جدا ثبت نشده.
               </div>
             ) : (
               <div className="divide-y divide-line-soft overflow-hidden rounded-[14px] border border-line-soft bg-paper">
@@ -175,7 +189,7 @@ export function ManagerStaffCommissionPanel({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label={`حذف استثنای ${override.serviceName}`}
+                      aria-label={`حذف درصد ${override.serviceName}`}
                       disabled={deleteOverride.isPending}
                       onClick={() =>
                         deleteOverride.mutate({
@@ -212,7 +226,7 @@ export function ManagerStaffCommissionPanel({
                 </Select>
               </label>
               <label className="block space-y-1.5 text-xs font-bold text-foreground">
-                درصد استثنا
+                درصد این خدمت
                 <div className="relative mt-1.5">
                   <Input
                     name="overridePercentage"
@@ -228,7 +242,7 @@ export function ManagerStaffCommissionPanel({
                       )
                     }}
                     className="pl-10 text-right tabular-nums"
-                    aria-label="درصد استثنای کمیسیون خدمت"
+                    aria-label="درصد کمیسیون این خدمت"
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                     ٪
@@ -245,8 +259,8 @@ export function ManagerStaffCommissionPanel({
                 }
               >
                 {overrides.some((row) => row.serviceId === overrideServiceId)
-                  ? 'ذخیره استثنا'
-                  : 'افزودن استثنا'}
+                  ? 'ذخیره درصد'
+                  : 'افزودن درصد'}
               </Button>
             </form>
           </div>

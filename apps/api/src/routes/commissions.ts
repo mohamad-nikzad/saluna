@@ -54,7 +54,7 @@ export const commissions = new Hono<AppEnv>()
         salonId,
         staffProfileId: id,
       })
-      if (!agreement) return error(c, 'توافق کمیسیون یافت نشد', 404)
+      if (!agreement) return error(c, 'کمیسیون یافت نشد', 404)
       return ok(c, { agreement })
     },
   )
@@ -77,7 +77,7 @@ export const commissions = new Hono<AppEnv>()
         if (result.reason === 'profile')
           return error(c, 'پروفایل پرسنل یافت نشد', 404)
         if (result.reason === 'agreement')
-          return error(c, 'توافق کمیسیون یافت نشد', 404)
+          return error(c, 'کمیسیون یافت نشد', 404)
         return error(c, 'خدمت یافت نشد', 404)
       }
       return ok(c, { agreement: result.agreement })
@@ -99,8 +99,8 @@ export const commissions = new Hono<AppEnv>()
         if (result.reason === 'profile')
           return error(c, 'پروفایل پرسنل یافت نشد', 404)
         if (result.reason === 'agreement')
-          return error(c, 'توافق کمیسیون یافت نشد', 404)
-        return error(c, 'استثنای کمیسیون خدمت یافت نشد', 404)
+          return error(c, 'کمیسیون یافت نشد', 404)
+        return error(c, 'درصد این خدمت یافت نشد', 404)
       }
       return ok(c, { agreement: result.agreement })
     },

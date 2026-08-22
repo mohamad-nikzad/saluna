@@ -141,7 +141,7 @@ function RetentionPage() {
     setMessageChannel(channel)
     setMessage(
       item.reason === 'birthday'
-        ? `${item.client.name} عزیز، تولدتان مبارک! آرزومند سالی پر از شادی و سلامتی برای شما هستیم.`
+        ? `${item.client.name} جان تولدت مبارک. از طرف سالن برات بهترین‌ها رو آرزو می‌کنیم.`
         : '',
     )
   }
@@ -345,7 +345,8 @@ function RetentionPage() {
               {confirmItem ? (
                 <>
                   برای {confirmItem.client.name} یک پیام کوتاه از طرف سالن ارسال
-                  می‌شود. ارسال خودکار دوره‌ای فعال نمی‌کند.
+                  می‌شود. فقط همین پیام را می‌فرستد و بعداً خودش تکرار
+                  نمی‌شود.
                 </>
               ) : null}
             </AlertDialogDescription>

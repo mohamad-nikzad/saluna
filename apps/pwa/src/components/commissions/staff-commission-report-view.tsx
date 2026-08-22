@@ -26,9 +26,9 @@ export function StaffCommissionReportView({
       <div className="rounded-[14px] border border-line-soft bg-paper px-3.5 py-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-bold text-foreground">توافق کمیسیون</div>
+            <div className="text-xs font-bold text-foreground">کمیسیون</div>
             <div className="mt-0.5 text-[11px] text-muted-foreground">
-              درصد پیش‌فرض و استثناهای خدمت
+              درصد پیش‌فرض و درصد جدا برای خدمت
             </div>
           </div>
           {report.agreement ? (
@@ -101,8 +101,8 @@ export function StaffCommissionReportView({
                 </div>
               </div>
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>مبنای محاسبه: {formatTomans(row.basis)}</span>
-                <span>درصد اعمال‌شده: {toPersianDigits(row.percentage)}٪</span>
+                <span>از سهم کار: {formatTomans(row.basis)}</span>
+                <span>با درصد: {toPersianDigits(row.percentage)}٪</span>
               </div>
             </div>
           ))}

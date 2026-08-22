@@ -44,7 +44,7 @@ test('manager configures a commission and both roles see the completed visit', a
         response.request().method() === 'PUT',
     )
     await page
-      .getByRole('button', { name: /فعال‌کردن توافق|ذخیره درصد جدید/ })
+      .getByRole('button', { name: /فعال‌کردن کمیسیون|ذخیره درصد جدید/ })
       .click()
     expect((await saved).ok()).toBeTruthy()
   })

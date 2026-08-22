@@ -67,7 +67,7 @@ const tagOptions = [
 const acquisitionSourceOptions = [
   { value: 'instagram', label: 'اینستاگرام' },
   { value: 'website', label: 'وب‌سایت' },
-  { value: 'google', label: 'گوگل یا جست‌وجوی اینترنتی' },
+  { value: 'google', label: 'گوگل' },
   { value: 'referral', label: 'معرفی مشتری' },
   { value: 'walk_in', label: 'مراجعه حضوری' },
   { value: 'other', label: 'سایر' },

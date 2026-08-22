@@ -1149,7 +1149,7 @@ function PendingCard({
     }
     const roster = [staffId, ...additionalStaffIds]
     if (!validateWorkAllocations(roster, workAllocations)) {
-      setErrMsg('مجموع سهم کار پرسنل باید دقیقاً ۱۰۰٪ باشد')
+      setErrMsg('مجموع سهم‌ها باید ۱۰۰٪ باشد')
       return
     }
     setErrMsg(null)

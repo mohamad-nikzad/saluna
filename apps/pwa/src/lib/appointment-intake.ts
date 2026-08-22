@@ -520,7 +520,7 @@ export function validateAppointmentIntakeSubmit({
   ) {
     return {
       field: 'workAllocations',
-      message: 'سهم کار پرسنل باید در مجموع ۱۰۰٪ باشد.',
+      message: 'مجموع سهم‌ها باید ۱۰۰٪ باشد.',
     }
   }
 

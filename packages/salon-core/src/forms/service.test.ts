@@ -29,6 +29,7 @@ describe('serviceFormSchema', () => {
       price: 250000,
       color: 'mint',
       active: true,
+      allowMultipleStaff: false,
     })
   })
 

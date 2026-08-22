@@ -6,7 +6,7 @@ import type {
 } from '@repo/salon-core/types'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import { birthdayOccurrenceInWindow } from '@repo/salon-core/client-birthday'
-import { formatJalaliDate } from '@repo/salon-core/jalali'
+import { formatJalaliMonthDay } from '@repo/salon-core/jalali'
 import { sql } from 'drizzle-orm'
 import { getDb } from '../client'
 import { clientFollowUps } from '../schema'
@@ -194,7 +194,7 @@ function addBirthdayCandidates(input: {
         noShowCount: item.noShows.length,
         lastVisitDate: item.lastCompleted?.date ?? null,
         lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
-        suggestedReason: `تولد مشتری در ${formatJalaliDate(occurrence.dueDate)} است.`,
+        suggestedReason: `تولدش ${formatJalaliMonthDay(occurrence.dueDate)} است.`,
       },
     )
   }

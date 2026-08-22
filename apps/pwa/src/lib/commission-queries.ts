@@ -72,8 +72,8 @@ export function useSaveCommissionAgreementMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'توافق کمیسیون ذخیره شد',
-      errorMessage: 'ذخیره توافق کمیسیون انجام نشد',
+      successMessage: 'کمیسیون ذخیره شد',
+      errorMessage: 'ذخیره کمیسیون انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })
@@ -90,8 +90,8 @@ export function useDisableCommissionAgreementMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'توافق کمیسیون غیرفعال شد',
-      errorMessage: 'غیرفعال‌کردن توافق کمیسیون انجام نشد',
+      successMessage: 'کمیسیون غیرفعال شد',
+      errorMessage: 'غیرفعال‌کردن کمیسیون انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })
@@ -116,8 +116,8 @@ export function useSaveServiceCommissionOverrideMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'استثنای کمیسیون خدمت ذخیره شد',
-      errorMessage: 'ذخیره استثنای کمیسیون خدمت انجام نشد',
+      successMessage: 'درصد این خدمت ذخیره شد',
+      errorMessage: 'ذخیره درصد این خدمت انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })
@@ -139,8 +139,8 @@ export function useDeleteServiceCommissionOverrideMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'استثنای کمیسیون خدمت حذف شد',
-      errorMessage: 'حذف استثنای کمیسیون خدمت انجام نشد',
+      successMessage: 'درصد این خدمت حذف شد',
+      errorMessage: 'حذف درصد این خدمت انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })

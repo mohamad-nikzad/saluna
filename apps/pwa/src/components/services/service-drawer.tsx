@@ -229,16 +229,22 @@ export function ServiceDrawer({
                 control={control}
                 name="allowMultipleStaff"
                 render={({ field }) => (
-                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl bg-blush-soft px-3 py-2">
-                    <span className="text-sm font-medium">
-                      اجازه انتخاب چند پرسنل برای این خدمت
-                    </span>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      aria-label="اجازه انتخاب چند پرسنل برای این خدمت"
-                    />
-                  </label>
+                  <div className="space-y-2">
+                    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl bg-blush-soft px-3 py-2">
+                      <span className="text-sm font-medium">
+                        چند نفر می‌توانند با هم این خدمت را انجام دهند
+                      </span>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-label="چند نفر می‌توانند با هم این خدمت را انجام دهند"
+                      />
+                    </label>
+                    <p className="text-[11px] leading-5 text-muted-foreground">
+                      لازم نیست چند نفر باشند. فقط اگر بخواهید همکار اضافه
+                      می‌کنید.
+                    </p>
+                  </div>
                 )}
               />
             </Field>

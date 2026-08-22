@@ -39,6 +39,13 @@ function buildBaleRetentionMessage(input: {
   clientName: string
   reason: string
 }): string {
+  if (input.reason === 'birthday') {
+    return [
+      `${input.clientName} جان سلام`,
+      `تولدت مبارک. از طرف ${input.salonName} برات بهترین‌ها رو آرزو می‌کنیم.`,
+    ].join('\n')
+  }
+
   const reasonText =
     input.reason === 'inactive'
       ? 'مدتی از آخرین مراجعه شما گذشته'
@@ -48,9 +55,7 @@ function buildBaleRetentionMessage(input: {
           ? 'برای ادامه مراقبت بعد از مراجعه اول'
           : input.reason === 'vip'
             ? 'به عنوان مشتری ارزشمند ما'
-            : input.reason === 'birthday'
-              ? 'تولدتان مبارک! آرزومند سالی پر از شادی و سلامتی برای شما هستیم.'
-              : 'برای پیگیری نوبت بعدی'
+            : 'برای پیگیری نوبت بعدی'
 
   return [
     `${input.clientName} عزیز، سلام`,
