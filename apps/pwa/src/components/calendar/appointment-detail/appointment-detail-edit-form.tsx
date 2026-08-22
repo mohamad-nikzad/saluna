@@ -377,7 +377,7 @@ export function AppointmentDetailEditForm({
             <FieldLabel htmlFor="edit-final-price">قیمت نهایی</FieldLabel>
             <LocalizedNumberInput
               id="edit-final-price"
-              suffix="تومان"
+              currency
               value={finalPrice}
               disabled={!priceEditable}
               onValueChange={(value) =>

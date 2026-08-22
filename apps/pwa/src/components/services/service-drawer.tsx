@@ -210,7 +210,7 @@ export function ServiceDrawer({
                   render={({ field }) => (
                     <LocalizedNumberInput
                       id="svc-price"
-                      suffix="تومان"
+                      currency
                       value={field.value}
                       onValueChange={field.onChange}
                       onBlur={() => {

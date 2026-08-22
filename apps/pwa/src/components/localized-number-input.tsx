@@ -17,6 +17,7 @@ type LocalizedNumberInputProps = Omit<
   onValueChange: (value: string) => void
   inputMode?: 'numeric' | 'decimal'
   suffix?: string
+  currency?: boolean
 }
 
 const DIGIT_RE = /[0-9\u06F0-\u06F9\u0660-\u0669]/
@@ -93,6 +94,7 @@ export function LocalizedNumberInput({
   onValueChange,
   inputMode = 'numeric',
   suffix,
+  currency = false,
   className,
   disabled,
   ...props
@@ -120,26 +122,46 @@ export function LocalizedNumberInput({
   }
 
   const inputClassName = className ?? 'text-right tabular-nums'
+  const control = (
+    <InputGroupInput
+      {...props}
+      ref={inputRef}
+      disabled={disabled}
+      type="text"
+      inputMode={inputMode}
+      value={formatted}
+      onChange={(event) =>
+        handleChange(
+          event.target.value,
+          event.target.selectionStart ?? event.target.value.length,
+        )
+      }
+      dir="rtl"
+      className={inputClassName}
+    />
+  )
+
+  if (currency) {
+    return (
+      <InputGroup
+        className="bg-blush-soft"
+        data-disabled={disabled ? true : undefined}
+      >
+        {control}
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>تومان</InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>
+    )
+  }
 
   if (suffix) {
     return (
-      <InputGroup data-disabled={disabled ? true : undefined}>
-        <InputGroupInput
-          {...props}
-          ref={inputRef}
-          disabled={disabled}
-          type="text"
-          inputMode={inputMode}
-          value={formatted}
-          onChange={(event) =>
-            handleChange(
-              event.target.value,
-              event.target.selectionStart ?? event.target.value.length,
-            )
-          }
-          dir="rtl"
-          className={inputClassName}
-        />
+      <InputGroup
+        className="bg-blush-soft"
+        data-disabled={disabled ? true : undefined}
+      >
+        {control}
         <InputGroupAddon align="inline-end">
           <InputGroupText>{suffix}</InputGroupText>
         </InputGroupAddon>

@@ -221,7 +221,7 @@ export function ServiceAddonDrawer({
                   render={({ field }) => (
                     <LocalizedNumberInput
                       id="addon-price"
-                      suffix="تومان"
+                      currency
                       value={field.value}
                       onValueChange={field.onChange}
                       onBlur={() => {

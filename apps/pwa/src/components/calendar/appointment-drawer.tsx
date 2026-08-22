@@ -718,7 +718,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                   <FieldLabel htmlFor="final-price">قیمت نهایی</FieldLabel>
                   <LocalizedNumberInput
                     id="final-price"
-                    suffix="تومان"
+                    currency
                     value={finalPriceInput}
                     onValueChange={(value) => {
                       finalPriceOverriddenRef.current = true

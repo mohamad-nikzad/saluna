@@ -441,7 +441,7 @@ function ServicePackageDrawer({
                   name="priceOverride"
                   render={({ field }) => (
                     <LocalizedNumberInput
-                      suffix="تومان"
+                      currency
                       value={field.value}
                       onValueChange={(value) =>
                         field.onChange(value === '' ? null : value)
