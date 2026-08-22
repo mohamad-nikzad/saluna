@@ -203,13 +203,14 @@ export function ServiceDrawer({
                 )}
               </Field>
               <Field>
-                <FieldLabel htmlFor="svc-price">قیمت (تومان)</FieldLabel>
+                <FieldLabel htmlFor="svc-price">قیمت</FieldLabel>
                 <Controller
                   control={control}
                   name="price"
                   render={({ field }) => (
                     <LocalizedNumberInput
                       id="svc-price"
+                      suffix="تومان"
                       value={field.value}
                       onValueChange={field.onChange}
                       onBlur={() => {

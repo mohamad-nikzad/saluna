@@ -374,11 +374,10 @@ export function AppointmentDetailEditForm({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="edit-final-price">
-              قیمت نهایی (تومان)
-            </FieldLabel>
+            <FieldLabel htmlFor="edit-final-price">قیمت نهایی</FieldLabel>
             <LocalizedNumberInput
               id="edit-final-price"
+              suffix="تومان"
               value={finalPrice}
               disabled={!priceEditable}
               onValueChange={(value) =>

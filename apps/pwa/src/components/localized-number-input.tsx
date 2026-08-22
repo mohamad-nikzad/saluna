@@ -1,6 +1,12 @@
-import type { ComponentProps } from 'react'
+import { useLayoutEffect, useRef, type ComponentProps } from 'react'
 
 import { Input } from '@repo/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@repo/ui/input-group'
 import { toLatinDigits, toPersianDigits } from '@repo/salon-core/persian-digits'
 
 type LocalizedNumberInputProps = Omit<
@@ -10,13 +16,52 @@ type LocalizedNumberInputProps = Omit<
   value: string | number | null | undefined
   onValueChange: (value: string) => void
   inputMode?: 'numeric' | 'decimal'
+  suffix?: string
+}
+
+const DIGIT_RE = /[0-9\u06F0-\u06F9\u0660-\u0669]/
+const groupedInteger = new Intl.NumberFormat('fa-IR', {
+  maximumFractionDigits: 0,
+})
+
+export function countLocalizedDigits(value: string): number {
+  let count = 0
+  for (const ch of value) {
+    if (DIGIT_RE.test(ch)) count += 1
+  }
+  return count
+}
+
+export function caretFromDigitCount(
+  formatted: string,
+  digitCount: number,
+): number {
+  if (digitCount <= 0) return 0
+  let seen = 0
+  for (let i = 0; i < formatted.length; i++) {
+    if (!DIGIT_RE.test(formatted[i] ?? '')) continue
+    seen += 1
+    if (seen === digitCount) return i + 1
+  }
+  return formatted.length
 }
 
 export function formatLocalizedNumberInput(
   value: string | number | null | undefined,
 ): string {
   if (value == null) return ''
-  return toPersianDigits(value)
+  const raw = String(value)
+  if (raw === '') return ''
+  const latin = toLatinDigits(raw)
+  const negative = latin.startsWith('-')
+  const unsigned = negative ? latin.slice(1) : latin
+  const hasDecimal = unsigned.includes('.')
+  const [whole = '', fraction] = unsigned.split('.')
+  const formattedWhole =
+    whole === '' ? '' : groupedInteger.format(Number.parseInt(whole, 10) || 0)
+  const sign = negative ? '−' : ''
+  if (!hasDecimal) return `${sign}${formattedWhole}`
+  return `${sign}${formattedWhole || toPersianDigits('0')}٫${toPersianDigits(fraction ?? '')}`
 }
 
 export function normalizeLocalizedIntegerInput(value: string): string {
@@ -25,6 +70,7 @@ export function normalizeLocalizedIntegerInput(value: string): string {
 
 export function normalizeLocalizedDecimalInput(value: string): string {
   const [whole = '', ...fraction] = toLatinDigits(value)
+    .replace(/[٬،]/g, '')
     .replace(/[٫,]/g, '.')
     .replace(/[^\d.]/g, '')
     .split('.')
@@ -46,24 +92,77 @@ export function LocalizedNumberInput({
   value,
   onValueChange,
   inputMode = 'numeric',
+  suffix,
   className,
+  disabled,
   ...props
 }: LocalizedNumberInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const pendingCaretDigits = useRef<number | null>(null)
+  const formatted = formatLocalizedNumberInput(value)
+
+  useLayoutEffect(() => {
+    const input = inputRef.current
+    const digitCount = pendingCaretDigits.current
+    if (!input || digitCount == null) return
+    pendingCaretDigits.current = null
+    const pos = caretFromDigitCount(formatted, digitCount)
+    input.setSelectionRange(pos, pos)
+  }, [formatted])
+
+  const handleChange = (raw: string, caret: number) => {
+    pendingCaretDigits.current = countLocalizedDigits(raw.slice(0, caret))
+    onValueChange(
+      inputMode === 'decimal'
+        ? normalizeLocalizedDecimalInput(raw)
+        : normalizeLocalizedIntegerInput(raw),
+    )
+  }
+
+  const inputClassName = className ?? 'text-right tabular-nums'
+
+  if (suffix) {
+    return (
+      <InputGroup data-disabled={disabled ? true : undefined}>
+        <InputGroupInput
+          {...props}
+          ref={inputRef}
+          disabled={disabled}
+          type="text"
+          inputMode={inputMode}
+          value={formatted}
+          onChange={(event) =>
+            handleChange(
+              event.target.value,
+              event.target.selectionStart ?? event.target.value.length,
+            )
+          }
+          dir="rtl"
+          className={inputClassName}
+        />
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>{suffix}</InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>
+    )
+  }
+
   return (
     <Input
       {...props}
+      ref={inputRef}
+      disabled={disabled}
       type="text"
       inputMode={inputMode}
-      value={formatLocalizedNumberInput(value)}
+      value={formatted}
       onChange={(event) =>
-        onValueChange(
-          inputMode === 'decimal'
-            ? normalizeLocalizedDecimalInput(event.target.value)
-            : normalizeLocalizedIntegerInput(event.target.value),
+        handleChange(
+          event.target.value,
+          event.target.selectionStart ?? event.target.value.length,
         )
       }
       dir="rtl"
-      className={className ?? 'text-right tabular-nums'}
+      className={inputClassName}
     />
   )
 }
