@@ -347,14 +347,13 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       const dateStr = format(arg.start, 'yyyy-MM-dd')
       const timeStr = format(arg.start, 'HH:mm')
       if (arg.allDay || arg.view.type === 'dayGridMonth') {
-        onDaySummaryOpen?.(dateStr)
         arg.view.calendar.unselect()
         return
       }
       onSlotSelect(dateStr, timeStr)
       arg.view.calendar.unselect()
     },
-    [onSlotSelect, onDaySummaryOpen],
+    [onSlotSelect],
   )
 
   const selectAllow = useCallback(

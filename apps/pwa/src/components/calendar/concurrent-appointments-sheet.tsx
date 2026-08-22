@@ -74,12 +74,15 @@ export function buildConcurrencyClusters(
 
 interface ConcurrentAppointmentsSheetProps {
   cluster: AppointmentWithDetails[] | null
+  /** Hide this drawer without clearing the cluster while a nested Appointment drawer is open. */
+  lockDismiss?: boolean
   onOpenChange: (open: boolean) => void
   onSelectAppointment: (appointment: AppointmentWithDetails) => void
 }
 
 export function ConcurrentAppointmentsSheet({
   cluster,
+  lockDismiss = false,
   onOpenChange,
   onSelectAppointment,
 }: ConcurrentAppointmentsSheetProps) {
@@ -142,14 +145,20 @@ export function ConcurrentAppointmentsSheet({
   const dateLabel = open ? formatPersianFullDate(parseISO(sorted[0].date)) : ''
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open && !lockDismiss}
+      onOpenChange={(next) => {
+        if (!next && lockDismiss) return
+        onOpenChange(next)
+      }}
+    >
       <DrawerContent>
         <DrawerHeader className="pb-2">
-          <div className="flex items-center justify-end gap-2 text-muted-foreground">
+          <div className="flex items-center justify-start gap-2 text-muted-foreground">
+            <CalendarDays className="size-4" />
             <DrawerTitle className="text-[13px] font-semibold text-foreground">
               {dateLabel}
             </DrawerTitle>
-            <CalendarDays className="size-4" />
           </div>
           <DrawerDescription className="sr-only">
             فهرست نوبت‌های همزمان در این بازه

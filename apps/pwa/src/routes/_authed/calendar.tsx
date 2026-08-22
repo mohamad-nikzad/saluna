@@ -360,11 +360,6 @@ function CalendarPage() {
   )
 
   const handleOpenDaySummary = useCallback((dateStr: string) => {
-    const parsed = parseISO(dateStr)
-    if (!Number.isNaN(parsed.getTime())) {
-      setNavDate(parsed)
-      setTitleAnchor(parsed)
-    }
     setSummaryDate(dateStr)
   }, [])
 
@@ -379,7 +374,6 @@ function CalendarPage() {
 
   const handleOpenAppointmentFromSummary = useCallback(
     (appointment: AppointmentWithDetails) => {
-      setSummaryDate(null)
       openDetail(appointment)
     },
     [openDetail],
@@ -458,7 +452,6 @@ function CalendarPage() {
 
   const handleConcurrentSelect = useCallback(
     (appointment: AppointmentWithDetails) => {
-      setConcurrentCluster(null)
       openDetail(appointment)
     },
     [openDetail],
@@ -705,6 +698,7 @@ function CalendarPage() {
 
       <ConcurrentAppointmentsSheet
         cluster={concurrentCluster}
+        lockDismiss={Boolean(appointmentFlow.state.detailAppointment)}
         onOpenChange={(open) => !open && setConcurrentCluster(null)}
         onSelectAppointment={handleConcurrentSelect}
       />
@@ -713,6 +707,7 @@ function CalendarPage() {
         date={summaryDate}
         appointments={filteredAppointments}
         canCreate={isManager}
+        lockDismiss={Boolean(appointmentFlow.state.detailAppointment)}
         onOpenChange={(open) => !open && setSummaryDate(null)}
         onCreateAppointment={handleCreateFromDaySummary}
         onOpenAppointment={handleOpenAppointmentFromSummary}
