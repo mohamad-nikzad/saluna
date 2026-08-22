@@ -89,6 +89,24 @@ The appointment-owned copy of a selected `ServiceAddon`: name, duration delta, p
 **AppointmentTotalsSnapshot**:
 The appointment-owned total duration and price after applying the `BookedServiceSnapshot` and any `BookedAddonSnapshot`s. Authoritative for revenue and retention spend.
 
+### Calendar
+
+**Salon-local Date**:
+A calendar day in `Asia/Tehran`. Operational “today” is this date.
+_Avoid_: UTC today, server-local date, browser-local date
+
+**Salon Week**:
+Saturday through Friday in Salon-local Dates. “This week” and “next week” use this week.
+_Avoid_: Sunday-start week, ISO week, Gregorian week
+
+**Jalali Month**:
+The Jalali calendar month that contains a Salon-local Date. Manager-facing “this month” and “next month” mean this month.
+_Avoid_: Gregorian month, JavaScript month
+
+**Reporting Period**:
+An inclusive range of Salon-local Dates used to filter Appointments and related operational read models: today, the current Salon Week, the current Jalali Month, or a custom inclusive range. A yearly operational report uses the Jalali year containing today.
+_Avoid_: billing month, SMS Allowance period, pay period
+
 ### Clients
 
 **Client**:
@@ -105,7 +123,7 @@ _Avoid_: reusable birthday reminder, reopening last year's follow-up
 
 A manager-recorded **AppointmentRequest** belongs to exactly one **Client**; a customer-recorded **AppointmentRequest** may remain unlinked until approval.
 
-For an **AppointmentRequest**, “next week” means the Saturday–Friday calendar week immediately following the current Salon-local week.
+For an **AppointmentRequest**, “next week” means the Salon Week immediately following the current Salon Week.
 
 **Flexible AppointmentRequest**:
 A manager-recorded **AppointmentRequest** constrained by one or more acceptable dates and one **Time Preference**, instead of an exact start time.
@@ -336,8 +354,10 @@ _Avoid_: ticket type, department
 - Use `Service Package` for sellable bundles, especially when included services span categories.
 - Treat existing combo tables and fields as migration/history names only; new workflows should use `Service Package`, package components, and package tasks.
 - Require explicit staff capability on the `Service Package`; do not infer it from components.
+- Use Salon-local Date, Salon Week, Jalali Month, and Reporting Period for operational “today / this week / this month”; do not call an SMS Allowance period or Salon Subscription term a Reporting Period.
 
 ## Flagged ambiguities
 
 - “staff cut” could mean either **Staff Commission** or **Salon Retained Amount** — use the exact term.
 - “income” could mean an appointment total, an earned **Staff Commission**, collected payment, or profit — Saluna must not use it alone in financial labels.
+- “month” could mean a **Jalali Month** on operational reports or an SMS Allowance monthly period — use the exact term.

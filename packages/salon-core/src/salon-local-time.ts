@@ -40,6 +40,17 @@ export function salonDateTimeInstant(ymd: string, hm: string): Date {
   return new Date(Date.UTC(year, month - 1, day, hour, minute) - 210 * 60_000)
 }
 
+/** Inclusive Salon-local Dates as [start, endExclusive) UTC instants. */
+export function salonLocalInclusiveRangeInstants(range: {
+  startDate: string
+  endDate: string
+}): { start: Date; endExclusive: Date } {
+  return {
+    start: salonDateTimeInstant(range.startDate, '00:00'),
+    endExclusive: salonDateTimeInstant(addDaysYmd(range.endDate, 1), '00:00'),
+  }
+}
+
 export function canEditAppointmentPrice(
   date: string,
   endTime: string,

@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-08-07 (BL-0077 added)
+Last organized: 2026-08-22 (BL-0079 added)
 
 ## Now
 
@@ -38,9 +38,11 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
+- [BL-0078 Give managers period analytics from existing Appointment data](inbox/BL-0078-manager-appointment-analytics-reports.md) (uses ADR-0038)
 
 ## Done
 
+- [BL-0079 Align manager Dashboard with Salon-local Reporting Periods](done/BL-0079-align-dashboard-reporting-periods.md)
 - [BL-0077 Set per-service Staff Commission overrides](done/BL-0077-set-per-service-staff-commission-overrides.md)
 - [BL-0068 Let managers make dates unavailable](done/BL-0068-make-one-date-unavailable.md)
 - [BL-0019 Configure and report Staff Commissions](done/BL-0019-configure-and-report-staff-commissions.md)
