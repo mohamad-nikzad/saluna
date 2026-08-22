@@ -1,7 +1,6 @@
 export type { MessagingProviderId } from './messaging-provider-id'
 export {
   checkMessagingLinkRateLimit,
-  consumeLinkToken,
   consumeLinkTokenIfValid,
   findValidLinkToken,
   createLinkToken,
