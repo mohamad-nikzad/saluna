@@ -104,8 +104,8 @@ The Jalali calendar month that contains a Salon-local Date. Manager-facing “th
 _Avoid_: Gregorian month, JavaScript month
 
 **Reporting Period**:
-An inclusive range of Salon-local Dates used to filter Appointments and related operational read models: today, the current Salon Week, the current Jalali Month, or a custom inclusive range. A yearly operational report uses the Jalali year containing today.
-_Avoid_: billing month, SMS Allowance period, pay period
+An inclusive range of Salon-local Dates used to filter Appointments and related operational read models: today, the current Salon Week, the current Jalali Month, the previous Jalali Month, or a custom inclusive range. A yearly operational report uses the Jalali year containing today.
+_Avoid_: billing month, SMS Allowance period, pay period, Gregorian last month
 
 ### Clients
 
