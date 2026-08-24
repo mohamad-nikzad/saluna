@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-08-22 (BL-0079 added)
+Last organized: 2026-08-23 (BL-0078 reshaped, BL-0080 added)
 
 ## Now
 
@@ -26,6 +26,7 @@ No active backlog items.
   - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
   - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
 - [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
+- [BL-0078 Give managers a salon money report for completed Appointments](ready/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
 
 ## Inbox
 
@@ -38,7 +39,7 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
-- [BL-0078 Give managers period analytics from existing Appointment data](inbox/BL-0078-manager-appointment-analytics-reports.md) (uses ADR-0038)
+- [BL-0080 Let managers browse and filter all Appointments](inbox/BL-0080-manager-appointment-list.md)
 
 ## Done
 

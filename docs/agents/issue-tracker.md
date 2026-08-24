@@ -23,14 +23,3 @@ When publishing subtasks from a spec, keep the spec as the parent item. Create e
 ## When a skill says "fetch the relevant ticket"
 
 Read the file at the referenced path (e.g. `backlog/ready/BL-0041-service-catalog-big-bang-migration.md`).
-
-## Wayfinding operations
-
-Used by `/wayfinder`. The **map** is a parent file with **child** ticket files.
-
-- **Map**: `backlog/<effort>/map.md` — Notes / Decisions-so-far / Fog body
-- **Child ticket**: `backlog/<effort>/BL-NNNN-<slug>.md` with the question in the body. Frontmatter records `type` (`research` | `prototype` | `grilling` | `task`) and `status` (`claimed` | `resolved`)
-- **Blocking**: a `blocked_by: [BL-NNNN, ...]` frontmatter field (or `## Blocked by` section). A ticket is unblocked when every blocker is `done` or `resolved`
-- **Frontier**: scan child tickets for open, unblocked, unclaimed items; lowest id first
-- **Claim**: set `status: now` (or a dedicated `claimed` status) before work begins
-- **Resolve**: append the answer under `## Answer`, set `status: done`, then gist + link in the map's Decisions-so-far
