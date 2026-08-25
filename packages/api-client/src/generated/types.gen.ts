@@ -1426,6 +1426,42 @@ export type SalonCommissionReport = {
     }>;
 };
 
+export type SalonMoneyReportResponse = {
+    report: SalonMoneyReport;
+};
+
+export type SalonMoneyReport = {
+    startDate: string;
+    endDate: string;
+    summary: {
+        bookedTotal: number;
+        staffCommissionTotal: number;
+        salonRetainedAmount: number;
+    };
+    staff: Array<{
+        staffProfileId: string;
+        staffName: string;
+        completedCount: number;
+        commissionBasisTotal: number;
+        staffCommissionTotal: number;
+    }>;
+    appointments: Array<{
+        appointmentId: string;
+        date: string;
+        clientName: string;
+        serviceName: string;
+        staffNames: Array<string>;
+        bookedTotal: number;
+        commissions: Array<{
+            staffProfileId: string;
+            staffName: string;
+            basis: number;
+            percentage: number;
+            amount: number;
+        }>;
+    }>;
+};
+
 export type AppointmentRequestsListResponse = {
     requests: Array<AppointmentRequestListItem>;
 };
@@ -5982,7 +6018,7 @@ export type GetApiV1CommissionsStaffByIdReportData = {
         id: string;
     };
     query?: {
-        period?: 'today' | 'week' | 'month' | 'custom';
+        period?: 'today' | 'week' | 'month' | 'previousMonth' | 'custom';
         startDate?: string;
         endDate?: string;
         staffProfileId?: string;
@@ -6024,7 +6060,7 @@ export type GetApiV1CommissionsMeData = {
     body?: never;
     path?: never;
     query?: {
-        period?: 'today' | 'week' | 'month' | 'custom';
+        period?: 'today' | 'week' | 'month' | 'previousMonth' | 'custom';
         startDate?: string;
         endDate?: string;
         staffProfileId?: string;
@@ -6066,7 +6102,7 @@ export type GetApiV1CommissionsSalonData = {
     body?: never;
     path?: never;
     query?: {
-        period?: 'today' | 'week' | 'month' | 'custom';
+        period?: 'today' | 'week' | 'month' | 'previousMonth' | 'custom';
         startDate?: string;
         endDate?: string;
         staffProfileId?: string;
@@ -6103,6 +6139,50 @@ export type GetApiV1CommissionsSalonResponses = {
 };
 
 export type GetApiV1CommissionsSalonResponse = GetApiV1CommissionsSalonResponses[keyof GetApiV1CommissionsSalonResponses];
+
+export type GetApiV1ReportsSalonMoneyData = {
+    body?: never;
+    path?: never;
+    query?: {
+        period?: 'today' | 'week' | 'month' | 'previousMonth' | 'custom';
+        startDate?: string;
+        endDate?: string;
+        staffProfileId?: string;
+        serviceId?: string;
+        categoryId?: string;
+    };
+    url: '/api/v1/reports/salon-money';
+};
+
+export type GetApiV1ReportsSalonMoneyErrors = {
+    /**
+     * Invalid report period
+     */
+    400: ApiError;
+    /**
+     * Missing or invalid session
+     */
+    401: ApiError;
+    /**
+     * Authenticated but not authorized for this report
+     */
+    403: ApiError;
+    /**
+     * Staff Profile, service, or category not found in salon
+     */
+    404: ApiError;
+};
+
+export type GetApiV1ReportsSalonMoneyError = GetApiV1ReportsSalonMoneyErrors[keyof GetApiV1ReportsSalonMoneyErrors];
+
+export type GetApiV1ReportsSalonMoneyResponses = {
+    /**
+     * Salon money report for completed Appointments
+     */
+    200: SalonMoneyReportResponse;
+};
+
+export type GetApiV1ReportsSalonMoneyResponse = GetApiV1ReportsSalonMoneyResponses[keyof GetApiV1ReportsSalonMoneyResponses];
 
 export type GetApiV1AppointmentRequestsData = {
     body?: never;

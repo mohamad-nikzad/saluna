@@ -58,6 +58,7 @@ import {
   putCommissionAgreementRoute,
   putServiceCommissionOverrideRoute,
 } from './routes/commissions'
+import { getSalonMoneyReportRoute } from './routes/reports'
 import {
   approveAppointmentRequestRoute,
   convertFlexibleAppointmentRequestRoute,
@@ -867,6 +868,26 @@ const getSalonCommissionReportStub: RouteHandler<
     200,
   )
 
+const getSalonMoneyReportStub: RouteHandler<typeof getSalonMoneyReportRoute> = (
+  c,
+) =>
+  c.json(
+    {
+      report: {
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        summary: {
+          bookedTotal: 0,
+          staffCommissionTotal: 0,
+          salonRetainedAmount: 0,
+        },
+        staff: [],
+        appointments: [],
+      },
+    },
+    200,
+  )
+
 const stubAppointmentRequest = {
   id: 'stub',
   salonId: 'stub',
@@ -1635,6 +1656,13 @@ export const contractApp = new OpenAPIHono()
       .openapi(getStaffCommissionReportRoute, getStaffCommissionReportStub)
       .openapi(getMyCommissionReportRoute, getMyCommissionReportStub)
       .openapi(getSalonCommissionReportRoute, getSalonCommissionReportStub),
+  )
+  .route(
+    '/api/v1/reports',
+    new OpenAPIHono().openapi(
+      getSalonMoneyReportRoute,
+      getSalonMoneyReportStub,
+    ),
   )
   .route(
     '/api/v1/appointment-requests',

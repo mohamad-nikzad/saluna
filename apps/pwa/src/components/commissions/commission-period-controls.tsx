@@ -8,6 +8,7 @@ const periods = [
   ['today', 'امروز'],
   ['week', 'این هفته'],
   ['month', 'این ماه'],
+  ['previousMonth', 'ماه قبل'],
   ['custom', 'بازه دلخواه'],
 ] as const
 
@@ -20,7 +21,7 @@ export function CommissionPeriodControls({
 }) {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-4 gap-1 rounded-[14px] bg-blush-soft p-1">
+      <div className="flex flex-wrap gap-1 rounded-[14px] bg-blush-soft p-1">
         {periods.map(([period, label]) => (
           <button
             key={period}
@@ -38,7 +39,7 @@ export function CommissionPeriodControls({
               }
             }}
             className={cn(
-              'h-9 rounded-[10px] px-1 text-[11px] font-bold transition-colors touch:h-11 touch-manipulation',
+              'h-9 min-w-[4.5rem] flex-1 rounded-[10px] px-1 text-[11px] font-bold transition-colors touch:h-11 touch-manipulation',
               value.period === period
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground',

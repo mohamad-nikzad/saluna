@@ -5,7 +5,12 @@ import {
 } from './jalali'
 import { addDaysYmd, salonTodayYmd } from './salon-local-time'
 
-export type ReportingPeriod = 'today' | 'week' | 'month' | 'custom'
+export type ReportingPeriod =
+  | 'today'
+  | 'week'
+  | 'month'
+  | 'previousMonth'
+  | 'custom'
 
 const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
@@ -31,12 +36,16 @@ export function reportingPeriodRange(input: {
     return { startDate, endDate: addDaysYmd(startDate, 6) }
   }
 
-  if (input.period === 'month') {
+  if (input.period === 'month' || input.period === 'previousMonth') {
     const { jy, jm } = parseGregorianToJalali(today)
-    return {
-      startDate: jalaliToGregorianStr(jy, jm, 1),
-      endDate: jalaliToGregorianStr(jy, jm, jalaliMonthLength(jy, jm)),
-    }
+    const month = input.period === 'month' ? jm : jm === 1 ? 12 : jm - 1
+    const year = input.period === 'month' || jm !== 1 ? jy : jy - 1
+    const startDate = jalaliToGregorianStr(year, month, 1)
+    const endDate =
+      input.period === 'previousMonth'
+        ? addDaysYmd(jalaliToGregorianStr(jy, jm, 1), -1)
+        : jalaliToGregorianStr(year, month, jalaliMonthLength(year, month))
+    return { startDate, endDate }
   }
 
   if (

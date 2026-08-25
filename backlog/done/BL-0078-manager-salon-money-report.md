@@ -1,13 +1,13 @@
 ---
 id: BL-0078
 title: Give managers a salon money report for completed Appointments
-status: ready
+status: done
 type: feature
 triage: ready-for-agent
 priority: medium
 size: medium
 created: 2026-08-11
-updated: 2026-08-23
+updated: 2026-08-24
 ---
 
 ## Problem
@@ -32,15 +32,15 @@ Reuse the shared Reporting Period helper (ADR-0038). Do not add Appointments ana
 
 ## Acceptance Criteria
 
-- [ ] A manager can open `/reports` from Settings and see the salon money report for the current Jalali Month by default.
-- [ ] Staff cannot open `/reports` (same rule as today’s Dashboard and `/commissions`).
-- [ ] Period controls include today, this Salon Week, this Jalali Month, ماه قبل (previous Jalali Month), and a custom inclusive range of Salon-local Dates.
-- [ ] Staff Profile, ServiceVariant, and ServiceCategory filters combine; empty means all; metrics stay tenant-scoped to the current Salon.
-- [ ] Cards always show completed booked totals (`bookedTotalPrice` / commission basis). A hide/show control adds Staff Commission and Salon Retained Amount from stored Staff Commissions, not a live rate.
-- [ ] With commission shown, the existing per-staff commission summary remains available for the filtered set.
-- [ ] The completed-Appointment list shows 10 rows, then show-more in further tens, and a row opens Appointment detail.
-- [ ] UI copy never labels booked totals as collected cash, profit, Client Payment, or bare “income.”
-- [ ] Settings has one “گزارش‌ها” entry to `/reports`. `/commissions` redirects there. Dashboard, `/earnings`, and the Staff Profile commission panel are unchanged.
+- [x] A manager can open `/reports` from Settings and see the salon money report for the current Jalali Month by default.
+- [x] Staff cannot open `/reports` (same rule as today’s Dashboard and `/commissions`).
+- [x] Period controls include today, this Salon Week, this Jalali Month, ماه قبل (previous Jalali Month), and a custom inclusive range of Salon-local Dates.
+- [x] Staff Profile, ServiceVariant, and ServiceCategory filters combine; empty means all; metrics stay tenant-scoped to the current Salon.
+- [x] Cards always show completed booked totals (`bookedTotalPrice` / commission basis). A hide/show control adds Staff Commission and Salon Retained Amount from stored Staff Commissions, not a live rate.
+- [x] With commission shown, the existing per-staff commission summary remains available for the filtered set.
+- [x] The completed-Appointment list shows 10 rows, then show-more in further tens, and a row opens Appointment detail.
+- [x] UI copy never labels booked totals as collected cash, profit, Client Payment, or bare “income.”
+- [x] Settings has one “گزارش‌ها” entry to `/reports`. `/commissions` redirects there. Dashboard, `/earnings`, and the Staff Profile commission panel are unchanged.
 
 ## Notes
 

@@ -2,7 +2,9 @@ import { useMutation } from '@tanstack/react-query'
 import type {
   CommissionAgreement,
   GetApiV1CommissionsMeData,
+  GetApiV1ReportsSalonMoneyData,
   SalonCommissionReport,
+  SalonMoneyReport,
   StaffCommissionReport,
 } from '@repo/api-client/types'
 import {
@@ -11,6 +13,7 @@ import {
   getApiV1CommissionsMeOptions,
   getApiV1CommissionsSalonOptions,
   getApiV1CommissionsStaffByIdReportOptions,
+  getApiV1ReportsSalonMoneyOptions,
   putApiV1CommissionsStaffByIdAgreementMutation,
   putApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
 } from '@repo/api-client/query'
@@ -19,10 +22,20 @@ export type CommissionPeriodQuery = NonNullable<
   GetApiV1CommissionsMeData['query']
 >
 
+export type SalonMoneyReportQuery = NonNullable<
+  GetApiV1ReportsSalonMoneyData['query']
+>
+
 const staffReportRoot = [{ _id: 'getApiV1CommissionsStaffByIdReport' }] as const
 const selfReportRoot = [{ _id: 'getApiV1CommissionsMe' }] as const
 const salonReportRoot = [{ _id: 'getApiV1CommissionsSalon' }] as const
-const reportRoots = [staffReportRoot, selfReportRoot, salonReportRoot] as const
+const salonMoneyReportRoot = [{ _id: 'getApiV1ReportsSalonMoney' }] as const
+const reportRoots = [
+  staffReportRoot,
+  selfReportRoot,
+  salonReportRoot,
+  salonMoneyReportRoot,
+] as const
 
 export function commissionReportInvalidationKeys() {
   return reportRoots
@@ -54,6 +67,13 @@ export function salonCommissionReportQueryOptions(
   return {
     ...getApiV1CommissionsSalonOptions({ query }),
     select: (data: { report: SalonCommissionReport }) => data.report,
+  }
+}
+
+export function salonMoneyReportQueryOptions(query: SalonMoneyReportQuery) {
+  return {
+    ...getApiV1ReportsSalonMoneyOptions({ query }),
+    select: (data: { report: SalonMoneyReport }) => data.report,
   }
 }
 

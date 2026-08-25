@@ -1,19 +1,14 @@
 import { z } from '@hono/zod-openapi'
 
+import {
+  reportingPeriodDateFields,
+  reportingPeriodField,
+} from './reporting-period'
+
 export const commissionPeriodQuerySchema = z
   .object({
-    period: z
-      .enum(['today', 'week', 'month', 'custom'])
-      .default('today')
-      .openapi({ param: { name: 'period', in: 'query' } }),
-    startDate: z
-      .string()
-      .optional()
-      .openapi({ param: { name: 'startDate', in: 'query' } }),
-    endDate: z
-      .string()
-      .optional()
-      .openapi({ param: { name: 'endDate', in: 'query' } }),
+    period: reportingPeriodField('today'),
+    ...reportingPeriodDateFields,
     staffProfileId: z
       .string()
       .optional()

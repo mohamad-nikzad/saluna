@@ -14,7 +14,8 @@ const migrationsFolder = fileURLToPath(
   new URL('../migrations', import.meta.url),
 )
 
-type CommissionQueries = typeof import('./commission-queries')
+type CommissionQueries = typeof import('./commission-queries') &
+  typeof import('./salon-money-report-queries')
 type AppointmentQueries = typeof import('./appointment-queries')
 
 let adminSql: Sql | undefined
@@ -133,7 +134,10 @@ describe.skipIf(!runIntegration)(
       await seed(testSql)
       process.env.DATABASE_URL = databaseUrl
       process.env.DATABASE_URL_DIRECT = databaseUrl
-      commissions = await import('./commission-queries')
+      commissions = {
+        ...(await import('./commission-queries')),
+        ...(await import('./salon-money-report-queries')),
+      }
       appointmentQueries = await import('./appointment-queries')
     }, 30_000)
 
@@ -967,6 +971,155 @@ describe.skipIf(!runIntegration)(
           serviceId: ids.serviceB,
         }),
       ).resolves.toMatchObject({ ok: true, agreement: { overrides: [] } })
+    })
+
+    it('counts unique completed booked totals and stored commissions with filters', async () => {
+      const extraCategory = randomUUID()
+      const extraService = randomUUID()
+      await testSql!`
+        insert into service_categories (id, salon_id, name)
+        values (${extraCategory}, ${ids.salon}, 'Color')
+      `
+      await testSql!`
+        insert into services (id, salon_id, category_id, name, duration, price, color)
+        values (${extraService}, ${ids.salon}, ${extraCategory}, 'Balayage', 30, 400, 'gold')
+      `
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+
+      const withoutCommission = await insertAppointment({
+        staffId: ids.profileB,
+        date: '2026-11-02',
+        price: 300,
+      })
+      const withCommission = await insertAppointment({
+        date: '2026-11-03',
+        price: 200,
+      })
+      const multiStaff = await insertAppointment({
+        date: '2026-11-04',
+        price: 100,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      const otherCategoryAppointment = await insertAppointment({
+        serviceId: extraService,
+        date: '2026-11-05',
+        price: 400,
+      })
+      const scheduled = await insertAppointment({
+        date: '2026-11-06',
+        price: 900,
+      })
+
+      await appointmentQueries.updateAppointment(withoutCommission, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(withCommission, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(multiStaff, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(
+        otherCategoryAppointment,
+        ids.salon,
+        { status: 'completed' },
+      )
+
+      const all = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+      })
+      expect(all.ok).toBe(true)
+      if (!all.ok) return
+      expect(all.report.appointments.map((row) => row.appointmentId)).toEqual(
+        expect.arrayContaining([
+          withoutCommission,
+          withCommission,
+          multiStaff,
+          otherCategoryAppointment,
+        ]),
+      )
+      expect(all.report.appointments.some((row) => row.appointmentId === scheduled)).toBe(
+        false,
+      )
+      expect(all.report.summary.bookedTotal).toBe(1000)
+      expect(all.report.summary.staffCommissionTotal).toBe(
+        all.report.staff.reduce((sum, row) => sum + row.staffCommissionTotal, 0),
+      )
+      expect(all.report.summary.salonRetainedAmount).toBe(
+        all.report.summary.bookedTotal - all.report.summary.staffCommissionTotal,
+      )
+
+      const staffA = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        staffProfileId: ids.profileA,
+      })
+      expect(staffA.ok).toBe(true)
+      if (!staffA.ok) return
+      expect(staffA.report.appointments.map((row) => row.appointmentId).sort()).toEqual(
+        [withCommission, multiStaff, otherCategoryAppointment].sort(),
+      )
+      expect(staffA.report.summary.bookedTotal).toBe(700)
+
+      const byService = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        serviceId: extraService,
+      })
+      expect(byService.ok).toBe(true)
+      if (!byService.ok) return
+      expect(byService.report.appointments).toEqual([
+        expect.objectContaining({ appointmentId: otherCategoryAppointment, bookedTotal: 400 }),
+      ])
+
+      const byCategory = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        categoryId: extraCategory,
+      })
+      expect(byCategory).toEqual(byService)
+
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          staffProfileId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'staff' })
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          serviceId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'service' })
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          categoryId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'category' })
     })
   },
 )

@@ -1,7 +1,6 @@
 import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
 import {
   allocateWorkBasis,
-  allocatePackagePrice,
   commissionAmount,
 } from '@repo/salon-core/commissions'
 
@@ -13,12 +12,14 @@ import {
   clients,
   commissionAgreements,
   serviceCommissionOverrides,
-  servicePackageBookings,
-  servicePackageTasks,
   services,
   staffCommissions,
   staffProfiles,
 } from '../schema'
+import {
+  appointmentCommissionBasis,
+  completedAppointmentBookedTotal,
+} from './appointment-commission-basis'
 
 type Db = ReturnType<typeof getDb>
 type DbTx = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -286,51 +287,6 @@ export async function deleteServiceCommissionOverride(input: {
   return { ok: true, agreement: await agreementView(agreement) }
 }
 
-async function appointmentCommissionBasis(
-  tx: DbTx,
-  appointment: AppointmentRow,
-): Promise<number> {
-  const taskRows = await tx
-    .select({ packageBookingId: servicePackageTasks.packageBookingId })
-    .from(servicePackageTasks)
-    .where(
-      and(
-        eq(servicePackageTasks.salonId, appointment.salonId),
-        eq(servicePackageTasks.appointmentId, appointment.id),
-      ),
-    )
-    .limit(1)
-  const task = taskRows[0]
-  if (!task) return appointment.bookedTotalPrice
-
-  const packageRows = await tx
-    .select({
-      appointmentId: servicePackageTasks.appointmentId,
-      sortOrder: servicePackageTasks.sortOrder,
-      bookedServicePrice: appointments.bookedServicePrice,
-      bookedPackagePrice: servicePackageBookings.bookedPackagePrice,
-    })
-    .from(servicePackageTasks)
-    .innerJoin(
-      appointments,
-      eq(appointments.id, servicePackageTasks.appointmentId),
-    )
-    .innerJoin(
-      servicePackageBookings,
-      eq(servicePackageBookings.id, servicePackageTasks.packageBookingId),
-    )
-    .where(eq(servicePackageTasks.packageBookingId, task.packageBookingId))
-    .orderBy(asc(servicePackageTasks.sortOrder))
-  const allocations = allocatePackagePrice(
-    packageRows[0]!.bookedPackagePrice,
-    packageRows.map((row) => row.bookedServicePrice),
-  )
-  const index = packageRows.findIndex(
-    (row) => row.appointmentId === appointment.id,
-  )
-  return allocations[index]!
-}
-
 export async function getSalonFinancialSummary(input: {
   salonId: string
   startDate: string
@@ -390,20 +346,16 @@ export async function getSalonFinancialSummary(input: {
     // ponytail: monthly volumes are small; batch package lookups if this is measured as slow.
     const bases = await Promise.all(
       [...byAppointment.values()].map(async (appointmentRows) => {
+        const appointment = appointmentRows[0]!.appointment
         const commissioned = appointmentRows.filter(
           (row) => row.commissionBasis != null,
         )
-        if (
-          commissioned.length > 0 &&
-          commissioned.length ===
-            (assignmentCount.get(appointmentRows[0]!.appointment.id) ?? 1)
-        ) {
-          return commissioned.reduce(
-            (sum, row) => sum + (row.commissionBasis ?? 0),
-            0,
-          )
-        }
-        return appointmentCommissionBasis(tx, appointmentRows[0]!.appointment)
+        return completedAppointmentBookedTotal({
+          tx,
+          appointment,
+          commissionBases: commissioned.map((row) => row.commissionBasis ?? 0),
+          assignmentCount: assignmentCount.get(appointment.id) ?? 0,
+        })
       }),
     )
     const grossAppointmentRevenue = bases.reduce((sum, basis) => sum + basis, 0)

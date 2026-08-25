@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-08-23 (BL-0078 reshaped, BL-0080 added)
+Last organized: 2026-08-24 (BL-0078 done)
 
 ## Now
 
@@ -26,7 +26,6 @@ No active backlog items.
   - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
   - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
 - [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
-- [BL-0078 Give managers a salon money report for completed Appointments](ready/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
 
 ## Inbox
 
@@ -43,6 +42,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0078 Give managers a salon money report for completed Appointments](done/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
 - [BL-0079 Align manager Dashboard with Salon-local Reporting Periods](done/BL-0079-align-dashboard-reporting-periods.md)
 - [BL-0077 Set per-service Staff Commission overrides](done/BL-0077-set-per-service-staff-commission-overrides.md)
 - [BL-0068 Let managers make dates unavailable](done/BL-0068-make-one-date-unavailable.md)

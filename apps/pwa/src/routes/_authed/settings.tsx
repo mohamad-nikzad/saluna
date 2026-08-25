@@ -367,9 +367,9 @@ function SettingsPage() {
               />
               <SettingsRow
                 icon={Banknote}
-                label="گزارش کمیسیون"
-                hint="کمیسیون پرسنل و مبلغ باقی‌مانده سالن"
-                to="/commissions"
+                label="گزارش‌ها"
+                hint="مبلغ نوبت‌های انجام‌شده و کمیسیون"
+                to="/reports"
               />
               <SettingsRow
                 icon={UserRoundSearch}

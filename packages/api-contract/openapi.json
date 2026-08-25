@@ -5514,6 +5514,152 @@
           "rows"
         ]
       },
+      "SalonMoneyReportResponse": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/SalonMoneyReport"
+          }
+        },
+        "required": [
+          "report"
+        ]
+      },
+      "SalonMoneyReport": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "bookedTotal": {
+                "type": "integer"
+              },
+              "staffCommissionTotal": {
+                "type": "integer"
+              },
+              "salonRetainedAmount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "bookedTotal",
+              "staffCommissionTotal",
+              "salonRetainedAmount"
+            ]
+          },
+          "staff": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "staffProfileId": {
+                  "type": "string"
+                },
+                "staffName": {
+                  "type": "string"
+                },
+                "completedCount": {
+                  "type": "integer"
+                },
+                "commissionBasisTotal": {
+                  "type": "integer"
+                },
+                "staffCommissionTotal": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "staffProfileId",
+                "staffName",
+                "completedCount",
+                "commissionBasisTotal",
+                "staffCommissionTotal"
+              ]
+            }
+          },
+          "appointments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "appointmentId": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "clientName": {
+                  "type": "string"
+                },
+                "serviceName": {
+                  "type": "string"
+                },
+                "staffNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "bookedTotal": {
+                  "type": "integer"
+                },
+                "commissions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "staffProfileId": {
+                        "type": "string"
+                      },
+                      "staffName": {
+                        "type": "string"
+                      },
+                      "basis": {
+                        "type": "integer"
+                      },
+                      "percentage": {
+                        "type": "number"
+                      },
+                      "amount": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "staffProfileId",
+                      "staffName",
+                      "basis",
+                      "percentage",
+                      "amount"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "appointmentId",
+                "date",
+                "clientName",
+                "serviceName",
+                "staffNames",
+                "bookedTotal",
+                "commissions"
+              ]
+            }
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate",
+          "summary",
+          "staff",
+          "appointments"
+        ]
+      },
       "AppointmentRequestsListResponse": {
         "type": "object",
         "properties": {
@@ -17042,6 +17188,7 @@
                 "today",
                 "week",
                 "month",
+                "previousMonth",
                 "custom"
               ],
               "default": "today"
@@ -17151,6 +17298,7 @@
                 "today",
                 "week",
                 "month",
+                "previousMonth",
                 "custom"
               ],
               "default": "today"
@@ -17260,6 +17408,7 @@
                 "today",
                 "week",
                 "month",
+                "previousMonth",
                 "custom"
               ],
               "default": "today"
@@ -17336,6 +17485,132 @@
           },
           "404": {
             "description": "Staff Profile or Commission Agreement not found in salon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/salon-money": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get the manager-only salon money report for completed Appointments",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "today",
+                "week",
+                "month",
+                "previousMonth",
+                "custom"
+              ],
+              "default": "month"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "staffProfileId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "serviceId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "categoryId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Salon money report for completed Appointments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalonMoneyReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid report period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not authorized for this report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff Profile, service, or category not found in salon",
             "content": {
               "application/json": {
                 "schema": {

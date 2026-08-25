@@ -11,3 +11,8 @@ export {
   type StaffCommissionReport,
   type StaffCommissionReportRow,
 } from './internal/commission-queries'
+export {
+  getSalonMoneyReport,
+  type SalonMoneyReport,
+  type SalonMoneyReportResult,
+} from './internal/salon-money-report-queries'
