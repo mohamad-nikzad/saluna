@@ -57,24 +57,3 @@ export async function appointmentCommissionBasis(
   )
   return allocations[index]!
 }
-
-/**
- * Unique salon booked total for one completed Appointment.
- * Prefer stored commission bases when every assignment has a non-voided row;
- * otherwise fall back to package-aware booked price.
- */
-export async function completedAppointmentBookedTotal(input: {
-  tx: CommissionDbTx
-  appointment: AppointmentCommissionRow
-  commissionBases: number[]
-  assignmentCount: number
-}): Promise<number> {
-  const expectedAssignments = input.assignmentCount || 1
-  if (
-    input.commissionBases.length > 0 &&
-    input.commissionBases.length === expectedAssignments
-  ) {
-    return input.commissionBases.reduce((sum, basis) => sum + basis, 0)
-  }
-  return appointmentCommissionBasis(input.tx, input.appointment)
-}

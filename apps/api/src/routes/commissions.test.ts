@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@repo/database/commissions', () => ({
   deleteServiceCommissionOverride: vi.fn(),
   disableCommissionAgreement: vi.fn(),
-  getSalonCommissionReport: vi.fn(),
   getStaffCommissionReport: vi.fn(),
   setCommissionAgreement: vi.fn(),
   setServiceCommissionOverride: vi.fn(),
@@ -116,12 +115,15 @@ describe('Staff Commission routes', () => {
         body: JSON.stringify({ percentage: 30 }),
       },
     )
-    const salon = await app.request('/api/v1/commissions/salon?period=today', {
-      headers,
-    })
+    const salonMoney = await app.request(
+      '/api/v1/reports/salon-money?period=today',
+      {
+        headers,
+      },
+    )
     expect(write.status).toBe(403)
     expect(overrideWrite.status).toBe(403)
-    expect(salon.status).toBe(403)
+    expect(salonMoney.status).toBe(403)
   })
 
   it('lets a manager upsert and delete a Service Commission Override', async () => {

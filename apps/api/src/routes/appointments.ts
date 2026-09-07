@@ -105,9 +105,7 @@ export const appointments = new Hono<AppEnv>()
       const {
         clientId,
         placeholderClient,
-        staffId,
-        additionalStaffIds,
-        workAllocations,
+        staffAssignments,
         serviceId,
         addonIds,
         date,
@@ -136,9 +134,7 @@ export const appointments = new Hono<AppEnv>()
         const intake = await validateCreateAppointmentIntake({
           salonId,
           clientId: resolvedClientId,
-          staffId,
-          additionalStaffIds,
-          workAllocations,
+          staffAssignments,
           serviceId,
           date,
           startTime,
@@ -170,18 +166,9 @@ export const appointments = new Hono<AppEnv>()
 
         await notifyAssignedStaff({
           salonId,
-          staffIds: (intake.staffMembers ?? [intake.staff]).map(
-            (member) => member.id,
-          ),
+          staffIds: intake.staffMembers.map((member) => member.id),
           actorUserId: userId,
-          appointment: {
-            id: appointment.id,
-            date: appointment.date,
-            startTime: appointment.startTime,
-            clientId: appointment.clientId,
-            staffId: appointment.staffId,
-            serviceId: appointment.serviceId,
-          },
+          appointment,
           clientName: intake.client.name,
           serviceName: intake.service.name,
         })
@@ -257,9 +244,7 @@ export const appointments = new Hono<AppEnv>()
       if (
         tenant.role === 'staff' &&
         !staffOwnsAppointment(
-          appointment.staffAssignments?.map(
-            (assignment) => assignment.staffId,
-          ) ?? appointment.staffId,
+          appointment.staffAssignments.map((assignment) => assignment.staffId),
           tenant,
         )
       ) {
@@ -293,9 +278,7 @@ export const appointments = new Hono<AppEnv>()
         const staffCanPatchOwnStatus =
           role === 'staff' &&
           staffOwnsAppointment(
-            existing.staffAssignments?.map(
-              (assignment) => assignment.staffId,
-            ) ?? existing.staffId,
+            existing.staffAssignments.map((assignment) => assignment.staffId),
             tenant,
           ) &&
           isStatusOnlyPatch &&
@@ -399,11 +382,9 @@ export const appointments = new Hono<AppEnv>()
 
         if (isManagerRole(role)) {
           const previousStaffIds = new Set(
-            existing.staffAssignments?.map(
-              (assignment) => assignment.staffId,
-            ) ?? [existing.staffId],
+            existing.staffAssignments.map((assignment) => assignment.staffId),
           )
-          const addedStaffIds = (intake.staffMembers ?? [intake.staff])
+          const addedStaffIds = intake.staffMembers
             .map((member) => member.id)
             .filter((staffId) => !previousStaffIds.has(staffId))
           if (addedStaffIds.length > 0) {

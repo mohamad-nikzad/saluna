@@ -1,8 +1,9 @@
-import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
+import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm'
 import {
   allocateWorkBasis,
   commissionAmount,
 } from '@repo/salon-core/commissions'
+import { EmptyAppointmentRosterError } from '@repo/salon-core/appointment-roster'
 
 import { getDb } from '../client'
 import { resolveAppointmentAssignmentStaffProfileId } from '../staff-profile-access'
@@ -16,10 +17,7 @@ import {
   staffCommissions,
   staffProfiles,
 } from '../schema'
-import {
-  appointmentCommissionBasis,
-  completedAppointmentBookedTotal,
-} from './appointment-commission-basis'
+import { appointmentCommissionBasis } from './appointment-commission-basis'
 
 type Db = ReturnType<typeof getDb>
 type DbTx = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -64,24 +62,6 @@ export type StaffCommissionReport = {
     staffCommissionTotal: number
   }
   rows: StaffCommissionReportRow[]
-}
-
-export type SalonCommissionReport = {
-  startDate: string
-  endDate: string
-  summary: {
-    grossAppointmentRevenue: number
-    staffCommissionTotal: number
-    salonRetainedAmount: number
-  }
-  staff: Array<{
-    staffProfileId: string
-    staffName: string
-    completedCount: number
-    grossAppointmentRevenue: number
-    staffCommissionTotal: number
-  }>
-  rows: Array<StaffCommissionReportRow & { staffProfileId: string }>
 }
 
 async function listAgreementOverrides(
@@ -287,90 +267,6 @@ export async function deleteServiceCommissionOverride(input: {
   return { ok: true, agreement: await agreementView(agreement) }
 }
 
-export async function getSalonFinancialSummary(input: {
-  salonId: string
-  startDate: string
-  endDate: string
-}) {
-  return getDb().transaction(async (tx) => {
-    const rows = await tx
-      .select({
-        appointment: appointments,
-        commissionBasis: staffCommissions.basis,
-        commissionAmount: staffCommissions.amount,
-      })
-      .from(appointments)
-      .leftJoin(
-        staffCommissions,
-        and(
-          eq(staffCommissions.appointmentId, appointments.id),
-          isNull(staffCommissions.voidedAt),
-        ),
-      )
-      .where(
-        and(
-          eq(appointments.salonId, input.salonId),
-          eq(appointments.status, 'completed'),
-          gte(appointments.date, input.startDate),
-          lte(appointments.date, input.endDate),
-        ),
-      )
-
-    const appointmentIds = [...new Set(rows.map((row) => row.appointment.id))]
-    const assignmentRows =
-      appointmentIds.length === 0
-        ? []
-        : await tx
-            .select({ appointmentId: appointmentStaffAssignments.appointmentId })
-            .from(appointmentStaffAssignments)
-            .where(
-              inArray(
-                appointmentStaffAssignments.appointmentId,
-                appointmentIds,
-              ),
-            )
-    const assignmentCount = new Map<string, number>()
-    for (const assignment of assignmentRows) {
-      assignmentCount.set(
-        assignment.appointmentId,
-        (assignmentCount.get(assignment.appointmentId) ?? 0) + 1,
-      )
-    }
-    const byAppointment = new Map<string, typeof rows>()
-    for (const row of rows) {
-      const appointmentRows = byAppointment.get(row.appointment.id) ?? []
-      appointmentRows.push(row)
-      byAppointment.set(row.appointment.id, appointmentRows)
-    }
-
-    // ponytail: monthly volumes are small; batch package lookups if this is measured as slow.
-    const bases = await Promise.all(
-      [...byAppointment.values()].map(async (appointmentRows) => {
-        const appointment = appointmentRows[0]!.appointment
-        const commissioned = appointmentRows.filter(
-          (row) => row.commissionBasis != null,
-        )
-        return completedAppointmentBookedTotal({
-          tx,
-          appointment,
-          commissionBases: commissioned.map((row) => row.commissionBasis ?? 0),
-          assignmentCount: assignmentCount.get(appointment.id) ?? 0,
-        })
-      }),
-    )
-    const grossAppointmentRevenue = bases.reduce((sum, basis) => sum + basis, 0)
-    const staffCommissionTotal = rows.reduce(
-      (sum, row) => sum + (row.commissionAmount ?? 0),
-      0,
-    )
-    return {
-      grossAppointmentRevenue,
-      staffCommissionTotal,
-      salonRetainedAmount: grossAppointmentRevenue - staffCommissionTotal,
-    }
-  })
-}
-
 export async function syncAppointmentCommission(
   tx: DbTx,
   before: Pick<AppointmentRow, 'status' | 'bookedTotalPrice'> | null,
@@ -423,7 +319,11 @@ export async function syncAppointmentCommission(
       asc(appointmentStaffAssignments.isLead),
       asc(appointmentStaffAssignments.createdAt),
     )
-  if (assignments.length === 0) return
+  if (assignments.length === 0) {
+    throw new EmptyAppointmentRosterError(
+      `Appointment ${after.id} has an empty staff roster`,
+    )
+  }
   const leadIndex = assignments.findIndex((assignment) => assignment.isLead)
   if (leadIndex > 0) {
     assignments.unshift(assignments.splice(leadIndex, 1)[0]!)
@@ -607,55 +507,5 @@ export async function getStaffCommissionReport(input: {
       ),
     },
     rows: mappedRows,
-  }
-}
-
-export async function getSalonCommissionReport(input: {
-  salonId: string
-  startDate: string
-  endDate: string
-  staffProfileId?: string
-}): Promise<SalonCommissionReport | null> {
-  const profile = input.staffProfileId
-    ? await getStaffProfile(input.salonId, input.staffProfileId)
-    : null
-  if (input.staffProfileId && !profile) return null
-  const [rows, profiles] = await Promise.all([
-    reportRows({ ...input, staffProfileId: profile?.id }),
-    getDb()
-      .select({ id: staffProfiles.id, name: staffProfiles.name })
-      .from(staffProfiles)
-      .where(eq(staffProfiles.salonId, input.salonId)),
-  ])
-  const names = new Map(profiles.map((row) => [row.id, row.name]))
-  const byStaff = new Map<string, SalonCommissionReport['staff'][number]>()
-  for (const row of rows) {
-    const summary = byStaff.get(row.staffProfileId) ?? {
-      staffProfileId: row.staffProfileId,
-      staffName: names.get(row.staffProfileId) ?? '',
-      completedCount: 0,
-      grossAppointmentRevenue: 0,
-      staffCommissionTotal: 0,
-    }
-    summary.completedCount++
-    summary.grossAppointmentRevenue += row.basis
-    summary.staffCommissionTotal += row.amount
-    byStaff.set(row.staffProfileId, summary)
-  }
-  const grossAppointmentRevenue = rows.reduce((sum, row) => sum + row.basis, 0)
-  const staffCommissionTotal = rows.reduce((sum, row) => sum + row.amount, 0)
-  return {
-    startDate: input.startDate,
-    endDate: input.endDate,
-    summary: {
-      grossAppointmentRevenue,
-      staffCommissionTotal,
-      salonRetainedAmount: grossAppointmentRevenue - staffCommissionTotal,
-    },
-    staff: [...byStaff.values()],
-    rows: rows.map((row) => ({
-      staffProfileId: row.staffProfileId,
-      ...mapReportRow(row),
-    })),
   }
 }

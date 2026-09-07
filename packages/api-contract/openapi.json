@@ -2524,9 +2524,6 @@
           "clientId": {
             "type": "string"
           },
-          "staffId": {
-            "type": "string"
-          },
           "staffAssignments": {
             "type": "array",
             "items": {
@@ -2617,7 +2614,7 @@
         "required": [
           "id",
           "clientId",
-          "staffId",
+          "staffAssignments",
           "serviceId",
           "bookedServiceName",
           "bookedServiceDuration",
@@ -4806,31 +4803,10 @@
               "name"
             ]
           },
-          "staffId": {
-            "type": "string"
-          },
-          "additionalStaffIds": {
+          "staffAssignments": {
             "type": "array",
             "items": {
-              "type": "string"
-            }
-          },
-          "workAllocations": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "staffId": {
-                  "type": "string"
-                },
-                "allocationBasisPoints": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "staffId",
-                "allocationBasisPoints"
-              ]
+              "$ref": "#/components/schemas/AppointmentStaffAssignmentInput"
             }
           },
           "serviceId": {
@@ -4865,10 +4841,29 @@
           }
         },
         "required": [
-          "staffId",
+          "staffAssignments",
           "serviceId",
           "date",
           "startTime"
+        ]
+      },
+      "AppointmentStaffAssignmentInput": {
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "string"
+          },
+          "isLead": {
+            "type": "boolean"
+          },
+          "allocationBasisPoints": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "staffId",
+          "isLead",
+          "allocationBasisPoints"
         ]
       },
       "AvailabilityResponse": {
@@ -5026,32 +5021,12 @@
               "name"
             ]
           },
-          "staffId": {
-            "type": "string"
-          },
-          "additionalStaffIds": {
+          "staffAssignments": {
             "type": "array",
             "items": {
-              "type": "string"
-            }
-          },
-          "workAllocations": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "staffId": {
-                  "type": "string"
-                },
-                "allocationBasisPoints": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "staffId",
-                "allocationBasisPoints"
-              ]
-            }
+              "$ref": "#/components/schemas/AppointmentStaffAssignmentInput"
+            },
+            "description": "Full roster replacement; omit to leave the roster unchanged"
           },
           "serviceId": {
             "type": "string"
@@ -5413,105 +5388,6 @@
           "basis",
           "percentage",
           "amount"
-        ]
-      },
-      "SalonCommissionReportResponse": {
-        "type": "object",
-        "properties": {
-          "report": {
-            "$ref": "#/components/schemas/SalonCommissionReport"
-          }
-        },
-        "required": [
-          "report"
-        ]
-      },
-      "SalonCommissionReport": {
-        "type": "object",
-        "properties": {
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          },
-          "summary": {
-            "type": "object",
-            "properties": {
-              "grossAppointmentRevenue": {
-                "type": "integer"
-              },
-              "staffCommissionTotal": {
-                "type": "integer"
-              },
-              "salonRetainedAmount": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "grossAppointmentRevenue",
-              "staffCommissionTotal",
-              "salonRetainedAmount"
-            ]
-          },
-          "staff": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "staffProfileId": {
-                  "type": "string"
-                },
-                "staffName": {
-                  "type": "string"
-                },
-                "completedCount": {
-                  "type": "integer"
-                },
-                "grossAppointmentRevenue": {
-                  "type": "integer"
-                },
-                "staffCommissionTotal": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "staffProfileId",
-                "staffName",
-                "completedCount",
-                "grossAppointmentRevenue",
-                "staffCommissionTotal"
-              ]
-            }
-          },
-          "rows": {
-            "type": "array",
-            "items": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/StaffCommissionReportRow"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "staffProfileId": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "staffProfileId"
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        "required": [
-          "startDate",
-          "endDate",
-          "summary",
-          "staff",
-          "rows"
         ]
       },
       "SalonMoneyReportResponse": {
@@ -6210,19 +6086,7 @@
       "ApproveAppointmentRequestRequest": {
         "type": "object",
         "properties": {
-          "staffId": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Staff member assigned when converting the request to an appointment"
-          },
-          "additionalStaffIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "workAllocations": {
+          "staffAssignments": {
             "type": "array",
             "items": {
               "type": "object",
@@ -6230,6 +6094,9 @@
                 "staffId": {
                   "type": "string",
                   "minLength": 1
+                },
+                "isLead": {
+                  "type": "boolean"
                 },
                 "allocationBasisPoints": {
                   "type": "integer",
@@ -6239,14 +6106,14 @@
               },
               "required": [
                 "staffId",
+                "isLead",
                 "allocationBasisPoints"
               ]
-            }
+            },
+            "minItems": 1,
+            "description": "Roster adopted by the appointment; omit to use the request staffId as sole lead"
           }
-        },
-        "required": [
-          "staffId"
-        ]
+        }
       },
       "ConvertFlexibleAppointmentRequestRequest": {
         "type": "object",
@@ -6259,18 +6126,7 @@
             "type": "string",
             "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
           },
-          "staffId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "additionalStaffIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "workAllocations": {
+          "staffAssignments": {
             "type": "array",
             "items": {
               "type": "object",
@@ -6278,6 +6134,9 @@
                 "staffId": {
                   "type": "string",
                   "minLength": 1
+                },
+                "isLead": {
+                  "type": "boolean"
                 },
                 "allocationBasisPoints": {
                   "type": "integer",
@@ -6287,15 +6146,17 @@
               },
               "required": [
                 "staffId",
+                "isLead",
                 "allocationBasisPoints"
               ]
-            }
+            },
+            "minItems": 1
           }
         },
         "required": [
           "finalDate",
           "startTime",
-          "staffId"
+          "staffAssignments"
         ],
         "additionalProperties": false
       },
@@ -17339,116 +17200,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StaffCommissionReportResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid percentage or report period",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid session",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authenticated but not authorized for this report or write",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Staff Profile or Commission Agreement not found in salon",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/commissions/salon": {
-      "get": {
-        "tags": [
-          "Staff Commissions"
-        ],
-        "summary": "Get the manager-only salon Commission report",
-        "security": [
-          {
-            "bearerAuth": []
-          },
-          {
-            "sessionCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "today",
-                "week",
-                "month",
-                "previousMonth",
-                "custom"
-              ],
-              "default": "today"
-            },
-            "required": false,
-            "name": "period",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "required": false,
-            "name": "startDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "required": false,
-            "name": "endDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "required": false,
-            "name": "staffProfileId",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Salon-wide Commission report",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SalonCommissionReportResponse"
                 }
               }
             }

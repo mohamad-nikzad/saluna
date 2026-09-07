@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Appointment } from '@repo/salon-core/types'
 import {
   validateCreateAppointmentIntake,
   validateUpdateAppointmentIntake,
@@ -51,6 +52,39 @@ vi.mock('./appointment-queries', () => ({
 vi.mock('./placeholder-client-queries', () => ({
   validatePlaceholderClientUsage: mocks.validatePlaceholderClientUsage,
 }))
+
+function soloRoster(staffId: string) {
+  return [
+    {
+      id: `assignment-${staffId}`,
+      staffId,
+      isLead: true,
+      allocationBasisPoints: 10_000,
+    },
+  ]
+}
+
+function existingAppointment(): Appointment {
+  return {
+    id: 'appointment-1',
+    clientId: 'placeholder-1',
+    staffAssignments: soloRoster('staff-1'),
+    serviceId: 'service-1',
+    bookedServiceName: 'Cut',
+    bookedServiceDuration: 45,
+    bookedServicePrice: 100,
+    bookedTotalDuration: 45,
+    bookedTotalPrice: 100,
+    bookedAddonCount: 0,
+    bookedAddons: [],
+    date: '2026-05-01',
+    startTime: '10:00',
+    endTime: '10:45',
+    status: 'scheduled',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
 
 describe('appointment intake placeholder rules', () => {
   beforeEach(() => {
@@ -119,7 +153,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -143,7 +177,7 @@ describe('appointment intake placeholder rules', () => {
       existing: {
         id: 'appointment-1',
         clientId: 'placeholder-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster('staff-1'),
         serviceId: 'service-1',
         bookedServiceName: 'Cut',
         bookedServiceDuration: 45,
@@ -190,7 +224,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'combo-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -218,7 +252,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'combo-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -259,7 +293,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'combo-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -281,8 +315,10 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
-      additionalStaffIds: ['staff-2'],
+      staffAssignments: [
+        { staffId: 'staff-1', isLead: true, allocationBasisPoints: 5000 },
+        { staffId: 'staff-2', isLead: false, allocationBasisPoints: 5000 },
+      ],
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -295,7 +331,7 @@ describe('appointment intake placeholder rules', () => {
     })
   })
 
-  it('validates every assigned staff member and defaults to an equal split', async () => {
+  it('validates every assigned staff member on the submitted roster', async () => {
     mocks.getServiceById.mockResolvedValue({
       id: 'service-1',
       name: 'کات',
@@ -323,8 +359,10 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
-      additionalStaffIds: ['staff-2'],
+      staffAssignments: [
+        { staffId: 'staff-2', isLead: false, allocationBasisPoints: 4000 },
+        { staffId: 'staff-1', isLead: true, allocationBasisPoints: 6000 },
+      ],
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -333,10 +371,9 @@ describe('appointment intake placeholder rules', () => {
     expect(result).toMatchObject({
       ok: true,
       command: {
-        additionalStaffIds: ['staff-2'],
-        workAllocations: [
-          { staffId: 'staff-1', allocationBasisPoints: 5000 },
-          { staffId: 'staff-2', allocationBasisPoints: 5000 },
+        staffAssignments: [
+          { staffId: 'staff-1', isLead: true, allocationBasisPoints: 6000 },
+          { staffId: 'staff-2', isLead: false, allocationBasisPoints: 4000 },
         ],
       },
     })
@@ -366,7 +403,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'service-1',
       addonIds: ['addon-1'],
       date: '2026-05-01',
@@ -396,7 +433,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '10:00',
@@ -415,7 +452,7 @@ describe('appointment intake placeholder rules', () => {
     const result = await validateCreateAppointmentIntake({
       salonId: 'salon-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster('staff-1'),
       serviceId: 'service-1',
       addonIds: ['addon-1', 'addon-1'],
       date: '2026-05-01',
@@ -436,7 +473,7 @@ describe('appointment intake placeholder rules', () => {
       existing: {
         id: 'appointment-1',
         clientId: 'placeholder-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster('staff-1'),
         serviceId: 'service-1',
         bookedServiceName: 'Cut',
         bookedServiceDuration: 45,
@@ -470,7 +507,7 @@ describe('appointment intake placeholder rules', () => {
       existing: {
         id: 'appointment-1',
         clientId: 'placeholder-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster('staff-1'),
         serviceId: 'service-1',
         bookedServiceName: 'Cut',
         bookedServiceDuration: 45,
@@ -534,7 +571,7 @@ describe('appointment intake placeholder rules', () => {
       existing: {
         id: 'appointment-1',
         clientId: 'placeholder-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster('staff-1'),
         serviceId: 'service-1',
         bookedServiceName: 'Cut',
         bookedServiceDuration: 45,
@@ -592,7 +629,7 @@ describe('appointment intake placeholder rules', () => {
       existing: {
         id: 'appointment-1',
         clientId: 'placeholder-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster('staff-1'),
         serviceId: 'service-1',
         bookedServiceName: 'Cut',
         bookedServiceDuration: 45,
@@ -618,6 +655,90 @@ describe('appointment intake placeholder rules', () => {
         addonIds: ['addon-1'],
         endTime: '11:00',
       },
+    })
+  })
+
+  it('leaves the roster untouched when staffAssignments is omitted', async () => {
+    const result = await validateUpdateAppointmentIntake({
+      salonId: 'salon-1',
+      appointmentId: 'appointment-1',
+      existing: existingAppointment(),
+      body: { notes: 'بدون تغییر پرسنل' },
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.patch.staffAssignments).toBeUndefined()
+  })
+
+  it('replaces the whole roster when staffAssignments is sent', async () => {
+    mocks.getServiceById.mockResolvedValue({
+      id: 'service-1',
+      name: 'کات',
+      active: true,
+      allowMultipleStaff: true,
+      duration: 45,
+    })
+    mocks.getAllStaff.mockResolvedValue([
+      { id: 'staff-1', salonId: 'salon-1', role: 'staff', name: 'اول' },
+      { id: 'staff-2', salonId: 'salon-1', role: 'staff', name: 'دوم' },
+    ])
+
+    const result = await validateUpdateAppointmentIntake({
+      salonId: 'salon-1',
+      appointmentId: 'appointment-1',
+      existing: existingAppointment(),
+      body: {
+        staffAssignments: [
+          { staffId: 'staff-2', isLead: true, allocationBasisPoints: 7000 },
+          { staffId: 'staff-1', isLead: false, allocationBasisPoints: 3000 },
+        ],
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      patch: {
+        staffAssignments: [
+          { staffId: 'staff-2', isLead: true, allocationBasisPoints: 7000 },
+          { staffId: 'staff-1', isLead: false, allocationBasisPoints: 3000 },
+        ],
+      },
+    })
+  })
+
+  it('rejects a roster whose allocations do not add up', async () => {
+    const result = await validateCreateAppointmentIntake({
+      salonId: 'salon-1',
+      clientId: 'placeholder-1',
+      staffAssignments: [
+        { staffId: 'staff-1', isLead: true, allocationBasisPoints: 4000 },
+      ],
+      serviceId: 'service-1',
+      date: '2026-05-01',
+      startTime: '10:00',
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'سهم کار پرسنل باید کامل و در مجموع ۱۰۰٪ باشد',
+    })
+  })
+
+  it('rejects an empty roster', async () => {
+    const result = await validateCreateAppointmentIntake({
+      salonId: 'salon-1',
+      clientId: 'placeholder-1',
+      staffAssignments: [],
+      serviceId: 'service-1',
+      date: '2026-05-01',
+      startTime: '10:00',
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'انتخاب پرسنل الزامی است',
     })
   })
 })

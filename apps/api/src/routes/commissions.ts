@@ -2,15 +2,12 @@ import { Hono } from 'hono'
 import {
   deleteServiceCommissionOverride,
   disableCommissionAgreement,
-  getSalonCommissionReport,
   getStaffCommissionReport,
   setCommissionAgreement,
   setServiceCommissionOverride,
 } from '@repo/database/commissions'
-import {
-  commissionPeriodRange,
-  percentageToBasisPoints,
-} from '@repo/salon-core/commissions'
+import { percentageToBasisPoints } from '@repo/salon-core/commissions'
+import { reportingPeriodRange } from '@repo/salon-core/reporting-period'
 
 import type { AppEnv } from '../factory'
 import { zValidator } from '../lib/validate'
@@ -113,9 +110,9 @@ export const commissions = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
-      let range: ReturnType<typeof commissionPeriodRange>
+      let range: ReturnType<typeof reportingPeriodRange>
       try {
-        range = commissionPeriodRange(c.req.valid('query'))
+        range = reportingPeriodRange(c.req.valid('query'))
       } catch {
         return error(c, 'بازه گزارش معتبر نیست', 400)
       }
@@ -137,37 +134,15 @@ export const commissions = new Hono<AppEnv>()
       if (tenant.role !== 'staff' || !tenant.staffProfileId) {
         return error(c, 'دسترسی غیرمجاز', 403)
       }
-      let range: ReturnType<typeof commissionPeriodRange>
+      let range: ReturnType<typeof reportingPeriodRange>
       try {
-        range = commissionPeriodRange(c.req.valid('query'))
+        range = reportingPeriodRange(c.req.valid('query'))
       } catch {
         return error(c, 'بازه گزارش معتبر نیست', 400)
       }
       const report = await getStaffCommissionReport({
         salonId: tenant.salonId,
         staffProfileId: tenant.staffProfileId,
-        ...range,
-      })
-      if (!report) return error(c, 'پروفایل پرسنل یافت نشد', 404)
-      return ok(c, { report })
-    },
-  )
-  .get(
-    '/salon',
-    requireTenant('manage_settings'),
-    zValidator('query', commissionPeriodQuerySchema),
-    async (c) => {
-      const { salonId } = c.var.tenant
-      const query = c.req.valid('query')
-      let range: ReturnType<typeof commissionPeriodRange>
-      try {
-        range = commissionPeriodRange(query)
-      } catch {
-        return error(c, 'بازه گزارش معتبر نیست', 400)
-      }
-      const report = await getSalonCommissionReport({
-        salonId,
-        staffProfileId: query.staffProfileId,
         ...range,
       })
       if (!report) return error(c, 'پروفایل پرسنل یافت نشد', 404)

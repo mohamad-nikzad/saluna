@@ -9,7 +9,6 @@ import {
   commissionAgreementBodySchema,
   commissionAgreementResponseSchema,
   commissionPeriodQuerySchema,
-  salonCommissionReportResponseSchema,
   serviceCommissionOverrideBodySchema,
   staffCommissionReportResponseSchema,
   staffServiceOverrideParamSchema,
@@ -152,24 +151,6 @@ export const getMyCommissionReportRoute = createRoute({
       description: 'Private self Commission report',
       content: {
         'application/json': { schema: staffCommissionReportResponseSchema },
-      },
-    },
-    ...errors,
-  },
-})
-
-export const getSalonCommissionReportRoute = createRoute({
-  method: 'get',
-  path: '/salon',
-  tags: ['Staff Commissions'],
-  summary: 'Get the manager-only salon Commission report',
-  security: tenantSecurity,
-  request: { query: commissionPeriodQuerySchema },
-  responses: {
-    200: {
-      description: 'Salon-wide Commission report',
-      content: {
-        'application/json': { schema: salonCommissionReportResponseSchema },
       },
     },
     ...errors,

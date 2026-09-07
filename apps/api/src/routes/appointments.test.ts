@@ -126,6 +126,17 @@ beforeEach(() => {
   )
 })
 
+
+function soloAssignments(staffId: string) {
+  return [
+    { staffId, isLead: true as const, allocationBasisPoints: 10_000 },
+  ]
+}
+
+function soloRoster(staffId: string) {
+  return [{ id: `asg-${staffId}`, staffId, isLead: true, allocationBasisPoints: 10_000 }]
+}
+
 describe('appointments router', () => {
   it('GET / returns 401 without auth', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue(null as never)
@@ -212,7 +223,7 @@ describe('appointments router', () => {
     const res = await app.request('/api/v1/appointments', {
       method: 'POST',
       headers: jsonHeaders,
-      body: JSON.stringify({ staffId: '', serviceId: '' }),
+      body: JSON.stringify({ staffAssignments: [], serviceId: '' }),
     })
     expect(res.status).toBe(400)
   })
@@ -229,7 +240,7 @@ describe('appointments router', () => {
       headers: jsonHeaders,
       body: JSON.stringify({
         clientId: 'c1',
-        staffId: 'u1',
+        staffAssignments: soloAssignments('u1'),
         serviceId: 'svc1',
         date: '2026-06-01',
         startTime: '10:00',
@@ -249,6 +260,7 @@ describe('appointments router', () => {
       command: {} as never,
       client: { id: 'c1', name: 'Ali' },
       staff: { id: 'u1', name: 'M' },
+      staffMembers: [{ id: 'u1', name: 'M' }],
       service: { id: 'svc1', name: 'Cut' },
     } as never)
     vi.mocked(appts.createAppointment).mockResolvedValue({
@@ -256,7 +268,7 @@ describe('appointments router', () => {
       date: '2026-06-01',
       startTime: '10:00',
       clientId: 'c1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       serviceId: 'svc1',
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
@@ -269,7 +281,7 @@ describe('appointments router', () => {
       headers: jsonHeaders,
       body: JSON.stringify({
         clientId: 'c1',
-        staffId: 'u1',
+        staffAssignments: soloAssignments('u1'),
         serviceId: 'svc1',
         date: '2026-06-01',
         startTime: '10:00',
@@ -294,6 +306,7 @@ describe('appointments router', () => {
       command: {} as never,
       client: { id: 'c1', name: 'Ali' },
       staff: { id: 'u1', name: 'M' },
+      staffMembers: [{ id: 'u1', name: 'M' }],
       service: { id: 'svc1', name: 'Cut' },
     } as never)
     vi.mocked(appts.createAppointment).mockResolvedValue({
@@ -301,7 +314,7 @@ describe('appointments router', () => {
       date: '2026-06-01',
       startTime: '10:00',
       clientId: 'c1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       serviceId: 'svc1',
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
@@ -314,7 +327,7 @@ describe('appointments router', () => {
       headers: jsonHeaders,
       body: JSON.stringify({
         clientId: 'c1',
-        staffId: 'u1',
+        staffAssignments: soloAssignments('u1'),
         serviceId: 'svc1',
         date: '2026-06-01',
         startTime: '10:00',
@@ -339,7 +352,7 @@ describe('appointments router', () => {
       headers: jsonHeaders,
       body: JSON.stringify({
         clientId: 'c1',
-        staffId: 'u1',
+        staffAssignments: soloAssignments('u1'),
         serviceId: 'svc1',
         date: '2026-06-01',
         startTime: '10:00',
@@ -357,6 +370,7 @@ describe('appointments router', () => {
       command: {} as never,
       client: { id: 'c1', name: 'Ali' },
       staff: { id: 'u2', name: 'Staff' },
+      staffMembers: [{ id: 'u2', name: 'Staff' }],
       service: { id: 'svc1', name: 'Cut' },
     } as never)
     vi.mocked(appts.createAppointment).mockResolvedValue({
@@ -364,7 +378,6 @@ describe('appointments router', () => {
       date: '2026-06-01',
       startTime: '10:00',
       clientId: 'c1',
-      staffId: 'u2',
       serviceId: 'svc1',
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
@@ -385,7 +398,7 @@ describe('appointments router', () => {
       headers: jsonHeaders,
       body: JSON.stringify({
         clientId: 'c1',
-        staffId: 'u2',
+        staffAssignments: soloAssignments('u2'),
         serviceId: 'svc1',
         date: '2026-06-01',
         startTime: '10:00',
@@ -461,7 +474,7 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
-      staffId: 'other',
+      staffAssignments: soloRoster('other'),
     } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       headers: authHeaders,
@@ -482,7 +495,7 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
-      staffId: 'profile-u2',
+      staffAssignments: soloRoster('profile-u2'),
     } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       headers: authHeaders,
@@ -545,7 +558,7 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u2',
+      staffAssignments: soloRoster('u2'),
       clientId: 'c1',
     } as never)
     vi.mocked(clientsDb.getClientById).mockResolvedValue({
@@ -573,7 +586,7 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'profile-u2',
+      staffAssignments: soloRoster('profile-u2'),
       clientId: 'c1',
       date: '2026-06-01',
       endTime: '10:00',
@@ -606,7 +619,7 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u2',
+      staffAssignments: soloRoster('u2'),
       clientId: 'c1',
     } as never)
     vi.mocked(clientsDb.getClientById).mockResolvedValue({
@@ -618,6 +631,7 @@ describe('appointments router', () => {
       patch: { status: 'completed' },
       client: { id: 'c1', name: 'X' },
       staff: { id: 'u2', name: 'S' },
+      staffMembers: [{ id: 'u2', name: 'S' }],
       service: { id: 'svc1', name: 'Cut' },
     } as never)
     vi.mocked(appts.updateAppointment).mockResolvedValue({
@@ -639,7 +653,7 @@ describe('appointments router', () => {
   it('PATCH /:id manager cancelling placeholder returns cleanup shape', async () => {
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       clientId: 'c1',
     } as never)
     vi.mocked(clientsDb.getClientById).mockResolvedValue({
@@ -670,7 +684,7 @@ describe('appointments router', () => {
   it('PATCH /:id preserves a completed placeholder appointment when cancelling it', async () => {
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       clientId: 'c1',
       status: 'completed',
     } as never)
@@ -683,6 +697,7 @@ describe('appointments router', () => {
       patch: { status: 'cancelled' },
       client: { id: 'c1', name: 'Placeholder' },
       staff: { id: 'u1', name: 'Manager' },
+      staffMembers: [{ id: 'u1', name: 'Manager' }],
       service: { id: 'svc1', name: 'Cut' },
     } as never)
     vi.mocked(appts.updateAppointment).mockResolvedValue({
@@ -715,7 +730,7 @@ describe('appointments router', () => {
     vi.setSystemTime(now)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       clientId: 'c1',
       date: '2026-06-01',
       endTime: '10:00',
@@ -730,6 +745,7 @@ describe('appointments router', () => {
       patch: { bookedTotalPrice: 125_000 },
       client: { id: 'c1' },
       staff: { id: 'u1' },
+      staffMembers: [{ id: 'u1' }],
       service: { id: 'svc1' },
     } as never)
     vi.mocked(appts.updateAppointment).mockResolvedValue({
@@ -753,7 +769,7 @@ describe('appointments router', () => {
     vi.setSystemTime('2026-07-01T06:30:00.001Z')
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffId: 'u1',
+      staffAssignments: soloRoster('u1'),
       clientId: 'c1',
       date: '2026-06-01',
       endTime: '10:00',

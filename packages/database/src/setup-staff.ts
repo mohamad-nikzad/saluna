@@ -3,7 +3,6 @@ import { getDb } from './client'
 import {
   member,
   appointmentRequests,
-  appointments,
   salonMember,
   staffProfiles,
   staffSchedules,
@@ -12,6 +11,7 @@ import {
   organization,
   salonProfile,
 } from './schema'
+import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type SetupStaffScheduleInput = {
   dayOfWeek: number
@@ -294,15 +294,11 @@ export async function claimStaffProfile(input: {
             eq(staffServices.staffUserId, input.userId),
           ),
         )
-      await tx
-        .update(appointments)
-        .set({ staffId: sourceProfile.id, updatedAt: new Date() })
-        .where(
-          and(
-            eq(appointments.salonId, sourceProfile.salonId),
-            eq(appointments.staffId, input.userId),
-          ),
-        )
+      await remapAppointmentAssignmentStaff(tx, {
+        salonId: sourceProfile.salonId,
+        fromStaffId: input.userId,
+        toStaffId: sourceProfile.id,
+      })
       await tx
         .update(appointmentRequests)
         .set({ staffId: sourceProfile.id, updatedAt: new Date() })
@@ -399,10 +395,11 @@ export async function claimStaffProfile(input: {
         .update(staffServices)
         .set({ staffUserId: input.userId })
         .where(eq(staffServices.staffUserId, profile.id)),
-      tx
-        .update(appointments)
-        .set({ staffId: input.userId, updatedAt: new Date() })
-        .where(eq(appointments.staffId, profile.id)),
+      remapAppointmentAssignmentStaff(tx, {
+        salonId: profile.salonId,
+        fromStaffId: profile.id,
+        toStaffId: input.userId,
+      }),
       tx
         .update(appointmentRequests)
         .set({ staffId: input.userId, updatedAt: new Date() })

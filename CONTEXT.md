@@ -9,8 +9,8 @@ A scheduled service on the staff calendar, with a validated client, one or more 
 _Avoid_: booking (verb only, customer UI copy)
 
 **Appointment Staff Assignment**:
-One `Staff Profile` assigned to an `Appointment`. An Appointment has one lead assignment and may have additional assignments only when its `ServiceVariant` allows multiple staff; every assignment occupies the Appointment's entire time window.
-_Avoid_: separate appointment, assistant shift
+One `Staff Profile` assigned to an `Appointment`, carrying whether it is the lead and that profile's Work Allocation. The set of assignments is the Appointment's only staff roster: exactly one lead, optional extras only when the `ServiceVariant` allows multiple staff, and every assignment occupies the Appointment's entire time window. An Appointment without assignments is invalid.
+_Avoid_: separate appointment, assistant shift, parallel lead id outside assignments
 
 **AppointmentRequest**:
 A proposal for an `Appointment` or `Service Package`, recorded by a customer or manager and awaiting manager review. Carries customer contact, desired timing, and snapshot-shaped service/package fields. Lifecycle: `pending` → `approved` | `rejected` | `cancelled` | `expired`. Never on the staff calendar.
@@ -303,6 +303,10 @@ _Avoid_: separate commission agreement, category commission
 **Salon Retained Amount**:
 The remainder of an eligible completed `Appointment`'s authoritative total after all of its Staff Commissions, without implying payment collection or profit.
 _Avoid_: salon profit, salon commission, salon income
+
+**Salon Money Report**:
+A manager read model over a Reporting Period: unique completed Appointment money (`AppointmentTotalsSnapshot` / package-aware booked totals), Staff Commissions, and Salon Retained Amount. A Staff Profile filter keeps Appointments that staff worked; booked totals stay full Appointment money, the staff cut is that profile's Staff Commissions, and Salon Retained Amount still subtracts every Staff Commission on those Appointments.
+_Avoid_: salon commission report, gross from commission bases only
 
 A completed **Appointment** may produce one **Staff Commission** for each assigned **Staff Profile** with an applicable Commission Agreement.
 Each **Commission Agreement** belongs to exactly one salon and one **Staff Profile**.

@@ -1,7 +1,4 @@
-import {
-  reportingPeriodRange,
-  type ReportingPeriod,
-} from './reporting-period'
+import type { ReportingPeriod } from './reporting-period'
 
 export type CommissionPeriod = ReportingPeriod
 
@@ -109,13 +106,4 @@ export function allocatePackagePrice(
     allocations[index]++
   }
   return allocations
-}
-
-export function commissionPeriodRange(input: {
-  period: CommissionPeriod
-  startDate?: string
-  endDate?: string
-  now?: Date
-}): { startDate: string; endDate: string } {
-  return reportingPeriodRange(input)
 }

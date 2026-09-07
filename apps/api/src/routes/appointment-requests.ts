@@ -34,15 +34,15 @@ const listQuerySchema = z.object({
 })
 
 const approveBodySchema = z.object({
-  staffId: z.string().min(1),
-  additionalStaffIds: z.array(z.string().min(1)).optional(),
-  workAllocations: z
+  staffAssignments: z
     .array(
       z.object({
         staffId: z.string().min(1),
+        isLead: z.boolean(),
         allocationBasisPoints: z.number().int().min(0).max(10_000),
       }),
     )
+    .min(1)
     .optional(),
 })
 const rejectBodySchema = z.object({
@@ -143,14 +143,11 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
     async (c) => {
       const { salonId, userId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const { staffId, additionalStaffIds, workAllocations } =
-        c.req.valid('json')
+      const { staffAssignments } = c.req.valid('json')
       const result = await approveAppointmentRequest({
         id,
         salonId,
-        staffId,
-        additionalStaffIds,
-        workAllocations,
+        staffAssignments,
         reviewedByUserId: userId,
       })
       if (!result.ok) {

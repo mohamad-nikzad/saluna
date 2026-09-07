@@ -37,6 +37,10 @@ import {
 } from './appointment-request-queries'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
+const soloRoster = [
+  { staffId: 'staff-1', isLead: true, allocationBasisPoints: 10_000 },
+]
+
 const pendingRequest = {
   id: '22222222-2222-2222-2222-222222222222',
   salonId: 'salon-1',
@@ -98,7 +102,7 @@ describe('appointment request approval', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: '2026-07-03',
         startTime: '10:00',
@@ -122,7 +126,7 @@ describe('appointment request approval', () => {
     const result = await approveAppointmentRequest({
       id: pendingRequest.id,
       salonId: 'salon-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -134,7 +138,7 @@ describe('appointment request approval', () => {
     expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith({
       salonId: 'salon-1',
       clientId: 'client-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       serviceId: 'service-1',
       date: '2026-07-03',
       startTime: '10:00',
@@ -143,7 +147,7 @@ describe('appointment request approval', () => {
     expect(mocks.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
       }),
       'salon-1',
@@ -181,7 +185,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -200,7 +204,7 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -212,7 +216,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith({
       salonId: request.salonId,
       clientId: request.clientId,
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       serviceId: request.serviceId,
       date: finalDate,
       startTime: '13:30',
@@ -222,7 +226,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({
         clientId: request.clientId,
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: request.serviceId,
       }),
       request.salonId,
@@ -256,7 +260,7 @@ describe('flexible appointment request conversion', () => {
       salonId: pendingRequest.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -289,7 +293,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -308,7 +312,7 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -340,7 +344,7 @@ describe('flexible appointment request conversion', () => {
       salonId: pendingRequest.salonId,
       finalDate,
       startTime: '17:00',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -375,7 +379,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -392,7 +396,7 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 

@@ -1186,7 +1186,6 @@ export const appointments = pgTable(
     clientId: uuid('client_id')
       .notNull()
       .references(() => clients.id, { onDelete: 'restrict' }),
-    staffId: uuid('staff_id').notNull(),
     serviceId: uuid('service_id')
       .notNull()
       .references(() => services.id, { onDelete: 'restrict' }),
@@ -1219,17 +1218,11 @@ export const appointments = pgTable(
   },
   (t) => [
     index('appointments_salon_id_date_idx').on(t.salonId, t.date),
-    index('appointments_salon_id_staff_id_date_idx').on(
-      t.salonId,
-      t.staffId,
-      t.date,
-    ),
     index('appointments_salon_id_client_id_date_idx').on(
       t.salonId,
       t.clientId,
       t.date,
     ),
-    index('appointments_staff_id_date_idx').on(t.staffId, t.date),
     index('appointments_client_id_date_idx').on(t.clientId, t.date),
   ],
 )

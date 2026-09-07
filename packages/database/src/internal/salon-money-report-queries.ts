@@ -11,7 +11,7 @@ import {
   staffProfileAccesses,
   staffProfiles,
 } from '../schema'
-import { completedAppointmentBookedTotal } from './appointment-commission-basis'
+import { appointmentCommissionBasis } from './appointment-commission-basis'
 
 export type SalonMoneyReportAppointmentCommission = {
   staffProfileId: string
@@ -257,12 +257,10 @@ export async function getSalonMoneyReport(input: {
           commissionsByAppointment.get(row.appointment.id) ?? []
         const assignments =
           assignmentsByAppointment.get(row.appointment.id) ?? []
-        const bookedTotal = await completedAppointmentBookedTotal({
+        const bookedTotal = await appointmentCommissionBasis(
           tx,
-          appointment: row.appointment,
-          commissionBases: allCommissions.map((commission) => commission.basis),
-          assignmentCount: assignments.length,
-        })
+          row.appointment,
+        )
         const visibleCommissions = staffProfileId
           ? allCommissions.filter(
               (commission) => commission.staffProfileId === staffProfileId,
@@ -274,6 +272,10 @@ export async function getSalonMoneyReport(input: {
           const name = profileId ? namesByProfileId.get(profileId) : undefined
           if (name && !staffNames.includes(name)) staffNames.push(name)
         }
+        const allCommissionTotal = allCommissions.reduce(
+          (sum, commission) => sum + commission.amount,
+          0,
+        )
         return {
           appointmentId: row.appointment.id,
           date: row.appointment.date,
@@ -281,6 +283,7 @@ export async function getSalonMoneyReport(input: {
           serviceName: row.appointment.bookedServiceName,
           staffNames,
           bookedTotal,
+          allCommissionTotal,
           commissions: visibleCommissions.map((commission) => ({
             staffProfileId: commission.staffProfileId,
             staffName: namesByProfileId.get(commission.staffProfileId) ?? '',
@@ -288,7 +291,7 @@ export async function getSalonMoneyReport(input: {
             percentage: commission.percentageBasisPoints / 100,
             amount: commission.amount,
           })),
-        } satisfies SalonMoneyReportAppointment
+        }
       }),
     )
 
@@ -318,6 +321,12 @@ export async function getSalonMoneyReport(input: {
       (sum, commission) => sum + commission.amount,
       0,
     )
+    // Salon Retained Amount always subtracts every Staff Commission on the
+    // matched Appointments, even when the staff filter narrows the staff cut.
+    const allCommissionTotal = reportAppointments.reduce(
+      (sum, appointment) => sum + appointment.allCommissionTotal,
+      0,
+    )
     return {
       ok: true as const,
       report: {
@@ -326,10 +335,18 @@ export async function getSalonMoneyReport(input: {
         summary: {
           bookedTotal,
           staffCommissionTotal,
-          salonRetainedAmount: bookedTotal - staffCommissionTotal,
+          salonRetainedAmount: bookedTotal - allCommissionTotal,
         },
         staff: [...byStaff.values()],
-        appointments: reportAppointments,
+        appointments: reportAppointments.map((row) => ({
+          appointmentId: row.appointmentId,
+          date: row.date,
+          clientName: row.clientName,
+          serviceName: row.serviceName,
+          staffNames: row.staffNames,
+          bookedTotal: row.bookedTotal,
+          commissions: row.commissions,
+        })),
       },
     }
   })

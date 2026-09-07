@@ -1,4 +1,6 @@
 import { and, asc, eq, gte, lt, or, sql, type SQL } from 'drizzle-orm'
+import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointment-roster'
+import { leadStaffId } from '@repo/salon-core/appointment-roster'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
 import {
@@ -355,13 +357,28 @@ export async function lookupClientByPhone(
 export type ApproveAppointmentRequestInput = {
   id: string
   salonId: string
-  staffId: string
-  additionalStaffIds?: string[]
-  workAllocations?: Array<{
-    staffId: string
-    allocationBasisPoints: number
-  }>
+  /** When omitted/empty, request.staffId becomes a single lead at 10000 bps. */
+  staffAssignments?: AppointmentStaffAssignmentInput[]
   reviewedByUserId: string
+}
+
+function rosterFromApproveBodyOrRequest(input: {
+  staffAssignments?: AppointmentStaffAssignmentInput[]
+  requestStaffId: string | null
+}): AppointmentStaffAssignmentInput[] | null {
+  if (input.staffAssignments != null && input.staffAssignments.length > 0) {
+    return input.staffAssignments
+  }
+  if (input.requestStaffId) {
+    return [
+      {
+        staffId: input.requestStaffId,
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      },
+    ]
+  }
+  return null
 }
 
 export type ApproveAppointmentRequestResult =
@@ -413,6 +430,14 @@ export async function approveAppointmentRequest(
     return { ok: false, status: 409, error: 'این پیش‌نویس باید زمان‌بندی شود' }
   }
 
+  const staffAssignments = rosterFromApproveBodyOrRequest({
+    staffAssignments: input.staffAssignments,
+    requestStaffId: request.staffId,
+  })
+  if (!staffAssignments) {
+    return { ok: false, status: 400, error: 'انتخاب پرسنل الزامی است' }
+  }
+
   const normalizedPhone = normalizePhone(request.customerPhone)
   let client = await getClientByPhone(normalizedPhone, input.salonId)
   if (!client) {
@@ -426,9 +451,7 @@ export async function approveAppointmentRequest(
   const intake = await validateCreateAppointmentIntake({
     salonId: input.salonId,
     clientId: client.id,
-    staffId: input.staffId,
-    additionalStaffIds: input.additionalStaffIds,
-    workAllocations: input.workAllocations,
+    staffAssignments,
     serviceId: request.serviceId,
     date: request.requestedDate,
     startTime: request.requestedStartTime,
@@ -470,7 +493,7 @@ export async function approveAppointmentRequest(
     .update(appointmentRequests)
     .set({
       status: 'approved',
-      staffId: input.staffId,
+      staffId: leadStaffId(staffAssignments),
       reviewedByUserId: input.reviewedByUserId,
       reviewedAt: new Date(),
       appointmentId: appointment.id,
@@ -509,12 +532,7 @@ export type ConvertFlexibleAppointmentRequestInput = {
   salonId: string
   finalDate: string
   startTime: string
-  staffId: string
-  additionalStaffIds?: string[]
-  workAllocations?: Array<{
-    staffId: string
-    allocationBasisPoints: number
-  }>
+  staffAssignments: AppointmentStaffAssignmentInput[]
   reviewedByUserId: string
 }
 
@@ -569,9 +587,7 @@ export async function convertFlexibleAppointmentRequest(
   const intake = await validateCreateAppointmentIntake({
     salonId: input.salonId,
     clientId,
-    staffId: input.staffId,
-    additionalStaffIds: input.additionalStaffIds,
-    workAllocations: input.workAllocations,
+    staffAssignments: input.staffAssignments,
     serviceId: request.serviceId,
     date: input.finalDate,
     startTime: input.startTime,
@@ -593,7 +609,7 @@ export async function convertFlexibleAppointmentRequest(
         .update(appointmentRequests)
         .set({
           status: 'approved',
-          staffId: input.staffId,
+          staffId: leadStaffId(input.staffAssignments),
           reviewedByUserId: input.reviewedByUserId,
           reviewedAt: new Date(),
           updatedAt: new Date(),

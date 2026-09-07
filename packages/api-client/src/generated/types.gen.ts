@@ -676,8 +676,7 @@ export type ClientSummary = {
 export type AppointmentWithDetails = {
     id: string;
     clientId: string;
-    staffId: string;
-    staffAssignments?: Array<AppointmentStaffAssignment>;
+    staffAssignments: Array<AppointmentStaffAssignment>;
     serviceId: string;
     bookedServiceName: string;
     bookedServiceDuration: number;
@@ -1243,12 +1242,7 @@ export type AppointmentCreateRequest = {
         name: string;
         notes?: string;
     };
-    staffId: string;
-    additionalStaffIds?: Array<string>;
-    workAllocations?: Array<{
-        staffId: string;
-        allocationBasisPoints: number;
-    }>;
+    staffAssignments: Array<AppointmentStaffAssignmentInput>;
     serviceId: string;
     addonIds?: Array<string>;
     date: string;
@@ -1257,6 +1251,12 @@ export type AppointmentCreateRequest = {
     durationMinutes?: number;
     finalPrice?: number;
     notes?: string;
+};
+
+export type AppointmentStaffAssignmentInput = {
+    staffId: string;
+    isLead: boolean;
+    allocationBasisPoints: number;
 };
 
 export type AvailabilityResponse = DayAvailabilityResponse | NearestAvailabilityResponse;
@@ -1297,12 +1297,10 @@ export type AppointmentUpdateRequest = {
         name: string;
         notes?: string;
     };
-    staffId?: string;
-    additionalStaffIds?: Array<string>;
-    workAllocations?: Array<{
-        staffId: string;
-        allocationBasisPoints: number;
-    }>;
+    /**
+     * Full roster replacement; omit to leave the roster unchanged
+     */
+    staffAssignments?: Array<AppointmentStaffAssignmentInput>;
     serviceId?: string;
     addonIds?: Array<string>;
     date?: string;
@@ -1400,30 +1398,6 @@ export type StaffCommissionReportRow = {
     basis: number;
     percentage: number;
     amount: number;
-};
-
-export type SalonCommissionReportResponse = {
-    report: SalonCommissionReport;
-};
-
-export type SalonCommissionReport = {
-    startDate: string;
-    endDate: string;
-    summary: {
-        grossAppointmentRevenue: number;
-        staffCommissionTotal: number;
-        salonRetainedAmount: number;
-    };
-    staff: Array<{
-        staffProfileId: string;
-        staffName: string;
-        completedCount: number;
-        grossAppointmentRevenue: number;
-        staffCommissionTotal: number;
-    }>;
-    rows: Array<StaffCommissionReportRow & {
-        staffProfileId: string;
-    }>;
 };
 
 export type SalonMoneyReportResponse = {
@@ -1595,12 +1569,11 @@ export type ApproveAppointmentRequestResponse = {
 
 export type ApproveAppointmentRequestRequest = {
     /**
-     * Staff member assigned when converting the request to an appointment
+     * Roster adopted by the appointment; omit to use the request staffId as sole lead
      */
-    staffId: string;
-    additionalStaffIds?: Array<string>;
-    workAllocations?: Array<{
+    staffAssignments?: Array<{
         staffId: string;
+        isLead: boolean;
         allocationBasisPoints: number;
     }>;
 };
@@ -1608,10 +1581,9 @@ export type ApproveAppointmentRequestRequest = {
 export type ConvertFlexibleAppointmentRequestRequest = {
     finalDate: string;
     startTime: string;
-    staffId: string;
-    additionalStaffIds?: Array<string>;
-    workAllocations?: Array<{
+    staffAssignments: Array<{
         staffId: string;
+        isLead: boolean;
         allocationBasisPoints: number;
     }>;
 };
@@ -6097,48 +6069,6 @@ export type GetApiV1CommissionsMeResponses = {
 };
 
 export type GetApiV1CommissionsMeResponse = GetApiV1CommissionsMeResponses[keyof GetApiV1CommissionsMeResponses];
-
-export type GetApiV1CommissionsSalonData = {
-    body?: never;
-    path?: never;
-    query?: {
-        period?: 'today' | 'week' | 'month' | 'previousMonth' | 'custom';
-        startDate?: string;
-        endDate?: string;
-        staffProfileId?: string;
-    };
-    url: '/api/v1/commissions/salon';
-};
-
-export type GetApiV1CommissionsSalonErrors = {
-    /**
-     * Invalid percentage or report period
-     */
-    400: ApiError;
-    /**
-     * Missing or invalid session
-     */
-    401: ApiError;
-    /**
-     * Authenticated but not authorized for this report or write
-     */
-    403: ApiError;
-    /**
-     * Staff Profile or Commission Agreement not found in salon
-     */
-    404: ApiError;
-};
-
-export type GetApiV1CommissionsSalonError = GetApiV1CommissionsSalonErrors[keyof GetApiV1CommissionsSalonErrors];
-
-export type GetApiV1CommissionsSalonResponses = {
-    /**
-     * Salon-wide Commission report
-     */
-    200: SalonCommissionReportResponse;
-};
-
-export type GetApiV1CommissionsSalonResponse = GetApiV1CommissionsSalonResponses[keyof GetApiV1CommissionsSalonResponses];
 
 export type GetApiV1ReportsSalonMoneyData = {
     body?: never;

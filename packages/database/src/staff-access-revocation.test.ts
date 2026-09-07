@@ -24,6 +24,7 @@ import {
 } from './staff-access-revocation'
 import {
   appointmentRequests,
+  appointmentStaffAssignments,
   appointments,
   member,
   salonMember,
@@ -56,6 +57,8 @@ function tableName(table: unknown): string {
   if (table === staffSchedules) return 'staffSchedules'
   if (table === staffServices) return 'staffServices'
   if (table === appointments) return 'appointments'
+  if (table === appointmentStaffAssignments)
+    return 'appointmentStaffAssignments'
   if (table === appointmentRequests) return 'appointmentRequests'
   if (table === salonMember) return 'salonMember'
   if (table === member) return 'member'
@@ -309,9 +312,9 @@ describe('Staff Access Revocation persistence', () => {
     expect(opsFor('update', staffServices)[0]?.set).toMatchObject({
       staffUserId: 'profile-a',
     })
-    expect(opsFor('update', appointments)[0]?.set).toMatchObject({
-      staffId: 'profile-a',
-    })
+    expect(opsFor('update', appointmentStaffAssignments)[0]?.set).toMatchObject(
+      { staffId: 'profile-a' },
+    )
     expect(opsFor('update', appointmentRequests)[0]?.set).toMatchObject({
       staffId: 'profile-a',
     })
@@ -345,9 +348,9 @@ describe('Staff Access Revocation persistence', () => {
     expect(opsFor('delete', staffSchedules)).toHaveLength(0)
     expect(opsFor('delete', staffServices)).toHaveLength(0)
     expect(opsFor('delete', appointments)).toHaveLength(0)
-    expect(opsFor('update', appointments)[0]?.set).toMatchObject({
-      staffId: 'profile-a',
-    })
+    expect(opsFor('update', appointmentStaffAssignments)[0]?.set).toMatchObject(
+      { staffId: 'profile-a' },
+    )
   })
 
   it('deactivate sets access revokedAt while keeping profile, schedule, and capabilities', async () => {

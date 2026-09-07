@@ -96,11 +96,11 @@ async function insertAppointment(input: {
   const leadStaffId = input.staffId ?? ids.profileA
   await testSql!`
     insert into appointments (
-      id, salon_id, client_id, staff_id, service_id, date, start_time, end_time,
+      id, salon_id, client_id, service_id, date, start_time, end_time,
       booked_service_name, booked_service_duration, booked_service_price,
       booked_total_duration, booked_total_price, status
     ) values (
-      ${id}, ${ids.salon}, ${ids.client}, ${leadStaffId},
+      ${id}, ${ids.salon}, ${ids.client},
       ${serviceId}, ${input.date}, '10:00', '10:30', 'Booked service', 30,
       ${input.price}, 30, ${input.price}, ${input.status ?? 'scheduled'}
     )
@@ -254,26 +254,20 @@ describe.skipIf(!runIntegration)(
         false,
       )
 
-      const salon = await commissions.getSalonCommissionReport({
+      const money = await commissions.getSalonMoneyReport({
         salonId: ids.salon,
         startDate: '2026-07-01',
         endDate: '2026-07-31',
       })
-      expect(salon?.summary).toEqual({
-        grossAppointmentRevenue: 401,
-        staffCommissionTotal: 151,
-        salonRetainedAmount: 250,
-      })
-      await expect(
-        commissions.getSalonFinancialSummary({
-          salonId: ids.salon,
-          startDate: '2026-07-01',
-          endDate: '2026-07-31',
+      expect(money).toEqual({
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            bookedTotal: 1201,
+            staffCommissionTotal: 151,
+            salonRetainedAmount: 1050,
+          },
         }),
-      ).resolves.toEqual({
-        grossAppointmentRevenue: 1201,
-        staffCommissionTotal: 151,
-        salonRetainedAmount: 1050,
       })
 
       await appointmentQueries.deleteAppointment(first, ids.salon)
@@ -399,15 +393,20 @@ describe.skipIf(!runIntegration)(
       })
 
       await expect(
-        commissions.getSalonFinancialSummary({
+        commissions.getSalonMoneyReport({
           salonId: ids.salon,
           startDate: '2026-09-01',
           endDate: '2026-09-01',
         }),
       ).resolves.toEqual({
-        grossAppointmentRevenue: 101,
-        staffCommissionTotal: 26,
-        salonRetainedAmount: 75,
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            bookedTotal: 101,
+            staffCommissionTotal: 26,
+            salonRetainedAmount: 75,
+          },
+        }),
       })
       expect(
         (
@@ -549,55 +548,47 @@ describe.skipIf(!runIntegration)(
         },
       )
 
-      const salon = await commissions.getSalonCommissionReport({
+      const money = await commissions.getSalonMoneyReport({
         salonId: ids.salon,
         startDate: '2026-08-01',
         endDate: '2026-08-01',
       })
-      expect(salon?.rows.map((row) => [row.basis, row.amount])).toEqual([
+      expect(money.ok).toBe(true)
+      if (!money.ok) return
+      expect(
+        money.report.appointments.flatMap((appointment) =>
+          appointment.commissions.map((row) => [row.basis, row.amount]),
+        ),
+      ).toEqual([
         [84, 8],
         [166, 33],
         [250, 25],
       ])
-      expect(salon?.summary).toEqual({
-        grossAppointmentRevenue: 500,
+      expect(money.report.summary).toEqual({
+        bookedTotal: 500,
         staffCommissionTotal: 66,
         salonRetainedAmount: 434,
       })
-      await expect(
-        commissions.getSalonFinancialSummary({
-          salonId: ids.salon,
-          startDate: '2026-08-01',
-          endDate: '2026-08-01',
-        }),
-      ).resolves.toEqual(salon?.summary)
 
       await expect(
         appointmentQueries.deleteAppointment(appointmentIds[0]!, ids.salon),
       ).resolves.toBe(true)
-      expect(
-        (
-          await commissions.getSalonCommissionReport({
-            salonId: ids.salon,
-            startDate: '2026-08-01',
-            endDate: '2026-08-01',
-          })
-        )?.summary,
-      ).toEqual({
-        grossAppointmentRevenue: 416,
-        staffCommissionTotal: 58,
-        salonRetainedAmount: 358,
-      })
       await expect(
-        commissions.getSalonFinancialSummary({
+        commissions.getSalonMoneyReport({
           salonId: ids.salon,
           startDate: '2026-08-01',
           endDate: '2026-08-01',
         }),
       ).resolves.toEqual({
-        grossAppointmentRevenue: 416,
-        staffCommissionTotal: 58,
-        salonRetainedAmount: 358,
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            // Remaining package tasks re-split the booked package price; commissions stay stored.
+            bookedTotal: 500,
+            staffCommissionTotal: 58,
+            salonRetainedAmount: 442,
+          },
+        }),
       })
     })
 
@@ -785,9 +776,13 @@ describe.skipIf(!runIntegration)(
         staffProfileId: ids.profileA,
         percentageBasisPoints: 1000,
       })
-      await appointmentQueries.updateAppointment(afterDefaultChange, ids.salon, {
-        status: 'completed',
-      })
+      await appointmentQueries.updateAppointment(
+        afterDefaultChange,
+        ids.salon,
+        {
+          status: 'completed',
+        },
+      )
       report = await commissions.getStaffCommissionReport({
         salonId: ids.salon,
         staffProfileId: ids.profileA,
@@ -990,6 +985,11 @@ describe.skipIf(!runIntegration)(
         staffProfileId: ids.profileA,
         percentageBasisPoints: 2000,
       })
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
 
       const withoutCommission = await insertAppointment({
         staffId: ids.profileB,
@@ -1052,15 +1052,19 @@ describe.skipIf(!runIntegration)(
           otherCategoryAppointment,
         ]),
       )
-      expect(all.report.appointments.some((row) => row.appointmentId === scheduled)).toBe(
-        false,
-      )
+      expect(
+        all.report.appointments.some((row) => row.appointmentId === scheduled),
+      ).toBe(false)
       expect(all.report.summary.bookedTotal).toBe(1000)
       expect(all.report.summary.staffCommissionTotal).toBe(
-        all.report.staff.reduce((sum, row) => sum + row.staffCommissionTotal, 0),
+        all.report.staff.reduce(
+          (sum, row) => sum + row.staffCommissionTotal,
+          0,
+        ),
       )
       expect(all.report.summary.salonRetainedAmount).toBe(
-        all.report.summary.bookedTotal - all.report.summary.staffCommissionTotal,
+        all.report.summary.bookedTotal -
+          all.report.summary.staffCommissionTotal,
       )
 
       const staffA = await commissions.getSalonMoneyReport({
@@ -1071,10 +1075,13 @@ describe.skipIf(!runIntegration)(
       })
       expect(staffA.ok).toBe(true)
       if (!staffA.ok) return
-      expect(staffA.report.appointments.map((row) => row.appointmentId).sort()).toEqual(
-        [withCommission, multiStaff, otherCategoryAppointment].sort(),
-      )
+      expect(
+        staffA.report.appointments.map((row) => row.appointmentId).sort(),
+      ).toEqual([withCommission, multiStaff, otherCategoryAppointment].sort())
       expect(staffA.report.summary.bookedTotal).toBe(700)
+      // Staff cut is A's commissions only; salon cut subtracts A + B on those Appointments.
+      expect(staffA.report.summary.staffCommissionTotal).toBe(130)
+      expect(staffA.report.summary.salonRetainedAmount).toBe(560)
 
       const byService = await commissions.getSalonMoneyReport({
         salonId: ids.salon,
@@ -1085,7 +1092,10 @@ describe.skipIf(!runIntegration)(
       expect(byService.ok).toBe(true)
       if (!byService.ok) return
       expect(byService.report.appointments).toEqual([
-        expect.objectContaining({ appointmentId: otherCategoryAppointment, bookedTotal: 400 }),
+        expect.objectContaining({
+          appointmentId: otherCategoryAppointment,
+          bookedTotal: 400,
+        }),
       ])
 
       const byCategory = await commissions.getSalonMoneyReport({

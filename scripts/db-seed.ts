@@ -1242,7 +1242,7 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       | 'bookedServicePrice'
       | 'bookedTotalDuration'
       | 'bookedTotalPrice'
-    >
+    > & { staffId: string }
   > = [
     {
       salonId,
@@ -1454,7 +1454,7 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
   const insertedAppointments = await db
     .insert(appointments)
     .values(
-      aptRows.map((row) => ({
+      aptRows.map(({ staffId: _staffId, ...row }) => ({
         ...row,
         ...appointmentSnapshot(servicesById.get(row.serviceId)!),
       })),
@@ -1466,10 +1466,10 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       : await db
           .insert(appointmentStaffAssignments)
           .values(
-            insertedAppointments.map((appointment) => ({
+            insertedAppointments.map((appointment, index) => ({
               salonId,
               appointmentId: appointment.id,
-              staffId: appointment.staffId,
+              staffId: aptRows[index].staffId,
               isLead: true,
               allocationBasisPoints: 10_000,
             })),
@@ -1520,15 +1520,14 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       .insert(staffCommissions)
       .values(
         completedAppointments.map((appointment) => {
+          const assignment = assignmentByAppointment.get(appointment.id)!
           const percentageBasisPoints =
-            commissionRates.get(appointment.staffId) ?? 3_000
+            commissionRates.get(assignment.staffId) ?? 3_000
           return {
             salonId,
-            staffProfileId: appointment.staffId,
+            staffProfileId: assignment.staffId,
             appointmentId: appointment.id,
-            appointmentStaffAssignmentId: assignmentByAppointment.get(
-              appointment.id,
-            )!.id,
+            appointmentStaffAssignmentId: assignment.id,
             basis: appointment.bookedTotalPrice,
             percentageBasisPoints,
             amount: commissionAmount(
@@ -1959,68 +1958,71 @@ async function main() {
     skincareService &&
     allClients.length >= 4
   ) {
+    const demoAppointments: Array<
+      typeof appointments.$inferInsert & { staffId: string }
+    > = [
+      {
+        salonId: primarySalon.id,
+        clientId: allClients[0].id,
+        staffId: staffA.id,
+        serviceId: hairService.id,
+        ...appointmentSnapshot(hairService),
+        date: formatDate(today),
+        startTime: '09:00',
+        endTime: '09:45',
+        status: 'confirmed',
+        notes: 'کوتاهی کلاسیک',
+        createdByUserId: manager.id,
+      },
+      {
+        salonId: primarySalon.id,
+        clientId: allClients[1].id,
+        staffId: staffB.id,
+        serviceId: manicureService.id,
+        ...appointmentSnapshot(manicureService),
+        date: formatDate(today),
+        startTime: '10:00',
+        endTime: '10:30',
+        status: 'scheduled',
+        notes: null,
+        createdByUserId: manager.id,
+      },
+      {
+        salonId: primarySalon.id,
+        clientId: allClients[2].id,
+        staffId: staffA.id,
+        serviceId: colorService.id,
+        ...appointmentSnapshot(colorService),
+        date: formatDate(today),
+        startTime: '14:00',
+        endTime: '16:00',
+        status: 'scheduled',
+        notes: 'رنگ کامل',
+        createdByUserId: manager.id,
+      },
+      {
+        salonId: primarySalon.id,
+        clientId: allClients[3].id,
+        staffId: staffSkin.id,
+        serviceId: skincareService.id,
+        ...appointmentSnapshot(skincareService),
+        date: formatDate(tomorrow),
+        startTime: '11:00',
+        endTime: '12:00',
+        status: 'confirmed',
+        notes: null,
+        createdByUserId: manager.id,
+      },
+    ]
     const insertedAppointments = await db
       .insert(appointments)
-      .values([
-        {
-          salonId: primarySalon.id,
-          clientId: allClients[0].id,
-          staffId: staffA.id,
-          serviceId: hairService.id,
-          ...appointmentSnapshot(hairService),
-          date: formatDate(today),
-          startTime: '09:00',
-          endTime: '09:45',
-          status: 'confirmed',
-          notes: 'کوتاهی کلاسیک',
-          createdByUserId: manager.id,
-        },
-        {
-          salonId: primarySalon.id,
-          clientId: allClients[1].id,
-          staffId: staffB.id,
-          serviceId: manicureService.id,
-          ...appointmentSnapshot(manicureService),
-          date: formatDate(today),
-          startTime: '10:00',
-          endTime: '10:30',
-          status: 'scheduled',
-          notes: null,
-          createdByUserId: manager.id,
-        },
-        {
-          salonId: primarySalon.id,
-          clientId: allClients[2].id,
-          staffId: staffA.id,
-          serviceId: colorService.id,
-          ...appointmentSnapshot(colorService),
-          date: formatDate(today),
-          startTime: '14:00',
-          endTime: '16:00',
-          status: 'scheduled',
-          notes: 'رنگ کامل',
-          createdByUserId: manager.id,
-        },
-        {
-          salonId: primarySalon.id,
-          clientId: allClients[3].id,
-          staffId: staffSkin.id,
-          serviceId: skincareService.id,
-          ...appointmentSnapshot(skincareService),
-          date: formatDate(tomorrow),
-          startTime: '11:00',
-          endTime: '12:00',
-          status: 'confirmed',
-          notes: null,
-          createdByUserId: manager.id,
-        },
-      ])
+      .values(demoAppointments.map(({ staffId: _staffId, ...row }) => row))
       .returning()
     await db.insert(appointmentStaffAssignments).values(
-      insertedAppointments.map((appointment) => ({
+      insertedAppointments.map((appointment, index) => ({
         salonId: primarySalon.id,
         appointmentId: appointment.id,
-        staffId: appointment.staffId,
+        staffId: demoAppointments[index].staffId,
         isLead: true,
         allocationBasisPoints: 10_000,
       })),

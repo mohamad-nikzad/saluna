@@ -230,8 +230,8 @@ export interface Client {
 export interface Appointment {
   id: string
   clientId: string
-  staffId: string
-  staffAssignments?: AppointmentStaffAssignment[]
+  /** Sole staff roster; empty is corrupt and must fail at the database seam. */
+  staffAssignments: AppointmentStaffAssignment[]
   serviceId: string
   bookedServiceName: string
   bookedServiceDuration: number

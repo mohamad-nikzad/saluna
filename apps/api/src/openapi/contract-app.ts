@@ -53,7 +53,6 @@ import {
   deleteCommissionAgreementRoute,
   deleteServiceCommissionOverrideRoute,
   getMyCommissionReportRoute,
-  getSalonCommissionReportRoute,
   getStaffCommissionReportRoute,
   putCommissionAgreementRoute,
   putServiceCommissionOverrideRoute,
@@ -751,7 +750,14 @@ const updatePlatformAdminStub: RouteHandler<typeof updatePlatformAdminRoute> = (
 const stubAppointment = {
   id: 'stub',
   clientId: 'stub',
-  staffId: 'stub',
+  staffAssignments: [
+    {
+      id: 'stub',
+      staffId: 'stub',
+      isLead: true,
+      allocationBasisPoints: 10_000,
+    },
+  ],
   serviceId: 'stub',
   bookedServiceName: 'stub',
   bookedServiceDuration: 45,
@@ -848,25 +854,6 @@ const getStaffCommissionReportStub: RouteHandler<
 const getMyCommissionReportStub: RouteHandler<
   typeof getMyCommissionReportRoute
 > = (c) => c.json({ report: stubStaffCommissionReport }, 200)
-const getSalonCommissionReportStub: RouteHandler<
-  typeof getSalonCommissionReportRoute
-> = (c) =>
-  c.json(
-    {
-      report: {
-        startDate: '2026-01-01',
-        endDate: '2026-01-01',
-        summary: {
-          grossAppointmentRevenue: 0,
-          staffCommissionTotal: 0,
-          salonRetainedAmount: 0,
-        },
-        staff: [],
-        rows: [],
-      },
-    },
-    200,
-  )
 
 const getSalonMoneyReportStub: RouteHandler<typeof getSalonMoneyReportRoute> = (
   c,
@@ -1654,8 +1641,7 @@ export const contractApp = new OpenAPIHono()
         deleteServiceCommissionOverrideStub,
       )
       .openapi(getStaffCommissionReportRoute, getStaffCommissionReportStub)
-      .openapi(getMyCommissionReportRoute, getMyCommissionReportStub)
-      .openapi(getSalonCommissionReportRoute, getSalonCommissionReportStub),
+      .openapi(getMyCommissionReportRoute, getMyCommissionReportStub),
   )
   .route(
     '/api/v1/reports',

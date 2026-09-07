@@ -116,31 +116,3 @@ export const staffCommissionReportSchema = z
 export const staffCommissionReportResponseSchema = z
   .object({ report: staffCommissionReportSchema })
   .openapi('StaffCommissionReportResponse')
-
-export const salonCommissionReportSchema = z
-  .object({
-    startDate: z.string(),
-    endDate: z.string(),
-    summary: z.object({
-      grossAppointmentRevenue: z.number().int(),
-      staffCommissionTotal: z.number().int(),
-      salonRetainedAmount: z.number().int(),
-    }),
-    staff: z.array(
-      z.object({
-        staffProfileId: z.string(),
-        staffName: z.string(),
-        completedCount: z.number().int(),
-        grossAppointmentRevenue: z.number().int(),
-        staffCommissionTotal: z.number().int(),
-      }),
-    ),
-    rows: z.array(
-      staffCommissionReportRowSchema.extend({ staffProfileId: z.string() }),
-    ),
-  })
-  .openapi('SalonCommissionReport')
-
-export const salonCommissionReportResponseSchema = z
-  .object({ report: salonCommissionReportSchema })
-  .openapi('SalonCommissionReportResponse')

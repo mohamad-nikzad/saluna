@@ -249,8 +249,7 @@ export const appointmentWithDetailsSchema = z
   .object({
     id: z.string(),
     clientId: z.string(),
-    staffId: z.string(),
-    staffAssignments: z.array(appointmentStaffAssignmentSchema).optional(),
+    staffAssignments: z.array(appointmentStaffAssignmentSchema),
     serviceId: z.string(),
     bookedServiceName: z.string(),
     bookedServiceDuration: z.number(),

@@ -188,10 +188,9 @@ export async function getTodayData(
     .map((member) => {
       const rows = appointmentsForDay.filter(
         (appointment) =>
-          (appointment.staffAssignments?.some(
+          appointment.staffAssignments.some(
             (assignment) => assignment.staffId === member.id,
-          ) ??
-            appointment.staffId === member.id) &&
+          ) &&
           appointment.status !== 'cancelled' &&
           appointment.status !== 'no-show',
       )
@@ -240,10 +239,9 @@ export async function getTodayData(
     const booked = appointmentsForDay
       .filter(
         (appointment) =>
-          (appointment.staffAssignments?.some(
+          appointment.staffAssignments.some(
             (assignment) => assignment.staffId === load.staffId,
-          ) ??
-            appointment.staffId === load.staffId) &&
+          ) &&
           (appointment.status === 'scheduled' ||
             appointment.status === 'confirmed'),
       )

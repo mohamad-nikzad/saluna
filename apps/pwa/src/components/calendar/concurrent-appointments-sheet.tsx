@@ -123,9 +123,25 @@ export function ConcurrentAppointmentsSheet({
       }
     >()
     for (const apt of sorted) {
-      const entry = map.get(apt.staffId)
-      if (entry) entry.appts.push(apt)
-      else map.set(apt.staffId, { staff: apt.staff, appts: [apt] })
+      for (const assignment of apt.staffAssignments) {
+        const assignee =
+          assignment.staff ??
+          (assignment.isLead || assignment.staffId === apt.staff.id
+            ? apt.staff
+            : {
+                ...apt.staff,
+                id: assignment.staffId,
+                name: assignment.staffId,
+              })
+        const entry = map.get(assignment.staffId)
+        if (entry) {
+          if (!entry.appts.some((existing) => existing.id === apt.id)) {
+            entry.appts.push(apt)
+          }
+        } else {
+          map.set(assignment.staffId, { staff: assignee, appts: [apt] })
+        }
+      }
     }
     return Array.from(map.values())
   }, [sorted])

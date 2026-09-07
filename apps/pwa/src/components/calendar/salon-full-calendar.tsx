@@ -225,37 +225,61 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
   }, [appointments])
 
   const events: EventInput[] = useMemo(() => {
-    const buildSingle = (apt: AppointmentWithDetails): EventInput => {
-      const staffVar = staffAccentVar(apt.staff.color)
+    const buildSingles = (apt: AppointmentWithDetails): EventInput[] => {
       const isDone = apt.status === 'completed'
       const isCancelled = apt.status === 'cancelled' || apt.status === 'no-show'
       const classNames: string[] = []
       if (isDone) classNames.push('fc-event--done')
       else if (isCancelled) classNames.push('fc-event--cancelled')
       const clientLabel = `${apt.client.isPlaceholder ? 'موقت · ' : ''}${apt.client.name}`
-      return {
-        id: apt.id,
-        title: `${clientLabel} — ${appointmentServiceLabel(apt, view)}`,
-        start: `${apt.date}T${apt.startTime}:00`,
-        end: `${apt.date}T${apt.endTime}:00`,
-        allDay: false,
-        extendedProps: {
-          kind: 'single',
-          appointmentId: apt.id,
-          staffColorVar: staffVar,
-          timeLabel: formatPersianTime(apt.startTime),
-          clientLabel,
-          serviceLabel: appointmentServiceLabel(apt, view),
-          staffName: apt.staff.name.split(' ')[0],
-          clientInitials: personInitials(apt.client.name),
-          durationLabel: `${toPersianDigits(durationMinutes(apt.startTime, apt.endTime))} د`,
-          isDone,
-          isCancelled,
-        },
-        backgroundColor: `color-mix(in oklch, ${staffVar} 55%, var(--card))`,
-        borderColor: staffVar,
-        classNames,
-      }
+      const assignees =
+        apt.staffAssignments.length > 0
+          ? apt.staffAssignments
+          : [
+              {
+                id: `lead-${apt.id}`,
+                staffId: apt.staff.id,
+                isLead: true,
+                allocationBasisPoints: 10_000,
+                staff: apt.staff,
+              },
+            ]
+      return assignees.map((assignment) => {
+        const assignee =
+          assignment.staff ??
+          (assignment.isLead || assignment.staffId === apt.staff.id
+            ? apt.staff
+            : {
+                ...apt.staff,
+                id: assignment.staffId,
+                name: assignment.staffId,
+              })
+        const staffVar = staffAccentVar(assignee.color)
+        return {
+          id: `${apt.id}:${assignment.staffId}`,
+          title: `${clientLabel} — ${appointmentServiceLabel(apt, view)}`,
+          start: `${apt.date}T${apt.startTime}:00`,
+          end: `${apt.date}T${apt.endTime}:00`,
+          allDay: false,
+          extendedProps: {
+            kind: 'single',
+            appointmentId: apt.id,
+            assigneeStaffId: assignment.staffId,
+            staffColorVar: staffVar,
+            timeLabel: formatPersianTime(apt.startTime),
+            clientLabel,
+            serviceLabel: appointmentServiceLabel(apt, view),
+            staffName: assignee.name.split(' ')[0],
+            clientInitials: personInitials(apt.client.name),
+            durationLabel: `${toPersianDigits(durationMinutes(apt.startTime, apt.endTime))} د`,
+            isDone,
+            isCancelled,
+          },
+          backgroundColor: `color-mix(in oklch, ${staffVar} 55%, var(--card))`,
+          borderColor: staffVar,
+          classNames,
+        }
+      })
     }
 
     if (view !== 'week') {
@@ -264,7 +288,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         view === 'list'
           ? appointments.filter((a) => a.date >= salonTodayYmd())
           : appointments
-      return source.map(buildSingle)
+      return source.flatMap(buildSingles)
     }
 
     // Week view: collapse time-overlapping appointments into one "N همزمان" pill.
@@ -274,7 +298,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
     for (const apt of appointments) {
       const cluster = clusters.get(apt.id)
       if (!cluster || cluster.length < 2) {
-        out.push(buildSingle(apt))
+        out.push(...buildSingles(apt))
         continue
       }
       const ids = cluster.map((c) => c.id).sort()
@@ -291,8 +315,15 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       )
       const dotColors: string[] = []
       for (const c of cluster) {
-        const v = staffAccentVar(c.staff.color)
-        if (!dotColors.includes(v)) dotColors.push(v)
+        for (const assignment of c.staffAssignments) {
+          const assignee =
+            assignment.staff ??
+            (assignment.isLead || assignment.staffId === c.staff.id
+              ? c.staff
+              : c.staff)
+          const v = staffAccentVar(assignee.color)
+          if (!dotColors.includes(v)) dotColors.push(v)
+        }
       }
       out.push({
         id: `cluster:${key}`,

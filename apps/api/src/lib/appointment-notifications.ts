@@ -11,7 +11,7 @@ export async function notifyAssignedStaff(input: {
   staffIds: string[]
   appointment: Pick<
     Appointment,
-    'id' | 'date' | 'startTime' | 'clientId' | 'staffId' | 'serviceId'
+    'id' | 'date' | 'startTime' | 'clientId' | 'serviceId'
   >
   clientName: string
   serviceName: string

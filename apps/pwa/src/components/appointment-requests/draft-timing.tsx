@@ -21,6 +21,7 @@ import {
   equalWorkAllocations,
   validateWorkAllocations,
 } from '@repo/salon-core/commissions'
+import { staffAssignmentsFromLeadAndExtras } from '@repo/salon-core/forms/appointment'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { Service, User } from '@repo/salon-core/types'
 import { Button } from '@repo/ui/button'
@@ -638,9 +639,11 @@ export function ConvertDraftSheet({
         body: {
           finalDate,
           startTime,
-          staffId,
-          additionalStaffIds,
-          workAllocations,
+          staffAssignments: staffAssignmentsFromLeadAndExtras({
+            staffId,
+            additionalStaffIds,
+            workAllocations,
+          }),
         },
       },
       { onSuccess: () => onOpenChange(false) },

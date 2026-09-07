@@ -3,7 +3,6 @@ import type {
   CommissionAgreement,
   GetApiV1CommissionsMeData,
   GetApiV1ReportsSalonMoneyData,
-  SalonCommissionReport,
   SalonMoneyReport,
   StaffCommissionReport,
 } from '@repo/api-client/types'
@@ -11,7 +10,6 @@ import {
   deleteApiV1CommissionsStaffByIdAgreementMutation,
   deleteApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
   getApiV1CommissionsMeOptions,
-  getApiV1CommissionsSalonOptions,
   getApiV1CommissionsStaffByIdReportOptions,
   getApiV1ReportsSalonMoneyOptions,
   putApiV1CommissionsStaffByIdAgreementMutation,
@@ -28,12 +26,10 @@ export type SalonMoneyReportQuery = NonNullable<
 
 const staffReportRoot = [{ _id: 'getApiV1CommissionsStaffByIdReport' }] as const
 const selfReportRoot = [{ _id: 'getApiV1CommissionsMe' }] as const
-const salonReportRoot = [{ _id: 'getApiV1CommissionsSalon' }] as const
 const salonMoneyReportRoot = [{ _id: 'getApiV1ReportsSalonMoney' }] as const
 const reportRoots = [
   staffReportRoot,
   selfReportRoot,
-  salonReportRoot,
   salonMoneyReportRoot,
 ] as const
 
@@ -58,15 +54,6 @@ export function myCommissionReportQueryOptions(query: CommissionPeriodQuery) {
   return {
     ...getApiV1CommissionsMeOptions({ query }),
     select: (data: { report: StaffCommissionReport }) => data.report,
-  }
-}
-
-export function salonCommissionReportQueryOptions(
-  query: CommissionPeriodQuery,
-) {
-  return {
-    ...getApiV1CommissionsSalonOptions({ query }),
-    select: (data: { report: SalonCommissionReport }) => data.report,
   }
 }
 

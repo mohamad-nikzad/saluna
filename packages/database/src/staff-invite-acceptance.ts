@@ -7,7 +7,6 @@ import { and, eq, gt, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
   appointmentRequests,
-  appointments,
   member,
   organization,
   salonMember,
@@ -18,6 +17,7 @@ import {
   staffServices,
   user,
 } from './schema'
+import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type StaffInviteAcceptanceRejectionReason =
   | 'phone_mismatch'
@@ -470,15 +470,11 @@ export async function acceptStaffInvite(input: {
             eq(staffServices.staffUserId, profile.id),
           ),
         ),
-      tx
-        .update(appointments)
-        .set({ staffId: input.userId, updatedAt: now })
-        .where(
-          and(
-            eq(appointments.salonId, invite.salonId),
-            eq(appointments.staffId, profile.id),
-          ),
-        ),
+      remapAppointmentAssignmentStaff(tx, {
+        salonId: invite.salonId,
+        fromStaffId: profile.id,
+        toStaffId: input.userId,
+      }),
       tx
         .update(appointmentRequests)
         .set({ staffId: input.userId, updatedAt: now })

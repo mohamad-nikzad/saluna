@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  AppointmentStaffAssignment,
   BookedAppointmentAddonLine,
   AppointmentWithDetails,
   BusinessHours,
@@ -137,11 +138,12 @@ export function rowToClientFollowUp(
 
 export function rowToAppointment(
   row: typeof appointments.$inferSelect,
-): Appointment {
+): Omit<Appointment, 'staffAssignments'> & {
+  staffAssignments: AppointmentStaffAssignment[]
+} {
   return {
     id: row.id,
     clientId: row.clientId,
-    staffId: row.staffId,
     staffAssignments: [],
     serviceId: row.serviceId,
     bookedServiceName: row.bookedServiceName,

@@ -1,15 +1,12 @@
-import { and, asc, desc, eq, exists, gte, inArray, lte, or } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, lte, or } from 'drizzle-orm'
 import type {
   Appointment,
   AppointmentWithDetails,
-  AppointmentStaffAssignment,
   BookedAppointmentAddonLine,
   ServiceAddon,
 } from '@repo/salon-core/types'
-import {
-  equalWorkAllocations,
-  validateWorkAllocations,
-} from '@repo/salon-core/commissions'
+import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointment-roster'
+import { leadStaffId } from '@repo/salon-core/appointment-roster'
 import { detectScheduleOverlaps } from '@repo/salon-core/appointment-conflict'
 import {
   durationMinutesFromRange,
@@ -40,7 +37,12 @@ import {
 } from './service-queries'
 import { syncAppointmentCommission } from './commission-queries'
 import { assertSalonDateOpen } from './salon-closure-queries'
-import { getAllStaff } from './staff-queries'
+import {
+  appointmentHasAssignedStaff,
+  attachAppointmentRosters,
+  insertAppointmentRoster,
+  replaceAppointmentRoster,
+} from './appointment-roster-queries'
 
 type Db = ReturnType<typeof getDb>
 type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -61,83 +63,15 @@ type AppointmentCommand = Omit<
 > & {
   id?: string
   addonIds?: string[]
-  additionalStaffIds?: string[]
-  workAllocations?: Array<{
-    staffId: string
-    allocationBasisPoints: number
-  }>
+  staffAssignments: AppointmentStaffAssignmentInput[]
 }
+
 type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
   finalPrice?: number
-  additionalStaffIds?: string[]
-  workAllocations?: Array<{
-    staffId: string
-    allocationBasisPoints: number
-  }>
-}
-
-async function attachStaffAssignmentDetails<T extends Appointment>(
-  appointmentsList: T[],
-  salonId: string,
-): Promise<T[]> {
-  if (appointmentsList.length === 0) return appointmentsList
-  const rows = await getDb()
-    .select()
-    .from(appointmentStaffAssignments)
-    .where(
-      and(
-        eq(appointmentStaffAssignments.salonId, salonId),
-        inArray(
-          appointmentStaffAssignments.appointmentId,
-          appointmentsList.map((appointment) => appointment.id),
-        ),
-      ),
-    )
-    .orderBy(
-      desc(appointmentStaffAssignments.isLead),
-      asc(appointmentStaffAssignments.createdAt),
-    )
-  const staff = await getAllStaff(salonId)
-  const staffById = new Map(staff.map((member) => [member.id, member]))
-  const byAppointment = new Map<string, AppointmentStaffAssignment[]>()
-  for (const row of rows) {
-    const assignments = byAppointment.get(row.appointmentId) ?? []
-    assignments.push({
-      id: row.id,
-      staffId: row.staffId,
-      isLead: row.isLead,
-      allocationBasisPoints: row.allocationBasisPoints,
-      staff: staffById.get(row.staffId),
-    })
-    byAppointment.set(row.appointmentId, assignments)
-  }
-  return appointmentsList.map((appointment) => ({
-    ...appointment,
-    staffAssignments: byAppointment.get(appointment.id) ?? [
-      {
-        id: `legacy:${appointment.id}`,
-        staffId: appointment.staffId,
-        isLead: true,
-        allocationBasisPoints: 10_000,
-        staff: staffById.get(appointment.staffId),
-      },
-    ],
-  }))
-}
-
-function snapshotFromService(service: {
-  name: string
-  duration: number
-  price: number
-}) {
-  return {
-    bookedServiceName: service.name,
-    bookedServiceDuration: service.duration,
-    bookedServicePrice: service.price,
-  }
+  staffAssignments?: AppointmentStaffAssignmentInput[]
 }
 
 async function getAddonLinesForAppointments(
@@ -238,42 +172,16 @@ export function addonLineValues(input: {
   }))
 }
 
-function staffIdCondition(staffIdFilter?: string | readonly string[]) {
-  if (staffIdFilter == null) return undefined
-  if (typeof staffIdFilter === 'string') {
-    return or(
-      eq(appointments.staffId, staffIdFilter),
-      exists(
-        getDb()
-          .select({ id: appointmentStaffAssignments.id })
-          .from(appointmentStaffAssignments)
-          .where(
-            and(
-              eq(appointmentStaffAssignments.appointmentId, appointments.id),
-              eq(appointmentStaffAssignments.staffId, staffIdFilter),
-            ),
-          ),
-      ),
-    )
+function snapshotFromService(service: {
+  name: string
+  duration: number
+  price: number
+}) {
+  return {
+    bookedServiceName: service.name,
+    bookedServiceDuration: service.duration,
+    bookedServicePrice: service.price,
   }
-  if (staffIdFilter.length === 0) return undefined
-  if (staffIdFilter.length === 1) {
-    return staffIdCondition(staffIdFilter[0]!)
-  }
-  return or(
-    inArray(appointments.staffId, [...staffIdFilter]),
-    exists(
-      getDb()
-        .select({ id: appointmentStaffAssignments.id })
-        .from(appointmentStaffAssignments)
-        .where(
-          and(
-            eq(appointmentStaffAssignments.appointmentId, appointments.id),
-            inArray(appointmentStaffAssignments.staffId, [...staffIdFilter]),
-          ),
-        ),
-    ),
-  )
 }
 
 export async function getAppointmentsByDateRange(
@@ -288,24 +196,63 @@ export async function getAppointmentsByDateRange(
     gte(appointments.date, startDate),
     lte(appointments.date, endDate),
   ]
-  const staffCondition = staffIdCondition(staffIdFilter)
-  if (staffCondition) {
-    conditions.push(staffCondition)
-  }
+  const staffCondition =
+    staffIdFilter == null
+      ? undefined
+      : appointmentHasAssignedStaff(staffIdFilter)
+  if (staffCondition) conditions.push(staffCondition)
+
   const rows = await db
     .select()
     .from(appointments)
     .where(and(...conditions))
     .orderBy(asc(appointments.date), asc(appointments.startTime))
+
   const mapped = rows.map(rowToAppointment)
-  const lines = await getAddonLinesForAppointments(
+  return attachAppointmentRosters(
+    attachAddonDetails(
+      mapped,
+      await getAddonLinesForAppointments(
+        salonId,
+        mapped.map((appointment) => appointment.id),
+      ),
+    ),
     salonId,
-    mapped.map((appointment) => appointment.id),
   )
-  return attachStaffAssignmentDetails(
-    attachAddonDetails(mapped, lines),
-    salonId,
-  )
+}
+
+const appointmentDetailSelect = {
+  appointment: appointments,
+  client: clients,
+  staff: staffUserSelect,
+  service: services,
+} as const
+
+function leadStaffJoins(salonId: string) {
+  return {
+    leadAssignment: and(
+      eq(appointmentStaffAssignments.appointmentId, appointments.id),
+      eq(appointmentStaffAssignments.salonId, salonId),
+      eq(appointmentStaffAssignments.isLead, true),
+    ),
+    userJoin: eq(appointmentStaffAssignments.staffId, user.id),
+    memberJoin: and(
+      eq(member.userId, user.id),
+      eq(member.organizationId, salonId),
+    ),
+    salonMemberJoin: and(
+      eq(salonMember.userId, user.id),
+      eq(salonMember.organizationId, salonId),
+    ),
+    clientJoin: and(
+      eq(appointments.clientId, clients.id),
+      eq(clients.salonId, salonId),
+    ),
+    serviceJoin: and(
+      eq(appointments.serviceId, services.id),
+      eq(services.salonId, salonId),
+    ),
+  }
 }
 
 export async function getAppointmentsWithDetailsByDateRange(
@@ -320,52 +267,34 @@ export async function getAppointmentsWithDetailsByDateRange(
     gte(appointments.date, startDate),
     lte(appointments.date, endDate),
   ]
-  const staffCondition = staffIdCondition(staffIdFilter)
-  if (staffCondition) {
-    conditions.push(staffCondition)
-  }
+  const staffCondition =
+    staffIdFilter == null
+      ? undefined
+      : appointmentHasAssignedStaff(staffIdFilter)
+  if (staffCondition) conditions.push(staffCondition)
 
+  const joins = leadStaffJoins(salonId)
   const rows = await db
-    .select({
-      appointment: appointments,
-      client: clients,
-      staff: staffUserSelect,
-      service: services,
-    })
+    .select(appointmentDetailSelect)
     .from(appointments)
-    .innerJoin(
-      clients,
-      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
-    )
-    .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(
-      member,
-      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
-    )
-    .leftJoin(
-      salonMember,
-      and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
-      ),
-    )
-    .innerJoin(
-      services,
-      and(
-        eq(appointments.serviceId, services.id),
-        eq(services.salonId, salonId),
-      ),
-    )
+    .innerJoin(clients, joins.clientJoin)
+    .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
+    .innerJoin(user, joins.userJoin)
+    .innerJoin(member, joins.memberJoin)
+    .leftJoin(salonMember, joins.salonMemberJoin)
+    .innerJoin(services, joins.serviceJoin)
     .where(and(...conditions))
     .orderBy(asc(appointments.date), asc(appointments.startTime))
 
   const mapped = rows.map(attachAppointmentDetails)
-  const lines = await getAddonLinesForAppointments(
-    salonId,
-    mapped.map((appointment) => appointment.id),
-  )
-  return attachStaffAssignmentDetails(
-    attachAddonDetails(mapped, lines),
+  return attachAppointmentRosters(
+    attachAddonDetails(
+      mapped,
+      await getAddonLinesForAppointments(
+        salonId,
+        mapped.map((appointment) => appointment.id),
+      ),
+    ),
     salonId,
   )
 }
@@ -375,37 +304,16 @@ export async function getClientAppointmentsWithDetails(
   clientId: string,
 ): Promise<AppointmentWithDetails[]> {
   const db = getDb()
+  const joins = leadStaffJoins(salonId)
   const rows = await db
-    .select({
-      appointment: appointments,
-      client: clients,
-      staff: staffUserSelect,
-      service: services,
-    })
+    .select(appointmentDetailSelect)
     .from(appointments)
-    .innerJoin(
-      clients,
-      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
-    )
-    .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(
-      member,
-      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
-    )
-    .leftJoin(
-      salonMember,
-      and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
-      ),
-    )
-    .innerJoin(
-      services,
-      and(
-        eq(appointments.serviceId, services.id),
-        eq(services.salonId, salonId),
-      ),
-    )
+    .innerJoin(clients, joins.clientJoin)
+    .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
+    .innerJoin(user, joins.userJoin)
+    .innerJoin(member, joins.memberJoin)
+    .leftJoin(salonMember, joins.salonMemberJoin)
+    .innerJoin(services, joins.serviceJoin)
     .where(
       and(
         eq(appointments.salonId, salonId),
@@ -415,12 +323,14 @@ export async function getClientAppointmentsWithDetails(
     .orderBy(desc(appointments.date), desc(appointments.startTime))
 
   const mapped = rows.map(attachAppointmentDetails)
-  const lines = await getAddonLinesForAppointments(
-    salonId,
-    mapped.map((appointment) => appointment.id),
-  )
-  return attachStaffAssignmentDetails(
-    attachAddonDetails(mapped, lines),
+  return attachAppointmentRosters(
+    attachAddonDetails(
+      mapped,
+      await getAddonLinesForAppointments(
+        salonId,
+        mapped.map((appointment) => appointment.id),
+      ),
+    ),
     salonId,
   )
 }
@@ -430,37 +340,16 @@ export async function getAppointmentWithDetailsById(
   salonId: string,
 ): Promise<AppointmentWithDetails | undefined> {
   const db = getDb()
+  const joins = leadStaffJoins(salonId)
   const rows = await db
-    .select({
-      appointment: appointments,
-      client: clients,
-      staff: staffUserSelect,
-      service: services,
-    })
+    .select(appointmentDetailSelect)
     .from(appointments)
-    .innerJoin(
-      clients,
-      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
-    )
-    .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(
-      member,
-      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
-    )
-    .leftJoin(
-      salonMember,
-      and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
-      ),
-    )
-    .innerJoin(
-      services,
-      and(
-        eq(appointments.serviceId, services.id),
-        eq(services.salonId, salonId),
-      ),
-    )
+    .innerJoin(clients, joins.clientJoin)
+    .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
+    .innerJoin(user, joins.userJoin)
+    .innerJoin(member, joins.memberJoin)
+    .leftJoin(salonMember, joins.salonMemberJoin)
+    .innerJoin(services, joins.serviceJoin)
     .where(and(eq(appointments.id, id), eq(appointments.salonId, salonId)))
     .limit(1)
 
@@ -470,7 +359,7 @@ export async function getAppointmentWithDetailsById(
     [attachAppointmentDetails(row)],
     await getAddonLinesForAppointments(salonId, [row.appointment.id]),
   )
-  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
+  return (await attachAppointmentRosters([appointment], salonId))[0]
 }
 
 export async function getAppointmentById(
@@ -489,7 +378,7 @@ export async function getAppointmentById(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
+  return (await attachAppointmentRosters([appointment], salonId))[0]
 }
 
 export type CreateAppointmentOptions = {
@@ -532,10 +421,11 @@ export async function createAppointment(
     apt.startTime,
     apt.endTime,
   )
+  // Ensure lead exists before insert (seam asserts on write too).
+  leadStaffId(apt.staffAssignments)
   const values: typeof appointments.$inferInsert = {
     salonId,
     clientId: apt.clientId,
-    staffId: apt.staffId,
     serviceId: apt.serviceId,
     date: apt.date,
     startTime: apt.startTime,
@@ -554,22 +444,11 @@ export async function createAppointment(
     await assertSalonDateOpen(tx, salonId, apt.date)
     const [created] = await tx.insert(appointments).values(values).returning()
     if (!created) throw new Error('appointment creation failed')
-    const staffIds = [created.staffId, ...(apt.additionalStaffIds ?? [])]
-    const allocations = apt.workAllocations ?? equalWorkAllocations(staffIds)
-    if (!validateWorkAllocations(staffIds, allocations)) {
-      throw new Error('invalid appointment work allocations')
-    }
-    await tx.insert(appointmentStaffAssignments).values(
-      staffIds.map((staffId, index) => ({
-        salonId,
-        appointmentId: created.id,
-        staffId,
-        isLead: index === 0,
-        allocationBasisPoints: allocations.find(
-          (allocation) => allocation.staffId === staffId,
-        )!.allocationBasisPoints,
-      })),
-    )
+    await insertAppointmentRoster(tx, {
+      salonId,
+      appointmentId: created.id,
+      assignments: apt.staffAssignments,
+    })
     if (selectedAddons.length > 0) {
       await tx.insert(appointmentAddonLines).values(
         addonLineValues({
@@ -589,7 +468,7 @@ export async function createAppointment(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
+  return (await attachAppointmentRosters([appointment], salonId))[0]
 }
 
 export async function updateAppointment(
@@ -618,7 +497,6 @@ export async function updateAppointment(
     updatedAt: new Date(),
   }
   if (data.clientId !== undefined) patch.clientId = data.clientId
-  if (data.staffId !== undefined) patch.staffId = data.staffId
   if (serviceChanged) {
     const service = await getServiceById(data.serviceId!, salonId)
     if (!service) throw new Error('service not found')
@@ -670,10 +548,11 @@ export async function updateAppointment(
     patch.bookedTotalPrice = existing.bookedTotalPrice
   }
 
-  const assignmentsChanged =
-    data.staffId !== undefined ||
-    data.additionalStaffIds !== undefined ||
-    data.workAllocations !== undefined
+  const assignmentsChanged = data.staffAssignments !== undefined
+  if (assignmentsChanged) {
+    leadStaffId(data.staffAssignments!)
+  }
+
   const [row] = await db.transaction(async (tx) => {
     if (data.date !== undefined && data.date !== existing.date) {
       await assertSalonDateOpen(tx, salonId, data.date)
@@ -703,38 +582,11 @@ export async function updateAppointment(
       }
     }
     if (updated && assignmentsChanged) {
-      const staffIds = [
-        updated.staffId,
-        ...(data.additionalStaffIds ??
-          (existing.staffAssignments
-            ? existing.staffAssignments
-                .filter((assignment) => !assignment.isLead)
-                .map((assignment) => assignment.staffId)
-            : [])),
-      ]
-      const allocations = data.workAllocations ?? equalWorkAllocations(staffIds)
-      if (!validateWorkAllocations(staffIds, allocations)) {
-        throw new Error('invalid appointment work allocations')
-      }
-      await tx
-        .delete(appointmentStaffAssignments)
-        .where(
-          and(
-            eq(appointmentStaffAssignments.salonId, salonId),
-            eq(appointmentStaffAssignments.appointmentId, id),
-          ),
-        )
-      await tx.insert(appointmentStaffAssignments).values(
-        staffIds.map((staffId, index) => ({
-          salonId,
-          appointmentId: id,
-          staffId,
-          isLead: index === 0,
-          allocationBasisPoints: allocations.find(
-            (allocation) => allocation.staffId === staffId,
-          )!.allocationBasisPoints,
-        })),
-      )
+      await replaceAppointmentRoster(tx, {
+        salonId,
+        appointmentId: id,
+        assignments: data.staffAssignments!,
+      })
     }
     if (updated)
       await syncAppointmentCommission(tx, existing, updated, assignmentsChanged)
@@ -745,7 +597,7 @@ export async function updateAppointment(
     [rowToAppointment(row)],
     await getAddonLinesForAppointments(salonId, [row.id]),
   )
-  return (await attachStaffAssignmentDetails([appointment], salonId))[0]
+  return (await attachAppointmentRosters([appointment], salonId))[0]
 }
 
 export async function deleteAppointment(
@@ -774,16 +626,15 @@ export async function getScheduleOverlapFlags(
     .select({
       id: appointments.id,
       salonId: appointments.salonId,
-      staffId: appointments.staffId,
+      staffId: appointmentStaffAssignments.staffId,
       clientId: appointments.clientId,
       date: appointments.date,
       startTime: appointments.startTime,
       endTime: appointments.endTime,
       status: appointments.status,
-      assignedStaffId: appointmentStaffAssignments.staffId,
     })
     .from(appointments)
-    .leftJoin(
+    .innerJoin(
       appointmentStaffAssignments,
       and(
         eq(appointmentStaffAssignments.appointmentId, appointments.id),
@@ -795,30 +646,19 @@ export async function getScheduleOverlapFlags(
         eq(appointments.salonId, salonId),
         eq(appointments.date, date),
         or(
-          eq(appointments.staffId, staffId),
           eq(appointmentStaffAssignments.staffId, staffId),
           eq(appointments.clientId, clientId),
         ),
       ),
     )
 
-  return detectScheduleOverlaps(
-    rows.map((row) => ({
-      ...row,
-      staffId:
-        row.staffId === staffId || row.assignedStaffId == null
-          ? row.staffId
-          : row.assignedStaffId,
-      assignedStaffId: undefined,
-    })),
-    {
-      staffId,
-      clientId,
-      date,
-      startTime,
-      endTime,
-      excludeId,
-      salonId,
-    },
-  )
+  return detectScheduleOverlaps(rows, {
+    staffId,
+    clientId,
+    date,
+    startTime,
+    endTime,
+    excludeId,
+    salonId,
+  })
 }

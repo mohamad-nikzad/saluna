@@ -111,7 +111,9 @@ describe('appointment-requests-queries', () => {
     const body = {
       finalDate: '2026-07-25',
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: [
+        { staffId: 'staff-1', isLead: true, allocationBasisPoints: 10_000 },
+      ],
     }
 
     await result.current.mutateAsync({ requestId: 'draft-1', body })
