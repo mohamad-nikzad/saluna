@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-08-24 (BL-0078 done)
+Last organized: 2026-08-31 (BL-0081 done; ADR-0039 cutover)
 
 ## Now
 
@@ -39,9 +39,16 @@ No active backlog items.
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
 - [BL-0080 Let managers browse and filter all Appointments](inbox/BL-0080-manager-appointment-list.md)
+- Architecture deepenings (review 2026-08-26; salon money done in-session)
+  - [BL-0082 Deepen Appointment Intake into trusted persist](inbox/BL-0082-deepen-appointment-intake-persist.md)
+  - [BL-0083 Collapse AppointmentRequest conversion through Intake](inbox/BL-0083-collapse-appointment-request-conversion.md)
+  - [BL-0084 Deepen Staff Commission earning away from reports](inbox/BL-0084-deepen-staff-commission-earning.md)
+  - [BL-0085 Enforce Flexible AppointmentRequest agreement on convert](inbox/BL-0085-enforce-flexible-request-agreement.md)
+  - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
 
+- [BL-0081 Deepen Appointment Staff Assignment as one roster truth](done/BL-0081-deepen-appointment-staff-assignment.md) (ADR-0039)
 - [BL-0078 Give managers a salon money report for completed Appointments](done/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
 - [BL-0079 Align manager Dashboard with Salon-local Reporting Periods](done/BL-0079-align-dashboard-reporting-periods.md)
 - [BL-0077 Set per-service Staff Commission overrides](done/BL-0077-set-per-service-staff-commission-overrides.md)
