@@ -77,9 +77,9 @@ type AppointmentPatch = Partial<
 async function getAddonLinesForAppointments(
   salonId: string,
   appointmentIds: string[],
+  db: Db | DbTransaction = getDb(),
 ): Promise<BookedAppointmentAddonLine[]> {
   if (appointmentIds.length === 0) return []
-  const db = getDb()
   const rows = await db
     .select()
     .from(appointmentAddonLines)
@@ -466,9 +466,13 @@ export async function createAppointment(
     : await db.transaction(insert)
   const [appointment] = attachAddonDetails(
     [rowToAppointment(row)],
-    await getAddonLinesForAppointments(salonId, [row.id]),
+    await getAddonLinesForAppointments(salonId, [row.id], options.transaction),
   )
-  return (await attachAppointmentRosters([appointment], salonId))[0]
+  return (
+    await attachAppointmentRosters([appointment], salonId, {
+      db: options.transaction,
+    })
+  )[0]
 }
 
 export async function updateAppointment(

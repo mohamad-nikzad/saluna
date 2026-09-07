@@ -85,6 +85,7 @@ function setupDb(
     update: vi.fn(() => updateBuilder),
     transaction: vi.fn(),
   }
+  db.transaction.mockImplementation(async (work) => work(db))
   mocks.getDb.mockReturnValue(db)
   return { db, updateBuilder }
 }
@@ -122,6 +123,22 @@ describe('appointment request approval', () => {
     mocks.createAppointment.mockResolvedValue({ id: 'appointment-1' })
   })
 
+  it('does not create an Appointment when a concurrent close wins approval', async () => {
+    const { db, updateBuilder } = setupDb()
+    db.transaction.mockImplementation(async (work) => work(db))
+    updateBuilder.returning.mockResolvedValue([])
+
+    const result = await approveAppointmentRequest({
+      id: pendingRequest.id,
+      salonId: pendingRequest.salonId,
+      staffAssignments: soloRoster,
+      reviewedByUserId: 'manager-1',
+    })
+
+    expect(result).toMatchObject({ ok: false, status: 409 })
+    expect(mocks.createAppointment).not.toHaveBeenCalled()
+  })
+
   it('creates the approved appointment with the request service snapshot', async () => {
     const result = await approveAppointmentRequest({
       id: pendingRequest.id,
@@ -142,6 +159,7 @@ describe('appointment request approval', () => {
       serviceId: 'service-1',
       date: '2026-07-03',
       startTime: '10:00',
+      durationMinutes: pendingRequest.bookedServiceDuration,
       notes: pendingRequest.notes,
     })
     expect(mocks.createAppointment).toHaveBeenCalledWith(
@@ -153,6 +171,7 @@ describe('appointment request approval', () => {
       'salon-1',
       {
         createdByUserId: 'manager-1',
+        transaction: mocks.getDb(),
         serviceSnapshotOverride: {
           name: 'کوتاهی ثبت‌شده',
           duration: 45,

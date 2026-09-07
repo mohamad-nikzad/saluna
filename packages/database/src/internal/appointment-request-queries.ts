@@ -396,10 +396,7 @@ export type ApproveAppointmentRequestResult =
   | { ok: false; status: number; error: string; code?: string }
 
 /**
- * Atomically flips `pending` → `approved`, lookup-or-creates a client by the
- * request's phone, re-runs `Appointment Intake` (which may 409 if the slot
- * was taken since submit), and inserts the `Appointment` with the request's
- * snapshot honored.
+ * Resolves the exact request's Client and staff before conversion through Intake.
  */
 export async function approveAppointmentRequest(
   input: ApproveAppointmentRequestInput,
@@ -448,83 +445,14 @@ export async function approveAppointmentRequest(
     })
   }
 
-  const intake = await validateCreateAppointmentIntake({
-    salonId: input.salonId,
+  return convertAppointmentRequest({
+    request,
     clientId: client.id,
     staffAssignments,
-    serviceId: request.serviceId,
     date: request.requestedDate,
     startTime: request.requestedStartTime,
-    notes: request.notes ?? undefined,
+    reviewedByUserId: input.reviewedByUserId,
   })
-  if (!intake.ok) {
-    return {
-      ok: false,
-      status: intake.status,
-      error: intake.error,
-      ...(intake.code ? { code: intake.code } : {}),
-    }
-  }
-
-  let appointment
-  try {
-    appointment = await createAppointment(intake.command, input.salonId, {
-      createdByUserId: input.reviewedByUserId,
-      serviceSnapshotOverride: {
-        name: request.bookedServiceName,
-        duration: request.bookedServiceDuration,
-        price: request.bookedServicePrice,
-      },
-    })
-  } catch (error) {
-    if (error instanceof SalonClosedError) {
-      return {
-        ok: false,
-        status: 409,
-        error: error.message,
-        code: error.code,
-      }
-    }
-    throw error
-  }
-
-  // Conditional flip — if a concurrent action moved the request, undo our work.
-  const updated = await db
-    .update(appointmentRequests)
-    .set({
-      status: 'approved',
-      staffId: leadStaffId(staffAssignments),
-      reviewedByUserId: input.reviewedByUserId,
-      reviewedAt: new Date(),
-      appointmentId: appointment.id,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(appointmentRequests.id, input.id),
-        eq(appointmentRequests.salonId, input.salonId),
-        eq(appointmentRequests.status, 'pending'),
-      ),
-    )
-    .returning({ id: appointmentRequests.id })
-
-  if (updated.length === 0) {
-    return { ok: false, status: 409, error: 'این درخواست قابل تأیید نیست' }
-  }
-
-  return {
-    ok: true,
-    appointmentId: appointment.id,
-    clientId: client.id,
-    notification: {
-      appointment,
-      staffIds: (intake.staffMembers ?? [intake.staff]).map(
-        (member) => member.id,
-      ),
-      clientName: intake.client.name,
-      serviceName: intake.service.name,
-    },
-  }
 }
 
 export type ConvertFlexibleAppointmentRequestInput = {
@@ -537,18 +465,7 @@ export type ConvertFlexibleAppointmentRequestInput = {
 }
 
 export type ConvertFlexibleAppointmentRequestResult =
-  | {
-      ok: true
-      appointmentId: string
-      clientId: string
-      notification?: {
-        appointment: Awaited<ReturnType<typeof createAppointment>>
-        staffIds: string[]
-        clientName: string
-        serviceName: string
-      }
-    }
-  | { ok: false; status: number; error: string; code?: string }
+  ApproveAppointmentRequestResult
 
 export async function convertFlexibleAppointmentRequest(
   input: ConvertFlexibleAppointmentRequestInput,
@@ -584,12 +501,37 @@ export async function convertFlexibleAppointmentRequest(
     return { ok: false, status: 400, error: 'ساعت انتخاب‌شده قابل قبول نیست' }
   }
 
+  return convertAppointmentRequest({
+    request,
+    clientId,
+    staffAssignments: input.staffAssignments,
+    date: input.finalDate,
+    startTime: input.startTime,
+    reviewedByUserId: input.reviewedByUserId,
+  })
+}
+
+/** Claim the pending request before inserting; any write failure rolls both back. */
+async function convertAppointmentRequest(input: {
+  request: AppointmentRequestRow
+  clientId: string
+  staffAssignments: AppointmentStaffAssignmentInput[]
+  date: string
+  startTime: string
+  reviewedByUserId: string
+}): Promise<ApproveAppointmentRequestResult> {
+  const { request, clientId } = input
+  const db = getDb()
+  const unavailableError =
+    request.timingMode === 'flexible'
+      ? 'این پیش‌نویس قابل تبدیل نیست'
+      : 'این درخواست قابل تأیید نیست'
   const intake = await validateCreateAppointmentIntake({
-    salonId: input.salonId,
+    salonId: request.salonId,
     clientId,
     staffAssignments: input.staffAssignments,
     serviceId: request.serviceId,
-    date: input.finalDate,
+    date: input.date,
     startTime: input.startTime,
     durationMinutes: request.bookedServiceDuration,
     notes: request.notes ?? undefined,
@@ -616,20 +558,20 @@ export async function convertFlexibleAppointmentRequest(
         })
         .where(
           and(
-            eq(appointmentRequests.id, input.id),
-            eq(appointmentRequests.salonId, input.salonId),
-            eq(appointmentRequests.timingMode, 'flexible'),
+            eq(appointmentRequests.id, request.id),
+            eq(appointmentRequests.salonId, request.salonId),
+            eq(appointmentRequests.timingMode, request.timingMode),
             eq(appointmentRequests.status, 'pending'),
           ),
         )
         .returning({ id: appointmentRequests.id })
       if (updated.length === 0) {
-        return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
+        return { ok: false, status: 409, error: unavailableError }
       }
 
       const appointment = await createAppointment(
         intake.command,
-        input.salonId,
+        request.salonId,
         {
           createdByUserId: input.reviewedByUserId,
           transaction: tx,
@@ -643,7 +585,7 @@ export async function convertFlexibleAppointmentRequest(
       await tx
         .update(appointmentRequests)
         .set({ appointmentId: appointment.id })
-        .where(eq(appointmentRequests.id, input.id))
+        .where(eq(appointmentRequests.id, request.id))
       return {
         ok: true,
         appointmentId: appointment.id,
