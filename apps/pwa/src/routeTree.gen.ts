@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SelectSalonRouteImport } from './routes/select-salon'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StaffInvitesRouteImport } from './routes/staff-invites'
+import { Route as AuthedAppointmentsRouteImport } from './routes/_authed/appointments'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
 import { Route as AuthedCommissionsRouteImport } from './routes/_authed/commissions'
@@ -84,6 +85,11 @@ const StaffInvitesRoute = StaffInvitesRouteImport.update({
   id: '/staff-invites',
   path: '/staff-invites',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedAppointmentsRoute = AuthedAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   id: '/calendar',
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/appointments': typeof AuthedAppointmentsRoute
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/commissions': typeof AuthedCommissionsRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/appointments': typeof AuthedAppointmentsRoute
   '/calendar': typeof AuthedCalendarRoute
   '/commissions': typeof AuthedCommissionsRoute
   '/dashboard': typeof AuthedDashboardRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/_authed/appointments': typeof AuthedAppointmentsRoute
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
   '/_authed/commissions': typeof AuthedCommissionsRoute
@@ -392,6 +401,7 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/appointments'
     | '/calendar'
     | '/clients'
     | '/commissions'
@@ -434,6 +444,7 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/appointments'
     | '/calendar'
     | '/commissions'
     | '/dashboard'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/_authed/appointments'
     | '/_authed/calendar'
     | '/_authed/clients'
     | '/_authed/commissions'
@@ -571,6 +583,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/staff-invites'
       preLoaderRoute: typeof StaffInvitesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/appointments': {
+      id: '/_authed/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AuthedAppointmentsRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/_authed/calendar': {
       id: '/_authed/calendar'
@@ -887,6 +906,7 @@ const AuthedSupportRouteWithChildren = AuthedSupportRoute._addFileChildren(
 )
 
 interface AuthedRouteChildren {
+  AuthedAppointmentsRoute: typeof AuthedAppointmentsRoute
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedClientsRoute: typeof AuthedClientsRouteWithChildren
   AuthedCommissionsRoute: typeof AuthedCommissionsRoute
@@ -905,6 +925,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAppointmentsRoute: AuthedAppointmentsRoute,
   AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedClientsRoute: AuthedClientsRouteWithChildren,
   AuthedCommissionsRoute: AuthedCommissionsRoute,

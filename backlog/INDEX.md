@@ -38,7 +38,6 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
-- [BL-0080 Let managers browse and filter all Appointments](inbox/BL-0080-manager-appointment-list.md)
 - Architecture deepenings (review 2026-08-26; salon money done in-session)
   - [BL-0082 Deepen Appointment Intake into trusted persist](inbox/BL-0082-deepen-appointment-intake-persist.md)
   - [BL-0084 Deepen Staff Commission earning away from reports](inbox/BL-0084-deepen-staff-commission-earning.md)
@@ -47,6 +46,7 @@ No active backlog items.
 
 ## Done
 
+- [BL-0080 Let managers browse and filter all Appointments](done/BL-0080-manager-appointment-list.md)
 - [BL-0083 Collapse AppointmentRequest conversion through Intake](done/BL-0083-collapse-appointment-request-conversion.md)
 - [BL-0081 Deepen Appointment Staff Assignment as one roster truth](done/BL-0081-deepen-appointment-staff-assignment.md) (ADR-0039)
 - [BL-0078 Give managers a salon money report for completed Appointments](done/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
