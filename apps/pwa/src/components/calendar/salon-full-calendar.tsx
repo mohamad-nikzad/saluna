@@ -12,7 +12,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
-import { addDays, addMonths, format, subDays } from 'date-fns'
+import { addDays, addMonths, format, startOfWeek, subDays } from 'date-fns'
 import { WORKING_HOURS } from '@repo/salon-core/types'
 import type {
   AppointmentWithDetails,
@@ -37,6 +37,7 @@ import {
   salonTodayYmd,
 } from '@repo/salon-core/salon-local-time'
 import { buildConcurrencyClusters } from '#/components/calendar/concurrent-appointments-sheet'
+import { calendarMonthRange } from './calendar-month'
 import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 
 function durationMinutes(startTime: string, endTime: string): number {
@@ -78,7 +79,7 @@ function calendarViewToFc(view: CalendarView): string {
     case 'week':
       return 'timeGridWeek'
     case 'month':
-      return 'dayGridMonth'
+      return 'dayGridJalaliMonth'
     case 'list':
       return 'listUpcomingMonth'
     default:
@@ -218,6 +219,19 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       return { start, end: addDays(addMonths(start, 1), 1) }
     }
   }, [view])
+  const monthRange = useMemo(
+    () => calendarMonthRange(currentDate),
+    [currentDate],
+  )
+  const monthVisibleRange = useCallback((rangeDate: Date): DateRangeInput => {
+    const { start, end } = calendarMonthRange(rangeDate)
+    // Whole Saturday–Friday weeks make FullCalendar lay out a grid without
+    // inheriting dayGridMonth's Gregorian month duration.
+    return {
+      start: startOfWeek(start, { weekStartsOn: 6 }),
+      end: addDays(startOfWeek(subDays(end, 1), { weekStartsOn: 6 }), 7),
+    }
+  }, [])
   const appointmentsById = useMemo(() => {
     const m = new Map<string, AppointmentWithDetails>()
     for (const a of appointments) m.set(a.id, a)
@@ -377,7 +391,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
     (arg: DateSelectArg) => {
       const dateStr = format(arg.start, 'yyyy-MM-dd')
       const timeStr = format(arg.start, 'HH:mm')
-      if (arg.allDay || arg.view.type === 'dayGridMonth') {
+      if (arg.allDay || arg.view.type === 'dayGridJalaliMonth') {
         arg.view.calendar.unselect()
         return
       }
@@ -401,7 +415,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault()
-      if (info.view.type === 'dayGridMonth') {
+      if (info.view.type === 'dayGridJalaliMonth') {
         const id = info.event.extendedProps.appointmentId as string | undefined
         const apt = id ? appointmentsById.get(id) : null
         if (apt) onDaySummaryOpen?.(apt.date)
@@ -426,7 +440,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
 
   const handleDateClick = useCallback(
     (arg: { date: Date; dateStr: string; view: { type: string } }) => {
-      if (arg.view.type === 'dayGridMonth') {
+      if (arg.view.type === 'dayGridJalaliMonth') {
         onDaySummaryOpen?.(format(arg.date, 'yyyy-MM-dd'))
       } else {
         onSlotSelect(format(arg.date, 'yyyy-MM-dd'), format(arg.date, 'HH:mm'))
@@ -468,6 +482,10 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         locale={faLocale}
         headerToolbar={false}
         views={{
+          dayGridJalaliMonth: {
+            type: 'dayGrid',
+            visibleRange: monthVisibleRange,
+          },
           listUpcomingMonth: {
             type: 'list',
             duration: { months: 1 },
@@ -497,14 +515,25 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         datesSet={handleDatesSet}
         // Use HTML custom content (not React nodes) so @fullcalendar/react avoids flushSync
         // during lifecycle — see fullcalendar#7448 / React 18+ strict rendering.
-        dayHeaderContent={({ date }) => {
+        dayHeaderContent={({ date, view: headerView }) => {
           const { weekday, day } = formatPersianDayHeaderCompact(date)
+          if (headerView.type === 'dayGridJalaliMonth') {
+            return {
+              html: `<span class="day-header-weekday">${escapeHtml(weekday)}</span>`,
+            }
+          }
           return {
             html: `<div class="day-header-compact"><span class="day-header-weekday">${escapeHtml(weekday)}</span><span class="day-header-num">${escapeHtml(day)}</span></div>`,
           }
         }}
+        dayCellClassNames={({ date, view: cellView }) =>
+          cellView.type === 'dayGridJalaliMonth' &&
+          (date < monthRange.start || date >= monthRange.end)
+            ? ['fc-day-other']
+            : []
+        }
         dayCellContent={(arg) => {
-          if (arg.view.type !== 'dayGridMonth') {
+          if (arg.view.type !== 'dayGridJalaliMonth') {
             return {
               html: `<span class="fc-daygrid-day-number">${escapeHtml(arg.dayNumberText)}</span>`,
             }
@@ -514,7 +543,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
           }
         }}
         dayCellDidMount={(arg) => {
-          if (arg.view.type !== 'dayGridMonth') return
+          if (arg.view.type !== 'dayGridJalaliMonth') return
           arg.el.setAttribute('role', 'button')
           arg.el.setAttribute('tabindex', '0')
           arg.el.setAttribute(
@@ -534,7 +563,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         })}
         eventContent={(arg) => {
           const viewType = arg.view.type
-          if (viewType === 'dayGridMonth') return undefined
+          if (viewType === 'dayGridJalaliMonth') return undefined
           if (arg.event.extendedProps.kind === 'cluster') {
             const count = arg.event.extendedProps.count as number
             const dotColors =

@@ -17,6 +17,7 @@ import {
   formatPersianMonthYear,
   formatPersianWeekRange,
 } from '@repo/salon-core/jalali-display'
+import { calendarMonthRange } from './calendar-month'
 import { brand } from '@repo/brand'
 import { SalunaMark } from '#/components/brand/saluna-mark'
 
@@ -55,7 +56,7 @@ export function CalendarHeader({
         onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
         break
       case 'month':
-        onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
+        onDateChange(calendarMonthRange(d, direction === 'prev' ? -1 : 1).start)
         break
     }
   }
