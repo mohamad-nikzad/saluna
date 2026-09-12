@@ -14,7 +14,7 @@ updated: 2026-07-28
 
 ## Parent
 
-[BL-0069 Improve public Salon pages for local organic search](../ready/BL-0069-improve-public-salon-local-seo.md)
+[BL-0069 Improve public Salon pages for local organic search](../done/BL-0069-improve-public-salon-local-seo.md)
 
 ## What to Build
 

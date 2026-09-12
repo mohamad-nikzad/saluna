@@ -2,7 +2,7 @@ import type { CalendarColorId } from './calendar-colors'
 
 export type UserRole = 'manager' | 'staff'
 
-export type StaffInviteListStatus = 'pending'
+export type StaffInviteListStatus = 'pending' | 'expired'
 
 export interface User {
   id: string

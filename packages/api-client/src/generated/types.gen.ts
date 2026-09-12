@@ -779,7 +779,7 @@ export type StaffUser = {
     phone: string;
     createdAt: string | string;
     serviceIds?: Array<string> | null;
-    inviteStatus?: 'pending' | null;
+    inviteStatus?: 'pending' | 'expired' | null;
     [key: string]: unknown;
 };
 

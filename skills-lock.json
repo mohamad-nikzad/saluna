@@ -37,12 +37,6 @@
       "skillPath": "skills/principle-prove-it-works/SKILL.md",
       "computedHash": "df5e2a3f8b71c39780a398a9cd4515356479f2862e554b3d7cbf6dd8d1a37db7"
     },
-    "tdd": {
-      "source": "backnotprop/pstack",
-      "sourceType": "github",
-      "skillPath": "skills/tdd/SKILL.md",
-      "computedHash": "33a8e530ff47e54b647966bc5d3e615352a0c7cb95220003313769fcfeda11ea"
-    },
     "typescript-best-practices": {
       "source": "backnotprop/pstack",
       "sourceType": "github",

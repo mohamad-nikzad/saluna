@@ -194,7 +194,7 @@ describe('flexible appointment request conversion', () => {
       requestedDate: null,
       requestedStartTime: null,
       requestedEndTime: null,
-      acceptableDates: [finalDate],
+      acceptableDates: [addDaysYmd(salonTodayYmd(), -1), finalDate],
       timePreference: 'afternoon',
     }
     const { db } = setupDb(request)
@@ -270,7 +270,7 @@ describe('flexible appointment request conversion', () => {
       requestedDate: null,
       requestedStartTime: null,
       requestedEndTime: null,
-      acceptableDates: [addDaysYmd(salonTodayYmd(), 1)],
+      acceptableDates: [finalDate],
       timePreference: 'any',
     })
 
@@ -292,7 +292,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.createAppointment).not.toHaveBeenCalled()
   })
 
-  it('allows a horizon date even when it was not listed as acceptable', async () => {
+  it('rejects a horizon date that was not listed as acceptable', async () => {
     const listedDate = addDaysYmd(salonTodayYmd(), 1)
     const finalDate = addDaysYmd(salonTodayYmd(), 2)
     const request = {
@@ -335,14 +335,14 @@ describe('flexible appointment request conversion', () => {
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toMatchObject({
-      ok: true,
-      appointmentId: 'appointment-manual-date',
-      clientId: 'client-1',
+    expect(result).toEqual({
+      ok: false,
+      status: 400,
+      error: 'تاریخ انتخاب‌شده قابل قبول نیست',
     })
-    expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith(
-      expect.objectContaining({ date: finalDate }),
-    )
+    expect(mocks.validateCreateAppointmentIntake).not.toHaveBeenCalled()
+    expect(mocks.createAppointment).not.toHaveBeenCalled()
+    expect(db.transaction).not.toHaveBeenCalled()
   })
 
   it('rejects a start time outside the saved Time Preference', async () => {

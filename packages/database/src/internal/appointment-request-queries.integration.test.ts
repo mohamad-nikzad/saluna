@@ -122,6 +122,30 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
       await adminSql?.end({ timeout: 5 })
     }, 30000)
 
+    it('rejects an unlisted date and leaves the saved request pending', async () => {
+      const request = await requestFor('flexible')
+      const acceptableDates = [addDaysYmd(request.date, 1)]
+      await testSql`update appointment_requests set acceptable_dates = ${acceptableDates} where id = ${request.id}`
+
+      expect(await request.convert()).toEqual({
+        ok: false,
+        status: 400,
+        error: 'تاریخ انتخاب‌شده قابل قبول نیست',
+      })
+      expect(
+        await testSql`select id from appointments where date = ${request.date}`,
+      ).toHaveLength(0)
+      expect(
+        await testSql`select status, appointment_id, acceptable_dates from appointment_requests where id = ${request.id}`,
+      ).toEqual([
+        {
+          status: 'pending',
+          appointment_id: null,
+          acceptable_dates: acceptableDates,
+        },
+      ])
+    })
+
     for (const mode of ['exact', 'flexible'] as const) {
       it(`${mode}: persists the snapshot, roster, request link and notification`, async () => {
         const request = await requestFor(mode)

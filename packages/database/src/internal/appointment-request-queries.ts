@@ -3,10 +3,7 @@ import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointme
 import { leadStaffId } from '@repo/salon-core/appointment-roster'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
-import {
-  isStartTimeInPreference,
-  normalizeAcceptableDates,
-} from '@repo/salon-core/appointment-request-timing'
+import { flexibleRequestAgreementError } from '@repo/salon-core/appointment-request-timing'
 
 import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
@@ -489,15 +486,16 @@ export async function convertFlexibleAppointmentRequest(
     return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
   }
   const clientId = request.clientId
-  try {
-    normalizeAcceptableDates([input.finalDate], salonTodayYmd())
-  } catch {
+  const agreementError = flexibleRequestAgreementError({
+    acceptableDates: request.acceptableDates,
+    timePreference: request.timePreference,
+    finalDate: input.finalDate,
+    startTime: input.startTime,
+  })
+  if (agreementError === 'date') {
     return { ok: false, status: 400, error: 'تاریخ انتخاب‌شده قابل قبول نیست' }
   }
-  if (
-    !request.timePreference ||
-    !isStartTimeInPreference(input.startTime, request.timePreference)
-  ) {
+  if (agreementError === 'time') {
     return { ok: false, status: 400, error: 'ساعت انتخاب‌شده قابل قبول نیست' }
   }
 

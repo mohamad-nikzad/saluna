@@ -3,7 +3,7 @@
  * list/accept/decline that create Staff Profile Access.
  */
 
-import { and, eq, gt, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
   appointmentRequests,
@@ -143,12 +143,13 @@ export function evaluateStaffInviteDecline(input: {
   return { status: 'decline' }
 }
 
-export type PendingStaffInviteView = {
+export type UnacceptedStaffInviteView = {
   id: string
   salonId: string
   salonName: string
   staffProfileId: string
   staffName: string
+  status: string
   phone: string
   expiresAt: Date
   createdAt: Date
@@ -175,11 +176,12 @@ async function loadVerifiedIdentity(userId: string) {
   }
 }
 
-/** Pending Staff Invites for the session identity's verified phone only. */
-export async function listPendingStaffInvitesForUser(
+/** Unaccepted invitations, including expired ones, for the verified phone.
+ * Expired invitations remain visible so login explains how to regain access.
+ */
+export async function listUnacceptedStaffInvitesForUser(
   userId: string,
-  now: Date = new Date(),
-): Promise<PendingStaffInviteView[]> {
+): Promise<UnacceptedStaffInviteView[]> {
   const identity = await loadVerifiedIdentity(userId)
   if (!identity?.verified) return []
   const phone = identity.phoneNumber ?? identity.username
@@ -192,6 +194,7 @@ export async function listPendingStaffInvitesForUser(
       salonName: organization.name,
       staffProfileId: staffInvites.staffProfileId,
       staffName: staffProfiles.name,
+      status: staffInvites.status,
       phone: staffInvites.phone,
       expiresAt: staffInvites.expiresAt,
       createdAt: staffInvites.createdAt,
@@ -202,8 +205,9 @@ export async function listPendingStaffInvitesForUser(
     .where(
       and(
         eq(staffInvites.phone, phone),
-        eq(staffInvites.status, 'pending'),
-        gt(staffInvites.expiresAt, now),
+        inArray(staffInvites.status, ['pending', 'expired']),
+        eq(staffProfiles.active, true),
+        isNull(staffProfiles.userId),
       ),
     )
 }

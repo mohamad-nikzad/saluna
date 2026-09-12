@@ -1,13 +1,13 @@
 ---
 id: BL-0069
 title: Improve public Salon pages for local organic search
-status: ready
+status: done
 type: improvement
 triage: ready-for-agent
 priority: high
 size: large
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-09-07
 ---
 
 ## Problem Statement
@@ -212,3 +212,7 @@ URL for a social bio or channel.
 - [BL-0073 Keep AppointmentRequest status pages out of search](../done/BL-0073-keep-appointment-request-status-pages-out-of-search.md) — done
 - [BL-0074 Help managers complete and share their public page](../done/BL-0074-help-managers-complete-and-share-public-page.md) — done
 - [BL-0075 Prove the complete local-search journey](../done/BL-0075-prove-complete-local-search-journey.md) — done
+
+## Completion review
+
+Status reviewed on 2026-09-07. BL-0070 through BL-0075 are complete. Runtime discovery lives in `apps/web/src/pages/salons-sitemap.xml.ts`; `scripts/smoke-web.mjs` checks rendered locality, structured data, canonical URLs, publication changes, sitemap policy, and request-page noindex. `e2e/public-page-sharing.spec.ts` covers manager sharing. The final verification implementation landed in `2717230`.

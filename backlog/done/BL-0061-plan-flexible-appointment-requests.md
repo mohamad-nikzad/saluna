@@ -1,13 +1,13 @@
 ---
 id: BL-0061
 title: Capture flexible AppointmentRequests as manager drafts
-status: ready
+status: done
 type: feature
 triage: ready-for-agent
 priority: medium
 size: large
 created: 2026-07-19
-updated: 2026-07-21
+updated: 2026-09-07
 ---
 
 ## Problem Statement
@@ -174,9 +174,13 @@ Pending Drafts never occupy staff calendars or hold availability. The existing e
 
 ## Subtasks
 
-- [BL-0062 Record and list manager Drafts](BL-0062-record-list-manager-drafts.md) — blocked by none
-- [BL-0063 Organize and edit Draft timing](BL-0063-organize-edit-draft-timing.md) — blocked by BL-0062
-- [BL-0064 Convert a Draft into an Appointment](BL-0064-convert-draft-to-appointment.md) — blocked by BL-0063
-- [BL-0065 Close Drafts accurately](BL-0065-close-drafts-accurately.md) — blocked by BL-0062
-- [BL-0066 Expire and renew terminal Drafts](BL-0066-expire-renew-terminal-drafts.md) — blocked by BL-0063 and BL-0065
-- [BL-0067 Prove the complete Draft journey](BL-0067-prove-complete-draft-journey.md) — blocked by BL-0064 and BL-0066
+- [BL-0062 Record and list manager Drafts](BL-0062-record-list-manager-drafts.md) — done
+- [BL-0063 Organize and edit Draft timing](BL-0063-organize-edit-draft-timing.md) — done
+- [BL-0064 Convert a Draft into an Appointment](BL-0064-convert-draft-to-appointment.md) — done
+- [BL-0065 Close Drafts accurately](BL-0065-close-drafts-accurately.md) — done
+- [BL-0066 Expire and renew terminal Drafts](BL-0066-expire-renew-terminal-drafts.md) — done
+- [BL-0067 Prove the complete Draft journey](BL-0067-prove-complete-draft-journey.md) — done
+
+## Completion review
+
+Status reviewed on 2026-09-07. BL-0062 through BL-0067 are complete. The manager Draft workflow is implemented in `apps/pwa/src/routes/_authed/requests.tsx` and `packages/database/src/internal/appointment-request-queries.ts`, with the complete manager journey in `e2e/draft-journey.spec.ts`. Conversion now shares the transactional Intake path from commit `b00a2e2`. BL-0085 separately records the agreement-enforcement follow-up.

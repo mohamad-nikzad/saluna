@@ -8,7 +8,7 @@ priority: medium
 size: large
 blocked_by: []
 created: 2026-08-07
-updated: 2026-08-07
+updated: 2026-09-07
 ---
 
 ## Problem
@@ -58,3 +58,8 @@ Keep one Appointment, one client, one service snapshot, and one authoritative to
 ## Blocked By
 
 None — can start immediately.
+
+## Status review
+
+- Reviewed on 2026-09-07. Multi-staff scheduling and Work Allocations landed in `3fe7072`; `0cc2505` made Appointment Staff Assignments the sole roster source. Service configuration, manager create/edit controls, request conversion, calendar/conflict reads, authorization, notifications, and commission allocation are implemented. The original single-staff description above records the pre-implementation problem.
+- Existing checks include `appointment-intake.test.ts`, `appointment-roster-queries.test.ts`, and `commission-queries.integration.test.ts`. Keep this item ready until the final automated-check criterion is satisfied: the current `e2e/staff-commissions.spec.ts` covers a single-staff visit, and no complete multi-staff manager booking journey was found. Dedicated multi-staff notification and authorization coverage also remains unverified.
