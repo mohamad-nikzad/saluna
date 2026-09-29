@@ -22,6 +22,7 @@ import {
   member,
   salonMember,
   services,
+  staffProfiles,
   user,
 } from '../schema'
 import {
@@ -225,6 +226,14 @@ const appointmentDetailSelect = {
   appointment: appointments,
   client: clients,
   staff: staffUserSelect,
+  preparedStaff: {
+    id: staffProfiles.id,
+    salonId: staffProfiles.salonId,
+    name: staffProfiles.name,
+    phone: staffProfiles.phone,
+    color: staffProfiles.color,
+    createdAt: staffProfiles.createdAt,
+  },
   service: services,
 } as const
 
@@ -239,6 +248,10 @@ function leadStaffJoins(salonId: string) {
     memberJoin: and(
       eq(member.userId, user.id),
       eq(member.organizationId, salonId),
+    ),
+    preparedStaffJoin: and(
+      eq(appointmentStaffAssignments.staffId, staffProfiles.id),
+      eq(staffProfiles.salonId, salonId),
     ),
     salonMemberJoin: and(
       eq(salonMember.userId, user.id),
@@ -279,11 +292,20 @@ export async function getAppointmentsWithDetailsByDateRange(
     .from(appointments)
     .innerJoin(clients, joins.clientJoin)
     .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
-    .innerJoin(user, joins.userJoin)
-    .innerJoin(member, joins.memberJoin)
+    .leftJoin(user, joins.userJoin)
+    .leftJoin(member, joins.memberJoin)
+    .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
-    .where(and(...conditions))
+    .where(
+      and(
+        ...conditions,
+        or(
+          eq(member.organizationId, salonId),
+          eq(staffProfiles.salonId, salonId),
+        ),
+      ),
+    )
     .orderBy(asc(appointments.date), asc(appointments.startTime))
 
   const mapped = rows.map(attachAppointmentDetails)
@@ -310,14 +332,19 @@ export async function getClientAppointmentsWithDetails(
     .from(appointments)
     .innerJoin(clients, joins.clientJoin)
     .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
-    .innerJoin(user, joins.userJoin)
-    .innerJoin(member, joins.memberJoin)
+    .leftJoin(user, joins.userJoin)
+    .leftJoin(member, joins.memberJoin)
+    .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
     .where(
       and(
         eq(appointments.salonId, salonId),
         eq(appointments.clientId, clientId),
+        or(
+          eq(member.organizationId, salonId),
+          eq(staffProfiles.salonId, salonId),
+        ),
       ),
     )
     .orderBy(desc(appointments.date), desc(appointments.startTime))
@@ -346,11 +373,21 @@ export async function getAppointmentWithDetailsById(
     .from(appointments)
     .innerJoin(clients, joins.clientJoin)
     .innerJoin(appointmentStaffAssignments, joins.leadAssignment)
-    .innerJoin(user, joins.userJoin)
-    .innerJoin(member, joins.memberJoin)
+    .leftJoin(user, joins.userJoin)
+    .leftJoin(member, joins.memberJoin)
+    .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
-    .where(and(eq(appointments.id, id), eq(appointments.salonId, salonId)))
+    .where(
+      and(
+        eq(appointments.id, id),
+        eq(appointments.salonId, salonId),
+        or(
+          eq(member.organizationId, salonId),
+          eq(staffProfiles.salonId, salonId),
+        ),
+      ),
+    )
     .limit(1)
 
   const row = rows[0]
