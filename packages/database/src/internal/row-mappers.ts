@@ -25,6 +25,7 @@ import {
   member,
   salonMember,
   services,
+  staffProfiles,
   staffSchedules,
   user,
 } from '../schema'
@@ -34,8 +35,8 @@ const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
 /**
  * Drizzle select shape that reconstructs the legacy `User` from the Better Auth
  * model. Use it after joining `user` (the staff), `member` (role + org), and a
- * LEFT join on `salonMember` (color sidecar). `salonId` comes off the `member`
- * row, so this requires an inner join on `member`.
+ * LEFT join on `salonMember` (color sidecar). Appointment reads use nullable
+ * joins here because a prepared Staff Profile has no user or member yet.
  */
 export const staffUserSelect = {
   id: user.id,
@@ -59,6 +60,19 @@ export type StaffUserRow = {
   role: string
   color: string | null
   createdAt: Date
+}
+
+type NullableStaffUserRow = {
+  [K in keyof StaffUserRow]: StaffUserRow[K] | null
+}
+
+type PreparedStaffRow = Pick<
+  typeof staffProfiles.$inferSelect,
+  'id' | 'salonId' | 'name' | 'phone' | 'color' | 'createdAt'
+>
+
+type NullablePreparedStaffRow = {
+  [K in keyof PreparedStaffRow]: PreparedStaffRow[K] | null
 }
 
 export function rowToUser(row: StaffUserRow): User {
@@ -136,9 +150,10 @@ export function rowToClientFollowUp(
   }
 }
 
-export function rowToAppointment(
-  row: typeof appointments.$inferSelect,
-): Omit<Appointment, 'staffAssignments'> & {
+export function rowToAppointment(row: typeof appointments.$inferSelect): Omit<
+  Appointment,
+  'staffAssignments'
+> & {
   staffAssignments: AppointmentStaffAssignment[]
 } {
   return {
@@ -207,13 +222,32 @@ export function rowToBusinessHours(
 export function attachAppointmentDetails(row: {
   appointment: typeof appointments.$inferSelect
   client: typeof clients.$inferSelect
-  staff: StaffUserRow
+  staff: NullableStaffUserRow | null
+  preparedStaff: NullablePreparedStaffRow | null
   service: typeof services.$inferSelect
 }): AppointmentWithDetails {
+  const staff = row.staff?.salonId
+    ? rowToUser(row.staff as StaffUserRow)
+    : row.preparedStaff?.id
+      ? {
+          id: row.preparedStaff.id,
+          salonId: row.preparedStaff.salonId!,
+          name: row.preparedStaff.name!,
+          fullName: row.preparedStaff.name!,
+          nickname: null,
+          phone: row.preparedStaff.phone!,
+          role: 'staff' as const,
+          color: row.preparedStaff.color!,
+          createdAt: row.preparedStaff.createdAt!,
+        }
+      : null
+  if (!staff) {
+    throw new Error(`Appointment ${row.appointment.id} has no lead staff`)
+  }
   return {
     ...rowToAppointment(row.appointment),
     client: rowToClient(row.client),
-    staff: rowToUser(row.staff),
+    staff,
     service: rowToService(row.service),
   }
 }
