@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-09-07 (backlog completion review)
+Last organized: 2026-09-29 (public content CMS item added)
 
 ## Now
 
@@ -23,6 +23,7 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
+- [BL-0087 Publish Blog Articles and Product Guides with EmDash](inbox/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
 - Architecture deepenings (review 2026-08-26; salon money done in-session)
   - [BL-0082 Deepen Appointment Intake into trusted persist](inbox/BL-0082-deepen-appointment-intake-persist.md)
   - [BL-0084 Deepen Staff Commission earning away from reports](inbox/BL-0084-deepen-staff-commission-earning.md)

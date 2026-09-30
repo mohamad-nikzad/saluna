@@ -349,6 +349,16 @@ _Avoid_: ticket type, department
 >
 > **Developer:** “The manager answered, which reopened it. If it is a feature request, resolving the ticket still does not mean the feature will ship.”
 
+### Public Content
+
+**Blog Article**:
+A public editorial page for salon owners or prospective customers about a salon-management problem or related topic. It may explain Saluna's approach but is not the maintained instruction for completing a task in the product.
+_Avoid_: Product Guide, release note
+
+**Product Guide**:
+A public, maintained how-to page for completing a specific task in Saluna, with written steps and optional screenshots or video. Product staff review it when the corresponding product flow changes.
+_Avoid_: Blog Article, Support Ticket, in-app hint
+
 ## Naming rules
 
 - Prefer `category` and `service` in new product/admin catalog language; treat `family` as legacy storage/history only.
