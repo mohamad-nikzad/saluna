@@ -148,6 +148,80 @@ server {
 
 server {
   listen 80;
+  server_name ${ADMIN_DOMAIN};
+
+  client_max_body_size 5m;
+
+  location = /healthz {
+    access_log off;
+    add_header Content-Type text/plain;
+    return 200 "ok\n";
+  }
+
+  location /api/ {
+    proxy_pass http://api:3002;
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "no-store" always;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $saluna_forwarded_proto;
+  }
+
+  location / {
+    proxy_pass http://admin:80;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $saluna_forwarded_proto;
+  }
+}
+
+server {
+  listen 443 ssl;
+  server_name ${ADMIN_DOMAIN};
+
+  ssl_certificate /etc/nginx/certs/admin-origin.crt;
+  ssl_certificate_key /etc/nginx/certs/admin-origin.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  client_max_body_size 5m;
+
+  location = /healthz {
+    access_log off;
+    add_header Content-Type text/plain;
+    return 200 "ok\n";
+  }
+
+  location /api/ {
+    proxy_pass http://api:3002;
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "no-store" always;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $saluna_forwarded_proto;
+  }
+
+  location / {
+    proxy_pass http://admin:80;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $saluna_forwarded_proto;
+  }
+}
+
+server {
+  listen 80;
   server_name ${API_DOMAIN};
 
   client_max_body_size 5m;
