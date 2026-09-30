@@ -6,7 +6,7 @@ cd "$ROOT"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/deploy-registry-app.sh api|web|pwa IMAGE_TAG
+Usage: scripts/deploy-registry-app.sh api|web|pwa|admin IMAGE_TAG
 
 Run this on the VPS from /opt/saluna after CI has pushed one app image.
 It updates that app's deployment state, pulls only that image, restarts only
@@ -26,6 +26,8 @@ Optional:
   SALUNA_WEB_IMAGE_REGISTRY
   SALUNA_PWA_VERSION      PWA app version to persist
   SALUNA_PWA_IMAGE_REGISTRY
+  SALUNA_ADMIN_VERSION   Admin app version to persist
+  SALUNA_ADMIN_IMAGE_REGISTRY
   SKIP_BACKUP             Skip API pre-migration backup when set to 1
   SEED_CATALOG_PRESETS    Seed presets on API deploy (default: 1)
 USAGE
@@ -35,7 +37,7 @@ app="${1:-}"
 image_tag="${2:-}"
 
 case "$app" in
-  api | web | pwa) ;;
+  api | web | pwa | admin) ;;
   -h | --help)
     usage
     exit 0
@@ -55,6 +57,7 @@ case "$app" in
   api) registry_var="SALUNA_API_IMAGE_REGISTRY" ;;
   web) registry_var="SALUNA_WEB_IMAGE_REGISTRY" ;;
   pwa) registry_var="SALUNA_PWA_IMAGE_REGISTRY" ;;
+  admin) registry_var="SALUNA_ADMIN_IMAGE_REGISTRY" ;;
 esac
 
 # An explicit per-app registry selects a non-default CI/CD path. Legacy callers
@@ -78,14 +81,18 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 preserved_env_keys=(
+  ADMIN_DOMAIN
   API_DOMAIN
   APP_DOMAIN
   PUBLIC_DOMAIN
   SALUNA_API_VERSION
   SALUNA_API_IMAGE_REGISTRY
+  SALUNA_ADMIN_VERSION
+  SALUNA_ADMIN_IMAGE_REGISTRY
   SALUNA_IMAGE_REGISTRY
   SALUNA_PWA_VERSION
   SALUNA_PWA_IMAGE_REGISTRY
+  SALUNA_ADMIN_IMAGE_TAG
   SALUNA_WEB_VERSION
   SALUNA_WEB_IMAGE_REGISTRY
 )
@@ -245,6 +252,13 @@ case "$app" in
     version_value="${SALUNA_PWA_VERSION:-}"
     smoke_host="${APP_DOMAIN:-app.saluna.ir}"
     smoke_path="/healthz"
+    ;;
+  admin)
+    tag_var="SALUNA_ADMIN_IMAGE_TAG"
+    version_var="SALUNA_ADMIN_VERSION"
+    version_value="${SALUNA_ADMIN_VERSION:-}"
+    smoke_host="${ADMIN_DOMAIN:-admin.saluna.ir}"
+    smoke_path="/login"
     ;;
 esac
 
