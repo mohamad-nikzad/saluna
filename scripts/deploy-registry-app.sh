@@ -290,6 +290,11 @@ echo "Ensuring gateway is running"
 compose up -d --no-deps gateway
 wait_for_service_health gateway
 
+# Refresh mounted templates and resolve container addresses after a restart.
+compose exec -T gateway /docker-entrypoint.d/20-envsubst-on-templates.sh
+compose exec -T gateway nginx -t
+compose exec -T gateway nginx -s reload
+
 smoke_check "$smoke_host" "$smoke_path" "$app"
 
 set_env_value "$tag_var" "$image_tag" "$ENV_FILE"
