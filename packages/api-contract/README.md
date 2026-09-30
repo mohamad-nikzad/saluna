@@ -1,33 +1,28 @@
 # @repo/api-contract
 
-Generated OpenAPI contract for the Saluna API.
+Generated OpenAPI contract for the Saluna API. Edit Hono route definitions in
+`apps/api/src/openapi/`, then regenerate `openapi.json`.
 
-**Do not hand-edit `openapi.json`.** It is produced from Hono route definitions in `apps/api`.
+## Generation
 
-## Generate
-
-From the repo root:
+Run from the repo root, in this order:
 
 ```bash
 pnpm generate:api-contract
+pnpm generate:api-client
 ```
 
-Or from `apps/api`:
+The first command writes `packages/api-contract/openapi.json`. The second
+generates the SDK, types, and TanStack Query options in `packages/api-client`.
 
-```bash
-pnpm generate:openapi
-```
+## Coverage
 
-Output: `packages/api-contract/openapi.json`
+The contract includes admin, Support Tickets, Clients, staff, the service
+catalog, Appointments, AppointmentRequests, settings, Salon Presence, onboarding,
+reporting, retention, messaging, notifications, and public booking.
 
-## Scope
+Better Auth passthrough remains in the manual auth client. See
+[API client usage](../api-client/README.md).
 
-The contract is built incrementally. Phase 2 documents the **clients** route group only (`/api/v1/clients/*`). Other route groups remain legacy until converted in later passes.
-
-## Source of truth
-
-```txt
-Hono OpenAPI route definitions (apps/api/src/openapi/)
-  → packages/api-contract/openapi.json
-  → HeyAPI generated client (packages/api-client/src/generated/) — Phase 3+
-```
+[contract-app.ts](../../apps/api/src/openapi/contract-app.ts) registers the
+documented routes. Register new routes there as well as in the runtime app.

@@ -34,6 +34,6 @@ Update CatalogPreset definitions and import behavior so starter catalogs create 
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Partial implementation note: read/import code normalizes presets to categories and services and applies categories plus ServiceVariants only. The seed source still uses the legacy `families`/`variants` shape before normalization, so keep this open until seeds are stored/authored in the flat target shape and absence of family/combo/package imports is covered end to end.
 - Completion note: preset seed source now uses the flat `categories[].services[]` target shape directly, exports seeds for regression tests, and includes absence checks for legacy `families`/`variants`, duplicate service names, and package-like services.

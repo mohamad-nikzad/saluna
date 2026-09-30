@@ -37,6 +37,6 @@ Update PWA and admin surfaces so managers and platform staff use the new catalog
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Partial implementation note: PWA Services and Calendar have category/service, add-on, package definition, and package scheduling paths. Keep this open for final admin/PWA surface audit, staff package capability UX coverage, and regression tests proving no family/combo controls remain.
 - Completion note: final surface audit removed stale family/combo references, added manager package staff capability editing, constrained package booking to assigned staff, and added setup catalog add-on scope controls for all/category/service.

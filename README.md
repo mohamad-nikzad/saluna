@@ -55,8 +55,18 @@ docker compose up -d postgres
 
 ## Database portability
 
-The app uses standard PostgreSQL through `drizzle-orm` and `postgres`. Runtime reads `DATABASE_URL`; migrations and seeds prefer `DATABASE_URL_DIRECT` and fall back to `DATABASE_URL`. No provider-specific SDK is required — changing hosts is a matter of updating env vars and running migrations.
+The app uses PostgreSQL through `drizzle-orm` and `postgres`. Runtime reads `DATABASE_URL`; migrations and seeds prefer `DATABASE_URL_DIRECT` and fall back to `DATABASE_URL`. To change database hosts, update these variables and apply the migrations.
 
 ## CI schema checks
 
 `pnpm db:check` fails if `packages/database/src/schema.ts` changed without a matching checked-in migration. `.github/workflows/main-db.yml` runs this check on pull requests and pushes to `main`.
+
+## Documentation
+
+- [Backlog](backlog/INDEX.md) and [workflow](backlog/README.md)
+- [Domain language](CONTEXT.md) and [architecture decisions](docs/adr/)
+- [Production deployments](docs/DEPLOYMENTS.md) and [tarball fallback](docs/VPS_AIRGAPPED_DEPLOYMENT.md)
+- [Public web development](apps/web/README.md)
+- [API client usage](packages/api-client/README.md) and [contract generation](packages/api-contract/README.md)
+- [Monetization launch plan](docs/superpowers/plans/2026-08-04-monetization-launch-plan.md)
+- [Unscheduled messaging proposals](docs/plans/messaging-follow-ups.md)

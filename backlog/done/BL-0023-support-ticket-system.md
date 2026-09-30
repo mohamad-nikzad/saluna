@@ -89,4 +89,4 @@ Resolving a feature-request ticket completes the support conversation only; it d
 
 - Use the existing platform roles: `platform_owner`, `platform_admin`, `platform_support`, and `platform_viewer`.
 - Existing salon/user internal notes remain available when platform staff need private operational context.
-- Implementation plan: [`../../docs/superpowers/plans/2026-06-20-support-ticket-system-plan.md`](../../docs/superpowers/plans/2026-06-20-support-ticket-system-plan.md)
+- The implementation plan was retired after completion. See [Support Ticket domain terms](../../CONTEXT.md#product-support) and this item's acceptance criteria.

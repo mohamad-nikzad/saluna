@@ -34,4 +34,4 @@ Add manager/admin setup flows for defining Service Packages, choosing included S
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).

@@ -1,23 +1,13 @@
-# Triage Labels
+# Triage labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
+Use the same five labels in local backlog items and GitHub Issues.
 
-| Label in grill / domain-modeling skills | Label in our tracker | Meaning                                  |
-| -------------------------- | -------------------- | ---------------------------------------- |
-| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  |
-| `needs-info`               | `needs-info`         | Waiting on reporter for more information |
-| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
-| `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
-| `wontfix`                  | `wontfix`            | Will not be actioned                     |
+| Label             | Meaning                                      | Typical local stage |
+| ----------------- | -------------------------------------------- | ------------------- |
+| `needs-triage`    | Maintainer review needed                     | `inbox`             |
+| `needs-info`      | More information needed                      | `inbox`             |
+| `ready-for-agent` | Specified and ready for agent implementation | `ready`             |
+| `ready-for-human` | Requires human implementation                | `ready` or `now`    |
+| `wontfix`         | Will not be implemented                      | `archive`           |
 
-When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
-
-For local backlog items, align triage outcomes with folder stages where practical:
-
-| Triage role       | Typical backlog stage |
-| ----------------- | --------------------- |
-| `needs-triage`    | `inbox`               |
-| `needs-info`      | `inbox`               |
-| `ready-for-agent` | `ready`               |
-| `ready-for-human` | `ready` or `now`      |
-| `wontfix`         | `archive`             |
+When a skill names a triage role, use that exact label.

@@ -33,5 +33,5 @@ Replace manager/admin service catalog contracts with category, service, add-on, 
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Completed on 2026-07-08. Added combined manager service catalog response, included packages in setup catalog, exposed package `staffIds`, regenerated OpenAPI/API client artifacts, and verified with focused API tests, typechecks, and `pnpm db:check`.

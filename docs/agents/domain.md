@@ -1,35 +1,23 @@
-# Domain Docs
+# Domain docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+## Read before exploring
 
-## Before exploring, read these
+Read [CONTEXT.md](../../CONTEXT.md) and the relevant
+[architecture decisions](../adr/) before working on a domain area.
 
-- **`CONTEXT.md`** at the repo root
-- **`docs/adr/`** — read ADRs that touch the area you're about to work in
+This repo has one domain context. If either location is absent, proceed without
+creating it. The domain-modeling skill records terms and decisions when they
+are resolved.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
+## Use the glossary
 
-## File structure
+Use the terms in `CONTEXT.md` in code, tests, issues, and documentation. Avoid
+synonyms the glossary excludes.
 
-Single-context repo:
+If a needed term is missing, check whether an existing term fits before adding
+a new concept.
 
-```
-/
-├── CONTEXT.md
-├── docs/adr/
-│   ├── 0001-appointment-request-as-distinct-aggregate.md
-│   └── ...
-└── src/
-```
+## Conflicting decisions
 
-## Use the glossary's vocabulary
-
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
-
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
-
-## Flag ADR conflicts
-
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
-
-> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+Call out any proposed change that contradicts an ADR. Name the ADR, explain the
+conflict, and record a superseding decision when the rule changes.

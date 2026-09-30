@@ -1,33 +1,33 @@
 # Saluna deployments
 
-Last updated: **2026-07-22**
+Last updated: 2026-09-30
 
 The primary production path uses GitHub-hosted Actions runners, GHCR, and a
 manual production deployment workflow. The existing HamGit/HamDocker pipeline
 remains operational as the first fallback when international connectivity is
 blocked. The tarball release path is the final air-gapped fallback.
 
-## Production Shape
+## Production layout
 
 Production runs on the ParsPack VPS at the origin IP `195.177.255.24`, behind
 Arvan for public HTTP(S).
 
-Do not SSH to `saluna.ir`, `app.saluna.ir`, or `api.saluna.ir`; those names may
-resolve to Arvan CDN IPs. SSH to the origin IP as `deploy`.
+SSH to the origin IP as `deploy`. Public hostnames may resolve to Arvan CDN IPs.
 
-| Public host      | Compose service | Container         | App                              |
-| ---------------- | --------------- | ----------------- | -------------------------------- |
-| `api.saluna.ir`  | `api`           | `saluna-api`      | Hono API on port `3002`          |
-| `saluna.ir`      | `web`           | `saluna-web`      | Astro public site on port `3001` |
-| `app.saluna.ir`  | `pwa`           | `saluna-pwa`      | Manager PWA served by Nginx      |
-| all public hosts | `gateway`       | `saluna-gateway`  | Nginx host router                |
-| internal only    | `postgres`      | `saluna-postgres` | Postgres 16                      |
+| Public host       | Compose service | Container         | App                              |
+| ----------------- | --------------- | ----------------- | -------------------------------- |
+| `api.saluna.ir`   | `api`           | `saluna-api`      | Hono API on port `3002`          |
+| `saluna.ir`       | `web`           | `saluna-web`      | Astro public site on port `3001` |
+| `app.saluna.ir`   | `pwa`           | `saluna-pwa`      | Manager PWA served by Nginx      |
+| `admin.saluna.ir` | `admin`         | `saluna-admin`    | Platform admin served by Nginx   |
+| all public hosts  | `gateway`       | `saluna-gateway`  | Nginx host router                |
+| internal only     | `postgres`      | `saluna-postgres` | Postgres 16                      |
 
 The VPS directory is `/opt/saluna`, owned by `deploy`. The active Compose file
 is `/opt/saluna/docker-compose.prod.yml`, matching
 [`docker-compose.prod.yml`](../docker-compose.prod.yml).
 
-## Primary GitHub Flow
+## Primary GitHub workflow
 
 ```text
 push to GitHub main
@@ -85,22 +85,11 @@ and reports each channel result; after fixing permissions or configuration,
 rerun the failed job. Per-channel markers under
 `/opt/saluna/release-announcements/` prevent duplicate posts on retries.
 
-#### Current social-channel state
+Keep `TELEGRAM_ENABLED=false` while the VPS cannot reach
+`api.telegram.org`. Disabled providers do not need a channel ID. Keep bot
+tokens out of documentation, release notes, commands, and workflow inputs.
 
-| Provider | Production state | Channel   | Bot           | Notes                                      |
-| -------- | ---------------- | --------- | ------------- | ------------------------------------------ |
-| Bale     | enabled          | `@saluna` | `@salunabot`  | Active release-announcement destination    |
-| Telegram | disabled         | —         | `@saloorabot` | VPS outbound access to Telegram is blocked |
-
-Keep `TELEGRAM_ENABLED=false` until the VPS has a verified route to
-`api.telegram.org`. The publisher skips disabled providers and requires bot and
-channel configuration only for enabled providers, so Bale releases remain
-independent of Telegram availability. Never put bot tokens in documentation,
-commands, release notes, or workflow inputs.
-
-The Bale channel launched on 2026-07-22. The setup test post was removed, then
-the full Persian introduction was published with release key
-`channel-introduction-v1`. The production setting is:
+Bale announcement configuration:
 
 ```env
 BALE_ENABLED=true
@@ -109,7 +98,7 @@ BALE_RELEASE_CHANNEL_ID=@saluna
 ```
 
 The canonical operator procedure, including the announcement decision, is in
-[How To Release](#how-to-release).
+[How to release](#how-to-release).
 
 A good release note is short, friendly, and scannable. Use this shape:
 
@@ -132,11 +121,11 @@ publisher directly on the VPS. Normal releases must use the deployment workflow:
 cd /opt/saluna
 ./scripts/publish_release_announcement.py \
   --revision UNIQUE_RELEASE_KEY \
-  --apps api,web,pwa \
+  --apps api,web,pwa,admin \
   --notes 'متن نهایی و تاییدشده انتشار'
 ```
 
-## GitHub Workflows
+## GitHub workflows
 
 - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) validates pull
   requests and `main`.
@@ -150,7 +139,7 @@ cd /opt/saluna
 GitHub-hosted runners use the normal upstream Node, npm, Alpine, and Nginx
 sources. The production VPS does not build application images.
 
-## Required GitHub Secrets
+## Required GitHub secrets
 
 Configure these repository or organization Actions secrets:
 
@@ -165,7 +154,7 @@ The workflows use their short-lived `GITHUB_TOKEN` for GHCR push and pull. No
 long-lived GHCR token is required. Repository Actions settings must permit the
 workflow token to write packages.
 
-## HamGit/HamDocker Fallback
+## HamGit/HamDocker fallback
 
 The CI file is [`.gitlab-ci.yml`](../.gitlab-ci.yml).
 
@@ -176,19 +165,21 @@ runner tagged, protected, unprivileged, and limited to one job at a time.
 
 Fallback build jobs:
 
-| Job         | Builds       | Image tag                                               |
-| ----------- | ------------ | ------------------------------------------------------- |
-| `build-api` | `saluna-api` | `apps/api/package.json` version + `CI_COMMIT_SHORT_SHA` |
-| `build-web` | `saluna-web` | `apps/web/package.json` version + `CI_COMMIT_SHORT_SHA` |
-| `build-pwa` | `saluna-pwa` | `apps/pwa/package.json` version + `CI_COMMIT_SHORT_SHA` |
+| Job           | Builds         | Image tag                                                 |
+| ------------- | -------------- | --------------------------------------------------------- |
+| `build-api`   | `saluna-api`   | `apps/api/package.json` version + `CI_COMMIT_SHORT_SHA`   |
+| `build-web`   | `saluna-web`   | `apps/web/package.json` version + `CI_COMMIT_SHORT_SHA`   |
+| `build-admin` | `saluna-admin` | `apps/admin/package.json` version + `CI_COMMIT_SHORT_SHA` |
+| `build-pwa`   | `saluna-pwa`   | `apps/pwa/package.json` version + `CI_COMMIT_SHORT_SHA`   |
 
 Fallback deploy jobs:
 
-| Job          | Runs on VPS                                         | Extra behavior                                                 |
-| ------------ | --------------------------------------------------- | -------------------------------------------------------------- |
-| `deploy-api` | `./scripts/deploy-registry-app.sh api "$IMAGE_TAG"` | backup, migrations, catalog preset seed, `/health` smoke check |
-| `deploy-web` | `./scripts/deploy-registry-app.sh web "$IMAGE_TAG"` | public `/` smoke check                                         |
-| `deploy-pwa` | `./scripts/deploy-registry-app.sh pwa "$IMAGE_TAG"` | manager `/healthz` smoke check                                 |
+| Job            | Runs on VPS                                           | Extra behavior                                                 |
+| -------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| `deploy-api`   | `./scripts/deploy-registry-app.sh api "$IMAGE_TAG"`   | backup, migrations, catalog preset seed, `/health` smoke check |
+| `deploy-web`   | `./scripts/deploy-registry-app.sh web "$IMAGE_TAG"`   | public `/` smoke check                                         |
+| `deploy-admin` | `./scripts/deploy-registry-app.sh admin "$IMAGE_TAG"` | platform admin `/login` smoke check                            |
+| `deploy-pwa`   | `./scripts/deploy-registry-app.sh pwa "$IMAGE_TAG"`   | manager `/healthz` smoke check                                 |
 
 Builds use mirrored infrastructure so the pipeline does not depend on blocked
 international endpoints:
@@ -204,7 +195,7 @@ SALUNA_PNPM_VERSION=9.15.9
 Kaniko runs from `gcr.hamdocker.ir/kaniko-project/executor:v1.23.2-debug` and
 pushes app images to `SALUNA_IMAGE_REGISTRY`.
 
-### Required HamGit CI Variables
+### Required HamGit CI variables
 
 These are protected HamGit variables:
 
@@ -225,15 +216,12 @@ that default and safely switches the selected app back to HamDocker.
 Do not remove the GitLab workflow, HamDocker credentials, mirrored build
 arguments, or VPS runner configuration while this fallback is required.
 
-## Versioning And Tags
+## Versioning and tags
 
-Each deployable app owns its version:
-
-| App         | Version source          | Current baseline |
-| ----------- | ----------------------- | ---------------: |
-| API         | `apps/api/package.json` |         `0.11.0` |
-| Public web  | `apps/web/package.json` |          `0.6.0` |
-| Manager PWA | `apps/pwa/package.json` |         `0.12.0` |
+Each deployable app owns its version in its `package.json`:
+[API](../apps/api/package.json), [public web](../apps/web/package.json),
+[manager PWA](../apps/pwa/package.json), and
+[platform admin](../apps/admin/package.json).
 
 Image tags are:
 
@@ -258,27 +246,17 @@ pre-`1.0.0` changes.
 
 The Docker images also get OCI labels for app version, git revision, and source.
 
-## Affected App Rules
+## Affected app rules
 
-CI currently maps changed paths to app builds like this:
-
-| Changed path                                                           | Build/deploy                                        |
-| ---------------------------------------------------------------------- | --------------------------------------------------- |
-| `apps/api/**`                                                          | API                                                 |
-| `apps/web/**`                                                          | Web                                                 |
-| `apps/pwa/**`                                                          | PWA                                                 |
-| `packages/auth/**`, `packages/notifications/**`                        | API                                                 |
-| `packages/database/**`                                                 | API and PWA                                         |
-| `packages/api-client/**`, `packages/ui/**`, `packages/brand-tokens/**` | PWA                                                 |
-| `packages/brand/**`, `packages/salon-core/**`                          | API, web, and PWA                                   |
-| `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`                | API, web, and PWA                                   |
-| Image workflow or Docker build inputs                                  | all affected images                                 |
-| Compose or deploy scripts                                              | deployment workflow only; no image rebuild required |
+Changed-path filters in the
+[GitHub build workflow](../.github/workflows/build-production-images.yml) and
+[HamGit pipeline](../.gitlab-ci.yml) determine which apps rebuild. Update those
+filters when workspace dependencies change.
 
 If a change crosses boundaries, deploy every app that consumed the changed
-package. For uncertain shared code changes, deploy all three apps.
+package. For uncertain shared code changes, deploy all affected apps, or select `all`.
 
-## How To Release
+## How to release
 
 1. Bump only the changed app package version when the change should produce a
    new app release.
@@ -311,9 +289,10 @@ Smoke checks:
 curl -i https://api.saluna.ir/health
 curl -i https://saluna.ir/
 curl -i https://app.saluna.ir/healthz
+curl -i https://admin.saluna.ir/login
 ```
 
-## What The VPS Deploy Script Does
+## What the VPS deploy script does
 
 The current deploy script is
 [`scripts/deploy-registry-app.sh`](../scripts/deploy-registry-app.sh). It is run
@@ -343,7 +322,7 @@ For API deploys only, before restarting `api`, it also:
 
 Use `SKIP_BACKUP=1` only when a backup was already taken another way.
 
-## VPS Deployment State
+## VPS deployment state
 
 Production state lives in `/opt/saluna/.env.production`.
 
@@ -359,6 +338,9 @@ SALUNA_WEB_IMAGE_TAG=0.4.0-e6fa2b7
 SALUNA_PWA_VERSION=0.7.0
 SALUNA_PWA_IMAGE_REGISTRY=ghcr.io/<github-owner>/
 SALUNA_PWA_IMAGE_TAG=0.7.0-e6fa2b7
+SALUNA_ADMIN_VERSION=0.1.0
+SALUNA_ADMIN_IMAGE_REGISTRY=ghcr.io/<github-owner>/
+SALUNA_ADMIN_IMAGE_TAG=0.1.0-e6fa2b7
 ```
 
 `docker-compose.prod.yml` still supports the legacy shared `SALUNA_IMAGE_TAG`
@@ -384,7 +366,7 @@ API rollback is only simple when migrations are backward-compatible. If an API
 deploy included a non-backward-compatible migration, restore the matching
 pre-deploy database backup before or during rollback.
 
-## Manual Operator Checks
+## Manual operator checks
 
 Check running containers:
 
@@ -396,7 +378,7 @@ Check the active app tags without printing secrets:
 
 ```bash
 ssh deploy@195.177.255.24 \
-  'cd /opt/saluna && grep -E "^SALUNA_(API|WEB|PWA)_(VERSION|IMAGE_TAG|IMAGE_REGISTRY)=" .env.production'
+  'cd /opt/saluna && grep -E "^SALUNA_(API|WEB|PWA|ADMIN)_(VERSION|IMAGE_TAG|IMAGE_REGISTRY)=" .env.production'
 ```
 
 Check logs:
@@ -406,7 +388,7 @@ ssh deploy@195.177.255.24 \
   'cd /opt/saluna && docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100 api'
 ```
 
-## Tarball Fallback
+## Tarball fallback
 
 The air-gapped tarball workflow remains documented in
 [`VPS_AIRGAPPED_DEPLOYMENT.md`](./VPS_AIRGAPPED_DEPLOYMENT.md). Use it only

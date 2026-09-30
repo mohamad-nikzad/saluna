@@ -64,7 +64,7 @@ Ship one coordinated cutover that keeps existing appointments, appointment reque
 
 ## Notes
 
-- Source plan: `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- The completed cutover requirements and implementation slices are recorded in this item; the separate planning document was retired after completion.
 - This item is the parent tracker. Child backlog items BL-0042 through BL-0051 were created from the implementation slices.
 - A GitHub issue was created by mistake and closed because Saluna tracks implementation tasks locally.
 - Closed 2026-07-11: all child slices BL-0042 through BL-0051 are done. Parent tracker closed after verifying no open children remain.

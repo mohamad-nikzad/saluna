@@ -1,43 +1,39 @@
-# Astro Starter Kit: Minimal
+# Saluna public web
 
-```sh
-pnpm create astro@latest -- --template minimal
+`@repo/web` serves the Persian marketing site, public Salon pages, and customer
+AppointmentRequests. It uses Astro with React booking components and the Node
+standalone adapter.
+
+## Development
+
+Run commands from the repo root. Configure `.env.local` as described in the
+[root README](../../README.md).
+
+```bash
+pnpm dev:web
+pnpm --filter @repo/web build
+pnpm --filter @repo/web start
+pnpm --filter @repo/web test
+pnpm --filter @repo/web typecheck
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+`pnpm dev:web` starts web on port 3001 and the API on port 3002.
 
-## 🚀 Project Structure
+## Code layout
 
-Inside of your Astro project, you'll see the following folders and files:
+- `src/pages/` defines public pages, Salon pages, request status, sitemaps, and
+  Open Graph images.
+- `src/components/landing/prototype/` contains the current landing page.
+- `src/components/react/` contains interactive public booking components.
+- `src/lib/public-api.ts` loads public Salon data through the generated API SDK.
+- `src/assets/fonts/` contains local fonts.
+- `public/` contains static images and icons.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Environment and deployment
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+`PUBLIC_APP_URL` is the public site origin. `PUBLIC_API_URL` is the API origin.
+`PUBLIC_MANAGER_APP_URL` is the manager app origin for login and signup links.
+These values are used during the build.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `pnpm install`         | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+See [web deployment](DEPLOY.md) for local Node startup and validation, and
+[production deployments](../../docs/DEPLOYMENTS.md) for the VPS release process.

@@ -33,6 +33,9 @@ playwright/.cache/
 .playwright-cli/
 output/
 
+# Local reports from retired API benchmarks
+/benchmarks/results/
+
 # Local Claude worktrees
 .claude/worktrees/
 

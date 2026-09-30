@@ -909,7 +909,7 @@ Add `@repo/billing` to `apps/web/package.json`; no other frontend needs a direct
 billing-package dependency.
 
 Likely files: `apps/web/src/pages/index.astro`,
-`apps/web/src/components/landing/PricingFaq.astro`, the landing content module,
+`apps/web/src/components/landing/prototype/LandingPrototype.astro`, the landing content module,
 `apps/web/src/pages/terms.astro`, `apps/web/src/pages/privacy.astro`, and public
 site rendering tests.
 

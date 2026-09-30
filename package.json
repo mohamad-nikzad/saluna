@@ -41,10 +41,6 @@
     "db:seed:catalog-presets": "pnpm --filter @repo/database db:seed:catalog-presets",
     "brand:icons": "node scripts/generate-saluna-icons.mjs",
     "brand:sync": "tsx scripts/sync-brand-static.mjs",
-    "bench:local": "BASE_URL=http://localhost:3000 ./benchmarks/run.sh",
-    "bench:prod": "BASE_URL=https://saluna.vercel.app ./benchmarks/run.sh",
-    "bench:summary": "node benchmarks/summarize.mjs",
-    "bench:compare": "node benchmarks/compare.mjs",
     "generate:api-contract": "pnpm --filter @repo/api generate:openapi",
     "generate:api-client": "pnpm --filter @repo/api-client generate"
   },
