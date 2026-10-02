@@ -1,4 +1,4 @@
-import { and, eq, isNull, or } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm'
 import type { User } from '@repo/salon-core/types'
 import { getDb } from '../client'
 import {
@@ -48,14 +48,15 @@ export async function getUserById(id: string): Promise<User | undefined> {
   if (!profile || profile.userId !== null) return undefined
 
   const pending = await db
-    .select({ id: staffInvites.id })
+    .select({ status: staffInvites.status, expiresAt: staffInvites.expiresAt })
     .from(staffInvites)
     .where(
       and(
         eq(staffInvites.staffProfileId, profile.id),
-        eq(staffInvites.status, 'pending'),
+        inArray(staffInvites.status, ['pending', 'expired']),
       ),
     )
+    .orderBy(desc(staffInvites.createdAt))
     .limit(1)
 
   return {
@@ -68,6 +69,11 @@ export async function getUserById(id: string): Promise<User | undefined> {
     role: 'staff',
     color: profile.color,
     createdAt: profile.createdAt,
-    inviteStatus: pending[0] ? 'pending' : null,
+    inviteStatus: pending[0]
+      ? pending[0].status === 'expired' ||
+        pending[0].expiresAt.getTime() <= Date.now()
+        ? 'expired'
+        : 'pending'
+      : null,
   }
 }

@@ -13,7 +13,7 @@ updated: 2026-07-21
 
 ## Parent
 
-[BL-0061 Capture flexible AppointmentRequests as manager drafts](../ready/BL-0061-plan-flexible-appointment-requests.md)
+[BL-0061 Capture flexible AppointmentRequests as manager drafts](../done/BL-0061-plan-flexible-appointment-requests.md)
 
 ## What to Build
 

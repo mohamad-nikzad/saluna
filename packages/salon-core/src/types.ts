@@ -2,7 +2,7 @@ import type { CalendarColorId } from './calendar-colors'
 
 export type UserRole = 'manager' | 'staff'
 
-export type StaffInviteListStatus = 'pending'
+export type StaffInviteListStatus = 'pending' | 'expired'
 
 export interface User {
   id: string
@@ -51,6 +51,7 @@ export interface Service {
   active: boolean
   description?: string | null
   kind?: 'standard' | 'combo'
+  allowMultipleStaff?: boolean
 }
 
 export interface ServiceCategory {
@@ -201,11 +202,26 @@ export interface BookedAppointmentAddonLine {
   createdAt: Date
 }
 
+export const CLIENT_ACQUISITION_SOURCES = [
+  'instagram',
+  'website',
+  'google',
+  'referral',
+  'walk_in',
+  'other',
+  'unknown',
+] as const
+
+export type ClientAcquisitionSource =
+  (typeof CLIENT_ACQUISITION_SOURCES)[number]
+
 export interface Client {
   id: string
   name: string
   phone: string | null
   isPlaceholder: boolean
+  birthDate?: string | null
+  acquisitionSource?: ClientAcquisitionSource | null
   notes?: string
   createdAt: Date
   tags?: ClientTag[]
@@ -214,7 +230,8 @@ export interface Client {
 export interface Appointment {
   id: string
   clientId: string
-  staffId: string
+  /** Sole staff roster; empty is corrupt and must fail at the database seam. */
+  staffAssignments: AppointmentStaffAssignment[]
   serviceId: string
   bookedServiceName: string
   bookedServiceDuration: number
@@ -230,6 +247,14 @@ export interface Appointment {
   notes?: string
   createdAt: Date
   updatedAt: Date
+}
+
+export interface AppointmentStaffAssignment {
+  id: string
+  staffId: string
+  isLead: boolean
+  allocationBasisPoints: number
+  staff?: User
 }
 
 export interface AppointmentWithDetails extends Appointment {
@@ -287,7 +312,8 @@ export type FollowUpReason =
   | 'new-client'
   | 'vip'
   | 'manual'
-export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed'
+  | 'birthday'
+export type FollowUpStatus = 'open' | 'reviewed' | 'dismissed' | 'expired'
 
 export interface ClientFollowUp {
   id: string
@@ -296,6 +322,7 @@ export interface ClientFollowUp {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   createdAt: Date
   updatedAt: Date
   reviewedAt: Date | null
@@ -359,6 +386,7 @@ export interface RetentionItem {
   reason: FollowUpReason
   status: FollowUpStatus
   dueDate: string
+  occurrenceYear: number | null
   lastVisitDate: string | null
   lastServiceName: string | null
   completedCount: number

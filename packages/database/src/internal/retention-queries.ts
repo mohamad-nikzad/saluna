@@ -5,6 +5,9 @@ import type {
   RetentionItem,
 } from '@repo/salon-core/types'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { birthdayOccurrenceInWindow } from '@repo/salon-core/client-birthday'
+import { formatJalaliMonthDay } from '@repo/salon-core/jalali'
+import { sql } from 'drizzle-orm'
 import { getDb } from '../client'
 import { clientFollowUps } from '../schema'
 import { rowToClientFollowUp } from './row-mappers'
@@ -16,6 +19,7 @@ type RetentionCandidate = {
   client: Client
   reason: FollowUpReason
   dueDate: string
+  occurrenceYear: number | null
   suggestedReason: string
   completedCount: number
   estimatedSpend: number
@@ -92,6 +96,7 @@ function addLifecycleCandidates(input: {
     const base = {
       client: item.client,
       dueDate: today,
+      occurrenceYear: null,
       completedCount: item.completed.length,
       estimatedSpend: item.estimatedSpend,
       noShowCount: item.noShows.length,
@@ -160,7 +165,38 @@ function addVipCandidates(input: {
       lastVisitDate: item.lastCompleted?.date ?? null,
       lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
       suggestedReason: 'جزو مشتریان ارزشمند سالن است.',
+      occurrenceYear: null,
     })
+  }
+}
+
+function addBirthdayCandidates(input: {
+  candidates: Map<string, RetentionCandidate>
+  histories: ClientRetentionHistory[]
+  today: string
+}) {
+  for (const item of input.histories) {
+    if (!item.client.birthDate) continue
+    const occurrence = birthdayOccurrenceInWindow(
+      item.client.birthDate,
+      input.today,
+    )
+    if (!occurrence) continue
+    input.candidates.set(
+      `${item.client.id}:birthday:${occurrence.occurrenceYear}:${occurrence.dueDate}`,
+      {
+        client: item.client,
+        reason: 'birthday',
+        dueDate: occurrence.dueDate,
+        occurrenceYear: occurrence.occurrenceYear,
+        completedCount: item.completed.length,
+        estimatedSpend: item.estimatedSpend,
+        noShowCount: item.noShows.length,
+        lastVisitDate: item.lastCompleted?.date ?? null,
+        lastServiceName: item.lastCompleted?.bookedServiceName ?? null,
+        suggestedReason: `تولدش ${formatJalaliMonthDay(occurrence.dueDate)} است.`,
+      },
+    )
   }
 }
 
@@ -183,14 +219,60 @@ function buildRetentionCandidates(input: {
     inactiveCutoff,
   })
   addVipCandidates({ candidates, histories, today: input.today })
+  addBirthdayCandidates({ candidates, histories, today: input.today })
 
   return candidates
+}
+
+async function upsertRetentionCandidate(
+  salonId: string,
+  candidate: RetentionCandidate,
+) {
+  const values = {
+    salonId,
+    clientId: candidate.client.id,
+    reason: candidate.reason,
+    status: 'open' as const,
+    dueDate: candidate.dueDate,
+    occurrenceYear: candidate.occurrenceYear,
+  }
+  const db = getDb()
+  const [row] =
+    candidate.reason === 'birthday'
+      ? await db
+          .insert(clientFollowUps)
+          .values(values)
+          .onConflictDoUpdate({
+            target: [
+              clientFollowUps.salonId,
+              clientFollowUps.clientId,
+              clientFollowUps.reason,
+              clientFollowUps.occurrenceYear,
+              clientFollowUps.dueDate,
+            ],
+            targetWhere: sql`${clientFollowUps.reason} = 'birthday'`,
+            set: { updatedAt: new Date() },
+          })
+          .returning()
+      : await db
+          .insert(clientFollowUps)
+          .values(values)
+          .onConflictDoUpdate({
+            target: [
+              clientFollowUps.salonId,
+              clientFollowUps.clientId,
+              clientFollowUps.reason,
+            ],
+            targetWhere: sql`${clientFollowUps.reason} <> 'birthday'`,
+            set: { updatedAt: new Date() },
+          })
+          .returning()
+  return rowToClientFollowUp(row)
 }
 
 export async function getRetentionQueue(
   salonId: string,
 ): Promise<RetentionItem[]> {
-  const db = getDb()
   const today = salonTodayYmd()
   const [clientRows, appointmentRows, existingRows] = await Promise.all([
     getAllClients(salonId),
@@ -204,40 +286,25 @@ export async function getRetentionQueue(
     today,
   })
   const existingByKey = new Map(
-    existingRows.map((row) => [`${row.clientId}:${row.reason}`, row]),
+    existingRows.map((row) => [
+      row.reason === 'birthday'
+        ? `${row.clientId}:birthday:${row.occurrenceYear}:${row.dueDate}`
+        : `${row.clientId}:${row.reason}`,
+      row,
+    ]),
   )
   const result: RetentionItem[] = []
 
   for (const candidate of candidates.values()) {
-    const existing = existingByKey.get(
-      `${candidate.client.id}:${candidate.reason}`,
-    )
+    const key =
+      candidate.reason === 'birthday'
+        ? `${candidate.client.id}:birthday:${candidate.occurrenceYear}:${candidate.dueDate}`
+        : `${candidate.client.id}:${candidate.reason}`
+    const existing = existingByKey.get(key)
     if (existing && existing.status !== 'open') continue
 
     const followUp =
-      existing ??
-      rowToClientFollowUp(
-        (
-          await db
-            .insert(clientFollowUps)
-            .values({
-              salonId,
-              clientId: candidate.client.id,
-              reason: candidate.reason,
-              status: 'open',
-              dueDate: candidate.dueDate,
-            })
-            .onConflictDoUpdate({
-              target: [
-                clientFollowUps.salonId,
-                clientFollowUps.clientId,
-                clientFollowUps.reason,
-              ],
-              set: { updatedAt: new Date() },
-            })
-            .returning()
-        )[0],
-      )
+      existing ?? (await upsertRetentionCandidate(salonId, candidate))
 
     result.push({
       id: followUp.id,
@@ -245,6 +312,7 @@ export async function getRetentionQueue(
       reason: candidate.reason,
       status: followUp.status,
       dueDate: followUp.dueDate,
+      occurrenceYear: followUp.occurrenceYear,
       lastVisitDate: candidate.lastVisitDate,
       lastServiceName: candidate.lastServiceName,
       completedCount: candidate.completedCount,
@@ -254,5 +322,9 @@ export async function getRetentionQueue(
     })
   }
 
-  return result.sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+  return result.sort(
+    (a, b) =>
+      Number(b.reason === 'birthday') - Number(a.reason === 'birthday') ||
+      a.dueDate.localeCompare(b.dueDate),
+  )
 }

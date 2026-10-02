@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SelectSalonRouteImport } from './routes/select-salon'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StaffInvitesRouteImport } from './routes/staff-invites'
+import { Route as AuthedAppointmentsRouteImport } from './routes/_authed/appointments'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedClientsRouteImport } from './routes/_authed/clients'
 import { Route as AuthedCommissionsRouteImport } from './routes/_authed/commissions'
@@ -23,6 +24,7 @@ import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedEarningsRouteImport } from './routes/_authed/earnings'
 import { Route as AuthedOnboardingRouteImport } from './routes/_authed/onboarding'
 import { Route as AuthedPublicPageRouteImport } from './routes/_authed/public-page'
+import { Route as AuthedReportsRouteImport } from './routes/_authed/reports'
 import { Route as AuthedRequestsRouteImport } from './routes/_authed/requests'
 import { Route as AuthedRetentionRouteImport } from './routes/_authed/retention'
 import { Route as AuthedServicesRouteImport } from './routes/_authed/services'
@@ -84,6 +86,11 @@ const StaffInvitesRoute = StaffInvitesRouteImport.update({
   path: '/staff-invites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedAppointmentsRoute = AuthedAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -117,6 +124,11 @@ const AuthedOnboardingRoute = AuthedOnboardingRouteImport.update({
 const AuthedPublicPageRoute = AuthedPublicPageRouteImport.update({
   id: '/public-page',
   path: '/public-page',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedReportsRoute = AuthedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedRequestsRoute = AuthedRequestsRouteImport.update({
@@ -260,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/appointments': typeof AuthedAppointmentsRoute
   '/calendar': typeof AuthedCalendarRoute
   '/clients': typeof AuthedClientsRouteWithChildren
   '/commissions': typeof AuthedCommissionsRoute
@@ -267,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/earnings': typeof AuthedEarningsRoute
   '/onboarding': typeof AuthedOnboardingRouteWithChildren
   '/public-page': typeof AuthedPublicPageRoute
+  '/reports': typeof AuthedReportsRoute
   '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
   '/services': typeof AuthedServicesRoute
@@ -301,11 +315,13 @@ export interface FileRoutesByTo {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/appointments': typeof AuthedAppointmentsRoute
   '/calendar': typeof AuthedCalendarRoute
   '/commissions': typeof AuthedCommissionsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/earnings': typeof AuthedEarningsRoute
   '/public-page': typeof AuthedPublicPageRoute
+  '/reports': typeof AuthedReportsRoute
   '/requests': typeof AuthedRequestsRoute
   '/retention': typeof AuthedRetentionRoute
   '/services': typeof AuthedServicesRoute
@@ -340,6 +356,7 @@ export interface FileRoutesById {
   '/select-salon': typeof SelectSalonRoute
   '/signup': typeof SignupRoute
   '/staff-invites': typeof StaffInvitesRoute
+  '/_authed/appointments': typeof AuthedAppointmentsRoute
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/clients': typeof AuthedClientsRouteWithChildren
   '/_authed/commissions': typeof AuthedCommissionsRoute
@@ -347,6 +364,7 @@ export interface FileRoutesById {
   '/_authed/earnings': typeof AuthedEarningsRoute
   '/_authed/onboarding': typeof AuthedOnboardingRouteWithChildren
   '/_authed/public-page': typeof AuthedPublicPageRoute
+  '/_authed/reports': typeof AuthedReportsRoute
   '/_authed/requests': typeof AuthedRequestsRoute
   '/_authed/retention': typeof AuthedRetentionRoute
   '/_authed/services': typeof AuthedServicesRoute
@@ -383,6 +401,7 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/appointments'
     | '/calendar'
     | '/clients'
     | '/commissions'
@@ -390,6 +409,7 @@ export interface FileRouteTypes {
     | '/earnings'
     | '/onboarding'
     | '/public-page'
+    | '/reports'
     | '/requests'
     | '/retention'
     | '/services'
@@ -424,11 +444,13 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/appointments'
     | '/calendar'
     | '/commissions'
     | '/dashboard'
     | '/earnings'
     | '/public-page'
+    | '/reports'
     | '/requests'
     | '/retention'
     | '/services'
@@ -462,6 +484,7 @@ export interface FileRouteTypes {
     | '/select-salon'
     | '/signup'
     | '/staff-invites'
+    | '/_authed/appointments'
     | '/_authed/calendar'
     | '/_authed/clients'
     | '/_authed/commissions'
@@ -469,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authed/earnings'
     | '/_authed/onboarding'
     | '/_authed/public-page'
+    | '/_authed/reports'
     | '/_authed/requests'
     | '/_authed/retention'
     | '/_authed/services'
@@ -560,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffInvitesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/appointments': {
+      id: '/_authed/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AuthedAppointmentsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/calendar': {
       id: '/_authed/calendar'
       path: '/calendar'
@@ -607,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/public-page'
       fullPath: '/public-page'
       preLoaderRoute: typeof AuthedPublicPageRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/reports': {
+      id: '/_authed/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthedReportsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/requests': {
@@ -868,6 +906,7 @@ const AuthedSupportRouteWithChildren = AuthedSupportRoute._addFileChildren(
 )
 
 interface AuthedRouteChildren {
+  AuthedAppointmentsRoute: typeof AuthedAppointmentsRoute
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedClientsRoute: typeof AuthedClientsRouteWithChildren
   AuthedCommissionsRoute: typeof AuthedCommissionsRoute
@@ -875,6 +914,7 @@ interface AuthedRouteChildren {
   AuthedEarningsRoute: typeof AuthedEarningsRoute
   AuthedOnboardingRoute: typeof AuthedOnboardingRouteWithChildren
   AuthedPublicPageRoute: typeof AuthedPublicPageRoute
+  AuthedReportsRoute: typeof AuthedReportsRoute
   AuthedRequestsRoute: typeof AuthedRequestsRoute
   AuthedRetentionRoute: typeof AuthedRetentionRoute
   AuthedServicesRoute: typeof AuthedServicesRoute
@@ -885,6 +925,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAppointmentsRoute: AuthedAppointmentsRoute,
   AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedClientsRoute: AuthedClientsRouteWithChildren,
   AuthedCommissionsRoute: AuthedCommissionsRoute,
@@ -892,6 +933,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedEarningsRoute: AuthedEarningsRoute,
   AuthedOnboardingRoute: AuthedOnboardingRouteWithChildren,
   AuthedPublicPageRoute: AuthedPublicPageRoute,
+  AuthedReportsRoute: AuthedReportsRoute,
   AuthedRequestsRoute: AuthedRequestsRoute,
   AuthedRetentionRoute: AuthedRetentionRoute,
   AuthedServicesRoute: AuthedServicesRoute,

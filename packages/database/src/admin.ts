@@ -17,6 +17,7 @@ import {
   adminAuditEvents,
   adminInternalNotes,
   appointmentRequests,
+  appointmentStaffAssignments,
   appointments,
   businessSettings,
   catalogPresets,
@@ -545,7 +546,14 @@ export async function getAdminSalon(id: string) {
       })
       .from(appointments)
       .innerJoin(clients, eq(clients.id, appointments.clientId))
-      .innerJoin(user, eq(user.id, appointments.staffId))
+      .innerJoin(
+        appointmentStaffAssignments,
+        and(
+          eq(appointmentStaffAssignments.appointmentId, appointments.id),
+          eq(appointmentStaffAssignments.isLead, true),
+        ),
+      )
+      .innerJoin(user, eq(user.id, appointmentStaffAssignments.staffId))
       .where(
         and(
           eq(appointments.salonId, id),
@@ -706,7 +714,7 @@ export async function listAdminSalonAppointments(
       clientId: appointments.clientId,
       clientName: clients.name,
       clientPhone: clients.phone,
-      staffId: appointments.staffId,
+      staffId: appointmentStaffAssignments.staffId,
       staffName: user.name,
       serviceId: appointments.serviceId,
       date: appointments.date,
@@ -721,7 +729,14 @@ export async function listAdminSalonAppointments(
     })
     .from(appointments)
     .innerJoin(clients, eq(clients.id, appointments.clientId))
-    .innerJoin(user, eq(user.id, appointments.staffId))
+    .innerJoin(
+      appointmentStaffAssignments,
+      and(
+        eq(appointmentStaffAssignments.appointmentId, appointments.id),
+        eq(appointmentStaffAssignments.isLead, true),
+      ),
+    )
+    .innerJoin(user, eq(user.id, appointmentStaffAssignments.staffId))
     .where(where)
     .orderBy(desc(appointments.date), desc(appointments.startTime))
     .limit(pageSize)
@@ -730,7 +745,14 @@ export async function listAdminSalonAppointments(
     .select({ value: count() })
     .from(appointments)
     .innerJoin(clients, eq(clients.id, appointments.clientId))
-    .innerJoin(user, eq(user.id, appointments.staffId))
+    .innerJoin(
+      appointmentStaffAssignments,
+      and(
+        eq(appointmentStaffAssignments.appointmentId, appointments.id),
+        eq(appointmentStaffAssignments.isLead, true),
+      ),
+    )
+    .innerJoin(user, eq(user.id, appointmentStaffAssignments.staffId))
     .where(where)
   return withPagination(rows, totalRows, page, pageSize)
 }
@@ -1156,7 +1178,7 @@ export async function listAdminSupportAppointments(input: ListInput = {}) {
       clientId: appointments.clientId,
       clientName: clients.name,
       clientPhone: clients.phone,
-      staffId: appointments.staffId,
+      staffId: appointmentStaffAssignments.staffId,
       serviceId: appointments.serviceId,
       date: appointments.date,
       startTime: appointments.startTime,
@@ -1169,6 +1191,13 @@ export async function listAdminSupportAppointments(input: ListInput = {}) {
     .from(appointments)
     .innerJoin(organization, eq(organization.id, appointments.salonId))
     .innerJoin(clients, eq(clients.id, appointments.clientId))
+    .innerJoin(
+      appointmentStaffAssignments,
+      and(
+        eq(appointmentStaffAssignments.appointmentId, appointments.id),
+        eq(appointmentStaffAssignments.isLead, true),
+      ),
+    )
     .where(where)
     .orderBy(desc(appointments.date), desc(appointments.startTime))
     .limit(pageSize)

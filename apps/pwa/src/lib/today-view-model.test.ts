@@ -26,7 +26,14 @@ function appt(
 ): AppointmentWithDetails {
   return {
     clientId: 'c1',
-    staffId: 's1',
+    staffAssignments: [
+      {
+        id: 'asg-s1',
+        staffId: 's1',
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      },
+    ],
     serviceId: 'svc1',
     bookedServiceName: 'کوتاهی',
     bookedServiceDuration: 30,

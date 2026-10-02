@@ -1,6 +1,7 @@
 import { queryOptions, useMutation } from '@tanstack/react-query'
 import type { ClientFormInput } from '@repo/salon-core/forms/client'
 import type { Client, ClientSummary } from '@repo/salon-core/types'
+import { parseGregorianToJalali } from '@repo/salon-core/jalali'
 import {
   getApiV1ClientsByIdSummary,
   getApiV1Clients,
@@ -58,9 +59,18 @@ export function clientSummaryQueryOptions(clientId: string) {
 }
 
 function toClientBody(values: ClientFormInput) {
+  const birthDate = values.birthDate
+  const parsedBirthDate =
+    birthDate && /^\d{4}-\d{2}-\d{2}$/.test(birthDate)
+      ? parseGregorianToJalali(birthDate)
+      : null
   return {
     name: values.name,
     phone: values.phone,
+    birthDate: parsedBirthDate
+      ? `${parsedBirthDate.jy}/${String(parsedBirthDate.jm).padStart(2, '0')}/${String(parsedBirthDate.jd).padStart(2, '0')}`
+      : birthDate,
+    acquisitionSource: values.acquisitionSource,
     notes: values.notes,
     tags: values.tags,
   }

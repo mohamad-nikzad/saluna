@@ -17,11 +17,18 @@ export function appointmentIntervalsConflict(
   return aStart < bEnd && aEnd > bStart
 }
 
+/** One staff assignee's occupancy for conflict checks (not the Appointment aggregate). */
+export type AppointmentStaffConflictRow = {
+  id: string
+  staffId: string
+  date: string
+  startTime: string
+  endTime: string
+  status: Appointment['status']
+}
+
 export function hasAppointmentConflict(
-  appointments: Pick<
-    Appointment,
-    'staffId' | 'date' | 'startTime' | 'endTime' | 'status' | 'id'
-  >[],
+  appointments: AppointmentStaffConflictRow[],
   staffId: string,
   date: string,
   startTime: string,
@@ -46,10 +53,10 @@ export function hasAppointmentConflict(
   return false
 }
 
-export type ScheduleConflictRow = Pick<
-  Appointment,
-  'id' | 'staffId' | 'clientId' | 'date' | 'startTime' | 'endTime' | 'status'
-> & { salonId?: string }
+export type ScheduleConflictRow = AppointmentStaffConflictRow & {
+  clientId: string
+  salonId?: string
+}
 
 export type ScheduleOverlapFlags = {
   staffConflict: boolean

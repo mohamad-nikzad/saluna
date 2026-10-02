@@ -24,7 +24,14 @@ function appt(
 ): AppointmentWithDetails {
   return {
     clientId: 'c1',
-    staffId: 's1',
+    staffAssignments: [
+      {
+        id: 'asg-s1',
+        staffId: 's1',
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      },
+    ],
     serviceId: 'svc1',
     bookedServiceName: 'کوتاهی',
     bookedServiceDuration: 30,
@@ -147,6 +154,10 @@ describe('appointmentEditFormDefaults', () => {
       temporaryClientNotes: 'بعدا تماس',
       clientId: '',
       staffId: 's1',
+      additionalStaffIds: [],
+      workAllocations: [
+        { staffId: 's1', allocationBasisPoints: 10_000 },
+      ],
       serviceId: 'svc1',
       date: '2026-06-02',
       startTime: '10:00',

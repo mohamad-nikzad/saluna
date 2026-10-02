@@ -2,10 +2,25 @@ import { describe, expect, it } from 'vitest'
 
 import {
   allocatePackagePrice,
+  allocateWorkBasis,
   commissionAmount,
-  commissionPeriodRange,
+  equalWorkAllocations,
+  validateWorkAllocations,
   percentageToBasisPoints,
 } from './commissions'
+
+describe('Appointment Work Allocations', () => {
+  it('splits exactly and gives the rounding remainder to the lead', () => {
+    const allocations = equalWorkAllocations(['lead', 'second', 'third'])
+    expect(allocations.map((row) => row.allocationBasisPoints)).toEqual([
+      3334, 3333, 3333,
+    ])
+    expect(
+      validateWorkAllocations(['lead', 'second', 'third'], allocations),
+    ).toBe(true)
+    expect(allocateWorkBasis(100, allocations)).toEqual([34, 33, 33])
+  })
+})
 
 describe('Staff Commission calculations', () => {
   it('validates two-decimal percentages and rounds each Appointment to toman', () => {
@@ -19,43 +34,5 @@ describe('Staff Commission calculations', () => {
   it('allocates the booked package price proportionally and exactly in task order', () => {
     expect(allocatePackagePrice(100, [100, 100, 100])).toEqual([34, 33, 33])
     expect(allocatePackagePrice(550, [100, 200, 300])).toEqual([92, 183, 275])
-  })
-})
-
-describe('Staff Commission reporting periods', () => {
-  const now = new Date('2026-07-17T20:45:00.000Z') // 2026-07-18 in Tehran
-
-  it('uses Tehran today, Saturday-to-Friday week, and current Jalali month', () => {
-    expect(commissionPeriodRange({ period: 'today', now })).toEqual({
-      startDate: '2026-07-18',
-      endDate: '2026-07-18',
-    })
-    expect(commissionPeriodRange({ period: 'week', now })).toEqual({
-      startDate: '2026-07-18',
-      endDate: '2026-07-24',
-    })
-    expect(commissionPeriodRange({ period: 'month', now })).toEqual({
-      startDate: '2026-06-22',
-      endDate: '2026-07-22',
-    })
-  })
-
-  it('keeps both custom endpoints and rejects reversed ranges', () => {
-    expect(
-      commissionPeriodRange({
-        period: 'custom',
-        startDate: '2026-01-03',
-        endDate: '2026-01-04',
-        now,
-      }),
-    ).toEqual({ startDate: '2026-01-03', endDate: '2026-01-04' })
-    expect(() =>
-      commissionPeriodRange({
-        period: 'custom',
-        startDate: '2026-01-05',
-        endDate: '2026-01-04',
-        now,
-      }),
-    ).toThrow()
   })
 })

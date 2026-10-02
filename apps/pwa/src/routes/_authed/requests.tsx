@@ -61,6 +61,10 @@ import {
 } from '@repo/salon-core/appointment-request-timing'
 import { displayPhone } from '@repo/salon-core/phone'
 import type { User, Service } from '@repo/salon-core/types'
+import {
+  equalWorkAllocations,
+  validateWorkAllocations,
+} from '@repo/salon-core/commissions'
 
 import {
   appointmentRequestsListQueryOptions,
@@ -93,6 +97,7 @@ import {
   formatNextWeekRangeLabel,
 } from '#/components/appointment-requests/draft-timing'
 import { ClientPicker } from '#/components/calendar/client-picker'
+import { AdditionalStaffFields } from '#/components/calendar/additional-staff-fields'
 import { ServicePicker } from '#/components/services/service-picker'
 import {
   FormSheet,
@@ -642,6 +647,9 @@ function DraftsPanel({
         <ConvertDraftSheet
           draft={convertingDraft}
           staff={staff}
+          service={services.find(
+            (service) => service.id === convertingDraft.serviceId,
+          )}
           open
           onOpenChange={(nextOpen) => {
             if (!nextOpen) setConvertingDraft(null)
@@ -1102,6 +1110,10 @@ function PendingCard({
   onChanged: () => void
 }) {
   const [staffId, setStaffId] = useState('')
+  const [additionalStaffIds, setAdditionalStaffIds] = useState<string[]>([])
+  const [workAllocations, setWorkAllocations] = useState<
+    Array<{ staffId: string; allocationBasisPoints: number }>
+  >([])
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [errMsg, setErrMsg] = useState<string | null>(null)
@@ -1135,9 +1147,19 @@ function PendingCard({
       setErrMsg('لطفاً پرسنل را انتخاب کنید')
       return
     }
+    const roster = [staffId, ...additionalStaffIds]
+    if (!validateWorkAllocations(roster, workAllocations)) {
+      setErrMsg('مجموع سهم‌ها باید ۱۰۰٪ باشد')
+      return
+    }
     setErrMsg(null)
     approveMutation.mutate(
-      { requestId: request.id, staffId },
+      {
+        requestId: request.id,
+        staffId,
+        additionalStaffIds,
+        workAllocations,
+      },
       {
         onSuccess: () => {
           setErrMsg(null)
@@ -1233,7 +1255,14 @@ function PendingCard({
       </div>
 
       <div className="space-y-2">
-        <Select value={staffId} onValueChange={setStaffId}>
+        <Select
+          value={staffId}
+          onValueChange={(nextStaffId) => {
+            setStaffId(nextStaffId)
+            setAdditionalStaffIds([])
+            setWorkAllocations(equalWorkAllocations([nextStaffId]))
+          }}
+        >
           <SelectTrigger className="w-full rounded-xl border-line-soft">
             <SelectValue placeholder="انتخاب پرسنل" />
           </SelectTrigger>
@@ -1251,6 +1280,16 @@ function PendingCard({
             )}
           </SelectContent>
         </Select>
+
+        <AdditionalStaffFields
+          service={service}
+          staff={capableStaff}
+          leadStaffId={staffId}
+          additionalStaffIds={additionalStaffIds}
+          workAllocations={workAllocations}
+          onAdditionalStaffIdsChange={setAdditionalStaffIds}
+          onWorkAllocationsChange={setWorkAllocations}
+        />
 
         {errMsg ? <p className="text-xs text-destructive">{errMsg}</p> : null}
 

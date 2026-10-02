@@ -1,6 +1,7 @@
 export * from './notifications'
 export {
   notifyManagersOfNewAppointmentRequest,
+  notifyManagersOfBirthdayFollowUp,
   type NotifyManagersOfNewAppointmentRequestOptions,
 } from './notify-managers'
 export {

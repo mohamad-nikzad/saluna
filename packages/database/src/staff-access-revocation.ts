@@ -8,7 +8,6 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
   appointmentRequests,
-  appointments,
   member,
   salonMember,
   staffProfileAccesses,
@@ -16,6 +15,7 @@ import {
   staffSchedules,
   staffServices,
 } from './schema'
+import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type StaffAccessRevocationRejectionReason =
   | 'access_not_found'
@@ -250,15 +250,11 @@ async function detachAccessFromProfile(
             eq(staffServices.staffUserId, linkedUserId),
           ),
         ),
-      tx
-        .update(appointments)
-        .set({ staffId: profile.id, updatedAt: now })
-        .where(
-          and(
-            eq(appointments.salonId, profile.salonId),
-            eq(appointments.staffId, linkedUserId),
-          ),
-        ),
+      remapAppointmentAssignmentStaff(tx, {
+        salonId: profile.salonId,
+        fromStaffId: linkedUserId,
+        toStaffId: profile.id,
+      }),
       tx
         .update(appointmentRequests)
         .set({ staffId: profile.id, updatedAt: now })

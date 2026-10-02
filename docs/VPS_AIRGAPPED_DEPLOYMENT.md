@@ -1,292 +1,46 @@
-# Air-Gapped VPS Deployment
+# Air-gapped VPS deployment
 
-This runbook deploys Saluna to a single ParsPack-style VPS when the server has
-limited or unreliable outbound internet.
+Use this runbook when both registry deployment paths are unavailable. Normal
+production releases use the [deployment workflow](DEPLOYMENTS.md).
 
-Normal production deployments are registry-first CI/CD: CI builds only changed
-app images, pushes them to an Iranian-reachable registry, and asks the VPS to
-pull and restart only the affected services. The tarball workflow in this
-document is the bootstrap and emergency fallback path, not the long-term happy
-path.
+Build images on a connected machine, save checksummed tarballs, copy them to
+`/opt/saluna/releases`, and load them on the VPS. The VPS needs Docker and the
+Compose plugin already installed.
 
-The fallback air-gapped path is:
+The scripts are [build](../scripts/build-airgap-release.sh),
+[upload](../scripts/upload-airgap-release.sh), and
+[apply](../scripts/apply-airgap-release.sh).
 
-1. Build Docker images on a connected builder.
-2. Save the images as checksummed tarballs.
-3. Copy the tarballs, compose file, Nginx template, env file, and apply script
-   to `/opt/saluna`.
-4. Load images on the VPS and run Docker Compose.
+The tarball builder packages `api`, `web`, and `pwa`. Production Compose also
+starts `admin`, so its configured image must already be loaded or reachable.
+For local tarball images, clear registry prefixes in the VPS environment or
+use image names matching its per-app registry settings.
 
-For the deployment workflow used today, see
-[`DEPLOYMENTS.md`](./DEPLOYMENTS.md).
+Public `VITE_*` and `PUBLIC_*` origins are baked into builds. Set
+`PUBLIC_APP_URL` for the public site and `PUBLIC_MANAGER_APP_URL` for manager
+login and signup links. Rebuild images when these values change.
 
-The retired public Next app and retired manager app are deprecated and are not
-deployed here.
+App versions and image tag rules are documented in
+[deployment versioning](DEPLOYMENTS.md#versioning-and-tags).
 
-## Truth Check
+## Production stack
 
-Current repo status, checked against the scripts and compose files:
-
-- The deploy script is
-  [`scripts/apply-airgap-release.sh`](../scripts/apply-airgap-release.sh).
-  Do not use `pwaly-airgap-release.sh`; that script does not exist.
-- [`docker-compose.prod.yml`](../docker-compose.prod.yml) starts `gateway`,
-  `api`, `web`, `pwa`, `postgres`, and optionally `registry`.
-- The gateway maps both `${HTTP_PORT:-80}:80` and `${HTTPS_PORT:-443}:443`.
-  The Nginx template contains TLS server blocks, so
-  `/opt/saluna/deploy/nginx/certs/saluna-origin.crt` and
-  `/opt/saluna/deploy/nginx/certs/saluna-origin.key` must exist unless the
-  compose/template is changed to be HTTP-only.
-- The manager host is `app.saluna.ir`, not `pwa.saluna.ir`.
-- App images are tagged `saluna-api:${SALUNA_IMAGE_TAG}`,
-  `saluna-web:${SALUNA_IMAGE_TAG}`, and `saluna-pwa:${SALUNA_IMAGE_TAG}`.
-- The PWA build bakes `VITE_*` values into static files. The public Astro app
-  also uses `PUBLIC_*` values during build. Change public origins only with a
-  new image tag and rebuild.
-- `PUBLIC_APP_URL` is currently overloaded in the web app: Astro uses it as the
-  public site origin for sitemap/robots, while the landing page also uses it for
-  `/login` and `/signup` links. Verify those links before launch; a follow-up
-  code cleanup should split "public web origin" from "manager app origin".
-- The release manifest
-  `deploy/releases/saluna-release-${SALUNA_IMAGE_TAG}.env` is created on the
-  builder, but the current upload script does not copy it to the VPS. The
-  bundles and `.sha256` files are the apply-script inputs.
-
-## Current And Target Versioning
-
-Saluna does not currently use meaningful per-app semver for deployments. Runtime
-versioning is image-tag based.
-
-Source package versions now declared in the repo:
-
-| Package       | Current `package.json` version | Deployment meaning              |
-| ------------- | ------------------------------ | ------------------------------- |
-| root `saluna` | `0.1.0`                        | workspace/package metadata only |
-| `@repo/api`   | `0.10.0`                       | current API app version         |
-| `@repo/web`   | `0.6.0`                        | current public web app version  |
-| `@repo/pwa`   | `0.11.0`                       | current manager PWA app version |
-
-These are bootstrap SemVer baselines assigned on `2026-06-06` from the current
-feature maturity. They are not a reconstruction of historical release numbers;
-they start the app-version history from this point forward.
-
-Current deploy/image versioning:
-
-| App         | Current image name | Current local configured tag | Last audited VPS tag |
-| ----------- | ------------------ | ---------------------------- | -------------------- |
-| API         | `saluna-api`       | `2026-06-05-1`               | `2026-06-04-1304`    |
-| Public web  | `saluna-web`       | `2026-06-05-1`               | `2026-06-04-1304`    |
-| Manager PWA | `saluna-pwa`       | `2026-06-05-1`               | `2026-06-04-1304`    |
-
-Where those values come from:
-
-- `.env.production` currently sets `SALUNA_IMAGE_TAG=2026-06-05-1`.
-- `.env.production` currently sets `VITE_PWA_ASSET_VERSION=2026-06-05-1`, so the
-  PWA asset/cache version follows the same release tag.
-- `deploy/releases/saluna-release-2026-06-05-1.env` was built at
-  `2026-06-05T18:51:28Z` from git SHA
-  `e6fa2b7ca95c60af446b2956d27a56fc65d8124b`.
-- [`DEPLOYMENTS.md`](./DEPLOYMENTS.md) records the current registry-first
-  deployment workflow.
-
-Current artifact reality:
-
-| Artifact                                                  | Current size |
-| --------------------------------------------------------- | -----------: |
-| `deploy/releases/saluna-apps-2026-06-05-1.tar.gz`         |       `497M` |
-| `deploy/releases/saluna-apps-2026-06-04-1304.tar.gz`      |       `498M` |
-| `deploy/releases/saluna-infra-postgres16-nginx127.tar.gz` |       `134M` |
-
-This is why the target CI/CD plan should move away from app tarballs as the
-normal path. A single changed app currently creates and ships a roughly 500 MB
-combined app bundle because all three images share one release tag.
-
-Target app versioning:
-
-Use independent SemVer-style app versions for each deployable app, and use image
-tags as build identifiers derived from those versions.
-
-| App         | Version source          | Current version | Example next patch | Example next feature |
-| ----------- | ----------------------- | --------------: | -----------------: | -------------------: |
-| API         | `apps/api/package.json` |        `0.10.0` |           `0.10.1` |             `0.11.0` |
-| Public web  | `apps/web/package.json` |         `0.6.0` |            `0.6.1` |              `0.7.0` |
-| Manager PWA | `apps/pwa/package.json` |        `0.11.0` |           `0.11.1` |             `0.12.0` |
-
-The root `package.json` can stay as workspace metadata, or become a product
-release version later. It should not block independent app releases.
-
-Version bump rules before `1.0.0`:
-
-- Patch, for example API `0.7.0` -> `0.7.1`: bug fix, copy/style tweak, safe
-  refactor, dependency patch, or operational fix with no intentional product
-  behavior change.
-- Minor, for example API `0.7.1` -> `0.8.0`: new user-visible capability, changed
-  workflow, additive API endpoint, additive database migration, or any breaking
-  change while the product is still pre-`1.0.0`.
-- Major, for example `1.0.0` -> `2.0.0`: reserve until after Saluna declares a
-  stable `1.0.0` contract; use for breaking API/auth/data/operator contracts.
-
-After `1.0.0`, use standard SemVer:
-
-- Patch for backward-compatible fixes.
-- Minor for backward-compatible features.
-- Major for breaking changes.
-
-Image tag format should be version plus git SHA, because Docker tags are the
-deployable artifact while SemVer is the human release version:
-
-```text
-registry.hamdocker.ir/<namespace>/saluna-api:0.7.1-e6fa2b7
-registry.hamdocker.ir/<namespace>/saluna-web:0.4.1-e6fa2b7
-registry.hamdocker.ir/<namespace>/saluna-pwa:0.7.1-e6fa2b7
-```
-
-Also add OCI image labels during Docker builds so the running container can
-report both the app version and source revision:
-
-```text
-org.opencontainers.image.version=0.7.1
-org.opencontainers.image.revision=e6fa2b7ca95c60af446b2956d27a56fc65d8124b
-org.opencontainers.image.source=<repo-url>
-```
-
-Release process target:
-
-1. Decide which app changed: `api`, `web`, or `pwa`.
-2. Choose the version bump for that app from the rules above.
-3. Update only that app's `package.json` version.
-4. Build and push only that app image tagged as `<version>-<short-sha>`.
-5. Update the VPS deployment state for only that app.
-6. Deploy and smoke-check only that app path.
-7. Record the release in a small changelog or release manifest.
-
-For PWA releases, set `VITE_PWA_ASSET_VERSION` from `SALUNA_PWA_VERSION` or
-`SALUNA_PWA_IMAGE_TAG`. Do not leave it tied to a global date release once
-per-app versions are adopted. Any icon change must ship with a new PWA version
-or image tag so browsers fetch the versioned manifest and icon URLs instead of
-their year-long cached copies. Some platforms snapshot the home-screen icon at
-install time, so existing users may still need to remove and reinstall the PWA
-to see an updated icon.
-
-## Better Options
-
-Use this tarball workflow as the short-term, least-surprising bootstrap path. It
-avoids npm, apk, GitHub, and Docker Hub access from the VPS.
-
-For repeated production releases, use HamGit/Hamravesh CI: build on a reachable
-runner using HamDocker, hmirror npm, and Arvan apk; push only the changed app
-image to `registry.hamdocker.ir`; then SSH to the VPS and pull/restart only that
-service. That removes manual tarball transfer, avoids large release artifacts on
-the developer machine, and gives each app an independent deployed version.
-
-Do not build on the VPS as the default. The Dockerfiles and CI jobs are
-configured to use Iranian mirrors, but VPS-local builds still spend production
-CPU/RAM on builds.
-
-When a HamGit runner or emergency VPS build needs Iranian mirrors, set:
-
-```bash
-SALUNA_NODE_IMAGE=hub.hamdocker.ir/library/node:22.12.0-alpine
-SALUNA_NGINX_IMAGE=hub.hamdocker.ir/library/nginx:1.27-alpine
-SALUNA_ALPINE_MIRROR=https://mirror.arvancloud.ir/alpine
-SALUNA_NPM_REGISTRY=https://repo.hmirror.ir/npm/
-SALUNA_PNPM_VERSION=9.15.9
-```
-
-The optional VPS-local registry is useful for faster later releases, but keep it
-bound to `127.0.0.1` and push through SSH. A public unauthenticated registry is
-not acceptable.
-
-## Target CI/CD Workflow
-
-This is the normal workflow:
-
-```text
-push to HamGit
-  -> CI detects affected app: api | web | pwa
-  -> CI builds only that Docker image with Iranian mirrors
-  -> CI tags image as version-sha, for example saluna-api:0.7.1-e6fa2b7
-  -> CI pushes to registry.hamdocker.ir/<namespace>/
-  -> CI SSHs to the VPS origin IP
-  -> VPS updates only that app tag and runs docker compose pull/up for that service
-  -> VPS runs migrations only for API deployments
-  -> VPS smoke-checks the changed service through Nginx
-```
-
-Target behavior by app:
-
-| Changed app | Build        | VPS action                                       | Extra step                            |
-| ----------- | ------------ | ------------------------------------------------ | ------------------------------------- |
-| `api`       | `saluna-api` | pull and restart `api`, then `gateway` if needed | backup + migrations + API smoke check |
-| `web`       | `saluna-web` | pull and restart `web`                           | public site smoke check               |
-| `pwa`       | `saluna-pwa` | pull and restart `pwa`                           | manager PWA smoke check               |
-
-The resumable implementation slice for that target now exists:
-
-```bash
-# Build machine or CI runner, after docker login:
-SALUNA_IMAGE_REGISTRY=registry.hamdocker.ir/<namespace>/ \
-  ./scripts/build-push-registry-app.sh api
-
-# VPS, from /opt/saluna:
-SALUNA_IMAGE_REGISTRY=registry.hamdocker.ir/<namespace>/ \
-  ./scripts/deploy-registry-app.sh api 0.7.1-e6fa2b7
-```
-
-Use `api`, `web`, or `pwa` as the first argument. The build script reads the
-selected app version from its `package.json`, defaults the tag to
-`<version>-<short-sha>`, adds OCI version/revision/source labels, and pushes only
-that app image. The VPS deploy script pulls only that service, restarts only that
-service, runs backup/migrations only for API deploys, and writes the new app tag
-to `.env.production` after the smoke check succeeds.
-
-Keep a tiny deployment state file on the VPS, not large bundles on a laptop:
-
-```env
-SALUNA_API_VERSION=0.7.0
-SALUNA_API_IMAGE_TAG=0.7.0-e6fa2b7
-SALUNA_WEB_VERSION=0.4.0
-SALUNA_WEB_IMAGE_TAG=0.4.0-e6fa2b7
-SALUNA_PWA_VERSION=0.7.0
-SALUNA_PWA_IMAGE_TAG=0.7.0-e6fa2b7
-```
-
-Implemented compatibility step: [`docker-compose.prod.yml`](../docker-compose.prod.yml)
-now accepts per-app image tag variables while preserving `SALUNA_IMAGE_TAG` as a
-shared fallback. True independent app versions should use per-app version and
-tag variables, for example
-`SALUNA_API_VERSION` / `SALUNA_API_IMAGE_TAG`,
-`SALUNA_WEB_VERSION` / `SALUNA_WEB_IMAGE_TAG`, and
-`SALUNA_PWA_VERSION` / `SALUNA_PWA_IMAGE_TAG`.
-
-Keep artifact retention boring:
-
-- Developer machines should not keep `deploy/releases/*.tar.gz` during normal
-  CI/CD.
-- CI should keep image layers in registry cache, not tarballs.
-- The VPS should keep the current and previous image for each app.
-- Registry retention should keep the last N tags per app plus explicitly pinned
-  rollback tags.
-- Tarball bundles should be produced only for bootstrap, disaster recovery, or
-  when the registry path is down.
-
-## Production Stack
-
-| Host                         | Service                                   | Container  | Notes                                |
-| ---------------------------- | ----------------------------------------- | ---------- | ------------------------------------ |
-| `saluna.ir`, `www.saluna.ir` | Astro public and appointment-request site | `web`      | `@repo/web`, port `3001`             |
-| `app.saluna.ir`              | Manager PWA                               | `pwa`      | `@repo/pwa`, Nginx static build      |
-| `api.saluna.ir`              | Hono API                                  | `api`      | bundled Node server, port `3002`     |
-| internal only                | PostgreSQL                                | `postgres` | Postgres 16 named volume             |
-| `80`, `443`                  | Gateway                                   | `gateway`  | Nginx host router                    |
-| `127.0.0.1:5000`             | Optional local registry                   | `registry` | only with Compose profile `registry` |
+| Host                         | Service                                   | Container  | Notes                                              |
+| ---------------------------- | ----------------------------------------- | ---------- | -------------------------------------------------- |
+| `saluna.ir`, `www.saluna.ir` | Astro public and appointment-request site | `web`      | `@repo/web`, port `3001`                           |
+| `app.saluna.ir`              | Manager PWA                               | `pwa`      | `@repo/pwa`, Nginx static build                    |
+| `api.saluna.ir`              | Hono API                                  | `api`      | bundled Node server, port `3002`                   |
+| `admin.saluna.ir`            | Platform admin                            | `admin`    | image supplied separately from the tarball builder |
+| internal only                | PostgreSQL                                | `postgres` | Postgres 16 named volume                           |
+| `80`, `443`                  | Gateway                                   | `gateway`  | Nginx host router                                  |
+| `127.0.0.1:5000`             | Optional local registry                   | `registry` | only with Compose profile `registry`               |
 
 The app must be client-facing HTTPS in production. ArvanCloud TLS termination is
 enough for browsers if public users access `https://...`; the origin may be HTTP
 or HTTPS depending on Arvan settings. The current Compose/Nginx files still
 require local certificate files because TLS blocks are present.
 
-## Agent Quick Path
+## Quick start
 
 For the ParsPack VPS, the origin IP is documented in
 [`DEPLOYMENTS.md`](./DEPLOYMENTS.md). Do not SSH to Arvan CDN IPs or
@@ -298,6 +52,10 @@ Set these on the connected builder:
 export VPS_HOST=YOUR_VPS_ORIGIN_IP
 export SSH_USER=deploy
 export SALUNA_IMAGE_TAG="$(git rev-parse --short=12 HEAD)"
+export SALUNA_API_IMAGE_TAG="$SALUNA_IMAGE_TAG"
+export SALUNA_WEB_IMAGE_TAG="$SALUNA_IMAGE_TAG"
+export SALUNA_PWA_IMAGE_TAG="$SALUNA_IMAGE_TAG"
+export VITE_PWA_ASSET_VERSION="$SALUNA_PWA_IMAGE_TAG"
 export DOCKER_PLATFORM=linux/amd64
 ```
 
@@ -307,7 +65,11 @@ For a first tarball-only deploy:
 INCLUDE_INFRA=1 ./scripts/build-airgap-release.sh
 UPLOAD_INFRA=1 ./scripts/upload-airgap-release.sh
 ssh "${SSH_USER}@${VPS_HOST}" \
-  "cd /opt/saluna && SALUNA_IMAGE_TAG=${SALUNA_IMAGE_TAG} LOAD_INFRA=1 ./scripts/apply-airgap-release.sh"
+  "cd /opt/saluna && SALUNA_IMAGE_TAG=${SALUNA_IMAGE_TAG} \
+  SALUNA_API_IMAGE_TAG=${SALUNA_API_IMAGE_TAG} \
+  SALUNA_WEB_IMAGE_TAG=${SALUNA_WEB_IMAGE_TAG} \
+  SALUNA_PWA_IMAGE_TAG=${SALUNA_PWA_IMAGE_TAG} \
+  LOAD_INFRA=1 ./scripts/apply-airgap-release.sh"
 ```
 
 For later app-only deploys:
@@ -316,15 +78,19 @@ For later app-only deploys:
 ./scripts/build-airgap-release.sh
 ./scripts/upload-airgap-release.sh
 ssh "${SSH_USER}@${VPS_HOST}" \
-  "cd /opt/saluna && SALUNA_IMAGE_TAG=${SALUNA_IMAGE_TAG} ./scripts/apply-airgap-release.sh"
+  "cd /opt/saluna && SALUNA_IMAGE_TAG=${SALUNA_IMAGE_TAG} \
+  SALUNA_API_IMAGE_TAG=${SALUNA_API_IMAGE_TAG} \
+  SALUNA_WEB_IMAGE_TAG=${SALUNA_WEB_IMAGE_TAG} \
+  SALUNA_PWA_IMAGE_TAG=${SALUNA_PWA_IMAGE_TAG} \
+  ./scripts/apply-airgap-release.sh"
 ```
 
 The `deploy` user is the normal SSH user for production operations.
 
-If you updated `SALUNA_IMAGE_TAG` inside `.env.production` before upload, the
-explicit remote override is redundant but harmless.
+Set all three app tags explicitly for a new tarball release. Per-app tags in
+`.env.production` take precedence over the shared fallback.
 
-## One-Time VPS Prep
+## One-time VPS preparation
 
 The scripts assume Docker already works on the VPS. They do not install Docker.
 
@@ -358,7 +124,7 @@ used, the current Nginx template still needs cert files to start. A temporary
 self-signed cert can satisfy Nginx, but the cleaner follow-up is to split the
 gateway config into explicit HTTP-origin and HTTPS-origin modes.
 
-## DNS And TLS
+## DNS and TLS
 
 Point these records to the VPS origin IP or to ArvanCloud, depending on the
 current cutover stage:
@@ -367,6 +133,7 @@ current cutover stage:
 - `A www.saluna.ir`
 - `A app.saluna.ir`
 - `A api.saluna.ir`
+- `A admin.saluna.ir`
 
 When ArvanCloud is active, keep the same hostnames and set the VPS public IP as
 the origin. SSH should still target the VPS origin IP directly.
@@ -375,7 +142,7 @@ Production browser features need HTTPS at the public URL. Service workers and
 PWA install flows require secure contexts, and production auth cookies should be
 sent only over HTTPS.
 
-## Environment Contract
+## Environment
 
 Create the real env file from the template:
 
@@ -392,11 +159,10 @@ Fill in at minimum:
 | `POSTGRES_PASSWORD`        | yes            | keep aligned with `DATABASE_URL` values                                                                              |
 | `DATABASE_URL`             | yes            | runtime URL, usually `postgres:5432` inside Compose                                                                  |
 | `DATABASE_URL_DIRECT`      | recommended    | migrations/seeds prefer this, can match `DATABASE_URL`                                                               |
-| `JWT_SECRET`               | yes            | at least 32 random characters in production                                                                          |
 | `BETTER_AUTH_SECRET`       | yes            | long random secret                                                                                                   |
 | `BETTER_AUTH_URL`          | yes            | `https://api.saluna.ir`                                                                                              |
 | `PWA_ORIGIN`               | yes            | `https://app.saluna.ir` for Better Auth trusted origin                                                               |
-| `CORS_ORIGINS`             | yes            | include `https://app.saluna.ir` and public origins                                                                   |
+| `CORS_ORIGINS`             | yes            | include manager, admin, and public origins                                                                           |
 | `SALUNA_IMAGE_REGISTRY`    | optional       | set to `127.0.0.1:5000/` for local registry flow, or `registry.hamdocker.ir/<namespace>/` for registry-first deploys |
 | `VITE_*`, `PUBLIC_*`       | yes for builds | public origins baked into app images                                                                                 |
 | VAPID/SMS/Telegram secrets | optional       | required only when enabling those providers                                                                          |
@@ -418,7 +184,7 @@ managed only on the VPS, use:
 UPLOAD_ENV=0 ./scripts/upload-airgap-release.sh
 ```
 
-## Build Release Images
+## Build release images
 
 Build on a connected machine with Docker. The VPS should not run `pnpm install`,
 `apk add`, or `docker pull` from international registries during the tarball
@@ -462,7 +228,7 @@ docker compose --env-file .env.production.example -f docker-compose.prod.yml con
 ls -lh deploy/releases/*"${SALUNA_IMAGE_TAG}"*
 ```
 
-## Transfer To The VPS
+## Transfer to the VPS
 
 Upload app bundle, optional infra bundle, compose file, Nginx templates, apply
 script, and env file:
@@ -490,7 +256,7 @@ Useful upload knobs:
 If SSH transfer is blocked, copy the same files by any available channel and put
 release bundles under `/opt/saluna/releases`.
 
-## Apply On The VPS
+## Apply on the VPS
 
 Run all apply commands from `/opt/saluna`.
 
@@ -530,7 +296,7 @@ The apply script:
 Set `SEED_CATALOG_PRESETS=0` to skip the production-safe catalog preset seed.
 Set `SKIP_BACKUP=1` only when a backup has already been taken another way.
 
-## Smoke Checks
+## Smoke checks
 
 From the VPS:
 
@@ -556,7 +322,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail
 docker compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100 gateway
 ```
 
-## Backups And Restore
+## Backups and restore
 
 The apply script takes a pre-migration backup unless `SKIP_BACKUP=1`.
 
@@ -581,13 +347,11 @@ gzip -dc /opt/saluna/backups/BACKUP_FILE.sql.gz | docker exec -i saluna-postgres
 
 ## Updating
 
-For the registry-first target workflow, update only the changed app's SemVer
-version, push an image tagged `<version>-<short-sha>`, update that app's VPS
-state variables, and restart only that service.
+For registry deployments, follow [the release procedure](DEPLOYMENTS.md#how-to-release).
 
 For the tarball fallback workflow:
 
-1. Choose a new immutable `SALUNA_IMAGE_TAG`.
+1. Choose a new immutable release tag and set all three app tags as shown above.
 2. Build a new app bundle with `./scripts/build-airgap-release.sh`.
 3. Upload with `VPS_HOST=YOUR_VPS_ORIGIN_IP ./scripts/upload-airgap-release.sh`.
 4. Apply with `cd /opt/saluna && ./scripts/apply-airgap-release.sh`.
@@ -599,14 +363,18 @@ Rollback is fast only when the database remains backward-compatible:
 
 ```bash
 cd /opt/saluna
-SALUNA_IMAGE_TAG=PREVIOUS_TAG SEED_CATALOG_PRESETS=0 SKIP_BACKUP=1 \
+SALUNA_IMAGE_TAG=PREVIOUS_TAG \
+  SALUNA_API_IMAGE_TAG=PREVIOUS_API_TAG \
+  SALUNA_WEB_IMAGE_TAG=PREVIOUS_WEB_TAG \
+  SALUNA_PWA_IMAGE_TAG=PREVIOUS_PWA_TAG \
+  SEED_CATALOG_PRESETS=0 SKIP_BACKUP=1 \
   ./scripts/apply-airgap-release.sh
 ```
 
 If migrations are not backward-compatible, restore a database backup before or
 as part of rollback.
 
-## Optional VPS-Local Registry
+## Optional VPS registry
 
 The tarball workflow is simplest. Use the VPS-local registry only when repeated
 image uploads are slow enough to justify the extra moving part.
@@ -640,7 +408,7 @@ images:
 VPS_HOST=YOUR_VPS_ORIGIN_IP REMOTE_PUSH_LOADED=1 ./scripts/push-airgap-registry.sh
 ```
 
-## Seed Catalog Presets
+## Seed catalog presets
 
 The apply script runs the production-safe seed by default. To run it manually on
 the VPS:
@@ -656,7 +424,7 @@ From a connected machine, SSH to the VPS origin IP:
 VPS_HOST=YOUR_VPS_ORIGIN_IP ./scripts/seed-vps-catalog-presets.sh
 ```
 
-## If The VPS Has Partial Internet
+## Outbound connectivity
 
 Probe from the VPS before choosing online versus air-gapped deployment:
 
@@ -669,8 +437,8 @@ curl -I https://tapi.bale.ai
 curl -I https://safir.bale.ai
 ```
 
-If these fail or are too slow, use the tarball workflow above. Normal HamGit
-builds already use HamDocker, hmirror npm, and Arvan apk as described in
+If these fail or are too slow, use the tarball workflow above. HamGit fallback
+builds use HamDocker, hmirror npm, and Arvan apk as described in
 [`DEPLOYMENTS.md`](./DEPLOYMENTS.md).
 
 For messaging features, allow outbound HTTPS from the API service to
@@ -683,48 +451,11 @@ pnpm --filter @repo/api cli:messaging-set-webhook -- --provider=bale
 
 ## Troubleshooting
 
-| Symptom                                           | Likely cause                                                   | Fix                                                                                 |
-| ------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `./scripts/pwaly-airgap-release.sh: No such file` | stale docs or command                                          | use `./scripts/apply-airgap-release.sh`                                             |
-| `saluna-gateway` exits immediately                | missing origin cert files                                      | install `saluna-origin.crt` and `saluna-origin.key`, or change gateway to HTTP-only |
-| external `pwa.saluna.ir` fails                    | wrong hostname                                                 | use `app.saluna.ir`                                                                 |
-| API CORS/auth fails from manager app              | `PWA_ORIGIN` or `CORS_ORIGINS` missing `https://app.saluna.ir` | update env, restart API                                                             |
-| PWA points at old API/app URL                     | `VITE_*` values were baked into old image                      | bump `SALUNA_IMAGE_TAG`, rebuild, redeploy                                          |
-| `docker pull` times out on VPS                    | international registry blocked                                 | use infra tarball or HamDocker mirror                                               |
-| rollback starts but data looks wrong              | migration was not backward-compatible                          | restore the matching predeploy backup                                               |
-
-## Recommended Follow-Ups
-
-- Done: change Compose from one shared `SALUNA_IMAGE_TAG` to per-app tag
-  variables with backward-compatible fallback to `SALUNA_IMAGE_TAG`.
-- Done: wire tarball build/deploy helpers to accept per-app image tags while
-  preserving `SALUNA_IMAGE_TAG` fallback compatibility.
-- Done: wire registry-first build/deploy scripts to read per-app SemVer from
-  `apps/api/package.json`, `apps/web/package.json`, and `apps/pwa/package.json`.
-- Done: add a registry-first deploy script that updates one app tag on the VPS, pulls
-  only that service, runs API migrations only for `api`, and smoke-checks only
-  the affected host.
-- Done: add CI affected-app detection so `api`, `web`, and `pwa` can deploy
-  independently.
-- Split `PUBLIC_APP_URL` into explicit public web and manager app variables, then
-  update the landing login/signup links.
-- Add an HTTP-origin gateway mode so Arvan TLS termination does not require
-  dummy local certs.
-- Keep `upload-airgap-release.sh` as fallback; teach it to upload the release
-  manifest only if agents need remote tarball metadata.
-- Done: configure a non-root deploy user and SSH key for normal operations.
-- Done: move normal releases to HamGit/Hamravesh CI with registry-first deploys.
-
-## External Facts Checked
-
-- Docker supports saving images to tar archives and loading them later:
-  <https://docs.docker.com/reference/cli/docker/image/save/>
-- Compose profiles are the intended way to start optional services such as the
-  local registry profile:
-  <https://docs.docker.com/compose/how-tos/profiles/>
-- Local registry workflows require registry-qualified image names when pushing
-  to a registry:
-  <https://docs.docker.com/engine/reference/commandline/tag/>
-- Service workers and PWA install behavior require secure contexts outside
-  localhost:
-  <https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API>
+| Symptom                              | Likely cause                                                   | Fix                                                                                 |
+| ------------------------------------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `saluna-gateway` exits immediately   | missing origin cert files                                      | install `saluna-origin.crt` and `saluna-origin.key`, or change gateway to HTTP-only |
+| external `pwa.saluna.ir` fails       | wrong hostname                                                 | use `app.saluna.ir`                                                                 |
+| API CORS/auth fails from manager app | `PWA_ORIGIN` or `CORS_ORIGINS` missing `https://app.saluna.ir` | update env, restart API                                                             |
+| PWA points at old API/app URL        | `VITE_*` values were baked into old image                      | bump `SALUNA_IMAGE_TAG`, rebuild, redeploy                                          |
+| `docker pull` times out on VPS       | international registry blocked                                 | use infra tarball or HamDocker mirror                                               |
+| rollback starts but data looks wrong | migration was not backward-compatible                          | restore the matching predeploy backup                                               |

@@ -14,7 +14,8 @@ const migrationsFolder = fileURLToPath(
   new URL('../migrations', import.meta.url),
 )
 
-type CommissionQueries = typeof import('./commission-queries')
+type CommissionQueries = typeof import('./commission-queries') &
+  typeof import('./salon-money-report-queries')
 type AppointmentQueries = typeof import('./appointment-queries')
 
 let adminSql: Sql | undefined
@@ -84,20 +85,39 @@ async function insertAppointment(input: {
   date: string
   status?: string
   price: number
+  staffAssignments?: Array<{
+    staffId: string
+    allocationBasisPoints: number
+    isLead?: boolean
+  }>
 }) {
   const id = input.id ?? randomUUID()
   const serviceId = input.serviceId ?? ids.serviceA
+  const leadStaffId = input.staffId ?? ids.profileA
   await testSql!`
     insert into appointments (
-      id, salon_id, client_id, staff_id, service_id, date, start_time, end_time,
+      id, salon_id, client_id, service_id, date, start_time, end_time,
       booked_service_name, booked_service_duration, booked_service_price,
       booked_total_duration, booked_total_price, status
     ) values (
-      ${id}, ${ids.salon}, ${ids.client}, ${input.staffId ?? ids.profileA},
+      ${id}, ${ids.salon}, ${ids.client},
       ${serviceId}, ${input.date}, '10:00', '10:30', 'Booked service', 30,
       ${input.price}, 30, ${input.price}, ${input.status ?? 'scheduled'}
     )
   `
+  const assignments = input.staffAssignments ?? [
+    { staffId: leadStaffId, allocationBasisPoints: 10_000, isLead: true },
+  ]
+  for (const assignment of assignments) {
+    await testSql!`
+      insert into appointment_staff_assignments (
+        id, salon_id, appointment_id, staff_id, is_lead, allocation_basis_points
+      ) values (
+        ${randomUUID()}, ${ids.salon}, ${id}, ${assignment.staffId},
+        ${assignment.isLead ?? false}, ${assignment.allocationBasisPoints}
+      )
+    `
+  }
   return id
 }
 
@@ -114,7 +134,10 @@ describe.skipIf(!runIntegration)(
       await seed(testSql)
       process.env.DATABASE_URL = databaseUrl
       process.env.DATABASE_URL_DIRECT = databaseUrl
-      commissions = await import('./commission-queries')
+      commissions = {
+        ...(await import('./commission-queries')),
+        ...(await import('./salon-money-report-queries')),
+      }
       appointmentQueries = await import('./appointment-queries')
     }, 30_000)
 
@@ -231,26 +254,20 @@ describe.skipIf(!runIntegration)(
         false,
       )
 
-      const salon = await commissions.getSalonCommissionReport({
+      const money = await commissions.getSalonMoneyReport({
         salonId: ids.salon,
         startDate: '2026-07-01',
         endDate: '2026-07-31',
       })
-      expect(salon?.summary).toEqual({
-        grossAppointmentRevenue: 401,
-        staffCommissionTotal: 151,
-        salonRetainedAmount: 250,
-      })
-      await expect(
-        commissions.getSalonFinancialSummary({
-          salonId: ids.salon,
-          startDate: '2026-07-01',
-          endDate: '2026-07-31',
+      expect(money).toEqual({
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            bookedTotal: 1201,
+            staffCommissionTotal: 151,
+            salonRetainedAmount: 1050,
+          },
         }),
-      ).resolves.toEqual({
-        grossAppointmentRevenue: 1201,
-        staffCommissionTotal: 151,
-        salonRetainedAmount: 1050,
       })
 
       await appointmentQueries.deleteAppointment(first, ids.salon)
@@ -353,6 +370,95 @@ describe.skipIf(!runIntegration)(
       ).toEqual([eligible])
     })
 
+    it('allocates one appointment across staff without multiplying salon revenue', async () => {
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 5000,
+      })
+      const appointmentId = await insertAppointment({
+        date: '2026-09-01',
+        price: 101,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'completed',
+      })
+
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-09-01',
+          endDate: '2026-09-01',
+        }),
+      ).resolves.toEqual({
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            bookedTotal: 101,
+            staffCommissionTotal: 26,
+            salonRetainedAmount: 75,
+          },
+        }),
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileA,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId,
+          basis: 51,
+          percentage: 50,
+          amount: 26,
+        }),
+      ])
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([])
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'cancelled',
+      })
+      await appointmentQueries.updateAppointment(appointmentId, ids.salon, {
+        status: 'completed',
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-09-01',
+            endDate: '2026-09-01',
+          })
+        )?.rows,
+      ).toEqual([])
+    })
+
     it('allocates an overridden package price exactly across unequal tasks and multiple Staff Profiles', async () => {
       await commissions.setCommissionAgreement({
         salonId: ids.salon,
@@ -442,55 +548,47 @@ describe.skipIf(!runIntegration)(
         },
       )
 
-      const salon = await commissions.getSalonCommissionReport({
+      const money = await commissions.getSalonMoneyReport({
         salonId: ids.salon,
         startDate: '2026-08-01',
         endDate: '2026-08-01',
       })
-      expect(salon?.rows.map((row) => [row.basis, row.amount])).toEqual([
+      expect(money.ok).toBe(true)
+      if (!money.ok) return
+      expect(
+        money.report.appointments.flatMap((appointment) =>
+          appointment.commissions.map((row) => [row.basis, row.amount]),
+        ),
+      ).toEqual([
         [84, 8],
         [166, 33],
         [250, 25],
       ])
-      expect(salon?.summary).toEqual({
-        grossAppointmentRevenue: 500,
+      expect(money.report.summary).toEqual({
+        bookedTotal: 500,
         staffCommissionTotal: 66,
         salonRetainedAmount: 434,
       })
-      await expect(
-        commissions.getSalonFinancialSummary({
-          salonId: ids.salon,
-          startDate: '2026-08-01',
-          endDate: '2026-08-01',
-        }),
-      ).resolves.toEqual(salon?.summary)
 
       await expect(
         appointmentQueries.deleteAppointment(appointmentIds[0]!, ids.salon),
       ).resolves.toBe(true)
-      expect(
-        (
-          await commissions.getSalonCommissionReport({
-            salonId: ids.salon,
-            startDate: '2026-08-01',
-            endDate: '2026-08-01',
-          })
-        )?.summary,
-      ).toEqual({
-        grossAppointmentRevenue: 416,
-        staffCommissionTotal: 58,
-        salonRetainedAmount: 358,
-      })
       await expect(
-        commissions.getSalonFinancialSummary({
+        commissions.getSalonMoneyReport({
           salonId: ids.salon,
           startDate: '2026-08-01',
           endDate: '2026-08-01',
         }),
       ).resolves.toEqual({
-        grossAppointmentRevenue: 416,
-        staffCommissionTotal: 58,
-        salonRetainedAmount: 358,
+        ok: true,
+        report: expect.objectContaining({
+          summary: {
+            // Remaining package tasks re-split the booked package price; commissions stay stored.
+            bookedTotal: 500,
+            staffCommissionTotal: 58,
+            salonRetainedAmount: 442,
+          },
+        }),
       })
     })
 
@@ -555,6 +653,483 @@ describe.skipIf(!runIntegration)(
       )
       expect(claimed?.summary).toEqual(managerAfterRevocation?.summary)
       expect(managerAfterRevocation?.summary.completedCount).toBe(2)
+    })
+
+    it('applies Service Commission Overrides prospectively without rewriting stored commissions', async () => {
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+      const defaulted = await insertAppointment({
+        serviceId: ids.serviceA,
+        date: '2026-10-01',
+        price: 100,
+      })
+      const overridden = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-02',
+        price: 100,
+      })
+      const afterDefaultChange = await insertAppointment({
+        serviceId: ids.serviceA,
+        date: '2026-10-03',
+        price: 100,
+      })
+      const afterOverrideRemoved = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-04',
+        price: 100,
+      })
+      const whileDisabled = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-05',
+        price: 100,
+      })
+      const multiStaff = await insertAppointment({
+        serviceId: ids.serviceB,
+        date: '2026-10-06',
+        price: 100,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      const otherSalon = randomUUID()
+      const otherService = randomUUID()
+      const otherCategory = randomUUID()
+      await testSql!`
+        insert into organization (id, name, slug)
+        values (${otherSalon}, 'Other Salon', ${`other-${databaseName}`})
+      `
+      await testSql!`
+        insert into service_categories (id, salon_id, name)
+        values (${otherCategory}, ${otherSalon}, 'Other')
+      `
+      await testSql!`
+        insert into services (id, salon_id, category_id, name, duration, price, color)
+        values (${otherService}, ${otherSalon}, ${otherCategory}, 'Foreign', 30, 100, 'rose')
+      `
+
+      expect(
+        await commissions.setServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: otherService,
+          percentageBasisPoints: 4000,
+        }),
+      ).toEqual({ ok: false, reason: 'service' })
+
+      const created = await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 4000,
+      })
+      expect(created).toMatchObject({
+        ok: true,
+        agreement: {
+          percentage: 20,
+          overrides: [
+            expect.objectContaining({
+              serviceId: ids.serviceB,
+              serviceName: 'Service B',
+              serviceActive: true,
+              percentage: 40,
+            }),
+          ],
+        },
+      })
+
+      await appointmentQueries.updateAppointment(defaulted, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'completed',
+      })
+
+      let report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.rows).toEqual([
+        expect.objectContaining({
+          appointmentId: defaulted,
+          percentage: 20,
+          amount: 20,
+        }),
+        expect.objectContaining({
+          appointmentId: overridden,
+          percentage: 40,
+          amount: 40,
+        }),
+      ])
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 1000,
+      })
+      await appointmentQueries.updateAppointment(
+        afterDefaultChange,
+        ids.salon,
+        {
+          status: 'completed',
+        },
+      )
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement).toMatchObject({
+        percentage: 10,
+        overrides: [
+          expect.objectContaining({ serviceId: ids.serviceB, percentage: 40 }),
+        ],
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ percentage: 40, amount: 40 })
+      expect(
+        report?.rows.find((row) => row.appointmentId === afterDefaultChange),
+      ).toMatchObject({ percentage: 10, amount: 10 })
+
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        finalPrice: 200,
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ basis: 200, percentage: 40, amount: 80 })
+
+      await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 5000,
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'cancelled',
+      })
+      await appointmentQueries.updateAppointment(overridden, ids.salon, {
+        status: 'completed',
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === overridden),
+      ).toMatchObject({ percentage: 40, amount: 80 })
+
+      await expect(
+        commissions.deleteServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: ids.serviceB,
+        }),
+      ).resolves.toMatchObject({
+        ok: true,
+        agreement: { overrides: [] },
+      })
+      await appointmentQueries.updateAppointment(
+        afterOverrideRemoved,
+        ids.salon,
+        { status: 'completed' },
+      )
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(
+        report?.rows.find((row) => row.appointmentId === afterOverrideRemoved),
+      ).toMatchObject({ percentage: 10, amount: 10 })
+
+      await commissions.setServiceCommissionOverride({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        serviceId: ids.serviceB,
+        percentageBasisPoints: 3000,
+      })
+      await commissions.disableCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+      })
+      await appointmentQueries.updateAppointment(whileDisabled, ids.salon, {
+        status: 'completed',
+      })
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement).toMatchObject({
+        active: false,
+        overrides: [
+          expect.objectContaining({ serviceId: ids.serviceB, percentage: 30 }),
+        ],
+      })
+      expect(
+        report?.rows.some((row) => row.appointmentId === whileDisabled),
+      ).toBe(false)
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 1000,
+      })
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
+      await appointmentQueries.updateAppointment(multiStaff, ids.salon, {
+        status: 'completed',
+      })
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileA,
+            startDate: '2026-10-06',
+            endDate: '2026-10-06',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId: multiStaff,
+          basis: 50,
+          percentage: 30,
+          amount: 15,
+        }),
+      ])
+      expect(
+        (
+          await commissions.getStaffCommissionReport({
+            salonId: ids.salon,
+            staffProfileId: ids.profileB,
+            startDate: '2026-10-06',
+            endDate: '2026-10-06',
+          })
+        )?.rows,
+      ).toEqual([
+        expect.objectContaining({
+          appointmentId: multiStaff,
+          basis: 50,
+          percentage: 20,
+          amount: 10,
+        }),
+      ])
+
+      await testSql!`
+        update services set active = false where id = ${ids.serviceB}
+      `
+      await testSql!`
+        delete from staff_services
+        where salon_id = ${ids.salon} and staff_user_id = ${ids.profileA}
+      `
+      report = await commissions.getStaffCommissionReport({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      })
+      expect(report?.agreement?.overrides).toEqual([
+        expect.objectContaining({
+          serviceId: ids.serviceB,
+          serviceActive: false,
+          percentage: 30,
+        }),
+      ])
+      await expect(
+        commissions.deleteServiceCommissionOverride({
+          salonId: ids.salon,
+          staffProfileId: ids.profileA,
+          serviceId: ids.serviceB,
+        }),
+      ).resolves.toMatchObject({ ok: true, agreement: { overrides: [] } })
+    })
+
+    it('counts unique completed booked totals and stored commissions with filters', async () => {
+      const extraCategory = randomUUID()
+      const extraService = randomUUID()
+      await testSql!`
+        insert into service_categories (id, salon_id, name)
+        values (${extraCategory}, ${ids.salon}, 'Color')
+      `
+      await testSql!`
+        insert into services (id, salon_id, category_id, name, duration, price, color)
+        values (${extraService}, ${ids.salon}, ${extraCategory}, 'Balayage', 30, 400, 'gold')
+      `
+
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 2000,
+      })
+
+      const withoutCommission = await insertAppointment({
+        staffId: ids.profileB,
+        date: '2026-11-02',
+        price: 300,
+      })
+      const withCommission = await insertAppointment({
+        date: '2026-11-03',
+        price: 200,
+      })
+      const multiStaff = await insertAppointment({
+        date: '2026-11-04',
+        price: 100,
+        staffAssignments: [
+          {
+            staffId: ids.profileA,
+            allocationBasisPoints: 5000,
+            isLead: true,
+          },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      const otherCategoryAppointment = await insertAppointment({
+        serviceId: extraService,
+        date: '2026-11-05',
+        price: 400,
+      })
+      const scheduled = await insertAppointment({
+        date: '2026-11-06',
+        price: 900,
+      })
+
+      await appointmentQueries.updateAppointment(withoutCommission, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(withCommission, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(multiStaff, ids.salon, {
+        status: 'completed',
+      })
+      await appointmentQueries.updateAppointment(
+        otherCategoryAppointment,
+        ids.salon,
+        { status: 'completed' },
+      )
+
+      const all = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+      })
+      expect(all.ok).toBe(true)
+      if (!all.ok) return
+      expect(all.report.appointments.map((row) => row.appointmentId)).toEqual(
+        expect.arrayContaining([
+          withoutCommission,
+          withCommission,
+          multiStaff,
+          otherCategoryAppointment,
+        ]),
+      )
+      expect(
+        all.report.appointments.some((row) => row.appointmentId === scheduled),
+      ).toBe(false)
+      expect(all.report.summary.bookedTotal).toBe(1000)
+      expect(all.report.summary.staffCommissionTotal).toBe(
+        all.report.staff.reduce(
+          (sum, row) => sum + row.staffCommissionTotal,
+          0,
+        ),
+      )
+      expect(all.report.summary.salonRetainedAmount).toBe(
+        all.report.summary.bookedTotal -
+          all.report.summary.staffCommissionTotal,
+      )
+
+      const staffA = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        staffProfileId: ids.profileA,
+      })
+      expect(staffA.ok).toBe(true)
+      if (!staffA.ok) return
+      expect(
+        staffA.report.appointments.map((row) => row.appointmentId).sort(),
+      ).toEqual([withCommission, multiStaff, otherCategoryAppointment].sort())
+      expect(staffA.report.summary.bookedTotal).toBe(700)
+      // Staff cut is A's commissions only; salon cut subtracts A + B on those Appointments.
+      expect(staffA.report.summary.staffCommissionTotal).toBe(130)
+      expect(staffA.report.summary.salonRetainedAmount).toBe(560)
+
+      const byService = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        serviceId: extraService,
+      })
+      expect(byService.ok).toBe(true)
+      if (!byService.ok) return
+      expect(byService.report.appointments).toEqual([
+        expect.objectContaining({
+          appointmentId: otherCategoryAppointment,
+          bookedTotal: 400,
+        }),
+      ])
+
+      const byCategory = await commissions.getSalonMoneyReport({
+        salonId: ids.salon,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        categoryId: extraCategory,
+      })
+      expect(byCategory).toEqual(byService)
+
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          staffProfileId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'staff' })
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          serviceId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'service' })
+      await expect(
+        commissions.getSalonMoneyReport({
+          salonId: ids.salon,
+          startDate: '2026-11-01',
+          endDate: '2026-11-30',
+          categoryId: randomUUID(),
+        }),
+      ).resolves.toEqual({ ok: false, reason: 'category' })
     })
   },
 )

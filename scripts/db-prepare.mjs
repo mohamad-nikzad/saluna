@@ -2,7 +2,7 @@
 /**
  * Start local Postgres (docker-compose) and apply checked-in Drizzle migrations.
  */
-import { spawnSync } from 'node:child_process'
+import spawn from 'cross-spawn'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -12,7 +12,7 @@ const repoRoot = path.resolve(
 )
 
 function ensureDocker() {
-  const check = spawnSync('docker', ['info'], {
+  const check = spawn.sync('docker', ['info'], {
     cwd: repoRoot,
     encoding: 'utf8',
     timeout: 8_000,
@@ -25,7 +25,7 @@ function ensureDocker() {
 }
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
+  const result = spawn.sync(command, args, {
     cwd: repoRoot,
     stdio: 'inherit',
     ...options,
@@ -41,7 +41,7 @@ function dockerCompose(args) {
 
 function waitForPostgres(maxAttempts = 30) {
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const probe = spawnSync(
+    const probe = spawn.sync(
       'docker',
       [
         'compose',
@@ -59,7 +59,7 @@ function waitForPostgres(maxAttempts = 30) {
       { cwd: repoRoot, encoding: 'utf8' },
     )
     if (probe.status === 0) return
-    spawnSync('sleep', ['1'], { cwd: repoRoot })
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1_000)
   }
   console.error('Postgres did not become ready in time.')
   process.exit(1)

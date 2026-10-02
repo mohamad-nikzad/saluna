@@ -8,6 +8,7 @@ import {
   phoneLookupVariants,
 } from '@repo/salon-core/phone'
 import type { Client, ClientTag } from '@repo/salon-core/types'
+import type { ClientAcquisitionSource } from '@repo/salon-core/types'
 import { getDb } from '../client'
 import { clients, clientTags } from '../schema'
 import {
@@ -139,6 +140,8 @@ export async function createClient(input: {
   id?: string
   name: string
   phone?: string | null
+  birthDate?: string | null
+  acquisitionSource?: ClientAcquisitionSource
   notes?: string
   isPlaceholder?: boolean
 }): Promise<Client> {
@@ -148,6 +151,8 @@ export async function createClient(input: {
     name: input.name,
     phone: input.phone ? canonicalSalonPhone(input.phone) : null,
     isPlaceholder: input.isPlaceholder ?? false,
+    birthDate: input.birthDate,
+    acquisitionSource: input.acquisitionSource,
     notes: input.notes,
   }
   if (isClientProvidedEntityId(input.id)) {
@@ -209,13 +214,26 @@ export async function createClientsBulk(
 export async function updateClient(
   id: string,
   salonId: string,
-  data: Partial<Pick<Client, 'name' | 'phone' | 'notes' | 'isPlaceholder'>>,
+  data: Partial<
+    Pick<
+      Client,
+      | 'name'
+      | 'phone'
+      | 'birthDate'
+      | 'acquisitionSource'
+      | 'notes'
+      | 'isPlaceholder'
+    >
+  >,
 ): Promise<Client | undefined> {
   const db = getDb()
   const patch: Partial<typeof clients.$inferInsert> = {}
   if (data.name !== undefined) patch.name = data.name
   if (data.phone !== undefined)
     patch.phone = data.phone ? canonicalSalonPhone(data.phone) : null
+  if (data.birthDate !== undefined) patch.birthDate = data.birthDate
+  if (data.acquisitionSource !== undefined)
+    patch.acquisitionSource = data.acquisitionSource
   if (data.notes !== undefined) patch.notes = data.notes
   if (data.isPlaceholder !== undefined) patch.isPlaceholder = data.isPlaceholder
 

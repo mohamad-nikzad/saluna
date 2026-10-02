@@ -62,24 +62,34 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
       .orderBy(asc(staffProfiles.name))
   ).filter((row) => row.active && row.userId === null)
 
-  const pendingInviteProfileIds = new Set(
+  const inviteStatuses = new Map(
     preparedProfiles.length === 0
       ? []
       : (
           await db
-            .select({ staffProfileId: staffInvites.staffProfileId })
+            .select({
+              staffProfileId: staffInvites.staffProfileId,
+              status: staffInvites.status,
+              expiresAt: staffInvites.expiresAt,
+            })
             .from(staffInvites)
             .where(
               and(
                 eq(staffInvites.salonId, salonId),
-                eq(staffInvites.status, 'pending'),
+                inArray(staffInvites.status, ['pending', 'expired']),
                 inArray(
                   staffInvites.staffProfileId,
                   preparedProfiles.map((row) => row.id),
                 ),
               ),
             )
-        ).map((row) => row.staffProfileId),
+            .orderBy(asc(staffInvites.createdAt))
+        ).map((row): [string, 'pending' | 'expired'] => [
+          row.staffProfileId,
+          row.status === 'expired' || row.expiresAt.getTime() <= Date.now()
+            ? 'expired'
+            : 'pending',
+        ]),
   )
 
   const preparedRows: User[] = preparedProfiles.map((row) => ({
@@ -92,9 +102,7 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
     role: 'staff' as const,
     color: row.color,
     createdAt: row.createdAt,
-    inviteStatus: pendingInviteProfileIds.has(row.id)
-      ? ('pending' as const)
-      : null,
+    inviteStatus: inviteStatuses.get(row.id) ?? null,
   }))
   const rows = [...legacyRows, ...preparedRows].sort((a, b) =>
     a.name.localeCompare(b.name, 'fa'),

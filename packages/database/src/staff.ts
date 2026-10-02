@@ -58,10 +58,10 @@ export {
   declineStaffInvite,
   evaluateStaffInviteAcceptance,
   evaluateStaffInviteDecline,
-  listPendingStaffInvitesForUser,
+  listUnacceptedStaffInvitesForUser,
   type AcceptStaffInviteResult,
   type DeclineStaffInviteResult,
-  type PendingStaffInviteView,
+  type UnacceptedStaffInviteView,
   type StaffInviteAcceptanceRejectionReason,
   type StaffInviteDeclineRejectionReason,
 } from './staff-invite-acceptance'

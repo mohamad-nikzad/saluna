@@ -171,21 +171,31 @@ export const updateFlexibleAppointmentRequestResponseSchema = z
   .object({ request: flexibleAppointmentRequestListItemSchema })
   .openapi('UpdateFlexibleAppointmentRequestResponse')
 
+const appointmentRequestStaffAssignmentSchema = z.object({
+  staffId: z.string().min(1),
+  isLead: z.boolean(),
+  allocationBasisPoints: z.number().int().min(0).max(10_000),
+})
+
 export const convertFlexibleAppointmentRequestBodySchema = z
   .object({
     finalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
-    staffId: z.string().min(1),
+    staffAssignments: z.array(appointmentRequestStaffAssignmentSchema).min(1),
   })
   .strict()
   .openapi('ConvertFlexibleAppointmentRequestRequest')
 
 export const approveAppointmentRequestBodySchema = z
   .object({
-    staffId: z.string().min(1).openapi({
-      description:
-        'Staff member assigned when converting the request to an appointment',
-    }),
+    staffAssignments: z
+      .array(appointmentRequestStaffAssignmentSchema)
+      .min(1)
+      .optional()
+      .openapi({
+        description:
+          'Roster adopted by the appointment; omit to use the request staffId as sole lead',
+      }),
   })
   .openapi('ApproveAppointmentRequestRequest')
 

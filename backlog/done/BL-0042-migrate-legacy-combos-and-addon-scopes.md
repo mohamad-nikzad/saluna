@@ -33,5 +33,5 @@ None - can start immediately.
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Completed on 2026-07-08. Added staff package capability storage and backfill on top of the existing package/add-on cutover migration. Verified with `pnpm db:check`, `pnpm --filter @repo/database typecheck`, and `pnpm --filter @repo/database test`.

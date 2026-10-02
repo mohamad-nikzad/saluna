@@ -2,25 +2,36 @@ import { useMutation } from '@tanstack/react-query'
 import type {
   CommissionAgreement,
   GetApiV1CommissionsMeData,
-  SalonCommissionReport,
+  GetApiV1ReportsSalonMoneyData,
+  SalonMoneyReport,
   StaffCommissionReport,
 } from '@repo/api-client/types'
 import {
   deleteApiV1CommissionsStaffByIdAgreementMutation,
+  deleteApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
   getApiV1CommissionsMeOptions,
-  getApiV1CommissionsSalonOptions,
   getApiV1CommissionsStaffByIdReportOptions,
+  getApiV1ReportsSalonMoneyOptions,
   putApiV1CommissionsStaffByIdAgreementMutation,
+  putApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation,
 } from '@repo/api-client/query'
 
 export type CommissionPeriodQuery = NonNullable<
   GetApiV1CommissionsMeData['query']
 >
 
+export type SalonMoneyReportQuery = NonNullable<
+  GetApiV1ReportsSalonMoneyData['query']
+>
+
 const staffReportRoot = [{ _id: 'getApiV1CommissionsStaffByIdReport' }] as const
 const selfReportRoot = [{ _id: 'getApiV1CommissionsMe' }] as const
-const salonReportRoot = [{ _id: 'getApiV1CommissionsSalon' }] as const
-const reportRoots = [staffReportRoot, selfReportRoot, salonReportRoot] as const
+const salonMoneyReportRoot = [{ _id: 'getApiV1ReportsSalonMoney' }] as const
+const reportRoots = [
+  staffReportRoot,
+  selfReportRoot,
+  salonMoneyReportRoot,
+] as const
 
 export function commissionReportInvalidationKeys() {
   return reportRoots
@@ -46,12 +57,10 @@ export function myCommissionReportQueryOptions(query: CommissionPeriodQuery) {
   }
 }
 
-export function salonCommissionReportQueryOptions(
-  query: CommissionPeriodQuery,
-) {
+export function salonMoneyReportQueryOptions(query: SalonMoneyReportQuery) {
   return {
-    ...getApiV1CommissionsSalonOptions({ query }),
-    select: (data: { report: SalonCommissionReport }) => data.report,
+    ...getApiV1ReportsSalonMoneyOptions({ query }),
+    select: (data: { report: SalonMoneyReport }) => data.report,
   }
 }
 
@@ -70,8 +79,8 @@ export function useSaveCommissionAgreementMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'توافق کمیسیون ذخیره شد',
-      errorMessage: 'ذخیره توافق کمیسیون انجام نشد',
+      successMessage: 'کمیسیون ذخیره شد',
+      errorMessage: 'ذخیره کمیسیون انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })
@@ -88,8 +97,57 @@ export function useDisableCommissionAgreementMutation() {
       return response.agreement
     },
     meta: {
-      successMessage: 'توافق کمیسیون غیرفعال شد',
-      errorMessage: 'غیرفعال‌کردن توافق کمیسیون انجام نشد',
+      successMessage: 'کمیسیون غیرفعال شد',
+      errorMessage: 'غیرفعال‌کردن کمیسیون انجام نشد',
+      invalidatesQuery: reportRoots,
+    },
+  })
+}
+
+export function useSaveServiceCommissionOverrideMutation() {
+  const generated =
+    putApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation()
+  return useMutation<
+    CommissionAgreement,
+    unknown,
+    { staffId: string; serviceId: string; percentage: number }
+  >({
+    mutationFn: async ({ staffId, serviceId, percentage }, context) => {
+      const response = await generated.mutationFn!(
+        {
+          path: { id: staffId, serviceId },
+          body: { percentage },
+        },
+        context,
+      )
+      return response.agreement
+    },
+    meta: {
+      successMessage: 'درصد این خدمت ذخیره شد',
+      errorMessage: 'ذخیره درصد این خدمت انجام نشد',
+      invalidatesQuery: reportRoots,
+    },
+  })
+}
+
+export function useDeleteServiceCommissionOverrideMutation() {
+  const generated =
+    deleteApiV1CommissionsStaffByIdAgreementOverridesByServiceIdMutation()
+  return useMutation<
+    CommissionAgreement,
+    unknown,
+    { staffId: string; serviceId: string }
+  >({
+    mutationFn: async ({ staffId, serviceId }, context) => {
+      const response = await generated.mutationFn!(
+        { path: { id: staffId, serviceId } },
+        context,
+      )
+      return response.agreement
+    },
+    meta: {
+      successMessage: 'درصد این خدمت حذف شد',
+      errorMessage: 'حذف درصد این خدمت انجام نشد',
       invalidatesQuery: reportRoots,
     },
   })

@@ -3,9 +3,11 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarPlus,
+  CakeSlice,
   Check,
   ClipboardList,
   Clock,
+  Megaphone,
   Pencil,
   Phone,
   Sparkles,
@@ -17,9 +19,14 @@ import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
 import { cn } from '@repo/ui/utils'
 import { APPOINTMENT_STATUS } from '@repo/salon-core/types'
-import type { ClientSummary, FollowUpReason } from '@repo/salon-core/types'
+import type {
+  ClientAcquisitionSource,
+  ClientSummary,
+  FollowUpReason,
+} from '@repo/salon-core/types'
 import {
   JALALI_MONTHS,
+  formatJalaliDate,
   formatJalaliFullDate,
   parseGregorianToJalali,
 } from '@repo/salon-core/jalali'
@@ -76,9 +83,23 @@ function followReasonLabel(reason: FollowUpReason): string {
       return 'ارزشمند'
     case 'manual':
       return 'دستی'
-    default:
-      return reason
+    case 'birthday':
+      return 'تولد'
+    default: {
+      const _exhaustive: never = reason
+      return _exhaustive
+    }
   }
+}
+
+const acquisitionSourceLabels: Record<ClientAcquisitionSource, string> = {
+  instagram: 'اینستاگرام',
+  website: 'وب‌سایت',
+  google: 'گوگل',
+  referral: 'معرفی مشتری',
+  walk_in: 'مراجعه حضوری',
+  other: 'سایر',
+  unknown: 'نامشخص',
 }
 
 function compactToman(n: number): string {
@@ -235,6 +256,30 @@ function ClientDetailPage() {
             </p>
           </Card>
         )}
+
+        {client.birthDate ? (
+          <Card className="gap-0 border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <CakeSlice className="h-4 w-4 text-primary" />
+              تاریخ تولد
+            </div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {formatJalaliDate(client.birthDate)}
+            </p>
+          </Card>
+        ) : null}
+
+        {client.acquisitionSource ? (
+          <Card className="gap-0 border-line-soft p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Megaphone className="h-4 w-4 text-primary" />
+              چطور با سالن آشنا شد؟
+            </div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {acquisitionSourceLabels[client.acquisitionSource]}
+            </p>
+          </Card>
+        ) : null}
 
         <div className="grid grid-cols-3 gap-2">
           <ClientStat

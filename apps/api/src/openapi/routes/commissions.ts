@@ -9,8 +9,9 @@ import {
   commissionAgreementBodySchema,
   commissionAgreementResponseSchema,
   commissionPeriodQuerySchema,
-  salonCommissionReportResponseSchema,
+  serviceCommissionOverrideBodySchema,
   staffCommissionReportResponseSchema,
+  staffServiceOverrideParamSchema,
 } from '../schemas/commissions'
 
 const errors = {
@@ -76,6 +77,50 @@ export const deleteCommissionAgreementRoute = createRoute({
   },
 })
 
+export const putServiceCommissionOverrideRoute = createRoute({
+  method: 'put',
+  path: '/staff/{id}/agreement/overrides/{serviceId}',
+  tags: ['Staff Commissions'],
+  summary: 'Add or update a Service Commission Override',
+  security: tenantSecurity,
+  request: {
+    params: staffServiceOverrideParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': { schema: serviceCommissionOverrideBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Commission Agreement with Service Commission Overrides',
+      content: {
+        'application/json': { schema: commissionAgreementResponseSchema },
+      },
+    },
+    ...errors,
+  },
+})
+
+export const deleteServiceCommissionOverrideRoute = createRoute({
+  method: 'delete',
+  path: '/staff/{id}/agreement/overrides/{serviceId}',
+  tags: ['Staff Commissions'],
+  summary: 'Remove a Service Commission Override',
+  security: tenantSecurity,
+  request: { params: staffServiceOverrideParamSchema },
+  responses: {
+    200: {
+      description: 'Commission Agreement without the removed override',
+      content: {
+        'application/json': { schema: commissionAgreementResponseSchema },
+      },
+    },
+    ...errors,
+  },
+})
+
 export const getStaffCommissionReportRoute = createRoute({
   method: 'get',
   path: '/staff/{id}/report',
@@ -106,24 +151,6 @@ export const getMyCommissionReportRoute = createRoute({
       description: 'Private self Commission report',
       content: {
         'application/json': { schema: staffCommissionReportResponseSchema },
-      },
-    },
-    ...errors,
-  },
-})
-
-export const getSalonCommissionReportRoute = createRoute({
-  method: 'get',
-  path: '/salon',
-  tags: ['Staff Commissions'],
-  summary: 'Get the manager-only salon Commission report',
-  security: tenantSecurity,
-  request: { query: commissionPeriodQuerySchema },
-  responses: {
-    200: {
-      description: 'Salon-wide Commission report',
-      content: {
-        'application/json': { schema: salonCommissionReportResponseSchema },
       },
     },
     ...errors,

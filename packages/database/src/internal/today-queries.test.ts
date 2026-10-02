@@ -66,7 +66,14 @@ describe('today placeholder attention', () => {
     const appointment = {
       id: 'appointment-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: [
+        {
+          id: 'assignment-1',
+          staffId: 'staff-1',
+          isLead: true,
+          allocationBasisPoints: 10_000,
+        },
+      ],
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '11:00',
@@ -122,7 +129,14 @@ describe('today placeholder attention', () => {
     const appointment = {
       id: 'appointment-1',
       clientId: 'placeholder-1',
-      staffId: 'staff-1',
+      staffAssignments: [
+        {
+          id: 'assignment-1',
+          staffId: 'staff-1',
+          isLead: true,
+          allocationBasisPoints: 10_000,
+        },
+      ],
       serviceId: 'service-1',
       date: '2026-05-01',
       startTime: '15:00',

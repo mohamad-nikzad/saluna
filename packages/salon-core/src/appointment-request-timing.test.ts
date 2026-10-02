@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  flexibleRequestAgreementError,
   flexibleRequestGroup,
   isFlexibleRequestExpired,
   isStartTimeInPreference,
@@ -9,6 +10,61 @@ import {
 } from './appointment-request-timing'
 
 describe('Flexible AppointmentRequest timing', () => {
+  it.each([
+    { finalDate: '2026-07-20', startTime: '12:00', error: 'date' },
+    { finalDate: '2026-07-21', startTime: '12:00', error: null },
+    { finalDate: '2026-07-22', startTime: '12:00', error: 'date' },
+    { finalDate: '2026-10-19', startTime: '16:59', error: null },
+    { finalDate: '2026-10-20', startTime: '12:00', error: 'date' },
+    { finalDate: '2026-09-31', startTime: '12:00', error: 'date' },
+    { finalDate: '2026-07-21', startTime: '11:59', error: 'time' },
+    { finalDate: '2026-07-21', startTime: '17:00', error: 'time' },
+    { finalDate: '2026-07-21', startTime: '24:00', error: 'time' },
+  ])(
+    'checks the saved agreement for $finalDate at $startTime',
+    ({ finalDate, startTime, error }) => {
+      expect(
+        flexibleRequestAgreementError({
+          acceptableDates: [
+            '2026-07-20',
+            '2026-07-21',
+            '2026-09-31',
+            '2026-10-19',
+            '2026-10-20',
+          ],
+          timePreference: 'afternoon',
+          finalDate,
+          startTime,
+          today: '2026-07-21',
+        }),
+      ).toBe(error)
+    },
+  )
+
+  it('rejects missing agreement details', () => {
+    const slot = {
+      finalDate: '2026-07-21',
+      startTime: '12:00',
+      today: '2026-07-21',
+    }
+    for (const acceptableDates of [null, []]) {
+      expect(
+        flexibleRequestAgreementError({
+          ...slot,
+          acceptableDates,
+          timePreference: 'any',
+        }),
+      ).toBe('date')
+    }
+    expect(
+      flexibleRequestAgreementError({
+        ...slot,
+        acceptableDates: [slot.finalDate],
+        timePreference: null,
+      }),
+    ).toBe('time')
+  })
+
   it('normalizes unique dates within the inclusive Request Horizon', () => {
     expect(
       normalizeAcceptableDates(['2026-07-31', '2026-07-21'], '2026-07-21'),

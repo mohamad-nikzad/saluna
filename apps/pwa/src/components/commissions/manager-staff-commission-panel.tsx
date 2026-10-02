@@ -1,8 +1,17 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Banknote, Percent } from 'lucide-react'
+import { Banknote, Percent, Trash2 } from 'lucide-react'
+import type { Service } from '@repo/salon-core/types'
+import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/ui/select'
 
 import {
   formatLocalizedNumberInput,
@@ -11,23 +20,51 @@ import {
 import { StaffDetailSection } from '#/components/staff/staff-detail-section'
 import {
   staffCommissionReportQueryOptions,
+  useDeleteServiceCommissionOverrideMutation,
   useDisableCommissionAgreementMutation,
   useSaveCommissionAgreementMutation,
+  useSaveServiceCommissionOverrideMutation,
   type CommissionPeriodQuery,
 } from '#/lib/commission-queries'
 import { CommissionPeriodControls } from './commission-period-controls'
 import { StaffCommissionReportView } from './staff-commission-report-view'
 
-export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
+export function ManagerStaffCommissionPanel({
+  staffId,
+  services,
+}: {
+  staffId: string
+  services: Service[]
+}) {
   const [period, setPeriod] = useState<CommissionPeriodQuery>({
     period: 'today',
   })
+  const [overrideServiceId, setOverrideServiceId] = useState('')
   const reportQuery = useQuery(
     staffCommissionReportQueryOptions(staffId, period),
   )
+  const heldAgreement = useRef<{
+    staffId: string
+    agreement: NonNullable<typeof reportQuery.data>['agreement']
+  } | null>(null)
+  if (reportQuery.data !== undefined) {
+    heldAgreement.current = {
+      staffId,
+      agreement: reportQuery.data.agreement,
+    }
+  }
   const saveAgreement = useSaveCommissionAgreementMutation()
   const disableAgreement = useDisableCommissionAgreementMutation()
-  const agreement = reportQuery.data?.agreement
+  const saveOverride = useSaveServiceCommissionOverrideMutation()
+  const deleteOverride = useDeleteServiceCommissionOverrideMutation()
+  const agreement =
+    reportQuery.data !== undefined
+      ? reportQuery.data.agreement
+      : heldAgreement.current?.staffId === staffId
+        ? heldAgreement.current.agreement
+        : null
+  const overrides = agreement?.overrides ?? []
+  const availableServices = services.filter((service) => service.active)
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -41,16 +78,37 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
     }
   }
 
+  const saveOverrideForm = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!overrideServiceId) return
+    const form = event.currentTarget
+    const percentage = Number(
+      normalizeLocalizedDecimalInput(
+        String(new FormData(form).get('overridePercentage') ?? ''),
+      ),
+    )
+    if (!Number.isFinite(percentage)) return
+    saveOverride.mutate(
+      { staffId, serviceId: overrideServiceId, percentage },
+      {
+        onSuccess: () => {
+          setOverrideServiceId('')
+          form.reset()
+        },
+      },
+    )
+  }
+
   return (
     <>
-      <StaffDetailSection title="توافق کمیسیون" icon={Percent}>
+      <StaffDetailSection title="کمیسیون" icon={Percent}>
         <form
           key={`${agreement?.percentage ?? ''}-${agreement?.active ?? false}`}
           onSubmit={save}
           className="space-y-3"
         >
           <label className="block space-y-1.5 text-xs font-bold text-foreground">
-            درصد کمیسیون از مبلغ نهایی نوبت
+            درصد پیش‌فرض کمیسیون
             <div className="relative mt-1.5">
               <Input
                 name="percentage"
@@ -64,7 +122,7 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
                   )
                 }}
                 className="pl-10 text-right tabular-nums"
-                aria-label="درصد کمیسیون"
+                aria-label="درصد پیش‌فرض کمیسیون"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 ٪
@@ -72,11 +130,12 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
             </div>
           </label>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            تغییر درصد فقط روی نوبت‌هایی اثر دارد که بعد از ذخیره انجام شوند.
+            تغییر درصد فقط برای نوبت‌های بعدی است. برای بعضی خدمات می‌توانید
+            درصد جدا بگذارید.
           </p>
           <div className="flex flex-col items-start gap-2">
             <Button type="submit" size="lg" disabled={saveAgreement.isPending}>
-              {agreement?.active ? 'ذخیره درصد جدید' : 'فعال‌کردن توافق'}
+              {agreement?.active ? 'ذخیره درصد جدید' : 'فعال‌کردن کمیسیون'}
             </Button>
             {agreement?.active ? (
               <Button
@@ -90,6 +149,122 @@ export function ManagerStaffCommissionPanel({ staffId }: { staffId: string }) {
             ) : null}
           </div>
         </form>
+
+        {agreement ? (
+          <div className="mt-5 space-y-3 border-t border-line-soft pt-4">
+            <div>
+              <div className="text-xs font-bold text-foreground">
+                درصد جدا برای بعضی خدمات
+              </div>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                اگر برای یک خدمت درصد جدا بگذارید، همان استفاده می‌شود.
+              </p>
+            </div>
+
+            {overrides.length === 0 ? (
+              <div className="rounded-[14px] border border-dashed border-line p-3 text-[11px] text-muted-foreground">
+                هنوز درصد جدا ثبت نشده.
+              </div>
+            ) : (
+              <div className="divide-y divide-line-soft overflow-hidden rounded-[14px] border border-line-soft bg-paper">
+                {overrides.map((override) => (
+                  <div
+                    key={override.serviceId}
+                    className="flex items-center justify-between gap-3 p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-bold text-foreground">
+                        {override.serviceName}
+                        {!override.serviceActive ? (
+                          <span className="mr-1 text-[10px] font-medium text-muted-foreground">
+                            (بایگانی‌شده)
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                        {toPersianDigits(override.percentage)}٪
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`حذف درصد ${override.serviceName}`}
+                      disabled={deleteOverride.isPending}
+                      onClick={() =>
+                        deleteOverride.mutate({
+                          staffId,
+                          serviceId: override.serviceId,
+                        })
+                      }
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={saveOverrideForm} className="space-y-3">
+              <label className="block space-y-1.5 text-xs font-bold text-foreground">
+                خدمت
+                <Select
+                  value={overrideServiceId || undefined}
+                  onValueChange={setOverrideServiceId}
+                  disabled={availableServices.length === 0}
+                >
+                  <SelectTrigger className="mt-1.5 w-full" aria-label="خدمت">
+                    <SelectValue placeholder="انتخاب خدمت" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableServices.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="block space-y-1.5 text-xs font-bold text-foreground">
+                درصد این خدمت
+                <div className="relative mt-1.5">
+                  <Input
+                    name="overridePercentage"
+                    type="text"
+                    inputMode="decimal"
+                    required={true}
+                    disabled={!overrideServiceId}
+                    onChange={(event) => {
+                      event.currentTarget.value = formatLocalizedNumberInput(
+                        normalizeLocalizedDecimalInput(
+                          event.currentTarget.value,
+                        ),
+                      )
+                    }}
+                    className="pl-10 text-right tabular-nums"
+                    aria-label="درصد کمیسیون این خدمت"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    ٪
+                  </span>
+                </div>
+              </label>
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={
+                  !overrideServiceId ||
+                  saveOverride.isPending ||
+                  availableServices.length === 0
+                }
+              >
+                {overrides.some((row) => row.serviceId === overrideServiceId)
+                  ? 'ذخیره درصد'
+                  : 'افزودن درصد'}
+              </Button>
+            </form>
+          </div>
+        ) : null}
       </StaffDetailSection>
 
       <StaffDetailSection title="گزارش کمیسیون" icon={Banknote}>

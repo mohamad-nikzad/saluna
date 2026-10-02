@@ -12,6 +12,7 @@ export type NotificationType =
   | 'appointment_request_approved'
   | 'appointment_request_rejected'
   | 'appointment_reminder'
+  | 'birthday_follow_up'
   | 'support_reply'
 export type NotificationChannel =
   | 'in_app'
@@ -134,6 +135,18 @@ export async function createNotificationForUser(
     .returning()
 
   return rowToNotification(row)
+}
+
+export async function createNotificationForUserOnce(
+  input: CreateNotificationInput & { sourceKey: string },
+): Promise<AppNotification | null> {
+  const db = getDb()
+  const [row] = await db
+    .insert(notifications)
+    .values({ ...input, data: input.data ?? {} })
+    .onConflictDoNothing()
+    .returning()
+  return row ? rowToNotification(row) : null
 }
 
 /** Shared list/read queries: one salon or many accepted salons (`inArray`). */

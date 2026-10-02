@@ -327,7 +327,11 @@ describe('appointment-requests router', () => {
       {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffId: 'staff1' }),
+        body: JSON.stringify({
+          staffAssignments: [
+            { staffId: 'staff1', isLead: true, allocationBasisPoints: 10_000 },
+          ],
+        }),
       },
     )
     expect(res.status).toBe(200)
@@ -338,7 +342,9 @@ describe('appointment-requests router', () => {
     expect(db.approveAppointmentRequest).toHaveBeenCalledWith({
       id: requestId,
       salonId: 's1',
-      staffId: 'staff1',
+      staffAssignments: [
+        { staffId: 'staff1', isLead: true, allocationBasisPoints: 10_000 },
+      ],
       reviewedByUserId: 'u1',
     })
   })
@@ -352,7 +358,9 @@ describe('appointment-requests router', () => {
     const body = {
       finalDate: validFlexibleDate,
       startTime: '13:30',
-      staffId: 'staff1',
+      staffAssignments: [
+        { staffId: 'staff1', isLead: true, allocationBasisPoints: 10_000 },
+      ],
     }
 
     const res = await app.request(
@@ -386,7 +394,9 @@ describe('appointment-requests router', () => {
         body: JSON.stringify({
           finalDate: validFlexibleDate,
           startTime: '13:30',
-          staffId: 'staff1',
+          staffAssignments: [
+            { staffId: 'staff1', isLead: true, allocationBasisPoints: 10_000 },
+          ],
           serviceId: requestId,
         }),
       },
@@ -408,7 +418,11 @@ describe('appointment-requests router', () => {
       {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffId: 'staff1' }),
+        body: JSON.stringify({
+          staffAssignments: [
+            { staffId: 'staff1', isLead: true, allocationBasisPoints: 10_000 },
+          ],
+        }),
       },
     )
     expect(res.status).toBe(409)
@@ -418,7 +432,12 @@ describe('appointment-requests router', () => {
     })
   })
 
-  it('POST /:id/approve 400 when staffId missing', async () => {
+  it('POST /:id/approve allows empty body when request staffId fallback applies', async () => {
+    vi.mocked(db.approveAppointmentRequest).mockResolvedValue({
+      ok: true,
+      appointmentId: 'apt1',
+      clientId: 'cli1',
+    } as never)
     const res = await app.request(
       `/api/v1/appointment-requests/${requestId}/approve`,
       {
@@ -427,7 +446,13 @@ describe('appointment-requests router', () => {
         body: JSON.stringify({}),
       },
     )
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(200)
+    expect(db.approveAppointmentRequest).toHaveBeenCalledWith({
+      id: requestId,
+      salonId: 's1',
+      staffAssignments: undefined,
+      reviewedByUserId: 'u1',
+    })
   })
 
   it('POST /:id/reject forwards reason', async () => {

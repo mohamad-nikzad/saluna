@@ -71,17 +71,15 @@ describe('AppointmentDetailEditForm price window', () => {
   it('switches the price control from editable to explained read-only state', () => {
     const view = render(<PriceForm priceEditable />)
     expect(
-      (screen.getByLabelText('قیمت نهایی (تومان)') as HTMLInputElement)
-        .disabled,
+      (screen.getByLabelText('قیمت نهایی') as HTMLInputElement).disabled,
     ).toBe(false)
 
     view.rerender(<PriceForm priceEditable={false} />)
     expect(
-      (screen.getByLabelText('قیمت نهایی (تومان)') as HTMLInputElement)
-        .disabled,
+      (screen.getByLabelText('قیمت نهایی') as HTMLInputElement).disabled,
     ).toBe(true)
     expect(
-      screen.getByText('مهلت ۲۴ ساعته ویرایش مبلغ به پایان رسیده است.'),
+      screen.getByText('مهلت ۳۰ روزه ویرایش مبلغ به پایان رسیده است.'),
     ).toBeTruthy()
   })
 })

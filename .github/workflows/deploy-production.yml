@@ -12,6 +12,7 @@ on:
           - affected
           - all
           - api
+          - admin
           - web
           - pwa
       ref:
@@ -172,7 +173,7 @@ jobs:
           }
 
           available_apps=()
-          for app in api web pwa; do
+          for app in admin api web pwa; do
             version="$(version_for "$app")"
             tag="${version}-${short_sha}"
             image="${registry}saluna-${app}:${tag}"
@@ -184,7 +185,7 @@ jobs:
           if [[ "$SELECTED_APP" == "affected" ]]; then
             apps=("${available_apps[@]}")
           elif [[ "$SELECTED_APP" == "all" ]]; then
-            apps=(api web pwa)
+            apps=(admin api web pwa)
           else
             apps=("$SELECTED_APP")
           fi
@@ -211,6 +212,11 @@ jobs:
                 registry_var=SALUNA_API_IMAGE_REGISTRY
                 version_var=SALUNA_API_VERSION
                 smoke_url=https://api.saluna.ir/health
+                ;;
+              admin)
+                registry_var=SALUNA_ADMIN_IMAGE_REGISTRY
+                version_var=SALUNA_ADMIN_VERSION
+                smoke_url=https://admin.saluna.ir/login
                 ;;
               web)
                 registry_var=SALUNA_WEB_IMAGE_REGISTRY

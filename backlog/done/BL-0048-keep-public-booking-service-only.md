@@ -35,5 +35,5 @@ Keep public booking and AppointmentRequest creation focused on visible active Se
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Implemented by keeping the public API/service lookup on active visible standard services only; Service Package definitions are manager-side only and public request snapshots still bind the selected service.

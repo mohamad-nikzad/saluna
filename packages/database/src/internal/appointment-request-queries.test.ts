@@ -37,6 +37,10 @@ import {
 } from './appointment-request-queries'
 import { addDaysYmd, salonTodayYmd } from '@repo/salon-core/salon-local-time'
 
+const soloRoster = [
+  { staffId: 'staff-1', isLead: true, allocationBasisPoints: 10_000 },
+]
+
 const pendingRequest = {
   id: '22222222-2222-2222-2222-222222222222',
   salonId: 'salon-1',
@@ -81,6 +85,7 @@ function setupDb(
     update: vi.fn(() => updateBuilder),
     transaction: vi.fn(),
   }
+  db.transaction.mockImplementation(async (work) => work(db))
   mocks.getDb.mockReturnValue(db)
   return { db, updateBuilder }
 }
@@ -98,7 +103,7 @@ describe('appointment request approval', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: '2026-07-03',
         startTime: '10:00',
@@ -118,15 +123,31 @@ describe('appointment request approval', () => {
     mocks.createAppointment.mockResolvedValue({ id: 'appointment-1' })
   })
 
+  it('does not create an Appointment when a concurrent close wins approval', async () => {
+    const { db, updateBuilder } = setupDb()
+    db.transaction.mockImplementation(async (work) => work(db))
+    updateBuilder.returning.mockResolvedValue([])
+
+    const result = await approveAppointmentRequest({
+      id: pendingRequest.id,
+      salonId: pendingRequest.salonId,
+      staffAssignments: soloRoster,
+      reviewedByUserId: 'manager-1',
+    })
+
+    expect(result).toMatchObject({ ok: false, status: 409 })
+    expect(mocks.createAppointment).not.toHaveBeenCalled()
+  })
+
   it('creates the approved appointment with the request service snapshot', async () => {
     const result = await approveAppointmentRequest({
       id: pendingRequest.id,
       salonId: 'salon-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: true,
       appointmentId: 'appointment-1',
       clientId: 'client-1',
@@ -134,21 +155,23 @@ describe('appointment request approval', () => {
     expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith({
       salonId: 'salon-1',
       clientId: 'client-1',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       serviceId: 'service-1',
       date: '2026-07-03',
       startTime: '10:00',
+      durationMinutes: pendingRequest.bookedServiceDuration,
       notes: pendingRequest.notes,
     })
     expect(mocks.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
       }),
       'salon-1',
       {
         createdByUserId: 'manager-1',
+        transaction: mocks.getDb(),
         serviceSnapshotOverride: {
           name: 'کوتاهی ثبت‌شده',
           duration: 45,
@@ -171,7 +194,7 @@ describe('flexible appointment request conversion', () => {
       requestedDate: null,
       requestedStartTime: null,
       requestedEndTime: null,
-      acceptableDates: [finalDate],
+      acceptableDates: [addDaysYmd(salonTodayYmd(), -1), finalDate],
       timePreference: 'afternoon',
     }
     const { db } = setupDb(request)
@@ -181,7 +204,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -200,11 +223,11 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: true,
       appointmentId: 'appointment-1',
       clientId: 'client-1',
@@ -212,7 +235,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith({
       salonId: request.salonId,
       clientId: request.clientId,
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       serviceId: request.serviceId,
       date: finalDate,
       startTime: '13:30',
@@ -222,7 +245,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.createAppointment).toHaveBeenCalledWith(
       expect.objectContaining({
         clientId: request.clientId,
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: request.serviceId,
       }),
       request.salonId,
@@ -247,7 +270,7 @@ describe('flexible appointment request conversion', () => {
       requestedDate: null,
       requestedStartTime: null,
       requestedEndTime: null,
-      acceptableDates: [addDaysYmd(salonTodayYmd(), 1)],
+      acceptableDates: [finalDate],
       timePreference: 'any',
     })
 
@@ -256,7 +279,7 @@ describe('flexible appointment request conversion', () => {
       salonId: pendingRequest.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -269,7 +292,7 @@ describe('flexible appointment request conversion', () => {
     expect(mocks.createAppointment).not.toHaveBeenCalled()
   })
 
-  it('allows a horizon date even when it was not listed as acceptable', async () => {
+  it('rejects a horizon date that was not listed as acceptable', async () => {
     const listedDate = addDaysYmd(salonTodayYmd(), 1)
     const finalDate = addDaysYmd(salonTodayYmd(), 2)
     const request = {
@@ -289,7 +312,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -308,18 +331,18 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
     expect(result).toEqual({
-      ok: true,
-      appointmentId: 'appointment-manual-date',
-      clientId: 'client-1',
+      ok: false,
+      status: 400,
+      error: 'تاریخ انتخاب‌شده قابل قبول نیست',
     })
-    expect(mocks.validateCreateAppointmentIntake).toHaveBeenCalledWith(
-      expect.objectContaining({ date: finalDate }),
-    )
+    expect(mocks.validateCreateAppointmentIntake).not.toHaveBeenCalled()
+    expect(mocks.createAppointment).not.toHaveBeenCalled()
+    expect(db.transaction).not.toHaveBeenCalled()
   })
 
   it('rejects a start time outside the saved Time Preference', async () => {
@@ -340,7 +363,7 @@ describe('flexible appointment request conversion', () => {
       salonId: pendingRequest.salonId,
       finalDate,
       startTime: '17:00',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 
@@ -375,7 +398,7 @@ describe('flexible appointment request conversion', () => {
       ok: true,
       command: {
         clientId: 'client-1',
-        staffId: 'staff-1',
+        staffAssignments: soloRoster,
         serviceId: 'service-1',
         date: finalDate,
         startTime: '13:30',
@@ -392,7 +415,7 @@ describe('flexible appointment request conversion', () => {
       salonId: request.salonId,
       finalDate,
       startTime: '13:30',
-      staffId: 'staff-1',
+      staffAssignments: soloRoster,
       reviewedByUserId: 'manager-1',
     })
 

@@ -214,15 +214,14 @@ export function ServiceAddonDrawer({
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field>
-                <FieldLabel htmlFor="addon-price">
-                  افزایش قیمت (تومان)
-                </FieldLabel>
+                <FieldLabel htmlFor="addon-price">افزایش قیمت</FieldLabel>
                 <Controller
                   control={control}
                   name="priceDelta"
                   render={({ field }) => (
                     <LocalizedNumberInput
                       id="addon-price"
+                      currency
                       value={field.value}
                       onValueChange={field.onChange}
                       onBlur={() => {

@@ -334,6 +334,7 @@ export async function createService(
     salonId: string
     categoryId?: string | null
     active?: boolean
+    allowMultipleStaff?: boolean
     description?: string | null
   },
 ): Promise<Service> {
@@ -351,6 +352,7 @@ export async function createService(
     price: input.price,
     color: input.color,
     active: input.active ?? true,
+    allowMultipleStaff: input.allowMultipleStaff ?? false,
     description: input.description ?? null,
   }
   if (isClientProvidedEntityId(input.id)) {
@@ -376,6 +378,7 @@ export async function updateService(
       | 'price'
       | 'color'
       | 'active'
+      | 'allowMultipleStaff'
       | 'description'
     >
   >,
@@ -400,6 +403,9 @@ export async function updateService(
       ...(data.price !== undefined ? { price: data.price } : {}),
       ...(data.color !== undefined ? { color: data.color } : {}),
       ...(data.active !== undefined ? { active: data.active } : {}),
+      ...(data.allowMultipleStaff !== undefined
+        ? { allowMultipleStaff: data.allowMultipleStaff }
+        : {}),
       ...(data.description !== undefined
         ? { description: data.description }
         : {}),

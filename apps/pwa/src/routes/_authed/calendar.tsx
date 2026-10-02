@@ -198,7 +198,10 @@ function CalendarPage() {
     if (!isManager) return appointments
     return appointments.filter((a) => {
       const staffMatches =
-        selectedStaffIds.length === 0 || selectedStaffIds.includes(a.staffId)
+        selectedStaffIds.length === 0 ||
+        a.staffAssignments.some((assignment) =>
+          selectedStaffIds.includes(assignment.staffId),
+        )
       const serviceMatches =
         selectedServiceIds.length === 0 ||
         selectedServiceIds.includes(a.serviceId)
@@ -228,7 +231,10 @@ function CalendarPage() {
     return appointments
       .filter((a) => {
         const staffMatches =
-          selectedStaffIds.length === 0 || selectedStaffIds.includes(a.staffId)
+          selectedStaffIds.length === 0 ||
+          a.staffAssignments.some((assignment) =>
+            selectedStaffIds.includes(assignment.staffId),
+          )
         const serviceMatches =
           selectedServiceIds.length === 0 ||
           selectedServiceIds.includes(a.serviceId)
@@ -352,11 +358,6 @@ function CalendarPage() {
   )
 
   const handleOpenDaySummary = useCallback((dateStr: string) => {
-    const parsed = parseISO(dateStr)
-    if (!Number.isNaN(parsed.getTime())) {
-      setNavDate(parsed)
-      setTitleAnchor(parsed)
-    }
     setSummaryDate(dateStr)
   }, [])
 
@@ -371,7 +372,6 @@ function CalendarPage() {
 
   const handleOpenAppointmentFromSummary = useCallback(
     (appointment: AppointmentWithDetails) => {
-      setSummaryDate(null)
       openDetail(appointment)
     },
     [openDetail],
@@ -450,7 +450,6 @@ function CalendarPage() {
 
   const handleConcurrentSelect = useCallback(
     (appointment: AppointmentWithDetails) => {
-      setConcurrentCluster(null)
       openDetail(appointment)
     },
     [openDetail],
@@ -697,6 +696,7 @@ function CalendarPage() {
 
       <ConcurrentAppointmentsSheet
         cluster={concurrentCluster}
+        lockDismiss={Boolean(appointmentFlow.state.detailAppointment)}
         onOpenChange={(open) => !open && setConcurrentCluster(null)}
         onSelectAppointment={handleConcurrentSelect}
       />
@@ -705,6 +705,7 @@ function CalendarPage() {
         date={summaryDate}
         appointments={filteredAppointments}
         canCreate={isManager}
+        lockDismiss={Boolean(appointmentFlow.state.detailAppointment)}
         onOpenChange={(open) => !open && setSummaryDate(null)}
         onCreateAppointment={handleCreateFromDaySummary}
         onOpenAppointment={handleOpenAppointmentFromSummary}

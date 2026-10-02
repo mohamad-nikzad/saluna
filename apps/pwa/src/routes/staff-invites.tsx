@@ -51,9 +51,13 @@ function StaffInvitesPage() {
   const respond = useMutation({
     mutationFn: ({ id, accept }: { id: string; accept: boolean }) =>
       accept ? api.auth.acceptStaffInvite(id) : api.auth.declineStaffInvite(id),
+    onError: async () => {
+      await invites.refetch()
+    },
     onSuccess: async (_, variables) => {
       if (variables.accept) clearPersistedActiveSalonId()
       await invites.refetch()
+      if (variables.accept) await finish()
     },
   })
 
@@ -98,7 +102,8 @@ function StaffInvitesPage() {
         </div>
         <h1 className="text-2xl font-extrabold">دعوت‌های سالن</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          دعوت‌های در انتظار را بپذیرید یا رد کنید.
+          دعوت‌های فعال را بپذیرید یا رد کنید. برای دعوت منقضی‌شده از مدیر سالن
+          بخواهید دعوت را دوباره ارسال کند.
         </p>
       </div>
       <ul className="flex flex-col gap-3">
@@ -111,24 +116,44 @@ function StaffInvitesPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               پروفایل {invite.staffName}
             </p>
-            <div className="mt-4 flex gap-2">
-              <Button
-                disabled={respond.isPending}
-                onClick={() => respond.mutate({ id: invite.id, accept: true })}
-              >
-                پذیرفتن
-              </Button>
-              <Button
-                variant="outline"
-                disabled={respond.isPending}
-                onClick={() => respond.mutate({ id: invite.id, accept: false })}
-              >
-                رد کردن
-              </Button>
-            </div>
+            {invite.status === 'expired' ||
+            new Date(invite.expiresAt).getTime() <= Date.now() ? (
+              <p className="mt-4 text-sm text-muted-foreground">
+                مهلت این دعوت تمام شده است. از مدیر سالن بخواهید دعوت را دوباره
+                ارسال کند، سپس «بررسی دوباره» را بزنید.
+              </p>
+            ) : (
+              <div className="mt-4 flex gap-2">
+                <Button
+                  disabled={respond.isPending}
+                  onClick={() =>
+                    respond.mutate({ id: invite.id, accept: true })
+                  }
+                >
+                  پذیرفتن
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={respond.isPending}
+                  onClick={() =>
+                    respond.mutate({ id: invite.id, accept: false })
+                  }
+                >
+                  رد کردن
+                </Button>
+              </div>
+            )}
           </li>
         ))}
       </ul>
+      <Button
+        className="mt-4"
+        variant="outline"
+        disabled={invites.isFetching}
+        onClick={() => void invites.refetch()}
+      >
+        بررسی دوباره
+      </Button>
       {respond.isError ? (
         <p className="mt-4 text-center text-sm text-destructive">
           ثبت پاسخ دعوت انجام نشد. دوباره تلاش کنید.

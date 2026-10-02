@@ -162,7 +162,9 @@ async function approveWithStaff(
   const result = await approveAppointmentRequest({
     id: input.requestId,
     salonId: resolved.salonId,
-    staffId,
+    staffAssignments: [
+      { staffId, isLead: true, allocationBasisPoints: 10_000 },
+    ],
     reviewedByUserId: resolved.caller.userId,
   })
   if (!result.ok) {

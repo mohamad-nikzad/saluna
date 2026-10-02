@@ -36,12 +36,13 @@ export type StaffSalonOption = {
   staffProfileId: string
 }
 
-export type PendingStaffInvite = {
+export type UnacceptedStaffInvite = {
   id: string
   salonId: string
   salonName: string
   staffProfileId: string
   staffName: string
+  status: string
   phone: string
   expiresAt: string
   createdAt: string
@@ -142,7 +143,7 @@ export function createAuthApi(client: ApiClient) {
       )
     },
     listStaffInvites(opts: { signal?: AbortSignal } = {}) {
-      return client.request<{ invites: PendingStaffInvite[] }>(
+      return client.request<{ invites: UnacceptedStaffInvite[] }>(
         endpoints.auth.staffInvites,
         { signal: opts.signal },
       )

@@ -1,6 +1,13 @@
 import { getAppointmentRequestNotificationContext } from '@repo/database/appointment-requests'
 import { listManagerUserIdsForSalon } from '@repo/database/members'
+import {
+  createNotificationForUserOnce,
+  dispatchNotification,
+  getNotificationPreferences,
+} from '@repo/database/notifications'
+import { getClientFollowUpMessageContext } from '@repo/database/clients'
 import { createNotificationForUser } from './notifications'
+import { isWebPushConfigured, sendWebPushToUser } from './push'
 import { renderAppointmentRequestPending } from './templates/appointment-request'
 
 export type NotifyManagersOfNewAppointmentRequestOptions = {
@@ -61,5 +68,44 @@ export async function notifyManagersOfNewAppointmentRequest(
         })
       }),
     ),
+  )
+}
+
+export async function notifyManagersOfBirthdayFollowUp(
+  salonId: string,
+  followUpId: string,
+): Promise<void> {
+  const context = await getClientFollowUpMessageContext(salonId, followUpId)
+  if (!context || context.followUp.reason !== 'birthday') return
+  const managerIds = await listManagerUserIdsForSalon(context.salon.id)
+
+  await Promise.all(
+    managerIds.map(async (userId) => {
+      const notification = await createNotificationForUserOnce({
+        salonId: context.salon.id,
+        userId,
+        type: 'birthday_follow_up',
+        title: `تولد ${context.client.name} نزدیک است`,
+        body: 'برای تماس یا ارسال پیام، صف پیگیری مشتریان را باز کنید.',
+        route: '/retention',
+        sourceKey: followUpId,
+        data: { followUpId, clientId: context.client.id },
+      })
+      if (!notification) return
+
+      await dispatchNotification(notification.id, 'in_app')
+      const preferences = await getNotificationPreferences(
+        context.salon.id,
+        userId,
+      )
+      if (preferences.localAlertsEnabled && isWebPushConfigured()) {
+        await sendWebPushToUser(userId, {
+          title: notification.title,
+          body: notification.body,
+          url: '/retention',
+          tag: `birthday-follow-up-${followUpId}`,
+        })
+      }
+    }),
   )
 }

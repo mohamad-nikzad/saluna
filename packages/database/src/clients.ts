@@ -35,6 +35,7 @@ export {
   getLatestClientFollowUpMessageDelivery,
   getClientFollowUps,
   getClientSummary,
+  syncBirthdayFollowUps,
   updateClientFollowUpStatus,
 } from './internal/client-followup-queries'
 export type {

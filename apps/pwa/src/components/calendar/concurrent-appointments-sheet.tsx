@@ -74,12 +74,15 @@ export function buildConcurrencyClusters(
 
 interface ConcurrentAppointmentsSheetProps {
   cluster: AppointmentWithDetails[] | null
+  /** Hide this drawer without clearing the cluster while a nested Appointment drawer is open. */
+  lockDismiss?: boolean
   onOpenChange: (open: boolean) => void
   onSelectAppointment: (appointment: AppointmentWithDetails) => void
 }
 
 export function ConcurrentAppointmentsSheet({
   cluster,
+  lockDismiss = false,
   onOpenChange,
   onSelectAppointment,
 }: ConcurrentAppointmentsSheetProps) {
@@ -120,9 +123,25 @@ export function ConcurrentAppointmentsSheet({
       }
     >()
     for (const apt of sorted) {
-      const entry = map.get(apt.staffId)
-      if (entry) entry.appts.push(apt)
-      else map.set(apt.staffId, { staff: apt.staff, appts: [apt] })
+      for (const assignment of apt.staffAssignments) {
+        const assignee =
+          assignment.staff ??
+          (assignment.isLead || assignment.staffId === apt.staff.id
+            ? apt.staff
+            : {
+                ...apt.staff,
+                id: assignment.staffId,
+                name: assignment.staffId,
+              })
+        const entry = map.get(assignment.staffId)
+        if (entry) {
+          if (!entry.appts.some((existing) => existing.id === apt.id)) {
+            entry.appts.push(apt)
+          }
+        } else {
+          map.set(assignment.staffId, { staff: assignee, appts: [apt] })
+        }
+      }
     }
     return Array.from(map.values())
   }, [sorted])
@@ -142,21 +161,27 @@ export function ConcurrentAppointmentsSheet({
   const dateLabel = open ? formatPersianFullDate(parseISO(sorted[0].date)) : ''
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open && !lockDismiss}
+      onOpenChange={(next) => {
+        if (!next && lockDismiss) return
+        onOpenChange(next)
+      }}
+    >
       <DrawerContent>
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center justify-end gap-2 text-muted-foreground">
+        <DrawerHeader className="min-h-14">
+          <div className="flex items-center justify-start gap-2 text-muted-foreground">
+            <CalendarDays className="size-4" />
             <DrawerTitle className="text-[13px] font-semibold text-foreground">
               {dateLabel}
             </DrawerTitle>
-            <CalendarDays className="size-4" />
           </div>
           <DrawerDescription className="sr-only">
             فهرست نوبت‌های همزمان در این بازه
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-4 pb-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-4 pb-4">
           {/* Hero */}
           <div className="hero-surface relative overflow-hidden rounded-[22px] px-5 py-4">
             <SakuraMark

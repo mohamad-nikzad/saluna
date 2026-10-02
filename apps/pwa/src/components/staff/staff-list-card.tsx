@@ -62,15 +62,19 @@ export function StaffListCard({
               style={{ backgroundColor: staffAccentVar(member.color) }}
               aria-hidden
             />
-            {member.inviteStatus === 'pending' ? (
+            {member.inviteStatus === 'pending' ||
+            member.inviteStatus === 'expired' ? (
               <Badge variant="secondary" className="shrink-0 text-[10px]">
-                در انتظار دعوت
+                {member.inviteStatus === 'expired'
+                  ? 'دعوت منقضی‌شده'
+                  : 'در انتظار دعوت'}
               </Badge>
             ) : null}
           </div>
           <p className="mt-0.5 text-[11.5px] text-muted-foreground">
-            {member.inviteStatus === 'pending'
-              ? 'دعوت شده — هنوز ورود ندارد'
+            {member.inviteStatus === 'pending' ||
+            member.inviteStatus === 'expired'
+              ? 'دعوت شده، هنوز ورود ندارد'
               : staffRoleLabel(member.role)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -90,14 +94,14 @@ export function StaffListCard({
         onEditServices={onEditServices}
         onEditSchedule={onEditSchedule}
         onResendInvite={
-          member.inviteStatus === 'pending'
+          member.inviteStatus === 'pending' || member.inviteStatus === 'expired'
             ? () => {
                 resendInvite.mutate(member.id)
               }
             : undefined
         }
         onCancelInvite={
-          member.inviteStatus === 'pending'
+          member.inviteStatus === 'pending' || member.inviteStatus === 'expired'
             ? () => {
                 cancelInvite.mutate(member.id)
               }

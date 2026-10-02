@@ -6,19 +6,28 @@ import {
   clientCreateSchema,
   clientFormSchema,
   clientUpdateSchema,
+  formatJalaliBirthDateInput,
 } from './client'
 
 describe('clientFormSchema', () => {
+  it('formats mobile birthday input while preserving paste and backspace', () => {
+    expect(formatJalaliBirthDateInput('۱۳۷۰۰۵۱۰')).toBe('۱۳۷۰/۰۵/۱۰')
+    expect(formatJalaliBirthDateInput('1370/5/10')).toBe('۱۳۷۰/۵/۱۰')
+    expect(formatJalaliBirthDateInput('۱۳۷۰/۰۵/۱')).toBe('۱۳۷۰/۰۵/۱')
+  })
+
   it('normalizes phone and trims notes', () => {
     const result = clientFormSchema.parse({
       name: '  مریم  ',
       phone: '۰۹۱۲۳۴۵۶۷۸۹',
       notes: '  مشتری ثابت  ',
+      acquisitionSource: 'instagram',
       tags: ['VIP', 'VIP', ' حساسیت ', ''],
     })
     expect(result.name).toBe('مریم')
     expect(result.phone).toBe('09123456789')
     expect(result.notes).toBe('مشتری ثابت')
+    expect(result.acquisitionSource).toBe('instagram')
     expect(result.tags).toEqual(['VIP', 'حساسیت'])
   })
 
@@ -45,6 +54,15 @@ describe('clientFormSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects an unknown acquisition source', () => {
+    const result = clientFormSchema.safeParse({
+      name: 'x',
+      phone: '09123456789',
+      acquisitionSource: 'billboard',
+    })
+    expect(result.success).toBe(false)
+  })
+
   it('caps tags at MAX_CLIENT_TAGS', () => {
     const tags = Array.from({ length: 12 }, (_, i) => `t${i}`)
     const result = clientFormSchema.safeParse({
@@ -61,6 +79,36 @@ describe('clientFormSchema', () => {
       phone: '09123456789',
     })
     expect(result.tags).toEqual([])
+  })
+
+  it('accepts a complete past Jalali birth date and rejects future dates', () => {
+    expect(
+      clientFormSchema.parse({
+        name: 'x',
+        phone: '09123456789',
+        birthDate: '۱۳۷۰/۰۵/۱۰',
+      }).birthDate,
+    ).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(
+      clientFormSchema.safeParse({
+        name: 'x',
+        phone: '09123456789',
+        birthDate: '۱۵۰۰/۰۱/۰۱',
+      }).success,
+    ).toBe(false)
+    expect(
+      clientFormSchema.safeParse({
+        name: 'x',
+        phone: '09123456789',
+        birthDate: '1991-08-01',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('clears an entered birth date with an empty value', () => {
+    expect(clientUpdateSchema.parse({ birthDate: '' })).toEqual({
+      birthDate: null,
+    })
   })
 })
 

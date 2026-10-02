@@ -44,7 +44,7 @@ test('manager configures a commission and both roles see the completed visit', a
         response.request().method() === 'PUT',
     )
     await page
-      .getByRole('button', { name: /فعال‌کردن توافق|ذخیره درصد جدید/ })
+      .getByRole('button', { name: /فعال‌کردن کمیسیون|ذخیره درصد جدید/ })
       .click()
     expect((await saved).ok()).toBeTruthy()
   })
@@ -85,10 +85,11 @@ test('manager configures a commission and both roles see the completed visit', a
   })
 
   await test.step('Manager sees salon-retained and per-visit reporting', async () => {
-    await page.goto('/commissions')
+    await page.goto('/reports')
     await expect(
-      page.getByRole('heading', { name: 'گزارش کمیسیون سالن' }),
+      page.getByRole('heading', { name: 'گزارش سالن' }),
     ).toBeVisible()
+    await page.getByRole('button', { name: 'نمایش کمیسیون' }).click()
     await expect(
       page.getByText('مبلغ باقی‌مانده سالن', { exact: true }),
     ).toBeVisible()

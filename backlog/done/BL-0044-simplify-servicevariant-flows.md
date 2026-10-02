@@ -33,5 +33,5 @@ Cut new service mutations over to normal ServiceVariants only, removing family a
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Completed on 2026-07-08. Service create/update inputs now exclude legacy family/kind fields, new variant writes rely on DB defaults for legacy storage columns, removed routes stay unmounted/unregistered, and focused API/database tests plus typechecks pass.

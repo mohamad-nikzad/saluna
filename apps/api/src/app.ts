@@ -42,6 +42,7 @@ import { salonHandoffRoute } from './routes/salon-handoff'
 import { staffInviteLinksRoute } from './routes/staff-invite-links'
 import { adminSupportTicketsRoute } from './routes/admin-support-tickets'
 import { commissions } from './routes/commissions'
+import { reports } from './routes/reports'
 const env = getEnv()
 
 const corsOrigins = env.CORS_ORIGINS
@@ -112,6 +113,7 @@ const app = new Hono<AppEnv>()
   .route('/api/v1/push', push)
   .route('/api/v1/appointments', appointments)
   .route('/api/v1/commissions', commissions)
+  .route('/api/v1/reports', reports)
   .route('/api/v1/public', publicRoutes)
   .route('/api/v1/appointment-requests', appointmentRequestsRoute)
   .route('/api/v1/messaging/bale', messagingBaleRoute)

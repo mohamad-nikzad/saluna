@@ -34,5 +34,5 @@ Let managers schedule a same-day Service Package by creating one package booking
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Implemented with `/api/v1/service-packages/:id/bookings`, transactional package booking/task Appointment creation, package booking snapshots, add-on rejection for package tasks, PWA calendar package scheduling, and focused query/API tests.

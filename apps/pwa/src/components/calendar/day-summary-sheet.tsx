@@ -23,6 +23,8 @@ interface DaySummarySheetProps {
   date: string | null
   appointments: AppointmentWithDetails[]
   canCreate: boolean
+  /** Keep the sheet mounted and ignore dismiss while a nested Appointment drawer is open. */
+  lockDismiss?: boolean
   onOpenChange: (open: boolean) => void
   onCreateAppointment: (date: string) => void
   onOpenAppointment: (appointment: AppointmentWithDetails) => void
@@ -39,6 +41,7 @@ export function DaySummarySheet({
   date,
   appointments,
   canCreate,
+  lockDismiss = false,
   onOpenChange,
   onCreateAppointment,
   onOpenAppointment,
@@ -56,17 +59,36 @@ export function DaySummarySheet({
   const open = Boolean(date)
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      modal={!lockDismiss}
+      onOpenChange={(next) => {
+        if (!next && lockDismiss) return
+        onOpenChange(next)
+      }}
+    >
       <SheetContent
         side="bottom"
         className="max-h-[86dvh] rounded-t-[24px] border-border/70 p-0 sm:inset-x-auto sm:left-4 sm:right-auto sm:bottom-4 sm:max-h-[calc(100dvh-2rem)] sm:w-[420px] sm:rounded-[24px] sm:border"
+        onInteractOutside={(event) => {
+          if (lockDismiss) event.preventDefault()
+        }}
+        onPointerDownOutside={(event) => {
+          if (lockDismiss) event.preventDefault()
+        }}
+        onFocusOutside={(event) => {
+          if (lockDismiss) event.preventDefault()
+        }}
+        onEscapeKeyDown={(event) => {
+          if (lockDismiss) event.preventDefault()
+        }}
       >
-        <SheetHeader className="border-b border-border/50 px-5 pb-4 pt-5 text-right">
-          <div className="flex items-center justify-end gap-2 text-muted-foreground">
+        <SheetHeader className="border-b border-border/50 px-5 pe-14 pb-4 pt-5 text-right">
+          <div className="flex items-center justify-start gap-2 text-muted-foreground">
+            <CalendarDays className="size-4" aria-hidden="true" />
             <SheetTitle className="text-[15px] font-bold text-foreground">
               {dateLabel}
             </SheetTitle>
-            <CalendarDays className="size-4" aria-hidden="true" />
           </div>
           <SheetDescription>
             {sorted.length > 0

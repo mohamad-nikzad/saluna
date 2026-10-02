@@ -159,6 +159,7 @@ describe('resolveIntakeServiceChange', () => {
     ).toEqual({
       serviceId: 'svc1',
       staffId: 's1',
+      additionalStaffIds: [],
       addonIds: [],
       durationMinutes: 45,
     })

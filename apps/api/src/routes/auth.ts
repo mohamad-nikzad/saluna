@@ -36,7 +36,7 @@ import {
   getStaffProfileForUser,
   getUserWithServiceIds,
   leaveStaffProfileAccess,
-  listPendingStaffInvitesForUser,
+  listUnacceptedStaffInvitesForUser,
   listStaffSalonOptionsForUser,
   type StaffAccessRevocationRejectionReason,
   type StaffInviteAcceptanceRejectionReason,
@@ -366,10 +366,10 @@ export const authRoute = new Hono<AppEnv>()
 
     const salonOptions = await listStaffSalonOptionsForUser(sessionUser.id)
     if (salonOptions.length === 0) {
-      const pendingInvites = await listPendingStaffInvitesForUser(
+      const unacceptedInvites = await listUnacceptedStaffInvitesForUser(
         sessionUser.id,
       )
-      if (pendingInvites.length > 0) {
+      if (unacceptedInvites.length > 0) {
         return ok(c, {
           status: 'needs_staff_invite',
           user: {
@@ -481,7 +481,7 @@ export const authRoute = new Hono<AppEnv>()
     const sessionUser = await getSessionUser(c)
     if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
 
-    const invites = await listPendingStaffInvitesForUser(sessionUser.id)
+    const invites = await listUnacceptedStaffInvitesForUser(sessionUser.id)
     return ok(c, {
       invites: invites.map((invite) => ({
         id: invite.id,
@@ -489,6 +489,7 @@ export const authRoute = new Hono<AppEnv>()
         salonName: invite.salonName,
         staffProfileId: invite.staffProfileId,
         staffName: invite.staffName,
+        status: invite.status,
         phone: invite.phone,
         expiresAt: invite.expiresAt.toISOString(),
         createdAt: invite.createdAt.toISOString(),
@@ -716,7 +717,9 @@ export const authRoute = new Hono<AppEnv>()
         })
       }
 
-      if ((await listPendingStaffInvitesForUser(sessionUser.id)).length > 0) {
+      if (
+        (await listUnacceptedStaffInvitesForUser(sessionUser.id)).length > 0
+      ) {
         return error(
           c,
           'ابتدا دعوت پرسنل خود را بپذیرید یا رد کنید',

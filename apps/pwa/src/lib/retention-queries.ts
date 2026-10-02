@@ -4,12 +4,14 @@ import {
   getApiV1RetentionQueryKey,
   patchApiV1RetentionByIdMutation,
   postApiV1RetentionByIdBaleMessageMutation,
+  postApiV1RetentionByIdSmsMessageMutation,
 } from '@repo/api-client/query'
 import type {
   FollowUpStatus,
   RetentionItem,
   RetentionListResponse,
   RetentionBaleMessageResponse,
+  RetentionSmsMessageResponse,
 } from '@repo/api-client/types'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
@@ -20,6 +22,7 @@ export type {
   RetentionItem,
   RetentionListResponse,
   RetentionBaleMessageResponse,
+  RetentionSmsMessageResponse,
 }
 
 export function retentionInvalidationKeys() {
@@ -68,19 +71,45 @@ export function useSendRetentionBaleMessageMutation() {
 
   return useMutation({
     mutationFn: async (
-      { id, retry }: { id: string; retry?: boolean },
+      { id, retry, message }: { id: string; retry?: boolean; message?: string },
       mutationContext,
     ): Promise<RetentionBaleMessageResponse> => {
       return generated.mutationFn!(
         {
           path: { id },
-          ...(retry ? { body: { retry: true } } : {}),
+          ...(retry || message
+            ? { body: { ...(retry ? { retry: true } : {}), message } }
+            : {}),
         },
         mutationContext,
       )
     },
     meta: {
       skipToast: true,
+      invalidatesQuery: retentionInvalidationKeys(),
+    },
+  })
+}
+
+export function useSendRetentionSmsMessageMutation() {
+  const generated = postApiV1RetentionByIdSmsMessageMutation()
+
+  return useMutation({
+    mutationFn: async (
+      { id, message, retry }: { id: string; message: string; retry?: boolean },
+      mutationContext,
+    ): Promise<RetentionSmsMessageResponse> => {
+      return generated.mutationFn!(
+        {
+          path: { id },
+          body: { message, ...(retry ? { retry: true } : {}) },
+        },
+        mutationContext,
+      )
+    },
+    meta: {
+      skipToast: true,
+      invalidatesQuery: retentionInvalidationKeys(),
     },
   })
 }

@@ -8,7 +8,24 @@ import {
   completePlaceholderClientSchema,
 } from './appointment'
 
+const staffAssignments = [
+  {
+    staffId: 'staff-1',
+    isLead: true,
+    allocationBasisPoints: 10_000,
+  },
+]
+
 const base = {
+  staffAssignments,
+  serviceId: 'service-1',
+  date: '2026-05-11',
+  startTime: '۰۹:۳۰',
+  endTime: '۱۰:۱۵',
+  durationMinutes: '۴۵',
+}
+
+const formBase = {
   staffId: 'staff-1',
   serviceId: 'service-1',
   date: '2026-05-11',
@@ -29,7 +46,7 @@ describe('appointmentCreateSchema', () => {
     })
 
     expect(result).toMatchObject({
-      staffId: 'staff-1',
+      staffAssignments,
       serviceId: 'service-1',
       date: '2026-05-11',
       startTime: '09:30',
@@ -88,6 +105,19 @@ describe('appointmentCreateSchema', () => {
       }).success,
     ).toBe(false)
   })
+
+  it('rejects roster without exactly one lead or allocations not summing to 10000', () => {
+    expect(
+      appointmentCreateSchema.safeParse({
+        ...base,
+        clientId: 'client-1',
+        staffAssignments: [
+          { staffId: 'a', isLead: true, allocationBasisPoints: 5000 },
+          { staffId: 'b', isLead: true, allocationBasisPoints: 5000 },
+        ],
+      }).success,
+    ).toBe(false)
+  })
 })
 
 describe('appointment server schemas', () => {
@@ -100,6 +130,16 @@ describe('appointment server schemas', () => {
       status: 'confirmed',
       notes: 'آماده شد',
     })
+  })
+
+  it('accepts full roster replace on update', () => {
+    const result = appointmentUpdateSchema.parse({
+      staffAssignments: [
+        { staffId: 'a', isLead: true, allocationBasisPoints: 6000 },
+        { staffId: 'b', isLead: false, allocationBasisPoints: 4000 },
+      ],
+    })
+    expect(result.staffAssignments).toHaveLength(2)
   })
 
   it('normalizes placeholder completion fields', () => {
@@ -129,9 +169,9 @@ describe('appointment server schemas', () => {
 })
 
 describe('appointmentFormSchema', () => {
-  it('emits a clientId payload from regular form values', () => {
+  it('emits staffAssignments from lead + extras form values', () => {
     const result = appointmentFormSchema.parse({
-      ...base,
+      ...formBase,
       useTemporaryClient: false,
       clientId: 'client-1',
       finalPrice: '۲۷۵۰۰۰',
@@ -140,7 +180,7 @@ describe('appointmentFormSchema', () => {
 
     expect(result).toEqual({
       clientId: 'client-1',
-      staffId: 'staff-1',
+      staffAssignments,
       serviceId: 'service-1',
       date: '2026-05-11',
       startTime: '09:30',
@@ -154,7 +194,7 @@ describe('appointmentFormSchema', () => {
 
   it('emits a placeholderClient payload from temporary-client form values', () => {
     const result = appointmentFormSchema.parse({
-      ...base,
+      ...formBase,
       useTemporaryClient: true,
       temporaryClientName: '  مهمان  ',
       temporaryClientNotes: '',
@@ -165,11 +205,12 @@ describe('appointmentFormSchema', () => {
       name: 'مهمان',
       notes: undefined,
     })
+    expect(result.staffAssignments).toEqual(staffAssignments)
   })
 
   it('pins validation errors to the UI fields', () => {
     const result = appointmentFormSchema.safeParse({
-      ...base,
+      ...formBase,
       useTemporaryClient: true,
       temporaryClientName: '',
       staffId: '',
@@ -187,7 +228,7 @@ describe('appointmentFormSchema', () => {
 
   it('rejects a cleared duration instead of falling back to the old value', () => {
     const result = appointmentFormSchema.safeParse({
-      ...base,
+      ...formBase,
       useTemporaryClient: false,
       clientId: 'client-1',
       durationMinutes: '',

@@ -12,7 +12,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
-import { addDays, addMonths, format, subDays } from 'date-fns'
+import { addDays, addMonths, format, startOfWeek, subDays } from 'date-fns'
 import { WORKING_HOURS } from '@repo/salon-core/types'
 import type {
   AppointmentWithDetails,
@@ -37,6 +37,7 @@ import {
   salonTodayYmd,
 } from '@repo/salon-core/salon-local-time'
 import { buildConcurrencyClusters } from '#/components/calendar/concurrent-appointments-sheet'
+import { calendarMonthRange } from './calendar-month'
 import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 
 function durationMinutes(startTime: string, endTime: string): number {
@@ -78,7 +79,7 @@ function calendarViewToFc(view: CalendarView): string {
     case 'week':
       return 'timeGridWeek'
     case 'month':
-      return 'dayGridMonth'
+      return 'dayGridJalaliMonth'
     case 'list':
       return 'listUpcomingMonth'
     default:
@@ -218,6 +219,19 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       return { start, end: addDays(addMonths(start, 1), 1) }
     }
   }, [view])
+  const monthRange = useMemo(
+    () => calendarMonthRange(currentDate),
+    [currentDate],
+  )
+  const monthVisibleRange = useCallback((rangeDate: Date): DateRangeInput => {
+    const { start, end } = calendarMonthRange(rangeDate)
+    // Whole Saturday–Friday weeks make FullCalendar lay out a grid without
+    // inheriting dayGridMonth's Gregorian month duration.
+    return {
+      start: startOfWeek(start, { weekStartsOn: 6 }),
+      end: addDays(startOfWeek(subDays(end, 1), { weekStartsOn: 6 }), 7),
+    }
+  }, [])
   const appointmentsById = useMemo(() => {
     const m = new Map<string, AppointmentWithDetails>()
     for (const a of appointments) m.set(a.id, a)
@@ -225,37 +239,61 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
   }, [appointments])
 
   const events: EventInput[] = useMemo(() => {
-    const buildSingle = (apt: AppointmentWithDetails): EventInput => {
-      const staffVar = staffAccentVar(apt.staff.color)
+    const buildSingles = (apt: AppointmentWithDetails): EventInput[] => {
       const isDone = apt.status === 'completed'
       const isCancelled = apt.status === 'cancelled' || apt.status === 'no-show'
       const classNames: string[] = []
       if (isDone) classNames.push('fc-event--done')
       else if (isCancelled) classNames.push('fc-event--cancelled')
       const clientLabel = `${apt.client.isPlaceholder ? 'موقت · ' : ''}${apt.client.name}`
-      return {
-        id: apt.id,
-        title: `${clientLabel} — ${appointmentServiceLabel(apt, view)}`,
-        start: `${apt.date}T${apt.startTime}:00`,
-        end: `${apt.date}T${apt.endTime}:00`,
-        allDay: false,
-        extendedProps: {
-          kind: 'single',
-          appointmentId: apt.id,
-          staffColorVar: staffVar,
-          timeLabel: formatPersianTime(apt.startTime),
-          clientLabel,
-          serviceLabel: appointmentServiceLabel(apt, view),
-          staffName: apt.staff.name.split(' ')[0],
-          clientInitials: personInitials(apt.client.name),
-          durationLabel: `${toPersianDigits(durationMinutes(apt.startTime, apt.endTime))} د`,
-          isDone,
-          isCancelled,
-        },
-        backgroundColor: `color-mix(in oklch, ${staffVar} 55%, var(--card))`,
-        borderColor: staffVar,
-        classNames,
-      }
+      const assignees =
+        apt.staffAssignments.length > 0
+          ? apt.staffAssignments
+          : [
+              {
+                id: `lead-${apt.id}`,
+                staffId: apt.staff.id,
+                isLead: true,
+                allocationBasisPoints: 10_000,
+                staff: apt.staff,
+              },
+            ]
+      return assignees.map((assignment) => {
+        const assignee =
+          assignment.staff ??
+          (assignment.isLead || assignment.staffId === apt.staff.id
+            ? apt.staff
+            : {
+                ...apt.staff,
+                id: assignment.staffId,
+                name: assignment.staffId,
+              })
+        const staffVar = staffAccentVar(assignee.color)
+        return {
+          id: `${apt.id}:${assignment.staffId}`,
+          title: `${clientLabel} — ${appointmentServiceLabel(apt, view)}`,
+          start: `${apt.date}T${apt.startTime}:00`,
+          end: `${apt.date}T${apt.endTime}:00`,
+          allDay: false,
+          extendedProps: {
+            kind: 'single',
+            appointmentId: apt.id,
+            assigneeStaffId: assignment.staffId,
+            staffColorVar: staffVar,
+            timeLabel: formatPersianTime(apt.startTime),
+            clientLabel,
+            serviceLabel: appointmentServiceLabel(apt, view),
+            staffName: assignee.name.split(' ')[0],
+            clientInitials: personInitials(apt.client.name),
+            durationLabel: `${toPersianDigits(durationMinutes(apt.startTime, apt.endTime))} د`,
+            isDone,
+            isCancelled,
+          },
+          backgroundColor: `color-mix(in oklch, ${staffVar} 55%, var(--card))`,
+          borderColor: staffVar,
+          classNames,
+        }
+      })
     }
 
     if (view !== 'week') {
@@ -264,7 +302,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         view === 'list'
           ? appointments.filter((a) => a.date >= salonTodayYmd())
           : appointments
-      return source.map(buildSingle)
+      return source.flatMap(buildSingles)
     }
 
     // Week view: collapse time-overlapping appointments into one "N همزمان" pill.
@@ -274,7 +312,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
     for (const apt of appointments) {
       const cluster = clusters.get(apt.id)
       if (!cluster || cluster.length < 2) {
-        out.push(buildSingle(apt))
+        out.push(...buildSingles(apt))
         continue
       }
       const ids = cluster.map((c) => c.id).sort()
@@ -291,8 +329,15 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       )
       const dotColors: string[] = []
       for (const c of cluster) {
-        const v = staffAccentVar(c.staff.color)
-        if (!dotColors.includes(v)) dotColors.push(v)
+        for (const assignment of c.staffAssignments) {
+          const assignee =
+            assignment.staff ??
+            (assignment.isLead || assignment.staffId === c.staff.id
+              ? c.staff
+              : c.staff)
+          const v = staffAccentVar(assignee.color)
+          if (!dotColors.includes(v)) dotColors.push(v)
+        }
       }
       out.push({
         id: `cluster:${key}`,
@@ -346,15 +391,14 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
     (arg: DateSelectArg) => {
       const dateStr = format(arg.start, 'yyyy-MM-dd')
       const timeStr = format(arg.start, 'HH:mm')
-      if (arg.allDay || arg.view.type === 'dayGridMonth') {
-        onDaySummaryOpen?.(dateStr)
+      if (arg.allDay || arg.view.type === 'dayGridJalaliMonth') {
         arg.view.calendar.unselect()
         return
       }
       onSlotSelect(dateStr, timeStr)
       arg.view.calendar.unselect()
     },
-    [onSlotSelect, onDaySummaryOpen],
+    [onSlotSelect],
   )
 
   const selectAllow = useCallback(
@@ -371,7 +415,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault()
-      if (info.view.type === 'dayGridMonth') {
+      if (info.view.type === 'dayGridJalaliMonth') {
         const id = info.event.extendedProps.appointmentId as string | undefined
         const apt = id ? appointmentsById.get(id) : null
         if (apt) onDaySummaryOpen?.(apt.date)
@@ -396,7 +440,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
 
   const handleDateClick = useCallback(
     (arg: { date: Date; dateStr: string; view: { type: string } }) => {
-      if (arg.view.type === 'dayGridMonth') {
+      if (arg.view.type === 'dayGridJalaliMonth') {
         onDaySummaryOpen?.(format(arg.date, 'yyyy-MM-dd'))
       } else {
         onSlotSelect(format(arg.date, 'yyyy-MM-dd'), format(arg.date, 'HH:mm'))
@@ -438,6 +482,10 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         locale={faLocale}
         headerToolbar={false}
         views={{
+          dayGridJalaliMonth: {
+            type: 'dayGrid',
+            visibleRange: monthVisibleRange,
+          },
           listUpcomingMonth: {
             type: 'list',
             duration: { months: 1 },
@@ -467,14 +515,25 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         datesSet={handleDatesSet}
         // Use HTML custom content (not React nodes) so @fullcalendar/react avoids flushSync
         // during lifecycle — see fullcalendar#7448 / React 18+ strict rendering.
-        dayHeaderContent={({ date }) => {
+        dayHeaderContent={({ date, view: headerView }) => {
           const { weekday, day } = formatPersianDayHeaderCompact(date)
+          if (headerView.type === 'dayGridJalaliMonth') {
+            return {
+              html: `<span class="day-header-weekday">${escapeHtml(weekday)}</span>`,
+            }
+          }
           return {
             html: `<div class="day-header-compact"><span class="day-header-weekday">${escapeHtml(weekday)}</span><span class="day-header-num">${escapeHtml(day)}</span></div>`,
           }
         }}
+        dayCellClassNames={({ date, view: cellView }) =>
+          cellView.type === 'dayGridJalaliMonth' &&
+          (date < monthRange.start || date >= monthRange.end)
+            ? ['fc-day-other']
+            : []
+        }
         dayCellContent={(arg) => {
-          if (arg.view.type !== 'dayGridMonth') {
+          if (arg.view.type !== 'dayGridJalaliMonth') {
             return {
               html: `<span class="fc-daygrid-day-number">${escapeHtml(arg.dayNumberText)}</span>`,
             }
@@ -484,7 +543,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
           }
         }}
         dayCellDidMount={(arg) => {
-          if (arg.view.type !== 'dayGridMonth') return
+          if (arg.view.type !== 'dayGridJalaliMonth') return
           arg.el.setAttribute('role', 'button')
           arg.el.setAttribute('tabindex', '0')
           arg.el.setAttribute(
@@ -504,7 +563,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
         })}
         eventContent={(arg) => {
           const viewType = arg.view.type
-          if (viewType === 'dayGridMonth') return undefined
+          if (viewType === 'dayGridJalaliMonth') return undefined
           if (arg.event.extendedProps.kind === 'cluster') {
             const count = arg.event.extendedProps.count as number
             const dotColors =

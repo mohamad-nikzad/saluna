@@ -1,5 +1,6 @@
 export {
   createNotificationForUser,
+  createNotificationForUserOnce,
   dispatchNotification,
   getNotificationPreferences,
   listNotificationsForUser,

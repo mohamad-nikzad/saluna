@@ -45,7 +45,7 @@ export const staffUserSchema = z
     phone: z.string(),
     createdAt: isoDateTimeSchema,
     serviceIds: z.array(z.string()).nullable().optional(),
-    inviteStatus: z.enum(['pending']).nullable().optional(),
+    inviteStatus: z.enum(['pending', 'expired']).nullable().optional(),
   })
   .passthrough()
   .openapi('StaffUser')

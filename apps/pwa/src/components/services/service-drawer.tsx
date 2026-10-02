@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@repo/ui/select'
 import { Spinner } from '@repo/ui/spinner'
+import { Switch } from '@repo/ui/switch'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import type { Service, ServiceCategory } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -50,6 +51,7 @@ function emptyValues(defaultCategoryId?: string | null): ServiceFormInput {
     price: 0,
     color: STAFF_COLORS[0],
     active: true,
+    allowMultipleStaff: false,
     description: '',
   }
 }
@@ -63,6 +65,7 @@ function serviceToFormValues(service: Service): ServiceFormInput {
     price: service.price,
     color: normalizeCalendarColorId(service.color),
     active: service.active,
+    allowMultipleStaff: service.allowMultipleStaff,
     description: service.description ?? '',
   }
 }
@@ -200,13 +203,14 @@ export function ServiceDrawer({
                 )}
               </Field>
               <Field>
-                <FieldLabel htmlFor="svc-price">قیمت (تومان)</FieldLabel>
+                <FieldLabel htmlFor="svc-price">قیمت</FieldLabel>
                 <Controller
                   control={control}
                   name="price"
                   render={({ field }) => (
                     <LocalizedNumberInput
                       id="svc-price"
+                      currency
                       value={field.value}
                       onValueChange={field.onChange}
                       onBlur={() => {
@@ -221,6 +225,30 @@ export function ServiceDrawer({
                 )}
               </Field>
             </div>
+            <Field>
+              <Controller
+                control={control}
+                name="allowMultipleStaff"
+                render={({ field }) => (
+                  <div className="space-y-2">
+                    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl bg-blush-soft px-3 py-2">
+                      <span className="text-sm font-medium">
+                        چند نفر می‌توانند با هم این خدمت را انجام دهند
+                      </span>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-label="چند نفر می‌توانند با هم این خدمت را انجام دهند"
+                      />
+                    </label>
+                    <p className="text-[11px] leading-5 text-muted-foreground">
+                      لازم نیست چند نفر باشند. فقط اگر بخواهید همکار اضافه
+                      می‌کنید.
+                    </p>
+                  </div>
+                )}
+              />
+            </Field>
             <Field>
               <FieldLabel htmlFor="svc-description">توضیح کوتاه</FieldLabel>
               <Textarea

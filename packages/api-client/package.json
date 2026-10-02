@@ -12,8 +12,7 @@
     "./generated-client": "./src/client.ts",
     "./sdk": "./src/generated/sdk.gen.ts",
     "./query": "./src/generated/@tanstack/react-query.gen.ts",
-    "./types": "./src/generated/types.gen.ts",
-    "./react": "./src/react/index.ts"
+    "./types": "./src/generated/types.gen.ts"
   },
   "scripts": {
     "generate": "openapi-ts",
@@ -28,6 +27,7 @@
     "@hey-api/openapi-ts": "^0.98.1",
     "@repo/typescript-config": "workspace:*",
     "@tanstack/react-query": "^5.62.7",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
     "vitest": "^3.0.5"
   }
 }

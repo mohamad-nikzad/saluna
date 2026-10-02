@@ -1,116 +1,83 @@
-# Deploy `@repo/web`
+# Deploy the public web app
 
-Public marketing + salon booking surface (Astro). SSR via `@astrojs/node` (`mode: 'standalone'`).
+`@repo/web` uses the Astro Node standalone adapter. It requires Node
+`>=22.12.0` and listens on port 3001.
 
-## Requirements
+Production releases use the [repo deployment workflow](../../docs/DEPLOYMENTS.md).
+For a VPS without registry access, use the
+[tarball runbook](../../docs/VPS_AIRGAPPED_DEPLOYMENT.md).
 
-- **Node.js** `>= 22.12.0` (Astro 6)
-- **Port** `3001` (matches existing reverse-proxy upstream for the public site)
-- Env loaded from repo root (see `scripts/with-root-env.mjs`)
+## Environment
 
-## Environment variables
+| Variable                 | Purpose                                                                |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `PUBLIC_APP_URL`         | Public site origin for canonical URLs, sitemaps, and Open Graph images |
+| `PUBLIC_API_URL`         | Hono API origin for public data and booking requests                   |
+| `PUBLIC_MANAGER_APP_URL` | Manager app origin for login and signup links                          |
+| `HOST`                   | Listen address, normally `0.0.0.0`                                     |
+| `PORT`                   | Listen port, normally `3001`                                           |
 
-| Variable         | Purpose                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------- |
-| `PUBLIC_APP_URL` | Canonical site origin (sitemap, OG URLs, robots). Example: `https://salon.example` |
-| `PUBLIC_API_URL` | Public Hono API origin for client fetches. Example: `https://api.example`          |
-| `HOST`           | Bind address (default `0.0.0.0` in Docker / PM2)                                   |
-| `PORT`           | Listen port (default `3001`)                                                       |
+Set the public origins before building. [with-root-env.mjs](../../scripts/with-root-env.mjs)
+loads repo env files and maps the corresponding `NEXT_PUBLIC_*` variables when
+the Astro variables are unset.
 
-`with-root-env.mjs` maps `NEXT_PUBLIC_*` -> `PUBLIC_*` when the Astro names are unset.
+## Build and run with Node
 
-## Build & run (bare Node)
-
-From repo root:
+From the repo root:
 
 ```bash
-pnpm install
 pnpm --filter @repo/web build
-cd apps/web
-HOST=0.0.0.0 PORT=3001 node ../../scripts/with-root-env.mjs node dist/server/entry.mjs
-```
-
-Or:
-
-```bash
 pnpm --filter @repo/web start
 ```
 
-Artifacts:
+The build writes static assets to `apps/web/dist/client/` and the server to
+`apps/web/dist/server/entry.mjs`.
 
-- `apps/web/dist/client/` — static assets
-- `apps/web/dist/server/entry.mjs` — Node server entry
-
-## PM2
+For a process manager, load the environment and run the entry file from
+`apps/web`. A [PM2 config](ecosystem.config.cjs) is included:
 
 ```bash
-pnpm --filter @repo/web build
 cd apps/web
-# Ensure PUBLIC_* and DB-related env are in the shell or pm2 env block
 pm2 start ecosystem.config.cjs
 pm2 save
 ```
 
-## systemd (example)
+## Docker
 
-Adjust paths and `User=` for your VPS:
-
-```ini
-[Unit]
-Description=Saluna public web (Astro)
-After=network.target
-
-[Service]
-Type=simple
-User=saloon
-WorkingDirectory=/opt/saloon/pwas/web
-Environment=NODE_ENV=production
-Environment=HOST=0.0.0.0
-Environment=PORT=3001
-EnvironmentFile=/opt/saloon/.env.production
-ExecStart=/usr/bin/node dist/server/entry.mjs
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Run `pnpm --filter @repo/web build` before `systemctl enable --now saloon-web`.
-
-## Docker (air-gapped VPS)
-
-Build on a machine with internet, ship the image tarball. See repo root `docs/VPS_AIRGAPPED_DEPLOYMENT.md`.
+Build from the repo root:
 
 ```bash
 docker build -f apps/web/Dockerfile \
-  --build-arg PUBLIC_APP_URL=https://your-public-domain \
-  --build-arg PUBLIC_API_URL=https://your-api-domain \
-  -t saloon-web:1.0 .
+  --build-arg PUBLIC_APP_URL=https://saluna.ir \
+  --build-arg PUBLIC_API_URL=https://api.saluna.ir \
+  --build-arg PUBLIC_MANAGER_APP_URL=https://app.saluna.ir \
+  -t saluna-web:YOUR_TAG .
 ```
 
-Runtime listens on `0.0.0.0:3001`.
+The production [Nginx template](../../deploy/nginx/templates/saluna.conf.template)
+routes the public host to the web container.
 
-## Fonts (Iran / no Google egress)
+## Fonts
 
-Fonts are **self-hosted** under `src/assets/fonts/` (Vazirmatn + Lalezar woff2, Vazirmatn Bold TTF for OG cards).
-
-Refresh fonts on a connected machine:
+Fonts are local under `src/assets/fonts/`. To refresh them on a connected
+machine, run:
 
 ```bash
-node scripts/fetch-web-fonts.mjs
+pnpm fonts:web
 ```
 
-## Smoke test
+## Validation
 
-With API + web running:
+With the API and web running:
 
 ```bash
-pnpm --filter @repo/web build
-pnpm --filter @repo/web start &
-BASE_URL=http://127.0.0.1:3001 SLUG=your-slug node scripts/smoke-web.mjs
+BASE_URL=http://127.0.0.1:3001 SLUG=your-slug pnpm smoke:web
 ```
 
-## Reverse proxy (nginx)
+Set `REQUEST_TOKEN` to include a real AppointmentRequest status page in the
+smoke check. Check booking interaction in a browser, including availability
+loading and submitting a request.
 
-Not configured in this repo. See `CUTOVER.md` for production validation notes.
+Public pages should have Persian RTL metadata, canonical URLs, and Salon
+structured data. Request status pages must remain private and absent from
+search indexes.

@@ -10,12 +10,15 @@ services:
         condition: service_healthy
       pwa:
         condition: service_healthy
+      admin:
+        condition: service_healthy
       web:
         condition: service_healthy
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-saluna.ir}
       APP_DOMAIN: ${APP_DOMAIN:-app.saluna.ir}
       API_DOMAIN: ${API_DOMAIN:-api.saluna.ir}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.saluna.ir}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
@@ -87,6 +90,20 @@ services:
   pwa:
     image: ${SALUNA_PWA_IMAGE_REGISTRY:-${SALUNA_IMAGE_REGISTRY:-}}saluna-pwa:${SALUNA_PWA_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
     container_name: saluna-pwa
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      - saluna
+
+  admin:
+    image: ${SALUNA_ADMIN_IMAGE_REGISTRY:-${SALUNA_IMAGE_REGISTRY:-}}saluna-admin:${SALUNA_ADMIN_IMAGE_TAG:-${SALUNA_IMAGE_TAG:-latest}}
+    container_name: saluna-admin
     restart: unless-stopped
     expose:
       - "80"
