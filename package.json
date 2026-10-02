@@ -51,6 +51,7 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/salon-core": "workspace:*",
     "@typescript/native": "npm:typescript@7.0.2",
+    "cross-spawn": "^7.0.6",
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.39.3",
     "eslint": "^9",

@@ -4,6 +4,10 @@
 
 Development uses Docker Postgres on `127.0.0.1:5432`. All config lives in `.env.local`.
 
+Install Node.js 22.12 or newer, pnpm 9.15.9, and Docker with Compose.
+On Windows, start Docker Desktop with its WSL 2 backend before preparing the
+database. In PowerShell, use `Copy-Item .env.example .env.local` for the first step.
+
 ```bash
 cp .env.example .env.local   # then edit secrets as needed
 pnpm install

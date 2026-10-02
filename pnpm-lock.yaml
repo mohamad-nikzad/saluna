@@ -32,6 +32,9 @@ importers:
       '@typescript/native':
         specifier: npm:typescript@7.0.2
         version: typescript@7.0.2
+      cross-spawn:
+        specifier: ^7.0.6
+        version: 7.0.6
       drizzle-kit:
         specifier: ^0.30.4
         version: 0.30.6

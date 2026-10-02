@@ -1,7 +1,7 @@
 import { cpSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { spawnSync } from 'node:child_process'
+import spawn from 'cross-spawn'
 import { fileURLToPath } from 'node:url'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
@@ -13,7 +13,7 @@ const tempDir = mkdtempSync(path.join(os.tmpdir(), 'saluna-drizzle-check-'))
 try {
   cpSync(metaDir, path.join(tempDir, 'meta'), { recursive: true })
 
-  const result = spawnSync(
+  const result = spawn.sync(
     'pnpm',
     [
       'exec',
