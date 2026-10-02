@@ -14,6 +14,7 @@
     "dev:admin": "turbo run dev --filter=@repo/admin --filter=@repo/api",
     "smoke:web": "node scripts/smoke-web.mjs",
     "fonts:web": "node scripts/fetch-web-fonts.mjs",
+    "og:web": "tsx scripts/generate-landing-og.mjs",
     "dev:api": "pnpm --filter @repo/api dev",
     "dev:pwa-lan": "node scripts/dev-pwa-lan.mjs",
     "dev:admin-stack": "turbo run dev --filter=@repo/api --filter=@repo/admin",

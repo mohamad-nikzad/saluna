@@ -9,6 +9,9 @@ import {
   buildSalonTitle,
 } from './seo'
 import { SalonInfoCard } from '../components/react/SalonInfoCard'
+import { InlineLayout } from '../components/react/InlineLayout'
+import { AgendaLayout } from '../components/react/AgendaLayout'
+import { formatPrice } from './format'
 
 const completeView: PublicSalonView = {
   salon: {
@@ -142,6 +145,7 @@ describe('public Salon page output', () => {
       makesOffer: [
         {
           itemOffered: { name: 'کاشت ناخن' },
+          priceSpecification: { price: 20_000_000, priceCurrency: 'IRR' },
         },
       ],
       openingHoursSpecification: [
@@ -160,6 +164,67 @@ describe('public Salon page output', () => {
       ],
     })
   })
+
+  it('converts tomans to IRR without changing the visible or stored price', () => {
+    const view = {
+      ...completeView,
+      services: completeView.services.map((service) => ({
+        ...service,
+        price: 550_000,
+      })),
+    }
+    const schema = buildSalonJsonLd(
+      view,
+      new URL('https://saluna.ir/salons/rose-salon'),
+    )
+    expect(schema.makesOffer?.[0]?.priceSpecification).toMatchObject({
+      price: 5_500_000,
+      priceCurrency: 'IRR',
+    })
+    expect(view.services.map((service) => formatPrice(service.price))).toEqual([
+      '۵۵۰,۰۰۰ تومان',
+    ])
+    expect(view.services.map((service) => service.price)).toEqual([550_000])
+  })
+
+  it('does not advertise online intake when a public Salon only shows its information', () => {
+    const description = buildSalonDescription({
+      ...completeView,
+      publicSettings: {
+        ...completeView.publicSettings,
+        bioText: null,
+        appointmentRequestsEnabled: false,
+      },
+    })
+    expect(description).toContain('اطلاعات تماس سالن')
+    expect(description).not.toContain('ثبت درخواست نوبت آنلاین')
+  })
+
+  for (const Layout of [InlineLayout, AgendaLayout]) {
+    for (const bookingEnabled of [true, false]) {
+      it(`${Layout.name} renders the complete public content once with intake ${bookingEnabled ? 'enabled' : 'disabled'}`, () => {
+        const html = renderToStaticMarkup(
+          <Layout
+            slug={completeView.salon.slug}
+            salonName={completeView.salon.name}
+            phone={completeView.salon.phone}
+            bio={completeView.publicSettings.bioText}
+            presence={completeView.presence}
+            businessHours={completeView.businessHours}
+            services={completeView.services}
+            dates={['2026-10-02']}
+            theme={resolvePublicTheme('rose')}
+            bookingEnabled={bookingEnabled}
+          />,
+        )
+        expect(html.match(/<h1\b/g)).toHaveLength(1)
+        expect(html.match(/کاشت ناخن/g)).toHaveLength(1)
+        expect(html).toContain('کاشت حرفه‌ای')
+        expect(html).toContain('۲,۰۰۰,۰۰۰ تومان')
+        expect(html).toContain('نشانی: خیابان سرو غربی، پلاک ۱۰')
+      })
+    }
+  }
 
   it('omits absent optional BeautySalon properties', () => {
     const jsonLd = buildSalonJsonLd(

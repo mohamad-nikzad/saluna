@@ -13,9 +13,9 @@ import {
   buildSalonDescription,
   buildSalonJsonLd,
   buildSalonTitle,
+  isSalonIndexable,
 } from '@/lib/seo'
 import SalonLayout from '@/layouts/SalonLayout.astro'
-import SalonShell from '@/components/SalonShell.astro'
 import { InlineLayout } from '@/components/react/InlineLayout'
 import { AgendaLayout } from '@/components/react/AgendaLayout'
 
@@ -69,8 +69,8 @@ const islandProps = {
   canonical={pageUrl.toString()}
   ogImage={ogImage}
   jsonLd={jsonLd}
+  noIndex={!isSalonIndexable(view.salon.slug)}
 >
-  <SalonShell view={view} />
   {
     layoutPick.id === 'inline' ? (
       <InlineLayout client:load {...islandProps} />
@@ -78,4 +78,9 @@ const islandProps = {
       <AgendaLayout client:load {...islandProps} />
     )
   }
+  <footer class="bg-[#fdf5f8] px-5 py-5 text-center text-sm text-[#6b4955]">
+    <a href="/" class="underline underline-offset-4"
+      >مدیریت سالن و درخواست نوبت با سالونا</a
+    >
+  </footer>
 </SalonLayout>

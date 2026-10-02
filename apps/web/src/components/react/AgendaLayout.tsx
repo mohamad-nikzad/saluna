@@ -113,6 +113,7 @@ export function AgendaLayout(props: PublicLayoutProps) {
       </div>
 
       <section className="mx-auto mt-5 w-full max-w-3xl px-5 sm:px-8">
+        <h2 className="sr-only">خدمات سالن</h2>
         {filtered.length === 0 ? (
           <p className="rounded-2xl bg-white/85 p-6 text-center text-sm opacity-70">
             خدمتی پیدا نشد.
@@ -139,12 +140,15 @@ export function AgendaLayout(props: PublicLayoutProps) {
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-extrabold">
-                        {s.name}
-                      </p>
+                      <p className="text-sm font-extrabold">{s.name}</p>
                       <p className="mt-0.5 text-[11px] opacity-60">
-                        {formatDuration(s.duration)}
+                        {formatDuration(s.duration)} · {formatPrice(s.price)}
                       </p>
+                      {s.description ? (
+                        <p className="mt-2 text-xs leading-6 opacity-70">
+                          {s.description}
+                        </p>
+                      ) : null}
                     </div>
                   </button>
                 </li>

@@ -41,6 +41,36 @@ describe('runtime Salon sitemap', () => {
 `)
   })
 
+  it('excludes only owner-confirmed internal Salons from discovery', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              slugs: [
+                'salon-a027zt',
+                'salon-vubbcn',
+                'salon-gzwp7u',
+                'aravirabeautylounge',
+                'mehrnanail',
+                'salon-wizjyw',
+              ],
+            }),
+          ),
+        ),
+    )
+
+    const xml = await (await GET({} as never)).text()
+    for (const slug of ['salon-a027zt', 'salon-vubbcn', 'salon-gzwp7u']) {
+      expect(xml).not.toContain(`/salons/${slug}`)
+    }
+    for (const slug of ['aravirabeautylounge', 'mehrnanail', 'salon-wizjyw']) {
+      expect(xml).toContain(`/salons/${slug}`)
+    }
+  })
+
   it('reads current publication state for every uncached response', async () => {
     vi.stubGlobal(
       'fetch',

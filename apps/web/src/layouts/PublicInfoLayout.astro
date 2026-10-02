@@ -20,6 +20,8 @@ const { title, description, canonical, jsonLd } = Astro.props
   description={description}
   canonical={canonical}
   jsonLd={jsonLd}
+  ogImage={new URL('/og/landing.png', canonical).toString()}
+  ogImageAlt="سالونا، نرم‌افزار مدیریت سالن زیبایی"
   preloadLalezar={true}
 >
   <main dir="rtl" class="min-h-dvh bg-[#fdf5f8] text-[#3f2730]">
@@ -33,7 +35,7 @@ const { title, description, canonical, jsonLd } = Astro.props
           aria-label={brand.name.fa}
         >
           <img
-            src={brand.assets.landingMark}
+            src="/landing/saluna-mark-88.webp"
             alt=""
             width="40"
             height="40"

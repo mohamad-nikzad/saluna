@@ -43,6 +43,7 @@ const vazirmatnVariants = [400, 500, 600, 700, 800].map((weight) => ({
 export default defineConfig({
   site: process.env.PUBLIC_APP_URL ?? 'http://localhost:3001',
   output: 'server',
+  trailingSlash: 'never',
   adapter: node({ mode: 'standalone' }),
   integrations: [react(), sitemap(), robotsSitemapIntegration()],
   image: {

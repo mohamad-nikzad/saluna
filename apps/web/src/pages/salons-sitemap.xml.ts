@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { PUBLIC_API_URL, PUBLIC_APP_URL } from 'astro:env/client'
-import { buildSalonCanonicalUrl } from '../lib/seo'
+import { buildSalonCanonicalUrl, isSalonIndexable } from '../lib/seo'
 
 const CACHE_CONTROL = 'public, s-maxage=86400, stale-while-revalidate=3600'
 
@@ -12,20 +12,20 @@ async function getPublishedSalonSlugs(): Promise<string[]> {
   if (
     !body ||
     typeof body !== 'object' ||
-    !Array.isArray((body as { slugs?: unknown }).slugs) ||
-    !(body as { slugs: unknown[] }).slugs.every(
-      (slug): slug is string => typeof slug === 'string',
-    )
+    !('slugs' in body) ||
+    !Array.isArray(body.slugs) ||
+    !body.slugs.every((slug): slug is string => typeof slug === 'string')
   ) {
     throw new Error('Invalid published Salon slugs response')
   }
 
-  return (body as { slugs: string[] }).slugs
+  return body.slugs
 }
 
 export const GET: APIRoute = async () => {
   const slugs = await getPublishedSalonSlugs()
   const urls = slugs
+    .filter(isSalonIndexable)
     .map(
       (slug) =>
         `  <url><loc>${buildSalonCanonicalUrl(slug, PUBLIC_APP_URL)}</loc></url>`,

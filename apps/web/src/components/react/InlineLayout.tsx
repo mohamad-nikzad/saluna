@@ -121,13 +121,18 @@ export function InlineLayout(props: PublicLayoutProps) {
                         className="flex w-full items-center justify-between gap-3 p-4 text-right"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-base font-extrabold">
+                          <p className="text-base font-extrabold">
                             {service.name}
                           </p>
                           <p className="mt-1 text-xs opacity-70">
                             {formatDuration(service.duration)} ·{' '}
                             {formatPrice(service.price)}
                           </p>
+                          {service.description ? (
+                            <p className="mt-2 text-xs leading-6 opacity-70">
+                              {service.description}
+                            </p>
+                          ) : null}
                         </div>
                         {bookingEnabled ? (
                           <ChevronDown

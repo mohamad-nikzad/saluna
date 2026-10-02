@@ -2,6 +2,7 @@
 import { brand } from '@repo/brand'
 import { displayClass } from '@/content/landing'
 import { publicNavLinks, publicSiteInfo } from '@/content/public-site'
+import { featurePages } from '@/content/features'
 
 const brandFa = brand.name.fa
 ---
@@ -12,7 +13,7 @@ const brandFa = brand.name.fa
   >
     <div class="flex items-center gap-2.5">
       <img
-        src={brand.assets.landingMark}
+        src="/landing/saluna-mark-88.webp"
         alt=""
         width="32"
         height="32"
@@ -25,6 +26,13 @@ const brandFa = brand.name.fa
     <nav
       class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-[#8b6b73]"
     >
+      {
+        featurePages.map((page) => (
+          <a href={page.href} class="transition hover:text-[#7a2a40]">
+            {page.linkLabel}
+          </a>
+        ))
+      }
       {
         publicNavLinks.map((link) => (
           <a href={link.href} class="transition hover:text-[#7a2a40]">

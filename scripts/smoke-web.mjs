@@ -8,6 +8,8 @@
  *   BASE_URL=http://127.0.0.1:3001 SLUG=my-salon node scripts/smoke-web.mjs
  *   SLUG=saluna MANAGER_PHONE=09120000000 MANAGER_PASSWORD=admin123 node scripts/smoke-web.mjs
  */
+import sharp from 'sharp'
+
 const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(
   /\/$/,
   '',
@@ -88,6 +90,113 @@ function isSitemapXml(xml) {
     (compact.match(/<url>/g) ?? []).length === urls.length &&
     (compact.match(/<\/url>/g) ?? []).length === urls.length
   )
+}
+
+async function checkPublicSeo(landingHtml) {
+  const paths = [
+    '/services',
+    '/about',
+    '/contact',
+    '/privacy',
+    '/terms',
+    '/features/online-appointment-requests',
+    '/features/salon-clients',
+    '/features/staff-commission',
+  ]
+  const { text: sitemap } = await get('/sitemap-0.xml')
+  const titles = new Set()
+  for (const path of paths) {
+    const { res, text } = await get(path)
+    const canonical = canonicalFrom(text)
+    const title = text.match(/<title>(.*?)<\/title>/s)?.[1]
+    if (
+      res.status === 200 &&
+      canonical &&
+      new URL(canonical).pathname === path &&
+      !text.includes('content="noindex')
+    ) {
+      pass(`${path} is indexable with its canonical path`)
+    } else fail(`${path} public metadata`, `${res.status}, ${canonical}`)
+    if (title && !titles.has(title)) titles.add(title)
+    else fail(`${path} missing or duplicate title`)
+    if ((text.match(/<h1\b/g) ?? []).length === 1) pass(`${path} has one H1`)
+    else fail(`${path} H1 count`)
+    if (landingHtml.includes(`href="${path}"`))
+      pass(`homepage links to ${path}`)
+    else fail(`homepage missing link to ${path}`)
+    if (sitemap.includes(`<loc>${canonical}</loc>`))
+      pass(`${path} canonical appears in sitemap`)
+    else fail(`${path} canonical missing from sitemap`)
+    const redirect = await fetch(`${base}${path}/?campaign=seo%20check`, {
+      redirect: 'manual',
+    })
+    const location = redirect.headers.get('location')
+    const target = location ? new URL(location, base) : null
+    if (
+      [301, 308].includes(redirect.status) &&
+      target?.pathname === path &&
+      target.search === '?campaign=seo%20check'
+    ) {
+      pass(`${path}/ redirects and preserves query`)
+    } else fail(`${path}/ redirect`, `${redirect.status}, ${location}`)
+  }
+
+  const faq = [
+    ...landingHtml.matchAll(
+      /<script[^>]+type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs,
+    ),
+  ]
+    .map((match) => JSON.parse(match[1]))
+    .find((item) => item['@type'] === 'FAQPage')
+  const visibleText = landingHtml
+    .replace(/<script\b[^>]*>.*?<\/script>/gs, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+  if (
+    faq?.mainEntity?.length &&
+    faq.mainEntity.every(
+      (item) =>
+        visibleText.includes(item.name) &&
+        visibleText.includes(item.acceptedAnswer.text),
+    )
+  ) {
+    pass('homepage FAQ schema matches readable questions and answers')
+  } else fail('homepage FAQ schema differs from page content')
+
+  for (const [path, type, width, height] of [
+    ['/og/landing.png', 'png', 1200, 630],
+    ['/apple-touch-icon.png', 'png', 180, 180],
+    ['/landing/saluna-mark-88.webp', 'webp', 88, 88],
+  ]) {
+    const response = await fetch(`${base}${path}`)
+    const bytes = Buffer.from(await response.arrayBuffer())
+    const info = await sharp(bytes).metadata()
+    if (
+      response.status === 200 &&
+      info.format === type &&
+      info.width === width &&
+      info.height === height
+    )
+      pass(`${path} is a valid ${width}×${height} ${type}`)
+    else
+      fail(
+        `${path} image response`,
+        `${response.status}, ${info.width}×${info.height}`,
+      )
+    if (type === 'webp' && bytes.length >= 10_000)
+      fail('header mark exceeds 10 KB', bytes.length)
+  }
+  if (
+    landingHtml.includes(
+      'rel="icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png"',
+    )
+  )
+    pass('homepage declares the stable 180px icon')
+  else fail('homepage primary icon declaration')
+  const preloads =
+    landingHtml.match(/<link[^>]+rel="preload"[^>]+as="font"[^>]*>/g) ?? []
+  if (preloads.length === 3) pass('homepage preloads three selected fonts')
+  else fail('homepage font preload count', preloads.length)
 }
 
 async function signInManager() {
@@ -246,6 +355,7 @@ async function main() {
     } else {
       fail('landing missing CSP')
     }
+    await checkPublicSeo(text)
   }
 
   {

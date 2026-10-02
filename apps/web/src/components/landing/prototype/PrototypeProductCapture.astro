@@ -2,9 +2,10 @@
 interface Props {
   src: string
   alt: string
+  loading?: 'eager' | 'lazy'
 }
 
-const { src, alt } = Astro.props
+const { src, alt, loading = 'lazy' } = Astro.props
 ---
 
 <figure class="mx-auto w-full max-w-[22rem]">
@@ -20,7 +21,7 @@ const { src, alt } = Astro.props
         alt={alt}
         width="390"
         height="844"
-        loading="eager"
+        loading={loading}
         decoding="async"
         class="block h-auto w-full max-w-full object-cover object-center"
       />

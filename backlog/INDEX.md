@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-09-29 (public content CMS item added)
+Last organized: 2026-10-02 (SEO audit implementation and confirmed test Salon exclusions recorded)
 
 ## Now
 
@@ -30,6 +30,10 @@ No active backlog items.
   - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
+
+- [BL-0089 Classify internal Salon pages before excluding them from search](done/BL-0089-classify-internal-salons-for-search.md) (three confirmed exclusions implemented; deployment pending)
+
+- [BL-0088 Address the October public-site SEO audit](done/BL-0088-address-october-seo-audit.md) (implementation complete; deployment pending)
 
 - [BL-0080 Let managers browse and filter all Appointments](done/BL-0080-manager-appointment-list.md)
 

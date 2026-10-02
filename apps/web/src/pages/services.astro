@@ -4,6 +4,8 @@ export const prerender = true
 import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
 import { displayClass } from '@/content/landing'
 import { publicServiceItems, publicSiteInfo } from '@/content/public-site'
+import { featurePages } from '@/content/features'
+import { signupHref } from '@/content/landing'
 
 const title = `خدمات و امکانات | ${publicSiteInfo.brandName}`
 const description = `معرفی خدمات و امکانات ${publicSiteInfo.brandName}: مدیریت نوبت‌ها، مشتریان، خدمات سالن، پرسنل، صفحه عمومی سالن و پیامک تایید.`
@@ -56,6 +58,41 @@ const jsonLd = {
           ))
         }
       </div>
+
+      <section class="mt-14 max-w-4xl">
+        <h2 class={`${displayClass} text-3xl sm:text-4xl`}>
+          با مسیرهای اصلی کار آشنا شوید
+        </h2>
+        <div class="mt-6 divide-y divide-[#f3d5dd]">
+          {
+            featurePages.map((page) => (
+              <article class="py-6">
+                <h3 class="text-xl font-bold">
+                  <a
+                    href={page.href}
+                    class="text-[#9b3348] underline underline-offset-4"
+                  >
+                    {page.linkLabel}
+                  </a>
+                </h3>
+                <p class="mt-3 text-sm leading-8 text-[#6b4955]">
+                  {page.intro}
+                </p>
+              </article>
+            ))
+          }
+        </div>
+        <p class="mt-6 text-sm leading-8 text-[#6b4955]">
+          تقویم و گزارش‌ها برای کار روزانه سالن هستند. گزارش مبلغ نوبت‌های
+          انجام‌شده، وصول وجه یا سود خالص حسابداری را نشان نمی‌دهد. دریافت
+          درخواست آنلاین نیز به تأیید مدیر نیاز دارد.
+        </p>
+        <a
+          href={signupHref}
+          class="mt-6 inline-flex rounded-md bg-[#c3425b] px-6 py-3 font-bold text-white"
+          >شروع استفاده از سالونا</a
+        >
+      </section>
     </div>
   </section>
 </PublicInfoLayout>

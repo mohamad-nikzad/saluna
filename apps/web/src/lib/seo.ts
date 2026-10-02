@@ -7,6 +7,18 @@ import {
 } from '@repo/salon-core/working-days'
 import type { PublicSalonView } from './public-api'
 
+// Owner-confirmed internal Salons, 2026-10-02. Keep this policy shared by
+// page metadata and sitemap discovery; update it if these slugs change.
+const internalSalonSlugs = new Set([
+  'salon-a027zt',
+  'salon-vubbcn',
+  'salon-gzwp7u',
+])
+
+export function isSalonIndexable(slug: string): boolean {
+  return !internalSalonSlugs.has(slug)
+}
+
 type JsonLdOffer = {
   '@type': 'Offer'
   itemOffered: {
@@ -62,7 +74,8 @@ function buildServiceOffer(service: Service): JsonLdOffer {
     },
     priceSpecification: {
       '@type': 'UnitPriceSpecification',
-      price: service.price,
+      // Service prices are stored and displayed in tomans; IRR denotes rials.
+      price: service.price * 10,
       priceCurrency: 'IRR',
     },
   }
@@ -162,7 +175,9 @@ export function buildSalonDescription(view: PublicSalonView): string {
     `خدمات ${view.salon.name}`,
     locality ? `در ${locality}` : null,
     services.length > 0 ? `شامل ${services.join('، ')}` : null,
-    'و ثبت درخواست نوبت آنلاین.',
+    view.publicSettings.appointmentRequestsEnabled
+      ? 'و ثبت درخواست نوبت آنلاین.'
+      : 'و اطلاعات تماس سالن.',
   ]
     .filter(Boolean)
     .join(' ')

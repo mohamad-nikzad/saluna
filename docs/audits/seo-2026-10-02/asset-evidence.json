@@ -1,0 +1,493 @@
+[
+  {
+    "url": "https://saluna.ir/_astro/fonts/3e80700a4f0305e9.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/3e80700a4f0305e9.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.025744,
+    "ttfb_seconds": 0.024583,
+    "download_bytes": 21724,
+    "body_bytes": 21724,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "21724",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"54dc-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "acf1bdeb086c2a9d29168a50ebb2a03f",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "a2656db2fc73de415f3963432cedf874532f6a7b1ff5ec8803df60e38c198ed2"
+  },
+  {
+    "url": "https://saluna.ir/_astro/fonts/41fded371f607efd.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/41fded371f607efd.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.038241,
+    "ttfb_seconds": 0.037535,
+    "download_bytes": 21756,
+    "body_bytes": 21756,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "21756",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"54fc-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "74ac068c21e48088a3f3369ddf8f00e8",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "7a915425676d23cfde214604a98059b55a4907e1117da724401131e97122fd8a"
+  },
+  {
+    "url": "https://saluna.ir/_astro/fonts/554d365dc2929230.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/554d365dc2929230.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.039811,
+    "ttfb_seconds": 0.038762,
+    "download_bytes": 21732,
+    "body_bytes": 21732,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "21732",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"54e4-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=6",
+          "x-cache": "HIT",
+          "x-request-id": "7ef2ba86a9bf4a641a2ea3f06e95f212",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "ab387a839ab8d1df9430b83880a1f50b143a4e047dec7044886b58efb7647c6f"
+  },
+  {
+    "url": "https://saluna.ir/_astro/fonts/7d05e03be817e0fe.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/7d05e03be817e0fe.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.054366,
+    "ttfb_seconds": 0.052358,
+    "download_bytes": 21012,
+    "body_bytes": 21012,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "21012",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"5214-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "5002063381a974d0effe0ff519af6a0b",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "6c00a9c4c6bd69475cc47e81afce5b82b96898027d7452e7043f3605671632c8"
+  },
+  {
+    "url": "https://saluna.ir/_astro/fonts/878eccd043c06de9.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/878eccd043c06de9.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.029601,
+    "ttfb_seconds": 0.027436,
+    "download_bytes": 57296,
+    "body_bytes": 57296,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "57296",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"dfd0-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "e273fe1b450c9b82fe1fe8186540b742",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "222f4d74bcead1b44a0a6f55725f1c83cb1063b82fc627807403352f761d5b32"
+  },
+  {
+    "url": "https://saluna.ir/_astro/fonts/fd0774b97c040899.woff2",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/fonts/fd0774b97c040899.woff2",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.049825,
+    "ttfb_seconds": 0.048939,
+    "download_bytes": 21696,
+    "body_bytes": 21696,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "font/woff2",
+          "content-length": "21696",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:54:59 GMT",
+          "etag": "W/\"54c0-1a095788638\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "49ea6a4325e37b5cea5411130c7f7dd7",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "2a86f823705c5be0d1a464f2e31eeaa5a82ad462cc527dbe84a3628ab7255625"
+  },
+  {
+    "url": "https://saluna.ir/_astro/landing.CZocari4.css",
+    "status": 200,
+    "effective_url": "https://saluna.ir/_astro/landing.CZocari4.css",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.032924,
+    "ttfb_seconds": 0.032099,
+    "download_bytes": 8224,
+    "body_bytes": 43504,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "text/css; charset=utf-8",
+          "transfer-encoding": "chunked",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "vary": "Accept-Encoding",
+          "cache-control": "public, max-age=31536000, immutable",
+          "last-modified": "Sat, 12 Sep 2026 11:55:00 GMT",
+          "etag": "W/\"a9f0-1a095788a20\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "86fb45327bd99b49a2b44da39e196078",
+          "x-sid": "2027",
+          "content-encoding": "gzip"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "e905c086938fad89f4e2869f83bdeb6236d57e161a847cf74f8b81577e83de45"
+  },
+  {
+    "url": "https://saluna.ir/landing/cta-bg.webp",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/cta-bg.webp",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.045324,
+    "ttfb_seconds": 0.039518,
+    "download_bytes": 159308,
+    "body_bytes": 159308,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/webp",
+          "content-length": "159308",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"26e4c-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "64cb09454ff7f4791fd3826c82bbd669",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "3154726c3631d9be01d6dce4797cf2d67e6f30f9fefe68cad3957bf110bb6f33"
+  },
+  {
+    "url": "https://saluna.ir/landing/hero-bg-mobile.webp",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/hero-bg-mobile.webp",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.044597,
+    "ttfb_seconds": 0.038085,
+    "download_bytes": 190364,
+    "body_bytes": 190364,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/webp",
+          "content-length": "190364",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"2e79c-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "ed5e29f73e50d97c889b244a79a3a958",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "f93930b2656d661c6658fcc437a9bbd3ed89b4db7a0465e20ba345f70b36d84a"
+  },
+  {
+    "url": "https://saluna.ir/landing/hero-bg.webp",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/hero-bg.webp",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.048761,
+    "ttfb_seconds": 0.04152,
+    "download_bytes": 167918,
+    "body_bytes": 167918,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/webp",
+          "content-length": "167918",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"28fee-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=8",
+          "x-cache": "HIT",
+          "x-request-id": "1c46f35b09d6b4dc2aba1c249cd70866",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "aaaf3589bdf857e8c4e4045f7234cf53f02c68810abd7b5c02c0dca7cc98f455"
+  },
+  {
+    "url": "https://saluna.ir/landing/prototype/calendar-mobile.jpg",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/prototype/calendar-mobile.jpg",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.042086,
+    "ttfb_seconds": 0.040054,
+    "download_bytes": 58261,
+    "body_bytes": 58261,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/jpeg",
+          "content-length": "58261",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"e395-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=8",
+          "x-cache": "HIT",
+          "x-request-id": "c5da6e79c7cb43d8e00f067a479dce55",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "8dcbb04bf63a711f1729a665d529f8e7bcd08986035991386082ad1c3740b53c"
+  },
+  {
+    "url": "https://saluna.ir/landing/prototype/dashboard-mobile.jpg",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/prototype/dashboard-mobile.jpg",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.045096,
+    "ttfb_seconds": 0.043702,
+    "download_bytes": 49541,
+    "body_bytes": 49541,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/jpeg",
+          "content-length": "49541",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"c185-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=2",
+          "x-cache": "HIT",
+          "x-request-id": "6e8d3dd5a9248910ff983a1b9be044d4",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "dfdd940b489459c77807a8e3be1d94d9a42a9efa7dcc52a7f9d26d240b1ea4ed"
+  },
+  {
+    "url": "https://saluna.ir/landing/prototype/today-mobile.jpg",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/prototype/today-mobile.jpg",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.040646,
+    "ttfb_seconds": 0.038799,
+    "download_bytes": 62142,
+    "body_bytes": 62142,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/jpeg",
+          "content-length": "62142",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"f2be-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=0",
+          "x-cache": "HIT",
+          "x-request-id": "632f136bd2ff02f336f523fbafe8a0ad",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "d17831c9377dc9aab118d396a021cbc7404714cbce7a0fb8902ae6334462ca94"
+  },
+  {
+    "url": "https://saluna.ir/landing/saluna-mark.png",
+    "status": 200,
+    "effective_url": "https://saluna.ir/landing/saluna-mark.png",
+    "remote_ip": "185.143.234.131",
+    "seconds": 0.064512,
+    "ttfb_seconds": 0.047109,
+    "download_bytes": 648352,
+    "body_bytes": 648352,
+    "redirects": [
+      {
+        "status_line": "HTTP/1.1 200 OK",
+        "headers": {
+          "date": "Fri, 02 Oct 2026 12:37:54 GMT",
+          "content-type": "image/png",
+          "content-length": "648352",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=65",
+          "cache-control": "public, max-age=0",
+          "last-modified": "Sat, 12 Sep 2026 11:55:02 GMT",
+          "etag": "W/\"9e4a0-1a0957891f0\"",
+          "x-xss-protection": "1; mode=block",
+          "server": "ArvanCloud",
+          "server-timing": "total;dur=3",
+          "x-cache": "HIT",
+          "x-request-id": "e9c588633a87084171a7e9f7b7a202b4",
+          "x-sid": "2027",
+          "accept-ranges": "bytes"
+        }
+      }
+    ],
+    "curl_exit": 0,
+    "error": "",
+    "sha256": "dc7bcf86248f4399a0bffaa8a847a2ba7d2a1e6173114fdda21a447f5fd2496a"
+  }
+]
