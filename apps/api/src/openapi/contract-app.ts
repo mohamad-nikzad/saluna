@@ -51,11 +51,13 @@ import {
 } from './routes/appointments'
 import {
   deleteCommissionAgreementRoute,
+  deleteServiceCommissionOverrideRoute,
   getMyCommissionReportRoute,
-  getSalonCommissionReportRoute,
   getStaffCommissionReportRoute,
   putCommissionAgreementRoute,
+  putServiceCommissionOverrideRoute,
 } from './routes/commissions'
+import { getSalonMoneyReportRoute } from './routes/reports'
 import {
   approveAppointmentRequestRoute,
   convertFlexibleAppointmentRequestRoute,
@@ -88,6 +90,7 @@ import { getTodayRoute } from './routes/today'
 import {
   listRetentionRoute,
   sendRetentionBaleMessageRoute,
+  sendRetentionSmsMessageRoute,
   updateRetentionRoute,
 } from './routes/retention'
 import {
@@ -198,6 +201,8 @@ const stubClient = {
   name: 'stub',
   phone: null,
   isPlaceholder: false,
+  birthDate: null,
+  acquisitionSource: null,
   createdAt: new Date().toISOString(),
 }
 
@@ -208,6 +213,7 @@ const stubFollowUp = {
   reason: 'manual' as const,
   status: 'open' as const,
   dueDate: '2026-01-01',
+  occurrenceYear: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   reviewedAt: null,
@@ -350,6 +356,7 @@ const stubService = {
   price: 0,
   color: 'plum',
   active: true,
+  allowMultipleStaff: false,
 }
 
 const stubServiceCategory = {
@@ -743,7 +750,14 @@ const updatePlatformAdminStub: RouteHandler<typeof updatePlatformAdminRoute> = (
 const stubAppointment = {
   id: 'stub',
   clientId: 'stub',
-  staffId: 'stub',
+  staffAssignments: [
+    {
+      id: 'stub',
+      staffId: 'stub',
+      isLead: true,
+      allocationBasisPoints: 10_000,
+    },
+  ],
   serviceId: 'stub',
   bookedServiceName: 'stub',
   bookedServiceDuration: 45,
@@ -801,6 +815,12 @@ const stubCommissionAgreement = {
   active: true,
   activatedAt: new Date().toISOString(),
   disabledAt: null,
+  overrides: [] as Array<{
+    serviceId: string
+    serviceName: string
+    serviceActive: boolean
+    percentage: number
+  }>,
 }
 const stubStaffCommissionReport = {
   staffProfileId: 'stub',
@@ -822,27 +842,34 @@ const deleteCommissionAgreementStub: RouteHandler<
   typeof deleteCommissionAgreementRoute
 > = (c) =>
   c.json({ agreement: { ...stubCommissionAgreement, active: false } }, 200)
+const putServiceCommissionOverrideStub: RouteHandler<
+  typeof putServiceCommissionOverrideRoute
+> = (c) => c.json({ agreement: stubCommissionAgreement }, 200)
+const deleteServiceCommissionOverrideStub: RouteHandler<
+  typeof deleteServiceCommissionOverrideRoute
+> = (c) => c.json({ agreement: stubCommissionAgreement }, 200)
 const getStaffCommissionReportStub: RouteHandler<
   typeof getStaffCommissionReportRoute
 > = (c) => c.json({ report: stubStaffCommissionReport }, 200)
 const getMyCommissionReportStub: RouteHandler<
   typeof getMyCommissionReportRoute
 > = (c) => c.json({ report: stubStaffCommissionReport }, 200)
-const getSalonCommissionReportStub: RouteHandler<
-  typeof getSalonCommissionReportRoute
-> = (c) =>
+
+const getSalonMoneyReportStub: RouteHandler<typeof getSalonMoneyReportRoute> = (
+  c,
+) =>
   c.json(
     {
       report: {
         startDate: '2026-01-01',
-        endDate: '2026-01-01',
+        endDate: '2026-01-31',
         summary: {
-          grossAppointmentRevenue: 0,
+          bookedTotal: 0,
           staffCommissionTotal: 0,
           salonRetainedAmount: 0,
         },
         staff: [],
-        rows: [],
+        appointments: [],
       },
     },
     200,
@@ -1119,6 +1146,28 @@ const sendRetentionBaleMessageStub: RouteHandler<
         providerMessageId: null,
         error: null,
         phone: null,
+      },
+    },
+    200,
+  )
+
+const sendRetentionSmsMessageStub: RouteHandler<
+  typeof sendRetentionSmsMessageRoute
+> = (c) =>
+  c.json(
+    {
+      delivery: {
+        id: 'stub',
+        provider: 'sms_ir' as const,
+        status: 'sent' as const,
+        providerMessageId: null,
+        error: null,
+      },
+      result: {
+        status: 'sent' as const,
+        provider: 'sms_ir' as const,
+        providerMessageId: null,
+        error: null,
       },
     },
     200,
@@ -1583,9 +1632,23 @@ export const contractApp = new OpenAPIHono()
     new OpenAPIHono()
       .openapi(putCommissionAgreementRoute, putCommissionAgreementStub)
       .openapi(deleteCommissionAgreementRoute, deleteCommissionAgreementStub)
+      .openapi(
+        putServiceCommissionOverrideRoute,
+        putServiceCommissionOverrideStub,
+      )
+      .openapi(
+        deleteServiceCommissionOverrideRoute,
+        deleteServiceCommissionOverrideStub,
+      )
       .openapi(getStaffCommissionReportRoute, getStaffCommissionReportStub)
-      .openapi(getMyCommissionReportRoute, getMyCommissionReportStub)
-      .openapi(getSalonCommissionReportRoute, getSalonCommissionReportStub),
+      .openapi(getMyCommissionReportRoute, getMyCommissionReportStub),
+  )
+  .route(
+    '/api/v1/reports',
+    new OpenAPIHono().openapi(
+      getSalonMoneyReportRoute,
+      getSalonMoneyReportStub,
+    ),
   )
   .route(
     '/api/v1/appointment-requests',
@@ -1652,7 +1715,8 @@ export const contractApp = new OpenAPIHono()
     new OpenAPIHono()
       .openapi(listRetentionRoute, listRetentionStub)
       .openapi(updateRetentionRoute, updateRetentionStub)
-      .openapi(sendRetentionBaleMessageRoute, sendRetentionBaleMessageStub),
+      .openapi(sendRetentionBaleMessageRoute, sendRetentionBaleMessageStub)
+      .openapi(sendRetentionSmsMessageRoute, sendRetentionSmsMessageStub),
   )
   .route(
     '/api/v1/messaging',

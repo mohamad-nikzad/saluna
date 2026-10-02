@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { and, eq, or, isNull } from 'drizzle-orm'
+import { and, desc, eq, inArray, or, isNull } from 'drizzle-orm'
 import { STAFF_COLORS } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { getDb } from './client'
@@ -290,9 +290,11 @@ export type ResendManagerStaffInviteDecision =
   | {
       status: 'resend'
       profile: typeof staffProfiles.$inferSelect
-      /** Same pending invite row — never a new Staff Profile. */
+      /** Same invitation row — never a new Staff Profile. */
       inviteId: string
       patch: {
+        status: 'pending'
+        expiredAt: null
         tokenHash: string
         expiresAt: Date
         lastDeliveredAt: Date
@@ -306,7 +308,7 @@ export type ResendManagerStaffInviteDecision =
     }
 
 /**
- * Pure resend decision: refresh token/expiry/delivery on the same pending row.
+ * Pure resend decision: refresh token/expiry/delivery on the same pending or expired row.
  * Does not create another Staff Profile.
  */
 export function evaluateResendManagerStaffInvite(input: {
@@ -330,6 +332,8 @@ export function evaluateResendManagerStaffInvite(input: {
     inviteId: input.pendingInvite.id,
     inviteToken: input.inviteToken,
     patch: {
+      status: 'pending',
+      expiredAt: null,
       tokenHash: hashInviteToken(input.inviteToken),
       expiresAt: new Date(input.now.getTime() + STAFF_INVITE_TTL_MS),
       lastDeliveredAt: input.now,
@@ -342,7 +346,7 @@ type StaffInviteTx = Parameters<
   Parameters<ReturnType<typeof getDb>['transaction']>[0]
 >[0]
 
-async function lockProfileAndPendingInvite(
+async function lockProfileAndUnacceptedInvite(
   tx: StaffInviteTx,
   input: { salonId: string; staffProfileId: string },
 ) {
@@ -366,9 +370,10 @@ async function lockProfileAndPendingInvite(
       and(
         eq(staffInvites.salonId, input.salonId),
         eq(staffInvites.staffProfileId, input.staffProfileId),
-        eq(staffInvites.status, 'pending'),
+        inArray(staffInvites.status, ['pending', 'expired']),
       ),
     )
+    .orderBy(desc(staffInvites.createdAt))
     .limit(1)
     .for('update')
   const pendingInvite = inviteRows[0] ?? null
@@ -376,7 +381,7 @@ async function lockProfileAndPendingInvite(
   return { profile, pendingInvite }
 }
 
-/** Cancel a pending Staff Invite. Keeps the salon-owned Staff Profile. */
+/** Cancel a pending or expired Staff Invite. Keeps the salon-owned Staff Profile. */
 export async function cancelManagerStaffInvite(input: {
   salonId: string
   staffProfileId: string
@@ -386,7 +391,7 @@ export async function cancelManagerStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const { profile, pendingInvite } = await lockProfileAndPendingInvite(
+    const { profile, pendingInvite } = await lockProfileAndUnacceptedInvite(
       tx,
       input,
     )
@@ -405,7 +410,7 @@ export async function cancelManagerStaffInvite(input: {
       .where(
         and(
           eq(staffInvites.id, decision.inviteId),
-          eq(staffInvites.status, 'pending'),
+          inArray(staffInvites.status, ['pending', 'expired']),
         ),
       )
       .returning()
@@ -422,7 +427,7 @@ export async function cancelManagerStaffInvite(input: {
 }
 
 /**
- * Resend a pending Staff Invite: new token, refreshed expiry and delivery
+ * Resend a pending or expired Staff Invite: new token, refreshed expiry and delivery
  * metadata. Does not create another Staff Profile.
  */
 export async function resendManagerStaffInvite(input: {
@@ -434,7 +439,7 @@ export async function resendManagerStaffInvite(input: {
   const now = input.now ?? new Date()
 
   return db.transaction(async (tx) => {
-    const { profile, pendingInvite } = await lockProfileAndPendingInvite(
+    const { profile, pendingInvite } = await lockProfileAndUnacceptedInvite(
       tx,
       input,
     )
@@ -454,7 +459,7 @@ export async function resendManagerStaffInvite(input: {
       .where(
         and(
           eq(staffInvites.id, decision.inviteId),
-          eq(staffInvites.status, 'pending'),
+          inArray(staffInvites.status, ['pending', 'expired']),
         ),
       )
       .returning()

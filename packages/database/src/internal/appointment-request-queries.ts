@@ -1,10 +1,9 @@
 import { and, asc, eq, gte, lt, or, sql, type SQL } from 'drizzle-orm'
+import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointment-roster'
+import { leadStaffId } from '@repo/salon-core/appointment-roster'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
-import {
-  isStartTimeInPreference,
-  normalizeAcceptableDates,
-} from '@repo/salon-core/appointment-request-timing'
+import { flexibleRequestAgreementError } from '@repo/salon-core/appointment-request-timing'
 
 import { getDb } from '../client'
 import { appointmentRequests, clients, organization, services } from '../schema'
@@ -355,19 +354,46 @@ export async function lookupClientByPhone(
 export type ApproveAppointmentRequestInput = {
   id: string
   salonId: string
-  staffId: string
+  /** When omitted/empty, request.staffId becomes a single lead at 10000 bps. */
+  staffAssignments?: AppointmentStaffAssignmentInput[]
   reviewedByUserId: string
 }
 
+function rosterFromApproveBodyOrRequest(input: {
+  staffAssignments?: AppointmentStaffAssignmentInput[]
+  requestStaffId: string | null
+}): AppointmentStaffAssignmentInput[] | null {
+  if (input.staffAssignments != null && input.staffAssignments.length > 0) {
+    return input.staffAssignments
+  }
+  if (input.requestStaffId) {
+    return [
+      {
+        staffId: input.requestStaffId,
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      },
+    ]
+  }
+  return null
+}
+
 export type ApproveAppointmentRequestResult =
-  | { ok: true; appointmentId: string; clientId: string }
+  | {
+      ok: true
+      appointmentId: string
+      clientId: string
+      notification?: {
+        appointment: Awaited<ReturnType<typeof createAppointment>>
+        staffIds: string[]
+        clientName: string
+        serviceName: string
+      }
+    }
   | { ok: false; status: number; error: string; code?: string }
 
 /**
- * Atomically flips `pending` → `approved`, lookup-or-creates a client by the
- * request's phone, re-runs `Appointment Intake` (which may 409 if the slot
- * was taken since submit), and inserts the `Appointment` with the request's
- * snapshot honored.
+ * Resolves the exact request's Client and staff before conversion through Intake.
  */
 export async function approveAppointmentRequest(
   input: ApproveAppointmentRequestInput,
@@ -398,6 +424,14 @@ export async function approveAppointmentRequest(
     return { ok: false, status: 409, error: 'این پیش‌نویس باید زمان‌بندی شود' }
   }
 
+  const staffAssignments = rosterFromApproveBodyOrRequest({
+    staffAssignments: input.staffAssignments,
+    requestStaffId: request.staffId,
+  })
+  if (!staffAssignments) {
+    return { ok: false, status: 400, error: 'انتخاب پرسنل الزامی است' }
+  }
+
   const normalizedPhone = normalizePhone(request.customerPhone)
   let client = await getClientByPhone(normalizedPhone, input.salonId)
   if (!client) {
@@ -408,71 +442,14 @@ export async function approveAppointmentRequest(
     })
   }
 
-  const intake = await validateCreateAppointmentIntake({
-    salonId: input.salonId,
+  return convertAppointmentRequest({
+    request,
     clientId: client.id,
-    staffId: input.staffId,
-    serviceId: request.serviceId,
+    staffAssignments,
     date: request.requestedDate,
     startTime: request.requestedStartTime,
-    notes: request.notes ?? undefined,
+    reviewedByUserId: input.reviewedByUserId,
   })
-  if (!intake.ok) {
-    return {
-      ok: false,
-      status: intake.status,
-      error: intake.error,
-      ...(intake.code ? { code: intake.code } : {}),
-    }
-  }
-
-  let appointment
-  try {
-    appointment = await createAppointment(intake.command, input.salonId, {
-      createdByUserId: input.reviewedByUserId,
-      serviceSnapshotOverride: {
-        name: request.bookedServiceName,
-        duration: request.bookedServiceDuration,
-        price: request.bookedServicePrice,
-      },
-    })
-  } catch (error) {
-    if (error instanceof SalonClosedError) {
-      return {
-        ok: false,
-        status: 409,
-        error: error.message,
-        code: error.code,
-      }
-    }
-    throw error
-  }
-
-  // Conditional flip — if a concurrent action moved the request, undo our work.
-  const updated = await db
-    .update(appointmentRequests)
-    .set({
-      status: 'approved',
-      staffId: input.staffId,
-      reviewedByUserId: input.reviewedByUserId,
-      reviewedAt: new Date(),
-      appointmentId: appointment.id,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(appointmentRequests.id, input.id),
-        eq(appointmentRequests.salonId, input.salonId),
-        eq(appointmentRequests.status, 'pending'),
-      ),
-    )
-    .returning({ id: appointmentRequests.id })
-
-  if (updated.length === 0) {
-    return { ok: false, status: 409, error: 'این درخواست قابل تأیید نیست' }
-  }
-
-  return { ok: true, appointmentId: appointment.id, clientId: client.id }
 }
 
 export type ConvertFlexibleAppointmentRequestInput = {
@@ -480,13 +457,12 @@ export type ConvertFlexibleAppointmentRequestInput = {
   salonId: string
   finalDate: string
   startTime: string
-  staffId: string
+  staffAssignments: AppointmentStaffAssignmentInput[]
   reviewedByUserId: string
 }
 
 export type ConvertFlexibleAppointmentRequestResult =
-  | { ok: true; appointmentId: string; clientId: string }
-  | { ok: false; status: number; error: string; code?: string }
+  ApproveAppointmentRequestResult
 
 export async function convertFlexibleAppointmentRequest(
   input: ConvertFlexibleAppointmentRequestInput,
@@ -510,24 +486,50 @@ export async function convertFlexibleAppointmentRequest(
     return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
   }
   const clientId = request.clientId
-  try {
-    normalizeAcceptableDates([input.finalDate], salonTodayYmd())
-  } catch {
+  const agreementError = flexibleRequestAgreementError({
+    acceptableDates: request.acceptableDates,
+    timePreference: request.timePreference,
+    finalDate: input.finalDate,
+    startTime: input.startTime,
+  })
+  if (agreementError === 'date') {
     return { ok: false, status: 400, error: 'تاریخ انتخاب‌شده قابل قبول نیست' }
   }
-  if (
-    !request.timePreference ||
-    !isStartTimeInPreference(input.startTime, request.timePreference)
-  ) {
+  if (agreementError === 'time') {
     return { ok: false, status: 400, error: 'ساعت انتخاب‌شده قابل قبول نیست' }
   }
 
-  const intake = await validateCreateAppointmentIntake({
-    salonId: input.salonId,
+  return convertAppointmentRequest({
+    request,
     clientId,
-    staffId: input.staffId,
-    serviceId: request.serviceId,
+    staffAssignments: input.staffAssignments,
     date: input.finalDate,
+    startTime: input.startTime,
+    reviewedByUserId: input.reviewedByUserId,
+  })
+}
+
+/** Claim the pending request before inserting; any write failure rolls both back. */
+async function convertAppointmentRequest(input: {
+  request: AppointmentRequestRow
+  clientId: string
+  staffAssignments: AppointmentStaffAssignmentInput[]
+  date: string
+  startTime: string
+  reviewedByUserId: string
+}): Promise<ApproveAppointmentRequestResult> {
+  const { request, clientId } = input
+  const db = getDb()
+  const unavailableError =
+    request.timingMode === 'flexible'
+      ? 'این پیش‌نویس قابل تبدیل نیست'
+      : 'این درخواست قابل تأیید نیست'
+  const intake = await validateCreateAppointmentIntake({
+    salonId: request.salonId,
+    clientId,
+    staffAssignments: input.staffAssignments,
+    serviceId: request.serviceId,
+    date: input.date,
     startTime: input.startTime,
     durationMinutes: request.bookedServiceDuration,
     notes: request.notes ?? undefined,
@@ -547,27 +549,27 @@ export async function convertFlexibleAppointmentRequest(
         .update(appointmentRequests)
         .set({
           status: 'approved',
-          staffId: input.staffId,
+          staffId: leadStaffId(input.staffAssignments),
           reviewedByUserId: input.reviewedByUserId,
           reviewedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(
           and(
-            eq(appointmentRequests.id, input.id),
-            eq(appointmentRequests.salonId, input.salonId),
-            eq(appointmentRequests.timingMode, 'flexible'),
+            eq(appointmentRequests.id, request.id),
+            eq(appointmentRequests.salonId, request.salonId),
+            eq(appointmentRequests.timingMode, request.timingMode),
             eq(appointmentRequests.status, 'pending'),
           ),
         )
         .returning({ id: appointmentRequests.id })
       if (updated.length === 0) {
-        return { ok: false, status: 409, error: 'این پیش‌نویس قابل تبدیل نیست' }
+        return { ok: false, status: 409, error: unavailableError }
       }
 
       const appointment = await createAppointment(
         intake.command,
-        input.salonId,
+        request.salonId,
         {
           createdByUserId: input.reviewedByUserId,
           transaction: tx,
@@ -581,11 +583,19 @@ export async function convertFlexibleAppointmentRequest(
       await tx
         .update(appointmentRequests)
         .set({ appointmentId: appointment.id })
-        .where(eq(appointmentRequests.id, input.id))
+        .where(eq(appointmentRequests.id, request.id))
       return {
         ok: true,
         appointmentId: appointment.id,
         clientId,
+        notification: {
+          appointment,
+          staffIds: (intake.staffMembers ?? [intake.staff]).map(
+            (member) => member.id,
+          ),
+          clientName: intake.client.name,
+          serviceName: intake.service.name,
+        },
       }
     })
   } catch (error) {

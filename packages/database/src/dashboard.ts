@@ -1,48 +1,28 @@
-import { and, count, eq, gte, lte, ne, or, isNull, sql } from 'drizzle-orm'
+import { and, count, eq, gte, lt, lte, ne, or, isNull, sql } from 'drizzle-orm'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
+import { reportingPeriodRange } from '@repo/salon-core/reporting-period'
+import { salonLocalInclusiveRangeInstants } from '@repo/salon-core/salon-local-time'
 import { STAFF_COLORS } from '@repo/salon-core/types'
-import { appointments, clients, member, salonMember, user } from './schema'
+import {
+  appointmentStaffAssignments,
+  appointments,
+  clients,
+  member,
+  salonMember,
+  user,
+} from './schema'
 import { getDb } from './client'
-import { getSalonFinancialSummary } from './internal/commission-queries'
+import { getSalonMoneyReport } from './internal/salon-money-report-queries'
 import { getTodayData } from './internal/today-queries'
 
 const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function weekBounds() {
-  const now = new Date()
-  const day = now.getDay()
-  const diffToSat = day === 6 ? 0 : -(day + 1)
-  const start = new Date(now)
-  start.setDate(now.getDate() + diffToSat)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  }
-}
-
-function monthBounds() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  }
-}
-
 export async function getDashboardData(salonId: string) {
   const db = getDb()
-  const today = todayStr()
-  const week = weekBounds()
-  const month = monthBounds()
+  const today = reportingPeriodRange({ period: 'today' })
+  const week = reportingPeriodRange({ period: 'week' })
+  const month = reportingPeriodRange({ period: 'month' })
+  const newClientsCreatedAt = salonLocalInclusiveRangeInstants(month)
 
   const [
     clientCountResult,
@@ -85,7 +65,7 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          eq(appointments.date, today),
+          eq(appointments.date, today.startDate),
           ne(appointments.status, 'cancelled'),
         ),
       ),
@@ -96,8 +76,8 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          gte(appointments.date, week.start),
-          lte(appointments.date, week.end),
+          gte(appointments.date, week.startDate),
+          lte(appointments.date, week.endDate),
           ne(appointments.status, 'cancelled'),
         ),
       ),
@@ -108,8 +88,8 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          gte(appointments.date, month.start),
-          lte(appointments.date, month.end),
+          gte(appointments.date, month.startDate),
+          lte(appointments.date, month.endDate),
           ne(appointments.status, 'cancelled'),
         ),
       ),
@@ -121,7 +101,10 @@ export async function getDashboardData(salonId: string) {
       })
       .from(appointments)
       .where(
-        and(eq(appointments.salonId, salonId), eq(appointments.date, today)),
+        and(
+          eq(appointments.salonId, salonId),
+          eq(appointments.date, today.startDate),
+        ),
       )
       .groupBy(appointments.status),
 
@@ -134,8 +117,8 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          gte(appointments.date, month.start),
-          lte(appointments.date, month.end),
+          gte(appointments.date, month.startDate),
+          lte(appointments.date, month.endDate),
         ),
       )
       .groupBy(appointments.status),
@@ -150,8 +133,8 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          gte(appointments.date, month.start),
-          lte(appointments.date, month.end),
+          gte(appointments.date, month.startDate),
+          lte(appointments.date, month.endDate),
           ne(appointments.status, 'cancelled'),
         ),
       )
@@ -161,13 +144,20 @@ export async function getDashboardData(salonId: string) {
 
     db
       .select({
-        staffId: appointments.staffId,
+        staffId: appointmentStaffAssignments.staffId,
         staffName: user.name,
         staffColor: salonMember.color,
         count: count(),
       })
       .from(appointments)
-      .innerJoin(user, eq(appointments.staffId, user.id))
+      .innerJoin(
+        appointmentStaffAssignments,
+        and(
+          eq(appointmentStaffAssignments.appointmentId, appointments.id),
+          eq(appointmentStaffAssignments.isLead, true),
+        ),
+      )
+      .innerJoin(user, eq(appointmentStaffAssignments.staffId, user.id))
       .leftJoin(
         salonMember,
         and(
@@ -178,18 +168,22 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(appointments.salonId, salonId),
-          gte(appointments.date, month.start),
-          lte(appointments.date, month.end),
+          gte(appointments.date, month.startDate),
+          lte(appointments.date, month.endDate),
           ne(appointments.status, 'cancelled'),
         ),
       )
-      .groupBy(appointments.staffId, user.name, salonMember.color)
+      .groupBy(
+        appointmentStaffAssignments.staffId,
+        user.name,
+        salonMember.color,
+      )
       .orderBy(sql`count(*) desc`),
 
-    getSalonFinancialSummary({
+    getSalonMoneyReport({
       salonId,
-      startDate: month.start,
-      endDate: month.end,
+      startDate: month.startDate,
+      endDate: month.endDate,
     }),
 
     db
@@ -198,8 +192,8 @@ export async function getDashboardData(salonId: string) {
       .where(
         and(
           eq(clients.salonId, salonId),
-          gte(clients.createdAt, new Date(month.start + 'T00:00:00')),
-          lte(clients.createdAt, new Date(month.end + 'T23:59:59')),
+          gte(clients.createdAt, newClientsCreatedAt.start),
+          lt(clients.createdAt, newClientsCreatedAt.endExclusive),
         ),
       ),
   ])
@@ -227,8 +221,14 @@ export async function getDashboardData(salonId: string) {
       color: row.staffColor ?? DEFAULT_STAFF_COLOR,
       count: row.count,
     })),
-    monthRevenue: monthFinancialSummary.grossAppointmentRevenue,
-    monthSalonRetainedAmount: monthFinancialSummary.salonRetainedAmount,
+    monthRevenue:
+      monthFinancialSummary.ok
+        ? monthFinancialSummary.report.summary.bookedTotal
+        : 0,
+    monthSalonRetainedAmount:
+      monthFinancialSummary.ok
+        ? monthFinancialSummary.report.summary.salonRetainedAmount
+        : 0,
     newClientsThisMonth: newClientsThisMonth[0]?.value ?? 0,
   }
 }

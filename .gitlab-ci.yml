@@ -176,6 +176,48 @@ build-pwa:
     reports:
       dotenv: build.env
 
+build-admin:
+  extends: .kaniko-build
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/admin/**/*
+        - packages/api-client/**/*
+        - packages/auth/**/*
+        - packages/database/**/*
+        - packages/notifications/**/*
+        - packages/salon-core/**/*
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - .gitlab-ci.yml
+        - docker-compose.prod.yml
+        - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
+  script:
+    - export SALUNA_ADMIN_VERSION="$(sed -n 's/.*"version":[[:space:]]*"\([^"]*\)".*/\1/p' apps/admin/package.json | head -n 1)"
+    - export SALUNA_ADMIN_IMAGE_TAG="${SALUNA_ADMIN_VERSION}-${CI_COMMIT_SHORT_SHA}"
+    - export SALUNA_IMAGE_REGISTRY="${SALUNA_IMAGE_REGISTRY%/}/"
+    - |
+      /kaniko/executor \
+        --context "$CI_PROJECT_DIR" \
+        --dockerfile "$CI_PROJECT_DIR/apps/admin/Dockerfile" \
+        --destination "${SALUNA_IMAGE_REGISTRY}saluna-admin:${SALUNA_ADMIN_IMAGE_TAG}" \
+        --build-arg "NODE_IMAGE=${SALUNA_NODE_IMAGE}" \
+        --build-arg "NGINX_IMAGE=${SALUNA_NGINX_IMAGE}" \
+        --build-arg "ALPINE_MIRROR=${SALUNA_ALPINE_MIRROR}" \
+        --build-arg "NPM_REGISTRY=${SALUNA_NPM_REGISTRY}" \
+        --build-arg "PNPM_VERSION=${SALUNA_PNPM_VERSION}" \
+        --label "org.opencontainers.image.title=saluna-admin" \
+        --label "org.opencontainers.image.version=${SALUNA_ADMIN_VERSION}" \
+        --label "org.opencontainers.image.revision=${CI_COMMIT_SHA}" \
+        --label "org.opencontainers.image.source=${CI_PROJECT_URL}"
+    - printf 'APP=admin\nIMAGE_TAG=%s\nAPP_VERSION=%s\n' "$SALUNA_ADMIN_IMAGE_TAG" "$SALUNA_ADMIN_VERSION" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
 deploy-api:
   extends: .deploy
   stage: deploy
@@ -252,3 +294,30 @@ deploy-pwa:
       artifacts: true
   script:
     - ssh "$VPS_SSH_USER@$VPS_HOST" "cd /opt/saluna && SALUNA_PWA_VERSION='$APP_VERSION' ./scripts/deploy-registry-app.sh pwa '$IMAGE_TAG'"
+
+deploy-admin:
+  extends: .deploy
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/admin/**/*
+        - packages/api-client/**/*
+        - packages/auth/**/*
+        - packages/database/**/*
+        - packages/notifications/**/*
+        - packages/salon-core/**/*
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - .gitlab-ci.yml
+        - docker-compose.prod.yml
+        - scripts/build-push-registry-app.sh
+        - scripts/deploy-registry-app.sh
+      when: manual
+    - when: never
+  needs:
+    - job: build-admin
+      artifacts: true
+  script:
+    - ssh "$VPS_SSH_USER@$VPS_HOST" "cd /opt/saluna && SALUNA_ADMIN_VERSION='$APP_VERSION' ./scripts/deploy-registry-app.sh admin '$IMAGE_TAG'"

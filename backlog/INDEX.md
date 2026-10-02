@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-07-28 (BL-0074 completed)
+Last organized: 2026-09-29 (public content CMS item added)
 
 ## Now
 
@@ -11,20 +11,7 @@ No active backlog items.
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
-- [BL-0061 Capture flexible AppointmentRequests as manager drafts](ready/BL-0061-plan-flexible-appointment-requests.md)
-  - [BL-0062 Record and list manager Drafts](done/BL-0062-record-list-manager-drafts.md)
-  - [BL-0063 Organize and edit Draft timing](done/BL-0063-organize-edit-draft-timing.md)
-  - [BL-0064 Convert a Draft into an Appointment](done/BL-0064-convert-draft-to-appointment.md)
-  - [BL-0065 Close Drafts accurately](done/BL-0065-close-drafts-accurately.md)
-  - [BL-0066 Expire and renew terminal Drafts](done/BL-0066-expire-renew-terminal-drafts.md)
-  - [BL-0067 Prove the complete Draft journey](done/BL-0067-prove-complete-draft-journey.md)
-- [BL-0069 Improve public Salon pages for local organic search](ready/BL-0069-improve-public-salon-local-seo.md)
-  - [BL-0070 Capture structured Salon Presence location](done/BL-0070-capture-structured-salon-location.md)
-  - [BL-0071 Publish local Salon details and structured data](done/BL-0071-publish-local-salon-details-and-structured-data.md)
-  - [BL-0072 Discover published Salons through a runtime sitemap](done/BL-0072-discover-published-salons-through-runtime-sitemap.md)
-  - [BL-0073 Keep AppointmentRequest status pages out of search](done/BL-0073-keep-appointment-request-status-pages-out-of-search.md)
-  - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
-  - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
+- [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
 
 ## Inbox
 
@@ -32,14 +19,42 @@ No active backlog items.
 - [BL-0012 Native app after PWA V1](inbox/BL-0012-native-app-after-pwa-v1.md)
 - [BL-0013 Factor generation for appointments](inbox/BL-0013-factor-generation-for-appointments.md)
 - [BL-0014 Payment plans and feature gates](inbox/BL-0014-payment-plans-and-feature-gates.md)
-- [BL-0017 Accounting features](inbox/BL-0017-accounting-features.md)
 - [BL-0018 Customer-facing Telegram and Bale bot](inbox/BL-0018-customer-facing-telegram-and-bale-bot.md)
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
+- [BL-0087 Publish Blog Articles and Product Guides with EmDash](inbox/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
+- Architecture deepenings (review 2026-08-26; salon money done in-session)
+  - [BL-0082 Deepen Appointment Intake into trusted persist](inbox/BL-0082-deepen-appointment-intake-persist.md)
+  - [BL-0084 Deepen Staff Commission earning away from reports](inbox/BL-0084-deepen-staff-commission-earning.md)
+  - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
 
+- [BL-0080 Let managers browse and filter all Appointments](done/BL-0080-manager-appointment-list.md)
+
+- [BL-0061 Capture flexible AppointmentRequests as manager drafts](done/BL-0061-plan-flexible-appointment-requests.md)
+  - [BL-0062 Record and list manager Drafts](done/BL-0062-record-list-manager-drafts.md)
+  - [BL-0063 Organize and edit Draft timing](done/BL-0063-organize-edit-draft-timing.md)
+  - [BL-0064 Convert a Draft into an Appointment](done/BL-0064-convert-draft-to-appointment.md)
+  - [BL-0065 Close Drafts accurately](done/BL-0065-close-drafts-accurately.md)
+  - [BL-0066 Expire and renew terminal Drafts](done/BL-0066-expire-renew-terminal-drafts.md)
+  - [BL-0067 Prove the complete Draft journey](done/BL-0067-prove-complete-draft-journey.md)
+- [BL-0069 Improve public Salon pages for local organic search](done/BL-0069-improve-public-salon-local-seo.md)
+  - [BL-0070 Capture structured Salon Presence location](done/BL-0070-capture-structured-salon-location.md)
+  - [BL-0071 Publish local Salon details and structured data](done/BL-0071-publish-local-salon-details-and-structured-data.md)
+  - [BL-0072 Discover published Salons through a runtime sitemap](done/BL-0072-discover-published-salons-through-runtime-sitemap.md)
+  - [BL-0073 Keep AppointmentRequest status pages out of search](done/BL-0073-keep-appointment-request-status-pages-out-of-search.md)
+  - [BL-0074 Help managers complete and share their public page](done/BL-0074-help-managers-complete-and-share-public-page.md)
+  - [BL-0075 Prove the complete local-search journey](done/BL-0075-prove-complete-local-search-journey.md)
+- [BL-0017 Accounting features](done/BL-0017-accounting-features.md)
+
+- [BL-0085 Enforce Flexible AppointmentRequest agreement on convert](done/BL-0085-enforce-flexible-request-agreement.md)
+- [BL-0083 Collapse AppointmentRequest conversion through Intake](done/BL-0083-collapse-appointment-request-conversion.md)
+- [BL-0081 Deepen Appointment Staff Assignment as one roster truth](done/BL-0081-deepen-appointment-staff-assignment.md) (ADR-0039)
+- [BL-0078 Give managers a salon money report for completed Appointments](done/BL-0078-manager-salon-money-report.md) (uses ADR-0038)
+- [BL-0079 Align manager Dashboard with Salon-local Reporting Periods](done/BL-0079-align-dashboard-reporting-periods.md)
+- [BL-0077 Set per-service Staff Commission overrides](done/BL-0077-set-per-service-staff-commission-overrides.md)
 - [BL-0068 Let managers make dates unavailable](done/BL-0068-make-one-date-unavailable.md)
 - [BL-0019 Configure and report Staff Commissions](done/BL-0019-configure-and-report-staff-commissions.md)
   - [BL-0055 Activate Staff Commission for a regular Appointment](done/BL-0055-activate-staff-commission.md)

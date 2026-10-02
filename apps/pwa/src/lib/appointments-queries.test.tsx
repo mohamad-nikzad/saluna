@@ -36,7 +36,7 @@ describe('appointments-queries', () => {
       'getApiV1Dashboard',
       'getApiV1CommissionsStaffByIdReport',
       'getApiV1CommissionsMe',
-      'getApiV1CommissionsSalon',
+      'getApiV1ReportsSalonMoney',
     ])
   })
 

@@ -1,0 +1,9 @@
+# Manager-facing periods use Salon-local Dates, Salon Weeks, and Jalali Months
+
+Saluna stores calendar days as native Gregorian `date` values. Managers and staff still name those days in Jalali, and “today / this week / this month” on operational screens must mean the same range everywhere. Staff Commission reports already follow Tehran today, Saturday–Friday weeks, and Jalali month edges; the manager Dashboard still uses JavaScript’s Gregorian month and UTC date strings, so the same Appointment can fall in “this month” on one screen and outside it on the other.
+
+**Decision.** Every manager- and staff-facing operational period uses a **Reporting Period**: an inclusive range of **Salon-local Dates** (calendar days in `Asia/Tehran`). Presets are today, the current **Salon Week** (Saturday–Friday), the current **Jalali Month**, the previous **Jalali Month**, and a custom inclusive date range. A yearly preset, if a later report needs one, is the Jalali year containing today. Queries convert those edges to stored Gregorian dates; printed dates on those screens are Jalali. New reports—Dashboard KPIs, Staff Commission, salon money reports, month-keyed retention, and anything else that filters by “this month”—must use this model. They must not derive month or year from `Date#getMonth`, `Date#getFullYear`, or `toISOString()` date prefixes.
+
+Commercial cycles stay on their own ADRs. An SMS Allowance period and a Salon Subscription term are not Reporting Periods; this decision does not change how they refresh.
+
+We rejected storing Jalali in the database (Postgres `date` is Gregorian; Client Birth Date already converts at the boundary). We rejected Jalali labels on Gregorian month bounds (the numbers would not match مرداد or شهریور). We rejected per-feature period math (Dashboard and commissions already disagree). We rejected ICU `fa-IR-u-ca-persian` for query bounds (display may use it; period math must stay on the deterministic Jalali helpers).

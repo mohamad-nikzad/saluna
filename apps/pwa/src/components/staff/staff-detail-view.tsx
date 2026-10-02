@@ -149,7 +149,10 @@ export function StaffDetailView({
               onOpenSchedule={() => onOpenSchedule(member)}
               onOpenServices={() => onOpenServices(member)}
             />
-            <ManagerStaffCommissionPanel staffId={member.id} />
+            <ManagerStaffCommissionPanel
+              staffId={member.id}
+              services={services}
+            />
           </>
         ) : null}
 

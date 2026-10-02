@@ -100,7 +100,9 @@ describe('handleApprovalCallback', () => {
     expect(mocks.approveAppointmentRequest).toHaveBeenCalledWith({
       id: 'req-1',
       salonId: 'salon-1',
-      staffId: 'staff-99',
+      staffAssignments: [
+        { staffId: 'staff-99', isLead: true, allocationBasisPoints: 10_000 },
+      ],
       reviewedByUserId: 'mgr-1',
     })
     expect(outcome.messageHtml).toContain('✅')
@@ -307,7 +309,9 @@ describe('handleAssignCallback', () => {
     expect(mocks.approveAppointmentRequest).toHaveBeenCalledWith({
       id: 'req-1',
       salonId: 'salon-1',
-      staffId: 'staff-2',
+      staffAssignments: [
+        { staffId: 'staff-2', isLead: true, allocationBasisPoints: 10_000 },
+      ],
       reviewedByUserId: 'mgr-1',
     })
     expect(outcome.messageHtml).toContain('✅')

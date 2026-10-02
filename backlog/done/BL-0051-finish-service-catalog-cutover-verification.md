@@ -42,7 +42,7 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 ## Notes
 
 - Type: AFK.
-- Source slice from `SERVICE_CATALOG_MIGRATION_PLAN.md`.
+- Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
 - Partial implementation note: OpenAPI/client artifacts, `CONTEXT.md`, and the manager package scheduling ADR appear to exist, but this item remains open until seeds are fully flat and the listed full verification commands plus targeted visual checks are run and recorded.
 - Verification note: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test` pass after the flat seed and UI cutover cleanup.
 - Visual verification note: authenticated PWA checks covered `/services` (category/service catalog, no family/combo controls, package staff capability checkboxes) and `/calendar` (manager package booking tab plus assigned-staff-only package picker). Authenticated admin checks covered `/salons/d6b08ecf-e697-41dd-b9e8-ed6e003d537e/services` setup catalog (service form without family/combo controls and add-on all/category/service scope controls).

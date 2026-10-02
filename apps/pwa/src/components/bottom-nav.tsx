@@ -38,6 +38,7 @@ const managerItems: ReadonlyArray<NavItem> = [
       '/staff',
       '/support',
       '/commissions',
+      '/reports',
     ],
   },
 ]

@@ -77,6 +77,7 @@ export const serviceFormSchema = z.object({
   price: nonNegativeMoneySchema,
   color: calendarColorIdSchema.default(STAFF_COLORS[0]),
   active: z.boolean().default(true),
+  allowMultipleStaff: z.boolean().default(false),
   description: z.string().trim().optional(),
 })
 
@@ -91,6 +92,7 @@ export const serviceUpdateSchema = z.object({
   price: nonNegativeMoneySchema.optional(),
   color: calendarColorIdSchema.optional(),
   active: z.boolean().optional(),
+  allowMultipleStaff: z.boolean().optional(),
   description: z.string().trim().optional(),
 })
 

@@ -7,6 +7,7 @@ import {
   integer,
   serial,
   smallint,
+  date,
   timestamp,
   jsonb,
   index,
@@ -16,6 +17,7 @@ import {
 } from 'drizzle-orm/pg-core'
 
 import type { CatalogPresetTree } from '@repo/salon-core/forms/catalog-preset'
+import type { ClientAcquisitionSource } from '@repo/salon-core/types'
 import type {
   SupportMessageAuthorKind,
   SupportTicketCategory,
@@ -717,6 +719,9 @@ export const services = pgTable(
     price: integer('price').notNull(),
     color: text('color').notNull(),
     active: boolean('active').notNull().default(true),
+    allowMultipleStaff: boolean('allow_multiple_staff')
+      .notNull()
+      .default(false),
     description: text('description'),
     kind: text('kind')
       .notNull()
@@ -1130,6 +1135,9 @@ export const clients = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     isPlaceholder: boolean('is_placeholder').notNull().default(false),
+    birthDate: date('birth_date', { mode: 'string' }),
+    acquisitionSource:
+      text('acquisition_source').$type<ClientAcquisitionSource>(),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -1178,7 +1186,6 @@ export const appointments = pgTable(
     clientId: uuid('client_id')
       .notNull()
       .references(() => clients.id, { onDelete: 'restrict' }),
-    staffId: uuid('staff_id').notNull(),
     serviceId: uuid('service_id')
       .notNull()
       .references(() => services.id, { onDelete: 'restrict' }),
@@ -1211,18 +1218,54 @@ export const appointments = pgTable(
   },
   (t) => [
     index('appointments_salon_id_date_idx').on(t.salonId, t.date),
-    index('appointments_salon_id_staff_id_date_idx').on(
-      t.salonId,
-      t.staffId,
-      t.date,
-    ),
     index('appointments_salon_id_client_id_date_idx').on(
       t.salonId,
       t.clientId,
       t.date,
     ),
-    index('appointments_staff_id_date_idx').on(t.staffId, t.date),
     index('appointments_client_id_date_idx').on(t.clientId, t.date),
+  ],
+)
+
+export const appointmentStaffAssignments = pgTable(
+  'appointment_staff_assignments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    staffId: uuid('staff_id').notNull(),
+    isLead: boolean('is_lead').notNull().default(false),
+    allocationBasisPoints: integer('allocation_basis_points').notNull(),
+    commissionExcludedAt: timestamp('commission_excluded_at', {
+      withTimezone: true,
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('appointment_staff_assignments_appointment_staff_unique').on(
+      t.appointmentId,
+      t.staffId,
+    ),
+    uniqueIndex('appointment_staff_assignments_lead_unique')
+      .on(t.appointmentId)
+      .where(sql`${t.isLead} = true`),
+    index('appointment_staff_assignments_salon_staff_idx').on(
+      t.salonId,
+      t.staffId,
+    ),
+    check(
+      'appointment_staff_assignments_allocation_check',
+      sql`${t.allocationBasisPoints} >= 0 and ${t.allocationBasisPoints} <= 10000`,
+    ),
   ],
 )
 
@@ -1397,6 +1440,43 @@ export const commissionAgreements = pgTable(
   ],
 )
 
+export const serviceCommissionOverrides = pgTable(
+  'service_commission_overrides',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    commissionAgreementId: uuid('commission_agreement_id')
+      .notNull()
+      .references(() => commissionAgreements.id, { onDelete: 'cascade' }),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'restrict' }),
+    percentageBasisPoints: integer('percentage_basis_points').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('service_commission_overrides_agreement_service_unique').on(
+      t.commissionAgreementId,
+      t.serviceId,
+    ),
+    index('service_commission_overrides_salon_agreement_idx').on(
+      t.salonId,
+      t.commissionAgreementId,
+    ),
+    check(
+      'service_commission_overrides_percentage_check',
+      sql`${t.percentageBasisPoints} > 0 and ${t.percentageBasisPoints} <= 10000`,
+    ),
+  ],
+)
+
 export const staffCommissions = pgTable(
   'staff_commissions',
   {
@@ -1410,6 +1490,11 @@ export const staffCommissions = pgTable(
     appointmentId: uuid('appointment_id')
       .notNull()
       .references(() => appointments.id, { onDelete: 'cascade' }),
+    appointmentStaffAssignmentId: uuid('appointment_staff_assignment_id')
+      .notNull()
+      .references(() => appointmentStaffAssignments.id, {
+        onDelete: 'cascade',
+      }),
     basis: integer('basis').notNull(),
     percentageBasisPoints: integer('percentage_basis_points').notNull(),
     amount: integer('amount').notNull(),
@@ -1422,7 +1507,9 @@ export const staffCommissions = pgTable(
       .defaultNow(),
   },
   (t) => [
-    uniqueIndex('staff_commissions_appointment_unique').on(t.appointmentId),
+    uniqueIndex('staff_commissions_assignment_unique').on(
+      t.appointmentStaffAssignmentId,
+    ),
     index('staff_commissions_salon_profile_idx').on(
       t.salonId,
       t.staffProfileId,
@@ -1448,12 +1535,15 @@ export const clientFollowUps = pgTable(
       .references(() => clients.id, { onDelete: 'cascade' }),
     reason: text('reason')
       .notNull()
-      .$type<'inactive' | 'no-show' | 'new-client' | 'vip' | 'manual'>(),
+      .$type<
+        'inactive' | 'no-show' | 'new-client' | 'vip' | 'manual' | 'birthday'
+      >(),
     status: text('status')
       .notNull()
-      .$type<'open' | 'reviewed' | 'dismissed'>()
+      .$type<'open' | 'reviewed' | 'dismissed' | 'expired'>()
       .default('open'),
     dueDate: text('due_date').notNull(),
+    occurrenceYear: smallint('occurrence_year'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -1463,11 +1553,12 @@ export const clientFollowUps = pgTable(
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex('client_follow_ups_salon_id_client_id_reason_unique').on(
-      t.salonId,
-      t.clientId,
-      t.reason,
-    ),
+    uniqueIndex('client_follow_ups_non_birthday_unique')
+      .on(t.salonId, t.clientId, t.reason)
+      .where(sql`${t.reason} <> 'birthday'`),
+    uniqueIndex('client_follow_ups_birthday_occurrence_unique')
+      .on(t.salonId, t.clientId, t.reason, t.occurrenceYear, t.dueDate)
+      .where(sql`${t.reason} = 'birthday'`),
     index('client_follow_ups_salon_id_status_due_idx').on(
       t.salonId,
       t.status,
@@ -1490,7 +1581,7 @@ export const clientFollowUpMessageDeliveries = pgTable(
     clientId: uuid('client_id')
       .notNull()
       .references(() => clients.id, { onDelete: 'cascade' }),
-    provider: text('provider').notNull().$type<'bale_safir'>(),
+    provider: text('provider').notNull().$type<'bale_safir' | 'sms_ir'>(),
     phone: text('phone').notNull(),
     requestId: text('request_id').notNull(),
     status: text('status').notNull().$type<'sent' | 'failed' | 'skipped'>(),
@@ -1600,12 +1691,14 @@ export const notifications = pgTable(
         | 'appointment_request_approved'
         | 'appointment_request_rejected'
         | 'appointment_reminder'
+        | 'birthday_follow_up'
         | 'support_reply'
       >(),
     title: text('title').notNull(),
     body: text('body').notNull(),
     route: text('route').notNull(),
     data: jsonb('data').notNull().$type<Record<string, unknown>>().default({}),
+    sourceKey: text('source_key'),
     readAt: timestamp('read_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -1622,6 +1715,9 @@ export const notifications = pgTable(
       t.userId,
       t.readAt,
     ),
+    uniqueIndex('notifications_user_type_source_key_unique')
+      .on(t.userId, t.type, t.sourceKey)
+      .where(sql`${t.sourceKey} is not null`),
   ],
 )
 

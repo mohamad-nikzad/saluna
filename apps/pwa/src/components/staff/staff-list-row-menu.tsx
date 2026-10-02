@@ -40,7 +40,8 @@ export function StaffListRowMenu({
 }: StaffListRowMenuProps) {
   const isSelf = member.id === currentUserId
   const isStaffRole = member.role === 'staff'
-  const isPendingInvite = member.inviteStatus === 'pending'
+  const isPendingInvite =
+    member.inviteStatus === 'pending' || member.inviteStatus === 'expired'
 
   return (
     <DropdownMenu>

@@ -68,6 +68,8 @@ import {
   parseOptionalLocalizedInteger,
 } from '#/components/localized-number-input'
 import { PackageBookingForm } from '#/components/calendar/package-booking-form'
+import { AdditionalStaffFields } from '#/components/calendar/additional-staff-fields'
+import { equalWorkAllocations } from '@repo/salon-core/commissions'
 
 const DURATION_PRESETS = [30, 45, 60, 90, 120]
 type BookingMode = 'single' | 'package'
@@ -170,6 +172,8 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
 
   const clientId = watch('clientId')
   const staffId = watch('staffId')
+  const additionalStaffIds = watch('additionalStaffIds') ?? []
+  const workAllocations = watch('workAllocations') ?? []
   const serviceId = watch('serviceId')
   const date = watch('date')
   const startTime = watch('startTime')
@@ -333,6 +337,15 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
       shouldDirty: true,
       shouldValidate: true,
     })
+    setValue('additionalStaffIds', next.additionalStaffIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setValue(
+      'workAllocations',
+      next.staffId ? equalWorkAllocations([next.staffId]) : [],
+      { shouldDirty: true, shouldValidate: true },
+    )
     applyDuration(next.durationMinutes)
     applyCalculatedFinalPrice(
       services.find((service) => service.id === next.serviceId),
@@ -366,6 +379,14 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
 
   const handleStaffChange = (id: string) => {
     setValue('staffId', id, { shouldDirty: true, shouldValidate: true })
+    setValue('additionalStaffIds', [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setValue('workAllocations', equalWorkAllocations([id]), {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
     const next = resolveIntakeStaffChange({
       staffId: id,
       serviceId: serviceId ?? '',
@@ -388,6 +409,8 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
 
   const clearStaff = () => {
     setValue('staffId', '', { shouldDirty: true, shouldValidate: true })
+    setValue('additionalStaffIds', [], { shouldDirty: true })
+    setValue('workAllocations', [], { shouldDirty: true })
   }
 
   const handleClientCreated = (newClient: Client) => {
@@ -618,6 +641,26 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                       <FieldError>{errors.staffId.message}</FieldError>
                     )}
                   </Field>
+                  <AdditionalStaffFields
+                    service={selectedService}
+                    staff={staffRoleOnly}
+                    leadStaffId={staffId ?? ''}
+                    additionalStaffIds={additionalStaffIds}
+                    workAllocations={workAllocations}
+                    getStatus={staffPickerStatus}
+                    onAdditionalStaffIdsChange={(staffIds) =>
+                      setValue('additionalStaffIds', staffIds, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    onWorkAllocationsChange={(allocations) =>
+                      setValue('workAllocations', allocations, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -672,11 +715,10 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                 </div>
 
                 <Field>
-                  <FieldLabel htmlFor="final-price">
-                    قیمت نهایی (تومان)
-                  </FieldLabel>
+                  <FieldLabel htmlFor="final-price">قیمت نهایی</FieldLabel>
                   <LocalizedNumberInput
                     id="final-price"
+                    currency
                     value={finalPriceInput}
                     onValueChange={(value) => {
                       finalPriceOverriddenRef.current = true

@@ -78,7 +78,3 @@ export function resolvePublicTheme(id: string | null | undefined): PublicTheme {
   const found = PUBLIC_THEMES.find((t) => t.id === id)
   return found ?? PUBLIC_THEMES[0]!
 }
-
-export function isPublicThemeId(value: unknown): value is PublicThemeId {
-  return typeof value === 'string' && PUBLIC_THEMES.some((t) => t.id === value)
-}

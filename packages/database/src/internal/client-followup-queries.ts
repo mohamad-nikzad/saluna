@@ -1,4 +1,14 @@
-import { and, asc, desc, eq } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  lt,
+  lte,
+  sql,
+} from 'drizzle-orm'
 import type {
   ClientFollowUp,
   ClientSummary,
@@ -6,6 +16,8 @@ import type {
   FollowUpStatus,
 } from '@repo/salon-core/types'
 import { salonTodayYmd } from '@repo/salon-core/salon-local-time'
+import { addDaysYmd } from '@repo/salon-core/salon-local-time'
+import { birthdayOccurrenceInWindow } from '@repo/salon-core/client-birthday'
 import { getDb } from '../client'
 import {
   clientFollowUpMessageDeliveries,
@@ -17,7 +29,7 @@ import { rowToClientFollowUp } from './row-mappers'
 import { getClientAppointmentsWithDetails } from './appointment-queries'
 import { getClientById, getClientTags } from './client-queries'
 
-export type ClientFollowUpMessageDeliveryProvider = 'bale_safir'
+export type ClientFollowUpMessageDeliveryProvider = 'bale_safir' | 'sms_ir'
 export type ClientFollowUpMessageDeliveryStatus = 'sent' | 'failed' | 'skipped'
 
 export type ClientFollowUpMessageDelivery = {
@@ -186,6 +198,7 @@ export async function createClientFollowUp(
         clientFollowUps.clientId,
         clientFollowUps.reason,
       ],
+      targetWhere: sql`${clientFollowUps.reason} <> 'birthday'`,
       set: {
         status: 'open',
         dueDate,
@@ -195,6 +208,110 @@ export async function createClientFollowUp(
     })
     .returning()
   return rowToClientFollowUp(row)
+}
+
+export async function syncBirthdayFollowUps(
+  input: {
+    salonId?: string
+    clientId?: string
+    now?: Date
+  } = {},
+): Promise<ClientFollowUp[]> {
+  const db = getDb()
+  const today = salonTodayYmd(input.now)
+  const clientConditions = [
+    eq(clients.isPlaceholder, false),
+    isNotNull(clients.birthDate),
+  ]
+  if (input.salonId) clientConditions.push(eq(clients.salonId, input.salonId))
+  if (input.clientId) clientConditions.push(eq(clients.id, input.clientId))
+
+  const clientRows = await db
+    .select({
+      id: clients.id,
+      salonId: clients.salonId,
+      birthDate: clients.birthDate,
+    })
+    .from(clients)
+    .where(and(...clientConditions))
+
+  const candidates = clientRows.flatMap((client) => {
+    if (!client.birthDate) return []
+    const occurrence = birthdayOccurrenceInWindow(client.birthDate, today)
+    return occurrence ? [{ client, occurrence }] : []
+  })
+
+  if (input.clientId && input.salonId) {
+    const target = candidates[0]?.occurrence
+    const openRows = await db
+      .select()
+      .from(clientFollowUps)
+      .where(
+        and(
+          eq(clientFollowUps.salonId, input.salonId),
+          eq(clientFollowUps.clientId, input.clientId),
+          eq(clientFollowUps.reason, 'birthday'),
+          eq(clientFollowUps.status, 'open'),
+        ),
+      )
+    const staleIds = openRows
+      .filter(
+        (row) =>
+          !target ||
+          row.occurrenceYear !== target.occurrenceYear ||
+          row.dueDate !== target.dueDate,
+      )
+      .map((row) => row.id)
+    if (staleIds.length > 0) {
+      await db
+        .update(clientFollowUps)
+        .set({ status: 'expired', updatedAt: new Date() })
+        .where(inArray(clientFollowUps.id, staleIds))
+    }
+  } else {
+    await db
+      .update(clientFollowUps)
+      .set({ status: 'expired', updatedAt: new Date() })
+      .where(
+        and(
+          eq(clientFollowUps.reason, 'birthday'),
+          eq(clientFollowUps.status, 'open'),
+          lt(clientFollowUps.dueDate, addDaysYmd(today, -7)),
+        ),
+      )
+  }
+
+  if (candidates.length > 0) {
+    await db
+      .insert(clientFollowUps)
+      .values(
+        candidates.map(({ client, occurrence }) => ({
+          salonId: client.salonId,
+          clientId: client.id,
+          reason: 'birthday' as const,
+          status: 'open' as const,
+          dueDate: occurrence.dueDate,
+          occurrenceYear: occurrence.occurrenceYear,
+        })),
+      )
+      .onConflictDoNothing()
+  }
+
+  const followUpConditions = [
+    eq(clientFollowUps.reason, 'birthday'),
+    eq(clientFollowUps.status, 'open'),
+    lte(clientFollowUps.dueDate, addDaysYmd(today, 7)),
+  ]
+  if (input.salonId)
+    followUpConditions.push(eq(clientFollowUps.salonId, input.salonId))
+  if (input.clientId)
+    followUpConditions.push(eq(clientFollowUps.clientId, input.clientId))
+
+  const rows = await db
+    .select()
+    .from(clientFollowUps)
+    .where(and(...followUpConditions))
+  return rows.map(rowToClientFollowUp)
 }
 
 export async function updateClientFollowUpStatus(

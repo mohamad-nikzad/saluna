@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/api/**'
+      - 'apps/admin/**'
       - 'apps/web/**'
       - 'apps/pwa/**'
       - 'packages/**'
@@ -26,6 +27,7 @@ on:
         options:
           - all
           - api
+          - admin
           - web
           - pwa
 
@@ -69,6 +71,20 @@ jobs:
               - 'tsconfig.json'
               - 'scripts/with-root-env.mjs'
               - '.github/workflows/build-production-images.yml'
+            admin:
+              - 'apps/admin/**'
+              - 'packages/api-client/**'
+              - 'packages/auth/**'
+              - 'packages/database/**'
+              - 'packages/notifications/**'
+              - 'packages/salon-core/**'
+              - 'packages/typescript-config/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - 'tsconfig.json'
+              - '.github/workflows/build-production-images.yml'
             web:
               - 'apps/web/**'
               - 'packages/api-client/**'
@@ -103,18 +119,20 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           SELECTED_APPS: ${{ inputs.apps }}
           API_CHANGED: ${{ steps.changes.outputs.api }}
+          ADMIN_CHANGED: ${{ steps.changes.outputs.admin }}
           WEB_CHANGED: ${{ steps.changes.outputs.web }}
           PWA_CHANGED: ${{ steps.changes.outputs.pwa }}
         run: |
           apps=()
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             if [[ "$SELECTED_APPS" == "all" ]]; then
-              apps=(api web pwa)
+              apps=(api web pwa admin)
             else
               apps=("$SELECTED_APPS")
             fi
           else
             [[ "$API_CHANGED" == "true" ]] && apps+=(api)
+            [[ "$ADMIN_CHANGED" == "true" ]] && apps+=(admin)
             [[ "$WEB_CHANGED" == "true" ]] && apps+=(web)
             [[ "$PWA_CHANGED" == "true" ]] && apps+=(pwa)
           fi

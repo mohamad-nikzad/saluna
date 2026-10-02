@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/commissions', () => ({
+  deleteServiceCommissionOverride: vi.fn(),
   disableCommissionAgreement: vi.fn(),
-  getSalonCommissionReport: vi.fn(),
   getStaffCommissionReport: vi.fn(),
   setCommissionAgreement: vi.fn(),
+  setServiceCommissionOverride: vi.fn(),
 }))
 vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
@@ -63,6 +64,7 @@ describe('Staff Commission routes', () => {
       active: true,
       activatedAt: new Date('2026-07-18T00:00:00Z'),
       disabledAt: null,
+      overrides: [],
     })
     const response = await app.request(
       '/api/v1/commissions/staff/profile-1/agreement',
@@ -105,11 +107,150 @@ describe('Staff Commission routes', () => {
         body: JSON.stringify({ percentage: 20 }),
       },
     )
-    const salon = await app.request('/api/v1/commissions/salon?period=today', {
+    const overrideWrite = await app.request(
+      '/api/v1/commissions/staff/profile-1/agreement/overrides/service-1',
+      {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ percentage: 30 }),
+      },
+    )
+    const salonMoney = await app.request(
+      '/api/v1/reports/salon-money?period=today',
+      {
+        headers,
+      },
+    )
+    expect(write.status).toBe(403)
+    expect(overrideWrite.status).toBe(403)
+    expect(salonMoney.status).toBe(403)
+  })
+
+  it('lets a manager upsert and delete a Service Commission Override', async () => {
+    vi.mocked(commissionsDb.setServiceCommissionOverride).mockResolvedValue({
+      ok: true,
+      agreement: {
+        staffProfileId: 'profile-1',
+        percentage: 20,
+        active: true,
+        activatedAt: new Date('2026-07-18T00:00:00Z'),
+        disabledAt: null,
+        overrides: [
+          {
+            serviceId: 'service-1',
+            serviceName: 'Color',
+            serviceActive: true,
+            percentage: 30,
+          },
+        ],
+      },
+    })
+    vi.mocked(commissionsDb.deleteServiceCommissionOverride).mockResolvedValue({
+      ok: true,
+      agreement: {
+        staffProfileId: 'profile-1',
+        percentage: 20,
+        active: true,
+        activatedAt: new Date('2026-07-18T00:00:00Z'),
+        disabledAt: null,
+        overrides: [],
+      },
+    })
+
+    const upsert = await app.request(
+      '/api/v1/commissions/staff/profile-1/agreement/overrides/service-1',
+      {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ percentage: 30 }),
+      },
+    )
+    expect(upsert.status).toBe(200)
+    expect(commissionsDb.setServiceCommissionOverride).toHaveBeenCalledWith({
+      salonId: 'salon-1',
+      staffProfileId: 'profile-1',
+      serviceId: 'service-1',
+      percentageBasisPoints: 3000,
+    })
+    expect(await upsert.json()).toMatchObject({
+      agreement: {
+        overrides: [{ serviceId: 'service-1', percentage: 30 }],
+      },
+    })
+
+    const removed = await app.request(
+      '/api/v1/commissions/staff/profile-1/agreement/overrides/service-1',
+      { method: 'DELETE', headers },
+    )
+    expect(removed.status).toBe(200)
+    expect(commissionsDb.deleteServiceCommissionOverride).toHaveBeenCalledWith({
+      salonId: 'salon-1',
+      staffProfileId: 'profile-1',
+      serviceId: 'service-1',
+    })
+  })
+
+  it('hides cross-salon services and missing agreements for override writes', async () => {
+    vi.mocked(commissionsDb.setServiceCommissionOverride).mockResolvedValue({
+      ok: false,
+      reason: 'service',
+    })
+    const missingService = await app.request(
+      '/api/v1/commissions/staff/profile-1/agreement/overrides/foreign-service',
+      {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ percentage: 30 }),
+      },
+    )
+    expect(missingService.status).toBe(404)
+
+    vi.mocked(commissionsDb.setServiceCommissionOverride).mockResolvedValue({
+      ok: false,
+      reason: 'agreement',
+    })
+    const missingAgreement = await app.request(
+      '/api/v1/commissions/staff/profile-1/agreement/overrides/service-1',
+      {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ percentage: 30 }),
+      },
+    )
+    expect(missingAgreement.status).toBe(404)
+  })
+
+  it('includes Service Commission Overrides in the private staff report', async () => {
+    useStaffSession()
+    vi.mocked(commissionsDb.getStaffCommissionReport).mockResolvedValue({
+      agreement: {
+        active: true,
+        percentage: 20,
+        overrides: [
+          {
+            serviceId: 'service-1',
+            serviceName: 'Color',
+            serviceActive: true,
+            percentage: 30,
+          },
+        ],
+      },
+      rows: [],
+    } as never)
+
+    const response = await app.request('/api/v1/commissions/me?period=today', {
       headers,
     })
-    expect(write.status).toBe(403)
-    expect(salon.status).toBe(403)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      report: {
+        agreement: {
+          percentage: 20,
+          overrides: [{ serviceId: 'service-1', percentage: 30 }],
+        },
+      },
+    })
   })
 
   it('derives the private staff report from active Staff Profile Access', async () => {

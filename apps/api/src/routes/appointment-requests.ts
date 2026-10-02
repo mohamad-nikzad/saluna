@@ -15,6 +15,7 @@ import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
 import { zValidator } from '../lib/validate'
 import { error, ok } from '../lib/responses'
+import { notifyAssignedStaff } from '../lib/appointment-notifications'
 import {
   cancelAppointmentRequestBodySchema,
   createFlexibleAppointmentRequestBodySchema,
@@ -32,7 +33,18 @@ const listQuerySchema = z.object({
   timingMode: z.enum(['exact', 'flexible']).optional(),
 })
 
-const approveBodySchema = z.object({ staffId: z.string().min(1) })
+const approveBodySchema = z.object({
+  staffAssignments: z
+    .array(
+      z.object({
+        staffId: z.string().min(1),
+        isLead: z.boolean(),
+        allocationBasisPoints: z.number().int().min(0).max(10_000),
+      }),
+    )
+    .min(1)
+    .optional(),
+})
 const rejectBodySchema = z.object({
   reason: z.string().trim().min(1).optional(),
 })
@@ -96,6 +108,13 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
           result.code,
         )
       }
+      if (result.notification) {
+        await notifyAssignedStaff({
+          salonId,
+          actorUserId: userId,
+          ...result.notification,
+        })
+      }
       return ok(c, {
         appointmentId: result.appointmentId,
         clientId: result.clientId,
@@ -124,15 +143,22 @@ export const appointmentRequestsRoute = new Hono<AppEnv>()
     async (c) => {
       const { salonId, userId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const { staffId } = c.req.valid('json')
+      const { staffAssignments } = c.req.valid('json')
       const result = await approveAppointmentRequest({
         id,
         salonId,
-        staffId,
+        staffAssignments,
         reviewedByUserId: userId,
       })
       if (!result.ok) {
         return error(c, result.error, result.status as 404, result.code)
+      }
+      if (result.notification) {
+        await notifyAssignedStaff({
+          salonId,
+          actorUserId: userId,
+          ...result.notification,
+        })
       }
       return ok(c, {
         appointmentId: result.appointmentId,

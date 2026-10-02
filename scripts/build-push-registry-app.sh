@@ -6,7 +6,7 @@ cd "$ROOT"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/build-push-registry-app.sh api|web|pwa
+Usage: scripts/build-push-registry-app.sh api|web|pwa|admin
 
 Builds one Saluna app image and pushes it to a registry.
 
@@ -25,13 +25,14 @@ Optional:
   SALUNA_API_IMAGE_TAG    Explicit API tag
   SALUNA_WEB_IMAGE_TAG    Explicit web tag
   SALUNA_PWA_IMAGE_TAG    Explicit PWA tag
+  SALUNA_ADMIN_IMAGE_TAG  Explicit admin tag
   SALUNA_SOURCE_URL       OCI source label
 USAGE
 }
 
 app="${1:-}"
 case "$app" in
-  api | web | pwa) ;;
+  api | web | pwa | admin) ;;
   -h | --help)
     usage
     exit 0
@@ -51,6 +52,7 @@ if [[ -f "$ENV_FILE" ]]; then
     PUBLIC_API_URL
     PUBLIC_APP_URL
     SALUNA_API_IMAGE_TAG
+    SALUNA_ADMIN_IMAGE_TAG
     SALUNA_ALPINE_MIRROR
     SALUNA_IMAGE_REGISTRY
     SALUNA_NGINX_IMAGE
@@ -126,6 +128,14 @@ case "$app" in
       --build-arg "VITE_APP_URL=${VITE_APP_URL:-https://app.saluna.ir}"
       --build-arg "VITE_WEB_URL=${VITE_WEB_URL:-https://saluna.ir}"
       --build-arg "VITE_PWA_ASSET_VERSION=${VITE_PWA_ASSET_VERSION:-$image_tag}"
+    )
+    ;;
+  admin)
+    image_name="saluna-admin"
+    image_tag="${SALUNA_ADMIN_IMAGE_TAG:-$default_tag}"
+    dockerfile="apps/admin/Dockerfile"
+    build_args=(
+      --build-arg "NGINX_IMAGE=${SALUNA_NGINX_IMAGE:-nginx:1.27-alpine}"
     )
     ;;
 esac

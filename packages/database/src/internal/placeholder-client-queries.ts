@@ -2,19 +2,9 @@ import { and, count, eq } from 'drizzle-orm'
 import type { AppointmentWithDetails, Client } from '@repo/salon-core/types'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { getDb } from '../client'
-import {
-  appointments,
-  clients,
-  member,
-  salonMember,
-  services,
-  user,
-} from '../schema'
-import {
-  attachAppointmentDetails,
-  rowToClient,
-  staffUserSelect,
-} from './row-mappers'
+import { appointments, clients } from '../schema'
+import { rowToClient } from './row-mappers'
+import { getAppointmentWithDetailsById } from './appointment-queries'
 import {
   createClient,
   getClientByPhone,
@@ -374,50 +364,14 @@ async function getAppointmentWithDetailsOrThrow(
   appointmentId: string,
   salonId: string,
 ): Promise<AppointmentWithDetails> {
-  const db = getDb()
-  const rows = await db
-    .select({
-      appointment: appointments,
-      client: clients,
-      staff: staffUserSelect,
-      service: services,
-    })
-    .from(appointments)
-    .innerJoin(
-      clients,
-      and(eq(appointments.clientId, clients.id), eq(clients.salonId, salonId)),
-    )
-    .innerJoin(user, eq(appointments.staffId, user.id))
-    .innerJoin(
-      member,
-      and(eq(member.userId, user.id), eq(member.organizationId, salonId)),
-    )
-    .leftJoin(
-      salonMember,
-      and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
-      ),
-    )
-    .innerJoin(
-      services,
-      and(
-        eq(appointments.serviceId, services.id),
-        eq(services.salonId, salonId),
-      ),
-    )
-    .where(
-      and(
-        eq(appointments.id, appointmentId),
-        eq(appointments.salonId, salonId),
-      ),
-    )
-    .limit(1)
-  const row = rows[0]
-  if (!row) {
+  const appointment = await getAppointmentWithDetailsById(
+    appointmentId,
+    salonId,
+  )
+  if (!appointment) {
     throw new Error(
       `Appointment ${appointmentId} was not found after placeholder completion`,
     )
   }
-  return attachAppointmentDetails(row)
+  return appointment
 }

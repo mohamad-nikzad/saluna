@@ -45,6 +45,7 @@ import {
 } from '#/lib/use-appointment-intake-mutations'
 import { parseOptionalLocalizedInteger } from '#/components/localized-number-input'
 import { FieldError } from '@repo/ui/field'
+import { equalWorkAllocations } from '@repo/salon-core/commissions'
 
 export function AppointmentDetailEditFieldError({
   message,
@@ -100,6 +101,8 @@ export function useAppointmentDetailDrawer({
       temporaryClientName: '',
       temporaryClientNotes: '',
       staffId: '',
+      additionalStaffIds: [],
+      workAllocations: [],
       serviceId: '',
       date: '',
       startTime: '',
@@ -123,6 +126,8 @@ export function useAppointmentDetailDrawer({
   const temporaryClientName = watchEdit('temporaryClientName') ?? ''
   const temporaryClientNotes = watchEdit('temporaryClientNotes') ?? ''
   const staffId = watchEdit('staffId') ?? ''
+  const additionalStaffIds = watchEdit('additionalStaffIds') ?? []
+  const workAllocations = watchEdit('workAllocations') ?? []
   const serviceId = watchEdit('serviceId') ?? ''
   const date = watchEdit('date')
   const startTime = watchEdit('startTime')
@@ -320,6 +325,15 @@ export function useAppointmentDetailDrawer({
       shouldDirty: true,
       shouldValidate: true,
     })
+    setEditValue('additionalStaffIds', next.additionalStaffIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setEditValue(
+      'workAllocations',
+      next.staffId ? equalWorkAllocations([next.staffId]) : [],
+      { shouldDirty: true, shouldValidate: true },
+    )
     applyDuration(next.durationMinutes)
   }
 
@@ -345,6 +359,14 @@ export function useAppointmentDetailDrawer({
 
   const handleEditStaffChange = (id: string) => {
     setEditValue('staffId', id, { shouldDirty: true, shouldValidate: true })
+    setEditValue('additionalStaffIds', [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+    setEditValue('workAllocations', equalWorkAllocations([id]), {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
     const next = resolveIntakeStaffChange({
       staffId: id,
       serviceId,
@@ -364,6 +386,8 @@ export function useAppointmentDetailDrawer({
 
   const clearEditStaff = () => {
     setEditValue('staffId', '', { shouldDirty: true, shouldValidate: true })
+    setEditValue('additionalStaffIds', [], { shouldDirty: true })
+    setEditValue('workAllocations', [], { shouldDirty: true })
   }
 
   const handleTemporaryClientModeChange = (enabled: boolean) => {
@@ -565,6 +589,8 @@ export function useAppointmentDetailDrawer({
     temporaryClientNotes,
     clientId,
     staffId,
+    additionalStaffIds,
+    workAllocations,
     serviceId,
     date,
     startTime,

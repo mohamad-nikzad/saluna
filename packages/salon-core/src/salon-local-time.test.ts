@@ -3,6 +3,7 @@ import {
   addDaysYmd,
   salonCurrentHm,
   salonHmAfterMinutes,
+  salonLocalInclusiveRangeInstants,
   salonTodayYmd,
 } from './salon-local-time'
 
@@ -22,5 +23,17 @@ describe('salon local time', () => {
   it('adds days to YYYY-MM-DD values without depending on host timezone', () => {
     expect(addDaysYmd('2026-04-29', 1)).toBe('2026-04-30')
     expect(addDaysYmd('2026-04-29', -60)).toBe('2026-02-28')
+  })
+
+  it('converts inclusive Salon-local Dates to Tehran midnight instants', () => {
+    expect(
+      salonLocalInclusiveRangeInstants({
+        startDate: '2026-06-22',
+        endDate: '2026-06-22',
+      }),
+    ).toEqual({
+      start: new Date('2026-06-21T20:30:00.000Z'),
+      endExclusive: new Date('2026-06-22T20:30:00.000Z'),
+    })
   })
 })

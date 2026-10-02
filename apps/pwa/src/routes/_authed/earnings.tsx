@@ -13,7 +13,7 @@ import {
 
 export const Route = createFileRoute('/_authed/earnings')({
   beforeLoad: ({ context }) => {
-    if (context.user.role !== 'staff') throw redirect({ to: '/commissions' })
+    if (context.user.role !== 'staff') throw redirect({ to: '/reports' })
   },
   component: EarningsPage,
 })

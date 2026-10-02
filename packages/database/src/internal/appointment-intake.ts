@@ -1,4 +1,12 @@
 import type { Appointment, Client, Service, User } from '@repo/salon-core/types'
+import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointment-roster'
+import {
+  EmptyAppointmentRosterError,
+  InvalidAppointmentRosterError,
+  assertValidAppointmentRoster,
+  leadStaffId,
+  orderedRoster,
+} from '@repo/salon-core/appointment-roster'
 import {
   SCHEDULE_CONFLICT_CODES,
   isBlockingAppointmentStatus,
@@ -35,18 +43,21 @@ type SnapshotKeys =
   | 'bookedTotalPrice'
   | 'bookedAddonCount'
   | 'bookedAddons'
+  | 'staffAssignments'
 type AppointmentCommand = Omit<
   Appointment,
   'id' | 'createdAt' | 'updatedAt' | SnapshotKeys
 > & {
   id?: string
   addonIds?: string[]
+  staffAssignments: AppointmentStaffAssignmentInput[]
 }
 type AppointmentPatch = Partial<
   Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | SnapshotKeys>
 > & {
   addonIds?: string[]
   finalPrice?: number
+  staffAssignments?: AppointmentStaffAssignmentInput[]
 }
 
 type AppointmentIntakeFailure = {
@@ -62,6 +73,7 @@ export type CreateAppointmentIntakeResult =
       command: AppointmentCommand
       client: Client
       staff: User
+      staffMembers: User[]
       service: Service
     }
   | AppointmentIntakeFailure
@@ -72,6 +84,7 @@ export type UpdateAppointmentIntakeResult =
       patch: AppointmentPatch
       client: Client
       staff: User
+      staffMembers: User[]
       service: Service
     }
   | AppointmentIntakeFailure
@@ -99,6 +112,103 @@ function explicitAddonIds(raw: unknown): string[] | null {
   return Array.isArray(raw) && raw.every((item) => typeof item === 'string')
     ? raw
     : null
+}
+
+function explicitStaffAssignments(
+  raw: unknown,
+): AppointmentStaffAssignmentInput[] | null {
+  if (!Array.isArray(raw)) return null
+  const assignments: AppointmentStaffAssignmentInput[] = []
+  for (const item of raw) {
+    if (typeof item !== 'object' || item == null) return null
+    const row = item as Record<string, unknown>
+    if (
+      typeof row.staffId !== 'string' ||
+      typeof row.isLead !== 'boolean' ||
+      typeof row.allocationBasisPoints !== 'number'
+    ) {
+      return null
+    }
+    assignments.push({
+      staffId: row.staffId,
+      isLead: row.isLead,
+      allocationBasisPoints: row.allocationBasisPoints,
+    })
+  }
+  return assignments
+}
+
+/** Roster invariants from salon-core, mapped to salon-facing messages. */
+function rosterShapeFailure(
+  assignments: readonly AppointmentStaffAssignmentInput[],
+): AppointmentIntakeFailure | null {
+  const staffIds = assignments.map((row) => row.staffId)
+  if (new Set(staffIds).size !== staffIds.length) {
+    return fail(400, 'هر پرسنل فقط یک‌بار می‌تواند انتخاب شود')
+  }
+  try {
+    assertValidAppointmentRoster(assignments)
+    return null
+  } catch (rosterError) {
+    if (rosterError instanceof EmptyAppointmentRosterError) {
+      return fail(400, 'انتخاب پرسنل الزامی است')
+    }
+    if (rosterError instanceof InvalidAppointmentRosterError) {
+      return fail(400, 'سهم کار پرسنل باید کامل و در مجموع ۱۰۰٪ باشد')
+    }
+    throw rosterError
+  }
+}
+
+function sameRoster(
+  next: readonly AppointmentStaffAssignmentInput[],
+  previous: readonly AppointmentStaffAssignmentInput[],
+): boolean {
+  if (next.length !== previous.length) return false
+  return next.every((row) => {
+    const match = previous.find(
+      (candidate) => candidate.staffId === row.staffId,
+    )
+    return (
+      match?.isLead === row.isLead &&
+      match.allocationBasisPoints === row.allocationBasisPoints
+    )
+  })
+}
+
+/** Lead capability is checked by `validateReferences`; extras are checked here. */
+async function validateAssignedStaff(input: {
+  salonId: string
+  service: Service
+  assignments: readonly AppointmentStaffAssignmentInput[]
+}): Promise<{ ok: true; staffMembers: User[] } | AppointmentIntakeFailure> {
+  const roster = orderedRoster(input.assignments)
+  if (roster.length > 1 && !input.service.allowMultipleStaff) {
+    return fail(400, 'این خدمت فقط یک پرسنل می‌پذیرد')
+  }
+
+  const allStaff = await getAllStaff(input.salonId)
+  const staffMembers = roster.map((row) =>
+    allStaff.find(
+      (candidate) => candidate.id === row.staffId && candidate.role === 'staff',
+    ),
+  )
+  if (staffMembers.some((member) => !member)) {
+    return fail(404, 'پرسنل یافت نشد')
+  }
+  for (const row of roster.slice(1)) {
+    if (
+      !(await staffMayPerformService(
+        row.staffId,
+        input.service.id,
+        input.salonId,
+      ))
+    ) {
+      return fail(400, 'یکی از پرسنل انتخاب‌شده این خدمت را انجام نمی‌دهد')
+    }
+  }
+
+  return { ok: true, staffMembers: staffMembers as User[] }
 }
 
 async function validateSelectedAddons(input: {
@@ -240,7 +350,7 @@ async function validateBlockingSchedule(input: {
 export async function validateCreateAppointmentIntake(input: {
   salonId: string
   clientId: unknown
-  staffId: unknown
+  staffAssignments: unknown
   serviceId: unknown
   date: unknown
   startTime: unknown
@@ -252,7 +362,6 @@ export async function validateCreateAppointmentIntake(input: {
 }): Promise<CreateAppointmentIntakeResult> {
   if (
     typeof input.clientId !== 'string' ||
-    typeof input.staffId !== 'string' ||
     typeof input.serviceId !== 'string' ||
     typeof input.date !== 'string' ||
     typeof input.startTime !== 'string'
@@ -260,13 +369,25 @@ export async function validateCreateAppointmentIntake(input: {
     return fail(400, 'فیلدهای الزامی کامل نیست')
   }
 
+  const roster = explicitStaffAssignments(input.staffAssignments)
+  if (roster == null) return fail(400, 'فهرست پرسنل نامعتبر است')
+  const rosterFailure = rosterShapeFailure(roster)
+  if (rosterFailure) return rosterFailure
+
   const refs = await validateReferences({
     salonId: input.salonId,
     clientId: input.clientId,
-    staffId: input.staffId,
+    staffId: leadStaffId(roster),
     serviceId: input.serviceId,
   })
   if (!refs.ok) return refs
+
+  const assignments = await validateAssignedStaff({
+    salonId: input.salonId,
+    service: refs.service,
+    assignments: roster,
+  })
+  if (!assignments.ok) return assignments
 
   const placeholderUsage = await validatePlaceholderClientUsage({
     salonId: input.salonId,
@@ -303,21 +424,23 @@ export async function validateCreateAppointmentIntake(input: {
     return fail(400, windowCheck.error)
   }
 
-  const schedule = await validateBlockingSchedule({
-    salonId: input.salonId,
-    staffId: input.staffId,
-    clientId: input.clientId,
-    date: input.date,
-    startTime: input.startTime,
-    endTime,
-  })
-  if (schedule !== true) return schedule
+  for (const staffMember of assignments.staffMembers) {
+    const schedule = await validateBlockingSchedule({
+      salonId: input.salonId,
+      staffId: staffMember.id,
+      clientId: input.clientId,
+      date: input.date,
+      startTime: input.startTime,
+      endTime,
+    })
+    if (schedule !== true) return schedule
+  }
 
   return {
     ok: true,
     command: {
       clientId: input.clientId,
-      staffId: input.staffId,
+      staffAssignments: orderedRoster(roster),
       serviceId: input.serviceId,
       date: input.date,
       startTime: input.startTime,
@@ -332,6 +455,7 @@ export async function validateCreateAppointmentIntake(input: {
     },
     client: refs.client,
     staff: refs.staff,
+    staffMembers: assignments.staffMembers,
     service: refs.service,
   }
 }
@@ -342,7 +466,7 @@ export async function validateUpdateAppointmentIntake(input: {
   existing: Appointment
   body: {
     clientId?: unknown
-    staffId?: unknown
+    staffAssignments?: unknown
     serviceId?: unknown
     date?: unknown
     startTime?: unknown
@@ -359,11 +483,23 @@ export async function validateUpdateAppointmentIntake(input: {
     typeof body.startTime === 'string' ? body.startTime : existing.startTime
   const resolvedServiceId =
     typeof body.serviceId === 'string' ? body.serviceId : existing.serviceId
-  const resolvedStaffId =
-    typeof body.staffId === 'string' ? body.staffId : existing.staffId
   const resolvedClientId =
     typeof body.clientId === 'string' ? body.clientId : existing.clientId
   const resolvedDate = typeof body.date === 'string' ? body.date : existing.date
+  const existingRoster: AppointmentStaffAssignmentInput[] =
+    existing.staffAssignments.map((assignment) => ({
+      staffId: assignment.staffId,
+      isLead: assignment.isLead,
+      allocationBasisPoints: assignment.allocationBasisPoints,
+    }))
+  // Omitting the roster leaves it untouched; sending one replaces it wholesale.
+  const roster =
+    body.staffAssignments === undefined
+      ? existingRoster
+      : explicitStaffAssignments(body.staffAssignments)
+  if (roster == null) return fail(400, 'فهرست پرسنل نامعتبر است')
+  const rosterFailure = rosterShapeFailure(roster)
+  if (rosterFailure) return rosterFailure
 
   const duration = positiveDurationMinutes(body.durationMinutes)
   const startChanged =
@@ -439,10 +575,22 @@ export async function validateUpdateAppointmentIntake(input: {
   const refs = await validateReferences({
     salonId: input.salonId,
     clientId: resolvedClientId,
-    staffId: resolvedStaffId,
+    staffId: leadStaffId(roster),
     serviceId: resolvedServiceId,
   })
   if (!refs.ok) return refs
+
+  const assignments = await validateAssignedStaff({
+    salonId: input.salonId,
+    service: refs.service,
+    assignments: roster,
+  })
+  if (!assignments.ok) return assignments
+
+  const rosterChanged = !sameRoster(roster, existingRoster)
+  if (existing.status === 'completed' && rosterChanged) {
+    return fail(409, 'پس از تکمیل نوبت نمی‌توان پرسنل یا سهم کار را تغییر داد')
+  }
 
   const placeholderUsage = await validatePlaceholderClientUsage({
     salonId: input.salonId,
@@ -463,21 +611,23 @@ export async function validateUpdateAppointmentIntake(input: {
       : existing.status
 
   if (isBlockingAppointmentStatus(resolvedStatus)) {
-    const schedule = await validateBlockingSchedule({
-      salonId: input.salonId,
-      staffId: resolvedStaffId,
-      clientId: resolvedClientId,
-      date: resolvedDate,
-      startTime: effectiveStart,
-      endTime,
-      excludeId: input.appointmentId,
-    })
-    if (schedule !== true) return schedule
+    for (const staffMember of assignments.staffMembers) {
+      const schedule = await validateBlockingSchedule({
+        salonId: input.salonId,
+        staffId: staffMember.id,
+        clientId: resolvedClientId,
+        date: resolvedDate,
+        startTime: effectiveStart,
+        endTime,
+        excludeId: input.appointmentId,
+      })
+      if (schedule !== true) return schedule
+    }
   }
 
   const patch: AppointmentPatch = { endTime }
   if (body.clientId !== undefined) patch.clientId = body.clientId as string
-  if (body.staffId !== undefined) patch.staffId = body.staffId as string
+  if (rosterChanged) patch.staffAssignments = orderedRoster(roster)
   if (serviceChanged) patch.serviceId = body.serviceId as string
   if (addonIdsChanged) patch.addonIds = addonIds ?? []
   if (body.date !== undefined) patch.date = body.date as string
@@ -493,6 +643,7 @@ export async function validateUpdateAppointmentIntake(input: {
     patch,
     client: refs.client,
     staff: refs.staff,
+    staffMembers: assignments.staffMembers,
     service: refs.service,
   }
 }

@@ -10,8 +10,10 @@ import {
   isClientProvidedEntityId,
   isDuplicatePhoneError,
   setClientTags,
+  syncBirthdayFollowUps,
   updateClient,
 } from '@repo/database/clients'
+import { notifyManagersOfBirthdayFollowUp } from '@repo/notifications'
 import type { FollowUpReason } from '@repo/salon-core/types'
 import type { AppEnv } from '../factory'
 import {
@@ -32,6 +34,21 @@ const allowedReasons = new Set<FollowUpReason>([
   'vip',
   'manual',
 ])
+
+async function syncClientBirthday(salonId: string, clientId: string) {
+  const followUps = await syncBirthdayFollowUps({ salonId, clientId })
+  await Promise.all(
+    followUps.map((followUp) =>
+      notifyManagersOfBirthdayFollowUp(salonId, followUp.id).catch((err) => {
+        console.error('[birthday-follow-up] manager notification failed', {
+          salonId,
+          followUpId: followUp.id,
+          err,
+        })
+      }),
+    ),
+  )
+}
 
 function validationErrorHook(
   result: { success: boolean; error?: { issues: Array<{ message?: string }> } },
@@ -59,16 +76,27 @@ const createClientHandler: RouteHandler<
   AppEnv
 > = async (c) => {
   const { salonId } = c.var.tenant
-  const { name, phone, notes, tags, id: requestedId } = c.req.valid('json')
+  const {
+    name,
+    phone,
+    birthDate,
+    acquisitionSource,
+    notes,
+    tags,
+    id: requestedId,
+  } = c.req.valid('json')
   try {
     const client = await createClient({
       name,
       phone,
+      birthDate,
+      acquisitionSource,
       notes,
       salonId,
       ...(isClientProvidedEntityId(requestedId) ? { id: requestedId } : {}),
     })
     const savedTags = await setClientTags(client.id, salonId, tags)
+    if (client.birthDate) await syncClientBirthday(salonId, client.id)
     return c.json(
       { client: jsonSerialized({ ...client, tags: savedTags }) },
       200,
@@ -104,13 +132,21 @@ const updateClientHandler: RouteHandler<
 > = async (c) => {
   const { salonId } = c.var.tenant
   const { id } = c.req.valid('param')
-  const { name, phone, notes, tags } = c.req.valid('json')
+  const { name, phone, birthDate, acquisitionSource, notes, tags } =
+    c.req.valid('json')
   try {
-    const client = await updateClient(id, salonId, { name, phone, notes })
+    const client = await updateClient(id, salonId, {
+      name,
+      phone,
+      birthDate,
+      acquisitionSource,
+      notes,
+    })
     if (!client) return c.json({ error: 'مشتری یافت نشد' }, 404)
     const savedTags = Array.isArray(tags)
       ? await setClientTags(id, salonId, tags)
       : await getClientTags(id, salonId)
+    if (birthDate !== undefined) await syncClientBirthday(salonId, id)
     return c.json(
       { client: jsonSerialized({ ...client, tags: savedTags }) },
       200,

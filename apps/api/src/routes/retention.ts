@@ -10,7 +10,9 @@ import {
 import type { FollowUpStatus } from '@repo/salon-core/types'
 import {
   normalizeBaleSafirPhone,
+  normalizeIranianMobile,
   sendBaleSafirMessage,
+  sendSmsText,
 } from '@repo/notifications'
 import type { AppEnv } from '../factory'
 import { requireTenant } from '../middleware/auth'
@@ -25,6 +27,11 @@ const allowedStatuses = new Set<FollowUpStatus>([
 const idParamSchema = z.object({ id: z.string().min(1) })
 const baleMessageBodySchema = z.object({
   retry: z.boolean().optional().default(false),
+  message: z.string().trim().min(1).max(500).optional(),
+})
+const smsMessageBodySchema = z.object({
+  retry: z.boolean().optional().default(false),
+  message: z.string().trim().min(1).max(500),
 })
 
 function buildBaleRetentionMessage(input: {
@@ -32,6 +39,13 @@ function buildBaleRetentionMessage(input: {
   clientName: string
   reason: string
 }): string {
+  if (input.reason === 'birthday') {
+    return [
+      `${input.clientName} جان سلام`,
+      `تولدت مبارک. از طرف ${input.salonName} برات بهترین‌ها رو آرزو می‌کنیم.`,
+    ].join('\n')
+  }
+
   const reasonText =
     input.reason === 'inactive'
       ? 'مدتی از آخرین مراجعه شما گذشته'
@@ -114,11 +128,13 @@ export const retention = new Hono<AppEnv>()
     const requestId = buildBaleRetentionRequestId(context.followUp.id)
     const result = await sendBaleSafirMessage({
       phone: normalizedPhone,
-      text: buildBaleRetentionMessage({
-        salonName: context.salon.name,
-        clientName: context.client.name,
-        reason: context.followUp.reason,
-      }),
+      text:
+        parsedBody.data.message ??
+        buildBaleRetentionMessage({
+          salonName: context.salon.name,
+          clientName: context.client.name,
+          reason: context.followUp.reason,
+        }),
       requestId,
     })
 
@@ -135,6 +151,72 @@ export const retention = new Hono<AppEnv>()
       sentByUserId: userId,
     })
 
+    if (result.status === 'sent' && context.followUp.reason === 'birthday') {
+      await updateClientFollowUpStatus(salonId, context.followUp.id, 'reviewed')
+    }
+
+    return ok(c, { delivery, result })
+  })
+  .post('/:id/sms-message', async (c) => {
+    const parsedParam = idParamSchema.safeParse({ id: c.req.param('id') })
+    if (!parsedParam.success) return error(c, 'شناسه نامعتبر است', 400)
+
+    const parsedBody = smsMessageBodySchema.safeParse(
+      await c.req.json().catch(() => ({})),
+    )
+    if (!parsedBody.success) return error(c, 'درخواست نامعتبر است', 400)
+
+    const { salonId, userId } = c.var.tenant
+    const context = await getClientFollowUpMessageContext(
+      salonId,
+      parsedParam.data.id,
+    )
+    if (!context) return error(c, 'پیگیری یافت نشد', 404)
+    if (context.followUp.status !== 'open') {
+      return error(c, 'فقط پیگیری باز قابل ارسال است', 409)
+    }
+    if (context.followUp.reason !== 'birthday') {
+      return error(c, 'پیامک تولد فقط برای پیگیری تولد قابل ارسال است', 409)
+    }
+
+    const phone = context.client.phone
+    const normalizedPhone = phone ? normalizeIranianMobile(phone) : null
+    if (!normalizedPhone) return error(c, 'شماره موبایل مشتری معتبر نیست', 400)
+
+    const previous = await getLatestClientFollowUpMessageDelivery({
+      salonId,
+      followUpId: context.followUp.id,
+      provider: 'sms_ir',
+    })
+    if (previous?.status === 'sent') {
+      return error(c, 'پیامک قبلا ارسال شده است', 409)
+    }
+    if (previous && !parsedBody.data.retry) {
+      return error(c, 'برای ارسال دوباره، retry را فعال کنید', 409)
+    }
+
+    const requestId = `retention:${context.followUp.id}:sms_ir:v1`
+    const result = await sendSmsText({
+      phone: normalizedPhone,
+      message: parsedBody.data.message,
+      purpose: 'retention',
+      requestId,
+    })
+    const delivery = await createClientFollowUpMessageDelivery({
+      salonId,
+      followUpId: context.followUp.id,
+      clientId: context.client.id,
+      provider: 'sms_ir',
+      phone: normalizedPhone,
+      requestId,
+      status: result.status,
+      providerMessageId: result.providerMessageId ?? null,
+      error: result.error ?? null,
+      sentByUserId: userId,
+    })
+    if (result.status === 'sent') {
+      await updateClientFollowUpStatus(salonId, context.followUp.id, 'reviewed')
+    }
     return ok(c, { delivery, result })
   })
 

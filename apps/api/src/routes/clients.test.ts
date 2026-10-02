@@ -15,8 +15,13 @@ vi.mock('@repo/database/clients', async (importOriginal) => {
       typeof id === 'string' && id.length > 0,
     getClientSummary: vi.fn(),
     createClientFollowUp: vi.fn(),
+    syncBirthdayFollowUps: vi.fn(),
   }
 })
+
+vi.mock('@repo/notifications', () => ({
+  notifyManagersOfBirthdayFollowUp: vi.fn(),
+}))
 
 vi.mock('@repo/auth/server', () => ({
   auth: { api: { getSession: vi.fn() } },
@@ -32,6 +37,7 @@ vi.mock('@repo/database/members', () => ({
 }))
 
 import * as db from '@repo/database/clients'
+import * as notifications from '@repo/notifications'
 import { auth as authServer } from '@repo/auth/server'
 import {
   getManagerMemberForUser,
@@ -61,6 +67,7 @@ function authHeaders() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(notifications.notifyManagersOfBirthdayFollowUp).mockResolvedValue()
   vi.mocked(authServer.api.getSession).mockImplementation(
     async (args: any) =>
       (args?.headers?.get?.('Authorization')
@@ -121,6 +128,46 @@ describe('clients router', () => {
       error: 'این شماره تماس برای این سالن قبلاً ثبت شده است',
       code: 'duplicate-phone',
     })
+  })
+
+  it('stores a Jalali birth date and creates its active birthday follow-up', async () => {
+    vi.mocked(db.createClient).mockResolvedValue({
+      id: 'c1',
+      name: 'Ali',
+      phone: '09121234567',
+      birthDate: '2021-03-21',
+    } as never)
+    vi.mocked(db.setClientTags).mockResolvedValue([])
+    vi.mocked(db.syncBirthdayFollowUps).mockResolvedValue([
+      { id: 'f1' },
+    ] as never)
+
+    const res = await app.request('/api/v1/clients', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Ali',
+        phone: '09121234567',
+        birthDate: '1400/01/01',
+        acquisitionSource: 'instagram',
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(db.createClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        birthDate: '2021-03-21',
+        acquisitionSource: 'instagram',
+      }),
+    )
+    expect(db.syncBirthdayFollowUps).toHaveBeenCalledWith({
+      salonId: 's1',
+      clientId: 'c1',
+    })
+    expect(notifications.notifyManagersOfBirthdayFollowUp).toHaveBeenCalledWith(
+      's1',
+      'f1',
+    )
   })
 
   it('returns 401 for bulk create without auth', async () => {

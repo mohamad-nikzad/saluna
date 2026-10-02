@@ -89,6 +89,8 @@ export function AppointmentDetailDrawer({
             temporaryClientNameRef={drawer.temporaryClientNameRef}
             clientId={drawer.clientId}
             staffId={drawer.staffId}
+            additionalStaffIds={drawer.additionalStaffIds}
+            workAllocations={drawer.workAllocations}
             serviceId={drawer.serviceId}
             date={drawer.date}
             startTime={drawer.startTime}

@@ -1,3 +1,5 @@
+import { toPersianDigits } from './persian-digits'
+
 const JALALI_MONTHS = [
   'فروردین',
   'اردیبهشت',
@@ -139,8 +141,13 @@ export function jalaliToGregorianStr(
 /** Format Gregorian "yyyy-MM-dd" as Jalali display string: "۲۶ فروردین ۱۴۰۴" */
 export function formatJalaliDate(dateStr: string): string {
   const { jy, jm, jd } = parseGregorianToJalali(dateStr)
-  const numFmt = new Intl.NumberFormat('fa-IR')
-  return `${numFmt.format(jd)} ${JALALI_MONTHS[jm - 1]} ${numFmt.format(jy)}`
+  return `${toPersianDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${toPersianDigits(jy)}`
+}
+
+/** Format Gregorian "yyyy-MM-dd" as Jalali month and day: "۲۶ فروردین" */
+export function formatJalaliMonthDay(dateStr: string): string {
+  const { jm, jd } = parseGregorianToJalali(dateStr)
+  return `${toPersianDigits(jd)} ${JALALI_MONTHS[jm - 1]}`
 }
 
 /** Format Gregorian "yyyy-MM-dd" as full Jalali with weekday: "شنبه، ۲۶ فروردین ۱۴۰۴" */

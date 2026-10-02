@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   addDays,
   addWeeks,
@@ -5,15 +6,18 @@ import {
   subDays,
   subWeeks,
   subMonths,
+  format,
 } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@repo/ui/button'
+import { JalaliDatePicker } from '@repo/ui/jalali-date-picker'
 import type { CalendarView } from '@repo/salon-core/types'
 import {
   formatPersianFullDate,
   formatPersianMonthYear,
   formatPersianWeekRange,
 } from '@repo/salon-core/jalali-display'
+import { calendarMonthRange } from './calendar-month'
 import { brand } from '@repo/brand'
 import { SalunaMark } from '#/components/brand/saluna-mark'
 
@@ -25,6 +29,11 @@ interface CalendarHeaderProps {
   onToday: () => void
 }
 
+function ymdToNoonDate(ymd: string): Date {
+  const [year, month, day] = ymd.split('-').map(Number)
+  return new Date(year, month - 1, day, 12, 0, 0, 0)
+}
+
 export function CalendarHeader({
   titleAnchor,
   navigationDate,
@@ -32,6 +41,8 @@ export function CalendarHeader({
   onDateChange,
   onToday,
 }: CalendarHeaderProps) {
+  const [pickerOpen, setPickerOpen] = useState(false)
+
   const navigate = (direction: 'prev' | 'next') => {
     const d = navigationDate
     switch (view) {
@@ -45,7 +56,7 @@ export function CalendarHeader({
         onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
         break
       case 'month':
-        onDateChange(direction === 'prev' ? subMonths(d, 1) : addMonths(d, 1))
+        onDateChange(calendarMonthRange(d, direction === 'prev' ? -1 : 1).start)
         break
     }
   }
@@ -73,9 +84,22 @@ export function CalendarHeader({
       </div>
 
       <div className="flex-1 min-w-0 text-center">
-        <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          aria-label="انتخاب تاریخ"
+          className="max-w-full min-h-11 rounded-2xl px-2 text-[13px] font-semibold text-foreground truncate leading-tight touch-manipulation hover:bg-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
           {getTitle()}
-        </p>
+        </button>
+        <JalaliDatePicker
+          nested={false}
+          hideTrigger
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={format(navigationDate, 'yyyy-MM-dd')}
+          onChange={(ymd) => onDateChange(ymdToNoonDate(ymd))}
+        />
       </div>
 
       <div dir="ltr" className="flex items-center gap-2 touch:gap-3 shrink-0">

@@ -8,6 +8,8 @@ import {
   retentionBaleMessageBodySchema,
   retentionBaleMessageResponseSchema,
   retentionListResponseSchema,
+  retentionSmsMessageBodySchema,
+  retentionSmsMessageResponseSchema,
   retentionUpdateBodySchema,
   retentionUpdateResponseSchema,
 } from '../schemas/retention'
@@ -107,6 +109,37 @@ export const sendRetentionBaleMessageRoute = createRoute({
       description: 'Message delivery result',
       content: {
         'application/json': { schema: retentionBaleMessageResponseSchema },
+      },
+    },
+    400: validationErrorResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse,
+  },
+})
+
+export const sendRetentionSmsMessageRoute = createRoute({
+  method: 'post',
+  path: '/{id}/sms-message',
+  tags: ['Retention'],
+  summary: 'Send birthday retention SMS',
+  description: 'Sends a manager-confirmed SMS for an open Birthday Follow-Up.',
+  security: tenantSecurity,
+  request: {
+    params: idParamSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': { schema: retentionSmsMessageBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'SMS delivery result',
+      content: {
+        'application/json': { schema: retentionSmsMessageResponseSchema },
       },
     },
     400: validationErrorResponse,

@@ -17,7 +17,11 @@ vi.mock('@repo/notifications', () => ({
   normalizeBaleSafirPhone: vi.fn((phone: string) =>
     /^09\d{9}$/.test(phone) ? `98${phone.slice(1)}` : null,
   ),
+  normalizeIranianMobile: vi.fn((phone: string) =>
+    /^09\d{9}$/.test(phone) ? phone : null,
+  ),
   sendBaleSafirMessage: vi.fn(),
+  sendSmsText: vi.fn(),
 }))
 
 vi.mock('@repo/auth/server', () => ({
@@ -102,6 +106,11 @@ beforeEach(() => {
     status: 'sent',
     providerMessageId: 'm1',
     phone: '989123456789',
+  } as never)
+  vi.mocked(notifications.sendSmsText).mockResolvedValue({
+    status: 'sent',
+    provider: 'sms_ir',
+    providerMessageId: 'sms1',
   } as never)
 })
 
@@ -270,5 +279,39 @@ describe('retention router', () => {
         providerMessageId: 'm1',
       },
     })
+  })
+
+  it('POST sms-message sends an edited birthday message and completes the follow-up', async () => {
+    vi.mocked(clientsDb.getClientFollowUpMessageContext).mockResolvedValue({
+      followUp: { id: 'f1', status: 'open', reason: 'birthday' },
+      client: { id: 'c1', name: 'Client', phone: '09123456789' },
+      salon: { id: 's1', name: 'Salon' },
+    } as never)
+
+    const res = await app.request('/api/v1/retention/f1/sms-message', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'تولدت مبارک!' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(notifications.sendSmsText).toHaveBeenCalledWith({
+      phone: '09123456789',
+      message: 'تولدت مبارک!',
+      purpose: 'retention',
+      requestId: 'retention:f1:sms_ir:v1',
+    })
+    expect(clientsDb.createClientFollowUpMessageDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        followUpId: 'f1',
+        provider: 'sms_ir',
+        status: 'sent',
+      }),
+    )
+    expect(clientsDb.updateClientFollowUpStatus).toHaveBeenCalledWith(
+      's1',
+      'f1',
+      'reviewed',
+    )
   })
 })

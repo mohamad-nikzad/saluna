@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Banknote,
+  CalendarDays,
   Bell,
   Globe,
   LayoutDashboard,
@@ -360,6 +361,12 @@ function SettingsPage() {
           {isManager ? (
             <SettingsGroup label="مدیریت سالن">
               <SettingsRow
+                icon={CalendarDays}
+                label="نوبت‌ها"
+                hint="فهرست و جستجوی نوبت‌های سالن"
+                to="/appointments"
+              />
+              <SettingsRow
                 icon={LayoutDashboard}
                 label="داشبورد و آمار"
                 hint="گزارش روزانه و عملکرد"
@@ -367,9 +374,9 @@ function SettingsPage() {
               />
               <SettingsRow
                 icon={Banknote}
-                label="گزارش کمیسیون"
-                hint="کمیسیون پرسنل و مبلغ باقی‌مانده سالن"
-                to="/commissions"
+                label="گزارش‌ها"
+                hint="مبلغ نوبت‌های انجام‌شده و کمیسیون"
+                to="/reports"
               />
               <SettingsRow
                 icon={UserRoundSearch}

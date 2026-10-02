@@ -20,6 +20,10 @@ import {
   servicePackageTasks,
 } from '../schema'
 import { rowToAppointment } from './row-mappers'
+import {
+  attachAppointmentRosters,
+  insertAppointmentRoster,
+} from './appointment-roster-queries'
 import { getClientById } from './client-queries'
 import { getScheduleOverlapFlags } from './appointment-queries'
 import {
@@ -306,7 +310,6 @@ export async function createServicePackageBooking(
             return {
               salonId: input.salonId,
               clientId: input.clientId,
-              staffId: task.staffId,
               serviceId: task.component.serviceId,
               date: input.date,
               startTime: task.startTime,
@@ -323,6 +326,20 @@ export async function createServicePackageBooking(
           }),
         )
         .returning()
+
+      for (const [index, appointment] of createdAppointments.entries()) {
+        await insertAppointmentRoster(tx, {
+          salonId: input.salonId,
+          appointmentId: appointment.id,
+          assignments: [
+            {
+              staffId: tasks[index]!.staffId,
+              isLead: true,
+              allocationBasisPoints: 10_000,
+            },
+          ],
+        })
+      }
 
       const createdTasks = await tx
         .insert(servicePackageTasks)
@@ -349,8 +366,12 @@ export async function createServicePackageBooking(
     },
   )
 
+  const bookedAppointments = await attachAppointmentRosters(
+    appointmentRows.map(rowToAppointment),
+    input.salonId,
+  )
   const appointmentById = new Map(
-    appointmentRows.map((row) => [row.id, rowToAppointment(row)]),
+    bookedAppointments.map((appointment) => [appointment.id, appointment]),
   )
   const bookedTasks = taskRows.map((row) =>
     rowToServicePackageTask(row, appointmentById.get(row.appointmentId)!),

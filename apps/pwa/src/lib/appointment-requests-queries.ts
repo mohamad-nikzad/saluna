@@ -21,6 +21,7 @@ import type {
   RenewTerminalAppointmentRequestRequest,
   UpdateFlexibleAppointmentRequestRequest,
 } from '@repo/api-client/types'
+import { staffAssignmentsFromLeadAndExtras } from '@repo/salon-core/forms/appointment'
 
 import { HEAVY_QUERY_STALE_TIME_MS } from '#/lib/query-client'
 import { appointmentsRangeInvalidationKeys } from '#/lib/appointments-queries'
@@ -150,13 +151,32 @@ export function useApproveAppointmentRequestMutation() {
 
   return useMutation({
     mutationFn: async (
-      { requestId, staffId }: { requestId: string; staffId: string },
+      {
+        requestId,
+        staffId,
+        additionalStaffIds,
+        workAllocations,
+      }: {
+        requestId: string
+        staffId: string
+        additionalStaffIds?: string[]
+        workAllocations?: Array<{
+          staffId: string
+          allocationBasisPoints: number
+        }>
+      },
       mutationContext,
     ) => {
       return generated.mutationFn!(
         {
           path: { id: requestId },
-          body: { staffId },
+          body: {
+            staffAssignments: staffAssignmentsFromLeadAndExtras({
+              staffId,
+              additionalStaffIds,
+              workAllocations,
+            }),
+          },
         },
         mutationContext,
       )

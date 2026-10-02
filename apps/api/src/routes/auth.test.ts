@@ -43,7 +43,7 @@ vi.mock('@repo/database/staff', () => ({
   getStaffProfileForUser: vi.fn(),
   getUserWithServiceIds: vi.fn(),
   leaveStaffProfileAccess: vi.fn(),
-  listPendingStaffInvitesForUser: vi.fn(),
+  listUnacceptedStaffInvitesForUser: vi.fn(),
   listStaffSalonOptionsForUser: vi.fn(),
 }))
 
@@ -96,7 +96,7 @@ import {
   getStaffProfileForUser,
   getUserWithServiceIds,
   leaveStaffProfileAccess,
-  listPendingStaffInvitesForUser,
+  listUnacceptedStaffInvitesForUser,
   listStaffSalonOptionsForUser,
 } from '@repo/database/staff'
 
@@ -147,7 +147,7 @@ beforeEach(() => {
   ).__setSelectRows([])
   vi.mocked(claimStaffProfile).mockResolvedValue({ status: 'none' })
   vi.mocked(getStaffProfileForUser).mockResolvedValue(undefined as never)
-  vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([])
+  vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([])
   vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
   vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
 })
@@ -293,33 +293,36 @@ describe('auth /me shim', () => {
     expect(getUserWithServiceIds).not.toHaveBeenCalled()
   })
 
-  it('routes a verified identity with a pending Staff Invite to acceptance', async () => {
-    vi.mocked(authServer.api.getSession).mockResolvedValue({
-      user: {
-        id: 'u1',
-        name: 'Sara',
-        phoneNumber: '09121234567',
-        username: '09121234567',
-      },
-    } as never)
-    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
-    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([
-      { id: 'invite-1' },
-    ] as never)
+  it.each(['pending', 'expired'])(
+    'routes a verified identity with a %s Staff Invite to invitations',
+    async (status) => {
+      vi.mocked(authServer.api.getSession).mockResolvedValue({
+        user: {
+          id: 'u1',
+          name: 'Sara',
+          phoneNumber: '09121234567',
+          username: '09121234567',
+        },
+      } as never)
+      vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([])
+      vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([
+        { id: 'invite-1', status, expiresAt: new Date('2020-01-01') },
+      ] as never)
 
-    const res = await app.request('/api/v1/auth/me')
+      const res = await app.request('/api/v1/auth/me')
 
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({
-      status: 'needs_staff_invite',
-      user: {
-        id: 'u1',
-        name: 'Sara',
-        phone: '09121234567',
-      },
-    })
-    expect(getMemberForUser).not.toHaveBeenCalled()
-  })
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual({
+        status: 'needs_staff_invite',
+        user: {
+          id: 'u1',
+          name: 'Sara',
+          phone: '09121234567',
+        },
+      })
+      expect(getMemberForUser).not.toHaveBeenCalled()
+    },
+  )
 
   it('marks pre-workspace users that already have a credential password', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
@@ -1140,7 +1143,7 @@ describe('OTP signup continuation routes', () => {
       },
     } as never)
     vi.mocked(getMemberForUser).mockResolvedValue(undefined)
-    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([
+    vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([
       { id: 'invite-1' },
     ] as never)
 
@@ -1204,6 +1207,7 @@ describe('Staff Invite accept and decline', () => {
     salonName: 'Salon B',
     staffProfileId: 'profile-b',
     staffName: 'Sara',
+    status: 'pending',
     phone: '09121234567',
     expiresAt: new Date('2026-07-20T12:00:00Z'),
     createdAt: new Date('2026-07-09T12:00:00Z'),
@@ -1213,12 +1217,14 @@ describe('Staff Invite accept and decline', () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: { id: 'u1' },
     } as never)
-    vi.mocked(listPendingStaffInvitesForUser).mockResolvedValue([pendingInvite])
+    vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([
+      pendingInvite,
+    ])
 
     const res = await app.request('/api/v1/auth/staff-invites')
 
     expect(res.status).toBe(200)
-    expect(listPendingStaffInvitesForUser).toHaveBeenCalledWith('u1')
+    expect(listUnacceptedStaffInvitesForUser).toHaveBeenCalledWith('u1')
     expect(await res.json()).toEqual({
       invites: [
         {
@@ -1227,6 +1233,7 @@ describe('Staff Invite accept and decline', () => {
           salonName: 'Salon B',
           staffProfileId: 'profile-b',
           staffName: 'Sara',
+          status: 'pending',
           phone: '09121234567',
           expiresAt: '2026-07-20T12:00:00.000Z',
           createdAt: '2026-07-09T12:00:00.000Z',
@@ -1241,7 +1248,7 @@ describe('Staff Invite accept and decline', () => {
     const res = await app.request('/api/v1/auth/staff-invites')
 
     expect(res.status).toBe(401)
-    expect(listPendingStaffInvitesForUser).not.toHaveBeenCalled()
+    expect(listUnacceptedStaffInvitesForUser).not.toHaveBeenCalled()
   })
 
   it('accepts a Staff Invite and returns Staff Profile Access', async () => {

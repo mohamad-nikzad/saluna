@@ -31,6 +31,10 @@ test-results/
 blob-report/
 playwright/.cache/
 .playwright-cli/
+output/
+
+# Local reports from retired API benchmarks
+/benchmarks/results/
 
 # Local Claude worktrees
 .claude/worktrees/
@@ -45,6 +49,7 @@ playwright/.cache/
 deploy/releases/
 .codex/
 saluna-icons/
+/marketing/
 
 # Android release signing secrets
 android/signing/

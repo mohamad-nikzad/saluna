@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from 'lucide-react'
 import { Button } from './button'
 import {
+  Drawer,
   DrawerNested,
   DrawerContent,
   DrawerHeader,
@@ -40,6 +41,10 @@ interface JalaliDatePickerProps {
   unavailableDates?: readonly string[]
   /** Keeps an already-selected closed date valid, for editing in place. */
   allowUnavailableValue?: boolean
+  /** Use a nested Vaul drawer when already inside another drawer. Default true. */
+  nested?: boolean
+  /** Hide the default trigger; control open state from a parent control. */
+  hideTrigger?: boolean
 }
 
 const numFmt = new Intl.NumberFormat('fa-IR')
@@ -79,6 +84,8 @@ export function JalaliDatePicker({
   onOpenChange,
   unavailableDates = NO_UNAVAILABLE_DATES,
   allowUnavailableValue = false,
+  nested = true,
+  hideTrigger = false,
 }: JalaliDatePickerProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = openProp ?? uncontrolledOpen
@@ -204,35 +211,39 @@ export function JalaliDatePicker({
     (!unavailable.has(todayYmd) ||
       (allowUnavailableValue && todayYmd === value))
 
+  const DateDrawer = nested ? DrawerNested : Drawer
+
   return (
     <>
-      <button
-        type="button"
-        id={id}
-        aria-label={
-          unavailable.has(value)
-            ? `تاریخ ${displayText}، سالن بسته است`
-            : displayText
-              ? `تاریخ ${displayText}`
-              : 'انتخاب تاریخ'
-        }
-        onClick={() => handleOpen(true)}
-        className={cn(
-          'border-input bg-blush-soft dark:bg-input/30 flex h-9 touch:h-11 w-full min-w-0 items-center justify-between rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
-          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-          !value && 'text-muted-foreground',
-          unavailable.has(value) && 'border-destructive/60 text-destructive',
-          className,
-        )}
-      >
-        <span>
-          {displayText || 'انتخاب تاریخ'}
-          {unavailable.has(value) ? ' · سالن بسته است' : ''}
-        </span>
-        <CalendarIcon className="h-4 w-4 opacity-50" />
-      </button>
+      {hideTrigger ? null : (
+        <button
+          type="button"
+          id={id}
+          aria-label={
+            unavailable.has(value)
+              ? `تاریخ ${displayText}، سالن بسته است`
+              : displayText
+                ? `تاریخ ${displayText}`
+                : 'انتخاب تاریخ'
+          }
+          onClick={() => handleOpen(true)}
+          className={cn(
+            'border-input bg-blush-soft dark:bg-input/30 flex h-9 touch:h-11 w-full min-w-0 items-center justify-between rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
+            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+            !value && 'text-muted-foreground',
+            unavailable.has(value) && 'border-destructive/60 text-destructive',
+            className,
+          )}
+        >
+          <span>
+            {displayText || 'انتخاب تاریخ'}
+            {unavailable.has(value) ? ' · سالن بسته است' : ''}
+          </span>
+          <CalendarIcon className="h-4 w-4 opacity-50" />
+        </button>
+      )}
 
-      <DrawerNested open={open} onOpenChange={handleOpen}>
+      <DateDrawer open={open} onOpenChange={handleOpen}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>انتخاب تاریخ</DrawerTitle>
@@ -365,7 +376,7 @@ export function JalaliDatePicker({
             </Button>
           </DrawerFooter>
         </DrawerContent>
-      </DrawerNested>
+      </DateDrawer>
     </>
   )
 }

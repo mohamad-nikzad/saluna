@@ -13,6 +13,7 @@ export const retentionItemSchema = z
     reason: followUpReasonSchema,
     status: followUpStatusSchema,
     dueDate: z.string(),
+    occurrenceYear: z.number().int().nullable(),
     lastVisitDate: z.string().nullable(),
     lastServiceName: z.string().nullable(),
     completedCount: z.number(),
@@ -43,13 +44,14 @@ export const retentionUpdateResponseSchema = z
 export const retentionBaleMessageBodySchema = z
   .object({
     retry: z.boolean().optional().default(false),
+    message: z.string().trim().min(1).max(500).optional(),
   })
   .openapi('RetentionBaleMessageRequest')
 
 export const retentionMessageDeliverySchema = z
   .object({
     id: z.string(),
-    provider: z.literal('bale_safir'),
+    provider: z.enum(['bale_safir', 'sms_ir']),
     status: z.enum(['sent', 'failed', 'skipped']),
     providerMessageId: z.string().nullable(),
     error: z.string().nullable(),
@@ -71,3 +73,22 @@ export const retentionBaleMessageResponseSchema = z
     result: retentionBaleMessageResultSchema,
   })
   .openapi('RetentionBaleMessageResponse')
+
+export const retentionSmsMessageBodySchema = z
+  .object({
+    retry: z.boolean().optional().default(false),
+    message: z.string().trim().min(1).max(500),
+  })
+  .openapi('RetentionSmsMessageRequest')
+
+export const retentionSmsMessageResponseSchema = z
+  .object({
+    delivery: retentionMessageDeliverySchema,
+    result: z.object({
+      status: z.enum(['sent', 'failed', 'skipped']),
+      provider: z.literal('sms_ir').nullable().optional(),
+      providerMessageId: z.string().nullable().optional(),
+      error: z.string().nullable().optional(),
+    }),
+  })
+  .openapi('RetentionSmsMessageResponse')

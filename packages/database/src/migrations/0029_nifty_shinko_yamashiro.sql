@@ -1,0 +1,1 @@
+ALTER TABLE "clients" ADD COLUMN "acquisition_source" text;

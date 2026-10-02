@@ -12,6 +12,7 @@ import type { UserRole } from '@repo/salon-core/types'
 import { getDb } from '@repo/database/client'
 import {
   appointments,
+  appointmentStaffAssignments,
   appointmentRequests,
   businessSettings,
   clientFollowUps,
@@ -383,6 +384,7 @@ type SeedServiceRow = {
   duration: number
   price: number
   color: 'rose' | 'violet' | 'mint' | 'gold' | 'coral'
+  allowMultipleStaff?: boolean
 }
 
 type SeedComboRow = {
@@ -436,6 +438,7 @@ const primarySeedServices: SeedServiceRow[] = [
     duration: 150,
     price: 1_800_000,
     color: 'rose',
+    allowMultipleStaff: true,
   },
   {
     category: 'مو',
@@ -777,6 +780,7 @@ async function seedServiceCatalog(salonId: string, rows: SeedServiceRow[]) {
         price: row.price,
         color: row.color,
         active: true,
+        allowMultipleStaff: row.allowMultipleStaff ?? false,
       })
       .onConflictDoUpdate({
         target: [services.salonId, services.name],
@@ -788,6 +792,7 @@ async function seedServiceCatalog(salonId: string, rows: SeedServiceRow[]) {
           color: row.color,
           kind: 'standard',
           active: true,
+          allowMultipleStaff: row.allowMultipleStaff ?? false,
         },
       })
   }
@@ -1237,7 +1242,7 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
       | 'bookedServicePrice'
       | 'bookedTotalDuration'
       | 'bookedTotalPrice'
-    >
+    > & { staffId: string }
   > = [
     {
       salonId,
@@ -1449,12 +1454,27 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
   const insertedAppointments = await db
     .insert(appointments)
     .values(
-      aptRows.map((row) => ({
+      aptRows.map(({ staffId: _staffId, ...row }) => ({
         ...row,
         ...appointmentSnapshot(servicesById.get(row.serviceId)!),
       })),
     )
     .returning()
+  const insertedAssignments =
+    insertedAppointments.length === 0
+      ? []
+      : await db
+          .insert(appointmentStaffAssignments)
+          .values(
+            insertedAppointments.map((appointment, index) => ({
+              salonId,
+              appointmentId: appointment.id,
+              staffId: aptRows[index].staffId,
+              isLead: true,
+              allocationBasisPoints: 10_000,
+            })),
+          )
+          .returning()
 
   const commissionRates = new Map([
     [staffA.id, 3_000],
@@ -1490,16 +1510,24 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
     (appointment) => appointment.status === 'completed',
   )
   if (completedAppointments.length > 0) {
+    const assignmentByAppointment = new Map(
+      insertedAssignments.map((assignment) => [
+        assignment.appointmentId,
+        assignment,
+      ]),
+    )
     await db
       .insert(staffCommissions)
       .values(
         completedAppointments.map((appointment) => {
+          const assignment = assignmentByAppointment.get(appointment.id)!
           const percentageBasisPoints =
-            commissionRates.get(appointment.staffId) ?? 3_000
+            commissionRates.get(assignment.staffId) ?? 3_000
           return {
             salonId,
-            staffProfileId: appointment.staffId,
+            staffProfileId: assignment.staffId,
             appointmentId: appointment.id,
+            appointmentStaffAssignmentId: assignment.id,
             basis: appointment.bookedTotalPrice,
             percentageBasisPoints,
             amount: commissionAmount(
@@ -1509,7 +1537,9 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
           }
         }),
       )
-      .onConflictDoNothing({ target: staffCommissions.appointmentId })
+      .onConflictDoNothing({
+        target: staffCommissions.appointmentStaffAssignmentId,
+      })
   }
 
   const days = [0, 1, 2, 3, 4, 5, 6] as const
@@ -1928,7 +1958,9 @@ async function main() {
     skincareService &&
     allClients.length >= 4
   ) {
-    await db.insert(appointments).values([
+    const demoAppointments: Array<
+      typeof appointments.$inferInsert & { staffId: string }
+    > = [
       {
         salonId: primarySalon.id,
         clientId: allClients[0].id,
@@ -1981,7 +2013,20 @@ async function main() {
         notes: null,
         createdByUserId: manager.id,
       },
-    ])
+    ]
+    const insertedAppointments = await db
+      .insert(appointments)
+      .values(demoAppointments.map(({ staffId: _staffId, ...row }) => row))
+      .returning()
+    await db.insert(appointmentStaffAssignments).values(
+      insertedAppointments.map((appointment, index) => ({
+        salonId: primarySalon.id,
+        appointmentId: appointment.id,
+        staffId: demoAppointments[index].staffId,
+        isLead: true,
+        allocationBasisPoints: 10_000,
+      })),
+    )
   }
 
   await seedServiceCatalog(secondSalon.id, secondSalonSeedServices)

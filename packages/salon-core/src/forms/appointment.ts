@@ -8,6 +8,8 @@ import {
   APPOINTMENT_DURATION_BOUNDS,
   durationMinutesFromRange,
 } from '../appointment-time'
+import { isValidAppointmentRoster } from '../appointment-roster'
+import { equalWorkAllocations } from '../commissions'
 import { APPOINTMENT_STATUS } from '../types'
 import { formMessages } from './messages'
 import {
@@ -22,14 +24,52 @@ import {
 
 const idSchema = z.string().trim().min(1)
 const addonIdsSchema = z.array(idSchema).optional()
+const staffAssignmentInputSchema = z.object({
+  staffId: idSchema,
+  isLead: z.boolean(),
+  allocationBasisPoints: z.number().int().min(0).max(10_000),
+})
+const staffAssignmentsSchema = z.array(staffAssignmentInputSchema).min(1)
 const appointmentStatusKeys = Object.keys(APPOINTMENT_STATUS) as [
   keyof typeof APPOINTMENT_STATUS,
   ...(keyof typeof APPOINTMENT_STATUS)[],
 ]
 const appointmentStatusSchema = z.enum(appointmentStatusKeys)
 
+function refineStaffAssignments(
+  assignments: z.infer<typeof staffAssignmentsSchema> | undefined,
+  ctx: z.RefinementCtx,
+  path: string[] = ['staffAssignments'],
+) {
+  if (assignments == null) return
+  if (!isValidAppointmentRoster(assignments)) {
+    ctx.addIssue({
+      code: 'custom',
+      path,
+      message: 'مجموع سهم‌ها باید ۱۰۰٪ باشد و دقیقاً یک مسئول داشته باشد',
+    })
+  }
+}
+
+/** UI lead + extras → wire roster (equal split when allocations omitted). */
+export function staffAssignmentsFromLeadAndExtras(input: {
+  staffId: string
+  additionalStaffIds?: string[]
+  workAllocations?: Array<{ staffId: string; allocationBasisPoints: number }>
+}) {
+  const staffIds = [input.staffId, ...(input.additionalStaffIds ?? [])]
+  const allocations = input.workAllocations ?? equalWorkAllocations(staffIds)
+  return staffIds.map((staffId, index) => ({
+    staffId,
+    isLead: index === 0,
+    allocationBasisPoints:
+      allocations.find((row) => row.staffId === staffId)?.allocationBasisPoints ??
+      0,
+  }))
+}
+
 const appointmentBaseSchema = z.object({
-  staffId: idSchema,
+  staffAssignments: staffAssignmentsSchema,
   serviceId: idSchema,
   addonIds: addonIdsSchema,
   date: gregorianDateSchema,
@@ -79,6 +119,7 @@ export const appointmentCreateSchema = appointmentBaseSchema
   })
   .superRefine((values, ctx) => {
     validateAppointmentRange(values, ctx)
+    refineStaffAssignments(values.staffAssignments, ctx)
     const hasClient =
       typeof values.clientId === 'string' && values.clientId.trim() !== ''
     const hasPlaceholder = values.placeholderClient != null
@@ -98,25 +139,35 @@ export const appointmentCreateSchema = appointmentBaseSchema
         : undefined,
   }))
 
-export const appointmentUpdateSchema = z.object({
-  clientId: z.string().trim().optional(),
-  placeholderClient: z
-    .object({
-      name: requiredTextSchema,
-      notes: optionalTrimmedTextSchema,
-    })
-    .optional(),
-  staffId: z.string().trim().optional(),
-  serviceId: z.string().trim().optional(),
-  addonIds: addonIdsSchema,
-  date: gregorianDateSchema.optional(),
-  startTime: timeOfDaySchema.optional(),
-  endTime: timeOfDaySchema.optional(),
-  durationMinutes: durationMinutesSchema.optional(),
-  finalPrice: nonNegativeMoneySchema.optional(),
-  status: appointmentStatusSchema.optional(),
-  notes: optionalTrimmedTextSchema,
-})
+export const appointmentUpdateSchema = z
+  .object({
+    clientId: z.string().trim().optional(),
+    placeholderClient: z
+      .object({
+        name: requiredTextSchema,
+        notes: optionalTrimmedTextSchema,
+      })
+      .optional(),
+    staffAssignments: staffAssignmentsSchema.optional(),
+    serviceId: z.string().trim().optional(),
+    addonIds: addonIdsSchema,
+    date: gregorianDateSchema.optional(),
+    startTime: timeOfDaySchema.optional(),
+    endTime: timeOfDaySchema.optional(),
+    durationMinutes: durationMinutesSchema.optional(),
+    finalPrice: nonNegativeMoneySchema.optional(),
+    status: appointmentStatusSchema.optional(),
+    notes: optionalTrimmedTextSchema,
+  })
+  .superRefine((values, ctx) => {
+    refineStaffAssignments(values.staffAssignments, ctx)
+    if (values.startTime && values.endTime) {
+      validateAppointmentRange(
+        { startTime: values.startTime, endTime: values.endTime },
+        ctx,
+      )
+    }
+  })
 
 export const completePlaceholderClientSchema = z.object({
   name: requiredTextSchema,
@@ -138,6 +189,15 @@ export const appointmentFormSchema = z
     temporaryClientName: z.string().optional(),
     temporaryClientNotes: z.string().optional(),
     staffId: z.string().optional(),
+    additionalStaffIds: z.array(z.string()).optional(),
+    workAllocations: z
+      .array(
+        z.object({
+          staffId: idSchema,
+          allocationBasisPoints: z.number().int().min(0).max(10_000),
+        }),
+      )
+      .optional(),
     serviceId: z.string().optional(),
     addonIds: z.array(z.string()).optional(),
     date: gregorianDateSchema,
@@ -180,6 +240,7 @@ export const appointmentFormSchema = z
     validateAppointmentRange(values, ctx)
   })
   .transform((values, ctx) => {
+    const staffId = values.staffId?.trim() ?? ''
     const payload = appointmentCreateSchema.safeParse({
       ...(values.useTemporaryClient
         ? {
@@ -189,7 +250,11 @@ export const appointmentFormSchema = z
             },
           }
         : { clientId: values.clientId }),
-      staffId: values.staffId,
+      staffAssignments: staffAssignmentsFromLeadAndExtras({
+        staffId,
+        additionalStaffIds: values.additionalStaffIds,
+        workAllocations: values.workAllocations,
+      }),
       serviceId: values.serviceId,
       addonIds: values.addonIds,
       date: values.date,

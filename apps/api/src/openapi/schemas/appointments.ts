@@ -7,6 +7,14 @@ import {
 import { AVAILABILITY_EMPTY_REASONS } from '@repo/salon-core/availability'
 import { appointmentWithDetailsSchema, clientSchema } from './clients'
 
+const staffAssignmentInputSchema = z
+  .object({
+    staffId: z.string(),
+    isLead: z.boolean(),
+    allocationBasisPoints: z.number().int(),
+  })
+  .openapi('AppointmentStaffAssignmentInput')
+
 function bodyFromCoreSchema<T extends z.ZodType>(
   name: string,
   shape: z.ZodRawShape,
@@ -43,7 +51,7 @@ export const appointmentCreateBodySchema = bodyFromCoreSchema(
         notes: z.string().optional(),
       })
       .optional(),
-    staffId: z.string(),
+    staffAssignments: z.array(staffAssignmentInputSchema),
     serviceId: z.string(),
     addonIds: z.array(z.string()).optional(),
     date: z.string().openapi({ example: '2026-06-07' }),
@@ -66,7 +74,9 @@ export const appointmentUpdateBodySchema = bodyFromCoreSchema(
         notes: z.string().optional(),
       })
       .optional(),
-    staffId: z.string().optional(),
+    staffAssignments: z.array(staffAssignmentInputSchema).optional().openapi({
+      description: 'Full roster replacement; omit to leave the roster unchanged',
+    }),
     serviceId: z.string().optional(),
     addonIds: z.array(z.string()).optional(),
     date: z.string().optional(),

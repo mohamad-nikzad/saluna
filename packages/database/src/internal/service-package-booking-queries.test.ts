@@ -5,6 +5,7 @@ vi.mock('./salon-closure-queries', () => ({
 }))
 import {
   appointments,
+  appointmentStaffAssignments,
   servicePackageBookings,
   servicePackageTasks,
 } from '../schema'
@@ -113,52 +114,71 @@ const packageFixture = {
 function setupDbMock() {
   const tx = {
     insert: mocks.txInsert.mockImplementation((table: unknown) => ({
-      values: (values: unknown) => ({
-        returning: async () => {
-          mocks.inserted.push({ table, values })
-          if (table === servicePackageBookings) {
-            return [
-              {
-                id: 'booking-1',
-                salonId: 'salon-1',
-                packageId: 'pkg-1',
-                clientId: 'client-1',
-                leadStaffId: 'staff-1',
-                date: '2026-07-02',
-                bookedPackageName: 'Bride',
-                bookedPackagePrice: 600000,
-                status: 'scheduled',
-                notes: null,
-                createdByUserId: 'manager-1',
+      values: (values: unknown) => {
+        mocks.inserted.push({ table, values })
+        return {
+          returning: async () => {
+            if (table === servicePackageBookings) {
+              return [
+                {
+                  id: 'booking-1',
+                  salonId: 'salon-1',
+                  packageId: 'pkg-1',
+                  clientId: 'client-1',
+                  leadStaffId: 'staff-1',
+                  date: '2026-07-02',
+                  bookedPackageName: 'Bride',
+                  bookedPackagePrice: 600000,
+                  status: 'scheduled',
+                  notes: null,
+                  createdByUserId: 'manager-1',
+                  createdAt: now,
+                  updatedAt: now,
+                },
+              ]
+            }
+            if (table === appointments) {
+              return (values as InsertValues).map((value, index) => ({
+                id: `appointment-${index + 1}`,
                 createdAt: now,
                 updatedAt: now,
-              },
-            ]
-          }
-          if (table === appointments) {
-            return (values as InsertValues).map((value, index) => ({
-              id: `appointment-${index + 1}`,
-              createdAt: now,
-              updatedAt: now,
-              ...value,
-            }))
-          }
-          if (table === servicePackageTasks) {
-            if (mocks.failTaskInsert) throw new Error('task insert failed')
-            return (values as InsertValues).map((value, index) => ({
-              id: `task-${index + 1}`,
-              createdAt: now,
-              updatedAt: now,
-              ...value,
-            }))
-          }
-          return []
-        },
-      }),
+                ...value,
+              }))
+            }
+            if (table === servicePackageTasks) {
+              if (mocks.failTaskInsert) throw new Error('task insert failed')
+              return (values as InsertValues).map((value, index) => ({
+                id: `task-${index + 1}`,
+                createdAt: now,
+                updatedAt: now,
+                ...value,
+              }))
+            }
+            return []
+          },
+        }
+      },
     })),
   }
   mocks.transaction.mockImplementation(async (callback) => callback(tx))
-  mocks.getDb.mockReturnValue({ transaction: mocks.transaction })
+  mocks.getDb.mockReturnValue({
+    transaction: mocks.transaction,
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          orderBy: async () =>
+            mocks.inserted
+              .filter((entry) => entry.table === appointmentStaffAssignments)
+              .flatMap((entry) =>
+                (entry.values as InsertValues).map((value, index) => ({
+                  id: `assignment-${value.appointmentId}-${index}`,
+                  ...value,
+                })),
+              ),
+        }),
+      }),
+    }),
+  })
 }
 
 describe('createServicePackageBooking', () => {
@@ -239,6 +259,13 @@ describe('createServicePackageBooking', () => {
             bookedServiceName: 'Hair',
             bookedServicePrice: 400000,
             bookedAddonCount: 0,
+            staffAssignments: [
+              expect.objectContaining({
+                staffId: 'staff-1',
+                isLead: true,
+                allocationBasisPoints: 10_000,
+              }),
+            ],
           }),
         }),
         expect.objectContaining({
@@ -251,6 +278,8 @@ describe('createServicePackageBooking', () => {
     expect(mocks.inserted.map((entry) => entry.table)).toEqual([
       servicePackageBookings,
       appointments,
+      appointmentStaffAssignments,
+      appointmentStaffAssignments,
       servicePackageTasks,
     ])
     const appointmentValues = mocks.inserted.find(
@@ -361,6 +390,8 @@ describe('createServicePackageBooking', () => {
     expect(mocks.inserted.map((entry) => entry.table)).toEqual([
       servicePackageBookings,
       appointments,
+      appointmentStaffAssignments,
+      appointmentStaffAssignments,
       servicePackageTasks,
     ])
   })

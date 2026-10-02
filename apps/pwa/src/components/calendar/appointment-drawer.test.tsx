@@ -128,8 +128,8 @@ describe('AppointmentDrawer final price', () => {
     const view = render(<AppointmentDrawer {...props} open={false} />)
     view.rerender(<AppointmentDrawer {...props} open />)
 
-    const price = screen.getByLabelText('قیمت نهایی (تومان)')
-    expect((price as HTMLInputElement).value).toBe('۱۰۰۰۰۰')
+    const price = screen.getByLabelText('قیمت نهایی')
+    expect((price as HTMLInputElement).value).toBe('۱۰۰٬۰۰۰')
     fireEvent.change(price, { target: { value: '۸۵۰۰۰' } })
     fireEvent.click(screen.getByRole('button', { name: 'رنگ' }))
     fireEvent.click(screen.getByRole('button', { name: 'ثبت نوبت' }))
@@ -175,15 +175,15 @@ describe('AppointmentDrawer final price', () => {
     const view = render(<AppointmentDrawer {...props} open formRevision={0} />)
     view.rerender(<AppointmentDrawer {...props} formRevision={0} />)
 
-    fireEvent.change(screen.getByLabelText('قیمت نهایی (تومان)'), {
+    fireEvent.change(screen.getByLabelText('قیمت نهایی'), {
       target: { value: '۸۵۰۰۰' },
     })
     view.rerender(<AppointmentDrawer {...props} formRevision={1} />)
 
     await waitFor(() =>
       expect(
-        (screen.getByLabelText('قیمت نهایی (تومان)') as HTMLInputElement).value,
-      ).toBe('۱۲۰۰۰۰'),
+        (screen.getByLabelText('قیمت نهایی') as HTMLInputElement).value,
+      ).toBe('۱۲۰٬۰۰۰'),
     )
     expect(screen.getByTestId('client-id').textContent).toBe(client.id)
     expect(screen.getByTestId('staff-id').textContent).toBe(staff.id)

@@ -85,6 +85,32 @@ export function isStartTimeInPreference(
   return startTime >= bounds.min && startTime <= bounds.max
 }
 
+/** Checks the selected slot against the saved agreement; elapsed dates stay history. */
+export function flexibleRequestAgreementError({
+  acceptableDates,
+  timePreference,
+  finalDate,
+  startTime,
+  today = salonTodayYmd(),
+}: {
+  acceptableDates: readonly string[] | null
+  timePreference: TimePreference | null
+  finalDate: string
+  startTime: string
+  today?: string
+}): 'date' | 'time' | null {
+  if (!acceptableDates?.includes(finalDate)) return 'date'
+  try {
+    normalizeAcceptableDates([finalDate], today)
+  } catch {
+    return 'date'
+  }
+  if (!timePreference || !isStartTimeInPreference(startTime, timePreference)) {
+    return 'time'
+  }
+  return null
+}
+
 export function flexibleRequestGroup(
   dates: readonly string[],
   today = salonTodayYmd(),
