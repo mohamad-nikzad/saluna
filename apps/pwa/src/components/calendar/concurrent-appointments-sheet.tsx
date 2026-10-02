@@ -169,7 +169,7 @@ export function ConcurrentAppointmentsSheet({
       }}
     >
       <DrawerContent>
-        <DrawerHeader className="pb-2">
+        <DrawerHeader className="min-h-14">
           <div className="flex items-center justify-start gap-2 text-muted-foreground">
             <CalendarDays className="size-4" />
             <DrawerTitle className="text-[13px] font-semibold text-foreground">
@@ -181,7 +181,7 @@ export function ConcurrentAppointmentsSheet({
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-4 pb-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-4 pb-4">
           {/* Hero */}
           <div className="hero-surface relative overflow-hidden rounded-[22px] px-5 py-4">
             <SakuraMark

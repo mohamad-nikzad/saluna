@@ -21,6 +21,8 @@ import {
   clients,
   member,
   salonMember,
+  serviceCategories,
+  serviceFamilies,
   services,
   staffProfiles,
   user,
@@ -235,6 +237,14 @@ const appointmentDetailSelect = {
     createdAt: staffProfiles.createdAt,
   },
   service: services,
+  category: {
+    id: serviceCategories.id,
+    name: serviceCategories.name,
+  },
+  family: {
+    id: serviceFamilies.id,
+    name: serviceFamilies.name,
+  },
 } as const
 
 function leadStaffJoins(salonId: string) {
@@ -264,6 +274,14 @@ function leadStaffJoins(salonId: string) {
     serviceJoin: and(
       eq(appointments.serviceId, services.id),
       eq(services.salonId, salonId),
+    ),
+    categoryJoin: and(
+      eq(services.categoryId, serviceCategories.id),
+      eq(serviceCategories.salonId, salonId),
+    ),
+    familyJoin: and(
+      eq(services.familyId, serviceFamilies.id),
+      eq(serviceFamilies.salonId, salonId),
     ),
   }
 }
@@ -297,6 +315,8 @@ export async function getAppointmentsWithDetailsByDateRange(
     .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
+    .leftJoin(serviceCategories, joins.categoryJoin)
+    .leftJoin(serviceFamilies, joins.familyJoin)
     .where(
       and(
         ...conditions,
@@ -337,6 +357,8 @@ export async function getClientAppointmentsWithDetails(
     .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
+    .leftJoin(serviceCategories, joins.categoryJoin)
+    .leftJoin(serviceFamilies, joins.familyJoin)
     .where(
       and(
         eq(appointments.salonId, salonId),
@@ -378,6 +400,8 @@ export async function getAppointmentWithDetailsById(
     .leftJoin(staffProfiles, joins.preparedStaffJoin)
     .leftJoin(salonMember, joins.salonMemberJoin)
     .innerJoin(services, joins.serviceJoin)
+    .leftJoin(serviceCategories, joins.categoryJoin)
+    .leftJoin(serviceFamilies, joins.familyJoin)
     .where(
       and(
         eq(appointments.id, id),

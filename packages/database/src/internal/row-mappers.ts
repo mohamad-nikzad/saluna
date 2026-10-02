@@ -225,6 +225,8 @@ export function attachAppointmentDetails(row: {
   staff: NullableStaffUserRow | null
   preparedStaff: NullablePreparedStaffRow | null
   service: typeof services.$inferSelect
+  category: { id: string; name: string } | null
+  family: { id: string; name: string } | null
 }): AppointmentWithDetails {
   const staff = row.staff?.salonId
     ? rowToUser(row.staff as StaffUserRow)
@@ -248,7 +250,7 @@ export function attachAppointmentDetails(row: {
     ...rowToAppointment(row.appointment),
     client: rowToClient(row.client),
     staff,
-    service: rowToService(row.service),
+    service: joinedRowToService(row),
   }
 }
 
