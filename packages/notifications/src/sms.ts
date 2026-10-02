@@ -499,10 +499,6 @@ function createSmsIrProvider(
   }
 }
 
-export function getSmsProvider(): SmsProvider | null {
-  return getConfiguredProvider()
-}
-
 async function dispatchSms(
   send: (provider: SmsProvider) => Promise<SmsDeliveryResult>,
 ): Promise<SmsDeliveryResult> {
