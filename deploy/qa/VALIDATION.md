@@ -1,0 +1,34 @@
+# Initial staging validation
+
+Verified on 2026-10-05 against the existing VPS at 195.177.255.24. No additional Arvan server or paid resource was created.
+
+- Fresh isolated `saluna_qa` migrations and synthetic seed completed locally and on the VPS.
+- The QA seed rejected a production-shaped database target before connecting.
+- Nine controller safety tests passed, including resource refusal, production health refusal, immutable lease deadlines, fixed QA stop targets, failed-stop recovery, and refusing stale-run cleanup of another session, and preventing a controller environment from restoring an old image revision.
+- Compose validation and `git diff --check` passed.
+- API, PWA, web, tools, and controller images were built on the workstation for Linux amd64.
+- Web sitemap and SEO checks passed. Private SSR requests reached the isolated QA API.
+- Three authenticated wake/sleep sessions completed. The final readiness checks covered all five QA services before the controller declared the session awake.
+- Owner, staff, and second-salon test accounts logged in successfully.
+- A synthetic customer AppointmentRequest became an Appointment after owner approval. Its assigned staff could see it; the second salon could not. The customer confirmation showed approved. The test cancelled only its own Appointment afterward.
+- Staging public salon and app pages returned HTTP 200 while awake.
+- Unauthenticated staging returned HTTP 401. Control access with only Basic authentication also returned HTTP 401.
+- After sleep, authenticated staging returned HTTP 503 in about two seconds. All five QA containers were stopped.
+- Production API and app returned HTTP 200 after the changes. Production API, app, web, admin, gateway, and Postgres containers remained healthy. The production gateway kept its original container ID; its nginx configuration was reloaded.
+- At the final sleep check, the host had about 2.7 GiB available RAM and 7.4 GiB free disk. Idle QA services used about 110 MiB combined before stopping. These are observations, not peak-load guarantees.
+
+Grok QA Lead received the owner-approved staging credentials. Owner and staff browser sign-in succeeded, and Grok confirmed staging asleep afterward. The nightly routine was independently inspected as enabled at 02:00 Asia/Tehran. The 18:00 build check remains paused. The existing enabled Slack poll was inspected and includes owner-only, timestamp-deduplicated RUN QA dispatch with revision matching.
+
+## Workstation release updater
+
+The snapshot test passed for committed and dirty working-tree sources, omitted credentials, unchanged source files, and content revision changes. All four runtime images for `qa-ec2c4641-0693b69c9af4` built locally. This includes the current uncommitted staff privacy work on main. The initial deployment correctly refused an overlapping cloud QA session; its prepared archive was retained for resume.
+
+At 23:15 Tehran, the workstation VPN route timed out for SSH and HTTPS. Grok independently read controller status and reported asleep, revision ec2c4641, about 2.8 GiB available memory and 7 GiB free disk. Choosing the existing en0 interface restored authenticated HTTPS and SSH access. The optional interface setting keeps normal certificate verification and does not modify the Mac's network settings.
+
+The new release migrated and passed readiness, then slept. A subsequent wake exposed a controller environment precedence bug: its old QA_REVISION overrode the updated env file, so it restarted the old API and web images. The focused privacy check detected the old response shape and stopped; its own synthetic Appointment was cancelled and staging slept. Inspection of the actual container image tags confirmed the old images. The controller now removes QA_REVISION from child environments, and the Compose configuration no longer captures it. A regression check covers this failure. The corrected wake was verified against actual API, web, and PWA container image tags. All three matched `qa-ec2c4641-0693b69c9af4`. The focused smoke check passed against that revision: owner/staff/second-salon login, customer request and approval, assigned calendar and tenant isolation, allowlisted staff Client fields in list/detail/mutation responses, preserved manager phone access, exact 403 for cancellation and mixed status/price writes, unassigned staff refusal, lead completion, and attributed manager status history. Its Appointment `38d3b776-eab5-413c-9853-9f5ecc82882f` was cancelled by the test owner. Final controller state was asleep, with 2,751 MiB available host RAM and 7,498 MiB free disk.
+
+The smoke helper respects both Retry-After and Better Auth's X-Retry-After for one bounded retry of a refused sign-in. Production and QA rate limits stay enabled. The update client retries transient connection errors three times with the same run ID; it attempts cleanup even when the wake response is lost.
+
+## Slack on-demand verification
+
+The owner command was delivered at 23:39 Tehran to private #saluna-reviews: https://salunaworkspace.slack.com/archives/C0C6C3KLEH5/p1791230958815129 . Growth Lead read the actual Slack owner message, dispatched exactly once to QA Lead and posted one in-thread ACK. The ACK was independently observed in Slack at https://salunaworkspace.slack.com/archives/C0C6C3KLEH5/p1791231004223049?thread_ts=1791230958.815129&cid=C0C6C3KLEH5 . Growth Lead's second pass reported no duplicate dispatch or acknowledgment. QA Lead received the command and began the focused browser session. Cloud browser results and final sleep are pending. The first unattended nightly run has not yet occurred.

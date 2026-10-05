@@ -44,7 +44,7 @@ import { seedCatalogPresets } from '@repo/database/seed/catalog-presets'
 
 const db = getDb()
 
-const SEED_PASSWORD = 'admin123'
+const SEED_PASSWORD = process.env.SEED_PASSWORD?.trim() || 'admin123'
 
 type SeedStaff = {
   id: string
@@ -2049,11 +2049,11 @@ async function main() {
   await seedRetentionAndFeaturesDemo(primarySalon.id)
 
   console.log('Seed complete.')
-  console.log('Manager: 09120000000 / admin123')
-  console.log('Second salon manager: 09130000000 / admin123')
   console.log(
-    'Staff: 09120000001, 09120000002, 09120000003, 09120000004 / admin123',
+    'Manager: 09120000000. Password comes from SEED_PASSWORD or the local demo default.',
   )
+  console.log('Second salon manager: 09130000000.')
+  console.log('Staff: 09120000001, 09120000002, 09120000003, 09120000004.')
   console.log(
     'Staff specialties: hair, nails, skin/epilation, lashes/brows/permanent makeup.',
   )

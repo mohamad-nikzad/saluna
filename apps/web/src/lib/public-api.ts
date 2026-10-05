@@ -18,7 +18,11 @@ import type {
   PublicSalonView as GeneratedPublicSalonView,
 } from '@repo/api-client/types'
 
-configureGeneratedApiClient({ baseUrl: PUBLIC_API_URL })
+configureGeneratedApiClient({
+  baseUrl: import.meta.env.SSR
+    ? process.env.API_INTERNAL_URL || PUBLIC_API_URL
+    : PUBLIC_API_URL,
+})
 
 export type PublicSalonView = Omit<GeneratedPublicSalonView, 'services'> & {
   services: Service[]

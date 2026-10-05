@@ -5,7 +5,12 @@ import { buildSalonCanonicalUrl, isSalonIndexable } from '../lib/seo'
 const CACHE_CONTROL = 'public, s-maxage=86400, stale-while-revalidate=3600'
 
 async function getPublishedSalonSlugs(): Promise<string[]> {
-  const response = await fetch(new URL('/api/v1/public/salons', PUBLIC_API_URL))
+  const response = await fetch(
+    new URL(
+      '/api/v1/public/salons',
+      process.env.API_INTERNAL_URL || PUBLIC_API_URL,
+    ),
+  )
   if (!response.ok) throw new Error('Could not load published Salon slugs')
 
   const body: unknown = await response.json()
