@@ -7,6 +7,7 @@ import {
 
 import { authQueryKey } from '#/lib/auth'
 import type { AuthSession } from '#/lib/auth'
+import { homePathForRole } from '#/lib/navigation'
 import { BottomNav } from '#/components/bottom-nav'
 import { cn } from '@repo/ui/utils'
 
@@ -39,6 +40,10 @@ export const Route = createFileRoute('/_authed')({
     }
 
     const { user } = session
+    // A saved login redirect can point staff at an old salon setup page.
+    if (user.role === 'staff' && location.pathname.startsWith('/onboarding')) {
+      throw redirect({ to: homePathForRole(user.role) })
+    }
     if (
       user.role === 'manager' &&
       user.needsOnboarding &&
