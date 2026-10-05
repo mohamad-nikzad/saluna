@@ -9,6 +9,27 @@ import update_server
 
 
 class ExistingReleaseTests(unittest.TestCase):
+    def test_brief_load_tail_waits_for_the_same_guard(self):
+        session = {'run_id': 'retry', 'state': 'awake', 'deadline': time.time() + 1000}
+        with patch.object(update_server.control, 'read_state', return_value=session), patch.object(update_server.control, 'headroom'), patch.object(update_server.control, 'pressure_reason', side_effect=['host_busy', None]), patch.object(update_server.control, 'production_healthy', return_value=True), patch.object(update_server.time, 'sleep') as sleep:
+            update_server.check_lease('retry')
+        sleep.assert_called_once_with(5)
+
+    def test_lost_lease_during_cooldown_cannot_continue(self):
+        session = {'run_id': 'retry', 'state': 'awake', 'deadline': time.time() + 1000}
+        with patch.object(update_server.control, 'read_state', side_effect=[session, {'state': 'asleep'}]), patch.object(update_server.control, 'headroom'), patch.object(update_server.control, 'pressure_reason', return_value='host_busy'), patch.object(update_server.control, 'production_healthy', return_value=True), patch.object(update_server.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'lease'):
+                update_server.check_lease('retry')
+
+    def test_persistent_load_still_refuses_without_extending_the_lease(self):
+        session = {'run_id': 'retry', 'state': 'awake', 'deadline': time.time() + 1000}
+        deadline = session['deadline']
+        with patch.object(update_server.control, 'read_state', return_value=session), patch.object(update_server.control, 'headroom'), patch.object(update_server.control, 'pressure_reason', return_value='host_busy'), patch.object(update_server.control, 'production_healthy', return_value=True), patch.object(update_server.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(RuntimeError, 'host_busy'):
+                update_server.check_lease('retry')
+        self.assertEqual(sleep.call_count, 6)
+        self.assertEqual(session['deadline'], deadline)
+
     def test_retry_existing_revision_keeps_qa_data_and_reaches_readiness(self):
         revision = 'qa-aaaaaaaa-bbbbbbbbbbbb'
         with tempfile.TemporaryDirectory() as tmp:
