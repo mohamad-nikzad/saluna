@@ -31,6 +31,8 @@ Wake returns `starting`; poll status until `awake` before opening the browser or
 
 Keep each run's created appointment and request IDs in its report. Use those IDs for subsequent confirmation, staff visibility, cancellation, and cleanup checks. Avoid parallel persona runs and load tests. Do not delete unrelated records or connect to production URLs. Data persists across sleep; waking does not reseed or reset it.
 
+Verify staff identity through `/api/v1/auth/me` before privacy checks. Inspect Client fields separately from Staff contact fields; an unrelated Staff phone in an appointment payload is not a Client privacy failure. Never flip a seeded appointment's status merely to probe a permission.
+
 ## Updating staging
 
 Use the updater from the workstation to stage a committed `main` revision, then send the exact Slack command it prints:
@@ -68,6 +70,10 @@ The VPS installation lives in `/opt/saluna/qa`, owned by `deploy`, with mode 700
 
 The production gateway includes only a new `saluna-qa.conf` for the three staging names. Only the QA gateway and controller join its private Docker network, `saluna_saluna`. The other QA services stay on their isolated backend network. Staging publishes no host ports. Install its template and htpasswd file in the existing templates mount, copy the config into the running gateway, run `nginx -t`, and reload only when validation passes. Do not recreate production containers.
 
+## Grok browser routing
+
+Grok browser traffic now uses cloud routing with the owner's approval. In Grok Settings → Computer, “Route traffic through this computer” is off. Leaving it on makes scheduled browser checks depend on this Mac being online and its VPN route reaching staging. A routing change applies to new connections. Keep TLS and staging authentication enabled. An API pass does not count as a browser pass; report transport failures separately. Persona bots use their approved private access files and QA Lead owns the controller lease.
+
 ## Recovery
 
 If the controller is unavailable, SSH as `deploy` and stop only QA:
@@ -87,4 +93,4 @@ docker compose --env-file deploy/qa/.env.qa.local -f deploy/qa/compose.yaml conf
 docker compose --env-file deploy/qa/.env.qa.local -f deploy/qa/control.compose.yaml config -q
 ```
 
-Deployment verification should cover private access, seed account login, the public salon page, same-origin browser API requests, wake/status/sleep, stopped QA containers after sleep, and unchanged healthy production containers. QA Lead has the approved staging credentials and completed owner and staff browser sign-in. Nightly QA is enabled at 02:00 Asia/Tehran. The existing Slack poll accepts on-demand QA every 15 minutes. The 18:00 build-check routine stays paused because staging updates are manual.
+Deployment verification should cover private access, seed account login, the public salon page, same-origin browser API requests, wake/status/sleep, stopped QA containers after sleep, and unchanged healthy production containers. The current main working-tree snapshot, `qa-ec2c4641-0693b69c9af4`, passed the focused API smoke and a cloud browser journey for Customer request, Owner approval/assignment, and Staff no-show and Client privacy. Cleanup cancelled the run's Appointment and staging was independently verified asleep. See `VALIDATION.md` for scope and evidence. Nightly QA is enabled at 02:00 Asia/Tehran; its first unattended run is pending. The existing Slack poll accepts on-demand QA every 15 minutes. The 18:00 build-check routine stays paused because staging updates are manual.
