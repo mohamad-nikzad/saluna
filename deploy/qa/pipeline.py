@@ -56,9 +56,17 @@ def retire_images():
 
 
 def preflight(metadata, downloaded=False):
-    reason = control.pressure_reason(control.headroom(), starting=True)
-    if reason or not control.production_healthy():
-        raise RuntimeError(reason or 'production_unhealthy')
+    # Scoped image retirement can leave a short load-average tail. Wait asleep
+    # for that tail, without weakening the normal startup threshold.
+    for attempt in range(11):
+        reason = control.pressure_reason(control.headroom(), starting=True)
+        if not control.production_healthy():
+            raise RuntimeError('production_unhealthy')
+        if reason != 'host_busy' or attempt == 10:
+            break
+        time.sleep(15)
+    if reason:
+        raise RuntimeError(reason)
     # Reserve both downloaded zip/extracted archive, image expansion, and 5 GiB.
     if shutil.disk_usage(ROOT).free < metadata['archive_bytes'] * (1 if downloaded else 2) + metadata['images_bytes'] + 5 * 1024**3:
         raise RuntimeError('insufficient_disk_for_release; keep the 5 GiB reserve and retry after QA cleanup')

@@ -98,6 +98,14 @@ class PipelineSafetyTests(unittest.TestCase):
             self.assertEqual(calls[-1], ('sleep', {'run_id': 'deploy-gh-123-1'}))
             self.assertFalse((root / archive.name).exists())
 
+    def test_cleanup_load_tail_waits_without_lowering_the_guard(self):
+        metadata = {'archive_bytes': 1000, 'images_bytes': 1000}
+        resources = {'available_memory_mb': 2000, 'free_disk_mb': 8000, 'load_1m': .1, 'cpu_count': 2}
+        with patch.object(pipeline.control, 'headroom', side_effect=[{**resources, 'load_1m': 2}, resources]), patch.object(pipeline.control, 'production_healthy', return_value=True), patch.object(pipeline.shutil, 'disk_usage') as disk, patch.object(pipeline.time, 'sleep') as sleep:
+            disk.return_value.free = 8 * 1024**3
+            pipeline.preflight(metadata)
+        sleep.assert_called_once_with(15)
+
 
 if __name__ == '__main__':
     unittest.main()

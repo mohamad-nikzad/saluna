@@ -1,6 +1,7 @@
 """Build a selected Git revision or local working tree, then update only QA."""
 import argparse
 import base64
+import gzip
 import hashlib
 import io
 import json
@@ -156,6 +157,29 @@ def main():
         raise
 
 
+def image_storage_bytes(archive):
+    """Budget blobs plus unpacked files, whether Docker exports OCI or legacy layers."""
+    total = 0
+    with tarfile.open(archive, 'r:gz') as tar:
+        for member in tar:
+            if not member.isfile():
+                continue
+            total += member.size
+            with tar.extractfile(member) as blob:
+                magic = blob.read(4)
+                if magic.startswith(b'\x1f\x8b'):
+                    blob.seek(0)
+                    with gzip.GzipFile(fileobj=blob) as expanded:
+                        while chunk := expanded.read(1024 * 1024):
+                            total += len(chunk)
+                elif magic == b'\x28\xb5\x2f\xfd':
+                    raise RuntimeError('Zstd layer sizing needs support before deployment')
+                elif member.name.endswith('/layer.tar'):
+                    # A containerd host also creates compressed blobs on legacy import.
+                    total += member.size
+    return total
+
+
 def export_release(metadata_path, destination=None):
     metadata = json.loads(metadata_path.read_text())
     revision = metadata['revision']
@@ -175,7 +199,7 @@ def export_release(metadata_path, destination=None):
     metadata['archive_bytes'] = archive.stat().st_size
     with archive.open('rb') as source:
         metadata['archive_sha256'] = hashlib.file_digest(source, 'sha256').hexdigest()
-    metadata['images_bytes'] = sum(int(value) for value in command(['docker', 'image', 'inspect', '--format', '{{.Size}}', *images], capture=True).splitlines())
+    metadata['images_bytes'] = image_storage_bytes(archive)
     metadata_path.write_text(json.dumps(metadata, indent=2))
     if destination:
         destination.mkdir(parents=True, exist_ok=True)
