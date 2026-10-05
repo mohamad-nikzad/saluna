@@ -56,10 +56,17 @@ jobs:
         run: |
           set -euo pipefail
           sha="$(git rev-parse HEAD)"
-          curl --fail --silent --show-error \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${sha}&status=success&per_page=1" \
-            | python3 -c 'import json,sys; assert json.load(sys.stdin)["total_count"] > 0, "Selected revision needs successful CI"'
+          ci_ready=false
+          for attempt in {1..30}; do
+            readiness="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${sha}&per_page=1" \
+              | python3 -c 'import json,sys; runs=json.load(sys.stdin)["workflow_runs"]; r=runs[0] if runs else {}; print("ready" if r.get("conclusion")=="success" else "failed" if r.get("status")=="completed" else "pending")')"
+            if [[ "$readiness" == ready ]]; then ci_ready=true; break; fi
+            if [[ "$readiness" == failed ]]; then echo 'Selected revision failed CI'; exit 1; fi
+            sleep 15
+          done
+          if [[ "$ci_ready" != true ]]; then echo 'Selected revision needs successful CI; retry after CI finishes'; exit 1; fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "branch=$QA_BRANCH" >> "$GITHUB_OUTPUT"
       - id: plan
