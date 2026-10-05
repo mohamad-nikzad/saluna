@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-02 (SEO audit implementation and confirmed test Salon exclusions recorded)
+Last organized: 2026-10-05 (staff login clarity and Appointment permissions/privacy tasks added)
 
 ## Now
 
@@ -8,6 +8,8 @@ No active backlog items.
 
 ## Ready
 
+- [BL-0091 Let staff update assigned Appointment status while protecting Client details](ready/BL-0091-staff-appointment-status-and-client-privacy.md)
+- [BL-0090 Make first-time staff login clear](ready/BL-0090-make-first-time-staff-login-clear.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)

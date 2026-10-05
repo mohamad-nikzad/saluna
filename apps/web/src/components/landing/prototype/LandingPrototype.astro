@@ -1,9 +1,9 @@
 ---
 // Approved landing direction.
 import { brand } from '@repo/brand'
+import { displayClass, faqItems, trialDescription } from '@/content/landing'
 import Footer from '@/components/landing/Footer.astro'
 import { featurePages } from '@/content/features'
-import { displayClass, faqItems } from '@/content/landing'
 import PrototypeProductCapture from './PrototypeProductCapture.astro'
 
 interface Props {
@@ -44,7 +44,7 @@ const featureSections = [
   {
     id: 'calendar',
     eyebrow: 'تقویم سالن',
-    title: 'برنامه سالن همیشه جلوی چشم شماست',
+    title: 'نوبت‌دهی سالن با تقویم روزانه، هفتگی و ماهانه',
     description:
       'نمای روز، هفته یا ماه را انتخاب کنید، برنامه کامل سالن را ببینید و پیش از ثبت یا تغییر نوبت، ساعت کاری، تداخل‌ها و خدمات قابل انجام هر فرد را بررسی کنید. هر عضو تیم نیز به برنامه خودش دسترسی دارد.',
     items: [
@@ -56,7 +56,7 @@ const featureSections = [
   {
     id: 'clients',
     eyebrow: 'مشتریان',
-    title: 'مشتری‌ها فقط یک شماره تلفن نیستند',
+    title: 'پرونده مشتریان و پیگیری مراجعه دوباره',
     description:
       'اطلاعات تماس، یادداشت‌ها، برچسب‌ها و سابقه مراجعه هر مشتری را یک‌جا نگه دارید؛ مشتریانی را که نیاز به پیگیری دارند بشناسید و ارتباط شخصی‌تری با آن‌ها داشته باشید.',
     items: [
@@ -70,7 +70,7 @@ const featureSections = [
   {
     id: 'staff',
     eyebrow: 'تیم سالن',
-    title: 'هر عضو تیم، برنامه و دسترسی خودش را دارد',
+    title: 'برنامه کاری و دسترسی شخصی پرسنل',
     description:
       'خدمات قابل انجام و ساعت کاری هر فرد را مشخص کنید و برای او دسترسی شخصی بسازید. با ثبت نوبت جدید، سالونا به‌صورت خودکار به فرد مربوط اعلان می‌فرستد. مدیر برنامه کامل سالن را می‌بیند و هر فرد به برنامه خودش دسترسی دارد.',
     items: [
@@ -83,7 +83,7 @@ const featureSections = [
   {
     id: 'services',
     eyebrow: 'خدمات و پکیج‌ها',
-    title: 'خدمات مشخص‌تر، نوبت‌های دقیق‌تر',
+    title: 'قیمت، مدت زمان و پکیج‌های خدمات سالن',
     description:
       'خدمات سالن را دسته‌بندی کنید و برای هرکدام قیمت، مدت زمان، پرسنل قابل انتخاب و افزودنی‌های مرتبط را مشخص کنید. برای خدمات چندمرحله‌ای نیز می‌توانید پکیج بسازید و هر مرحله را با زمان و فرد مناسب برنامه‌ریزی کنید.',
     items: [
@@ -96,7 +96,7 @@ const featureSections = [
   {
     id: 'public-page',
     eyebrow: 'صفحه آنلاین سالن',
-    title: 'خدماتتان را آنلاین نشان دهید؛ درخواست‌ها را منظم دریافت کنید',
+    title: 'دریافت درخواست نوبت آنلاین از صفحه سالن',
     description:
       'صفحه سالن را با خدمات، اطلاعات تماس، آدرس، نقشه و شبکه‌های اجتماعی کامل کنید و لینک آن را با مشتریان به اشتراک بگذارید. مشتری خدمات و زمان‌های قابل درخواست را می‌بیند و بدون تماس، درخواست نوبت ثبت می‌کند.',
     items: [
@@ -110,15 +110,15 @@ const featureSections = [
   {
     id: 'reports',
     eyebrow: 'داشبورد و گزارش‌ها',
-    title: 'فقط نوبت‌ها را ثبت نکنید؛ عملکرد سالن را هم ببینید',
+    title: 'محاسبه پورسانت پرسنل و گزارش مبلغ نوبت‌ها',
     description:
-      'تعداد و وضعیت نوبت‌ها، مشتریان جدید، خدمات پرطرفدار و حجم کاری هر فرد را در داشبورد دنبال کنید و ارزش نوبت‌های انجام‌شده را برای هر دوره ببینید.',
+      'برای هر فرد درصد کمیسیون تعیین کنید و در صورت نیاز، برای خدمات مشخص درصد متفاوت بگذارید. گزارش نوبت‌های انجام‌شده، کمیسیون پرسنل و مبلغ باقی‌مانده سالن را در بازه دلخواه ببینید. این گزارش مبلغ نوبت‌ها را نشان می‌دهد، نه سود خالص یا مبلغ وصول‌شده.',
     items: [
-      'آمار نوبت‌های روز، هفته و ماه',
-      'خدمات پرطرفدار',
-      'حجم کاری پرسنل',
-      'ارزش نوبت‌های انجام‌شده',
-      'گزارش کمیسیون و مبلغ باقی‌مانده سالن، در صورت استفاده',
+      'درصد پیش‌فرض کمیسیون برای هر فرد',
+      'درصد متفاوت برای خدمات مشخص',
+      'گزارش روزانه، هفتگی، ماهانه و بازه دلخواه',
+      'مبلغ نوبت‌ها، کمیسیون و سهم باقی‌مانده سالن',
+      'استفاده اختیاری از بخش کمیسیون',
     ],
   },
 ] as const
@@ -171,7 +171,10 @@ const setupHighlights = [
           {brandFa}
         </span>
       </a>
-      <nav class="hidden items-center gap-7 text-sm text-[#6b4955] md:flex">
+      <nav
+        aria-label="بخش‌های معرفی سالونا"
+        class="hidden items-center gap-7 text-sm text-[#6b4955] md:flex"
+      >
         <a href="#d-flow">نحوه کار</a>
         <a href="#d-features">امکانات</a>
         <a href="#d-setup">شروع کار</a>
@@ -193,20 +196,20 @@ const setupHighlights = [
         <p
           class="inline-flex rounded-full border border-[#e9b4c2] bg-white/75 px-4 py-1.5 text-xs font-bold text-[#7a2a40] backdrop-blur"
         >
-          نرم‌افزار مدیریت سالن زیبایی و نوبت‌دهی سالونا
+          سالونا، برای مدیران سالن و آرایشگاه
         </p>
         <h1
-          class={`${displayClass} mt-6 text-5xl leading-[1.15] text-[#4a1e2e] sm:text-7xl`}
+          class={`${displayClass} mt-6 text-5xl leading-[1.25] text-[#4a1e2e] sm:text-6xl`}
         >
-          هماهنگی کمتر؛
-          <span class="block text-[#9b2f4a]">مدیریت منظم‌تر</span>
+          نرم‌افزار مدیریت
+          <span class="block">سالن زیبایی</span>
         </h1>
         <p
           class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#6b4955] lg:mx-0 sm:text-lg"
         >
-          نوبت‌ها، برنامه پرسنل، مشتریان و درخواست‌های جدید را یک‌جا مدیریت کنید
-          و به مشتریان اجازه دهید خدمات را آنلاین ببینند و درخواست نوبت ثبت
-          کنند.
+          نوبت‌های سالن، پرونده مشتریان و برنامه پرسنل را یک‌جا مدیریت کنید.
+          درخواست نوبت آنلاین بگیرید و پورسانت هر فرد را بر اساس خدمات انجام‌شده
+          محاسبه کنید.
         </p>
         <div
           class="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
@@ -215,7 +218,7 @@ const setupHighlights = [
             href={signupHref}
             class="rounded-md bg-[#c3425b] px-7 py-3 text-center font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,.28)]"
           >
-            رایگان شروع کنید
+            شروع رایگان نسخه آزمایشی
           </a>
           <a
             href="#d-flow"
@@ -224,6 +227,9 @@ const setupHighlights = [
             دیدن نحوه کار
           </a>
         </div>
+        <p class="mt-4 text-sm leading-7 text-[#6b4955]">
+          قابل استفاده روی موبایل و کامپیوتر، با تقویم شمسی و رابط فارسی
+        </p>
       </div>
       <div class="relative mx-auto w-full max-w-xl">
         <div
@@ -234,6 +240,7 @@ const setupHighlights = [
           src="/landing/prototype/calendar-mobile.jpg"
           loading="eager"
           alt="تقویم روزانه سالونا با نوبت‌های ثبت‌شده"
+          caption="نمای واقعی تقویم سالونا با نوبت‌ها و برنامه پرسنل"
         />
       </div>
     </div>
@@ -243,7 +250,7 @@ const setupHighlights = [
     <div class="mx-auto max-w-7xl">
       <div class="mx-auto max-w-3xl text-center">
         <h2 class={`${displayClass} text-4xl leading-tight sm:text-6xl`}>
-          هیچ درخواست نوبتی میان پیام‌ها گم نمی‌شود
+          نوبت‌دهی آنلاین آرایشگاه، با تأیید شما
         </h2>
         <p class="mt-4 text-base font-extrabold text-[#9b3348]">
           از درخواست تا نوبت، در یک مسیر مشخص
@@ -300,7 +307,16 @@ const setupHighlights = [
 
   <section id="d-features" class="px-5 py-20 sm:px-8 sm:py-24">
     <div class="mx-auto max-w-7xl">
-      <div class="grid gap-5 lg:grid-cols-2">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class={`${displayClass} text-4xl leading-tight sm:text-6xl`}>
+          امکانات سالونا برای مدیریت روزانه سالن
+        </h2>
+        <p class="mt-4 text-base leading-8 text-[#6b4955]">
+          از ثبت اولین نوبت تا بررسی کمیسیون پرسنل، اطلاعات مورد نیاز مدیر سالن
+          در یک نرم‌افزار فارسی در دسترس است.
+        </p>
+      </div>
+      <div class="mt-12 grid gap-5 lg:grid-cols-2">
         {
           featureSections.map((section, index) => (
             <article
@@ -346,10 +362,12 @@ const setupHighlights = [
         <PrototypeProductCapture
           src="/landing/prototype/today-mobile.jpg"
           alt="صفحه امروز سالونا با خلاصه نوبت‌ها و درخواست‌ها"
+          caption="صفحه امروز برای رسیدگی به نوبت‌ها و درخواست‌های جدید"
         />
         <PrototypeProductCapture
           src="/landing/prototype/dashboard-mobile.jpg"
           alt="داشبورد سالونا با خلاصه ارزش نوبت‌ها و آمار سالن"
+          caption="داشبورد برای مرور وضعیت نوبت‌ها و مبلغ خدمات انجام‌شده"
         />
       </div>
     </div>
@@ -368,6 +386,12 @@ const setupHighlights = [
           از قالب‌های آماده خدمات استفاده کنید، اطلاعات مشتریان را گروهی وارد
           کنید و ساعت کاری، پرسنل و صفحه سالن را قدم‌به‌قدم آماده کنید.
         </p>
+        <a
+          href={signupHref}
+          class="mt-6 inline-flex rounded-md bg-[#c3425b] px-7 py-3 text-center font-bold text-white"
+        >
+          شروع رایگان نسخه آزمایشی
+        </a>
       </div>
       <ul class="grid gap-3 sm:grid-cols-2">
         {
@@ -391,15 +415,14 @@ const setupHighlights = [
           سالونا را با سالن واقعی خودتان امتحان کنید
         </h2>
         <p class="mt-3 text-sm leading-7 text-white/75">
-          استفاده از نسخه آزمایشی سالونا فعلاً رایگان است. پیش از شروع پلن‌های
-          پولی، به کاربران اطلاع‌رسانی می‌کنیم.
+          {trialDescription}
         </p>
       </div>
       <a
         href={signupHref}
         class="shrink-0 rounded-md bg-white px-8 py-3 font-bold text-[#9b2f4a]"
       >
-        ساخت رایگان سالن
+        شروع رایگان نسخه آزمایشی
       </a>
     </div>
   </section>
@@ -409,7 +432,7 @@ const setupHighlights = [
       <h2
         class={`${displayClass} text-center text-4xl leading-tight sm:text-6xl`}
       >
-        پیش از شروع، شاید این سؤال‌ها را داشته باشید
+        پرسش‌های رایج درباره نرم‌افزار سالونا
       </h2>
       <div
         class="mt-10 divide-y divide-[#f3d5dd] rounded-3xl border border-[#f3d5dd] bg-white/85 px-5 sm:px-7"
@@ -450,7 +473,7 @@ const setupHighlights = [
         <h2
           class={`${displayClass} text-4xl leading-tight text-[#4a1e2e] sm:text-6xl`}
         >
-          هماهنگی کمتر، مدیریت منظم‌تر؛ از همین امروز
+          اولین نوبت سالن را در سالونا ثبت کنید
         </h2>
         <p class="mt-5 text-base leading-8 text-[#6b4955]">
           سالن خود را در سالونا بسازید و نوبت‌ها، مشتریان، پرسنل و خدمات را در
@@ -460,7 +483,7 @@ const setupHighlights = [
           href={signupHref}
           class="mt-8 inline-flex rounded-md bg-[#c3425b] px-8 py-3 font-bold text-white shadow-[0_18px_40px_rgba(124,28,48,.32)]"
         >
-          ساخت رایگان سالن
+          شروع رایگان نسخه آزمایشی
         </a>
         <p class="mt-5 text-sm text-[#6b4955]">
           قبلاً ثبت‌نام کرده‌اید؟
@@ -478,5 +501,12 @@ const setupHighlights = [
       </div>
     </div>
   </section>
-  <Footer />
 </main>
+<Footer />
+
+<style>
+  main :is(a, summary):focus-visible {
+    outline: 3px solid #7a2a40;
+    outline-offset: 5px;
+  }
+</style>

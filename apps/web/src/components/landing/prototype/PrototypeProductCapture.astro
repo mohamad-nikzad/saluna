@@ -2,10 +2,11 @@
 interface Props {
   src: string
   alt: string
+  caption?: string
   loading?: 'eager' | 'lazy'
 }
 
-const { src, alt, loading = 'lazy' } = Astro.props
+const { src, alt, caption, loading = 'lazy' } = Astro.props
 ---
 
 <figure class="mx-auto w-full max-w-[22rem]">
@@ -22,9 +23,17 @@ const { src, alt, loading = 'lazy' } = Astro.props
         width="390"
         height="844"
         loading={loading}
+        fetchpriority={loading === 'eager' ? 'high' : undefined}
         decoding="async"
         class="block h-auto w-full max-w-full object-cover object-center"
       />
     </div>
   </div>
+  {
+    caption && (
+      <figcaption class="mt-5 text-center text-sm leading-7 text-[#6b4955]">
+        {caption}
+      </figcaption>
+    )
+  }
 </figure>
