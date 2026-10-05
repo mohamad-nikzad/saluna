@@ -57,6 +57,14 @@ class PipelineSafetyTests(unittest.TestCase):
                 _, plan = pipeline.plan_for(head, repo)
             self.assertTrue(plan['required'])
             self.assertIn('apps/api/appointments.ts', plan['changed_files'])
+            # A validation installation is not a completed main report.
+            (root / 'state/last-tested.json').rename(root / 'state/deployment.json')
+            with patch.object(pipeline, 'ROOT', root):
+                pipeline.plan_for(head, repo)
+                (root / 'state/deployment.json').write_text(json.dumps({'source_commit': head}))
+                baseline, still_pending = pipeline.plan_for(head, repo)
+            self.assertEqual(baseline, base)
+            self.assertTrue(still_pending['required'])
 
     def test_disk_reserve_includes_expanded_images(self):
         metadata = {'archive_bytes': 1000, 'images_bytes': 100000}

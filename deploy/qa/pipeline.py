@@ -67,7 +67,16 @@ def preflight(metadata, downloaded=False):
 def plan_for(head, repository):
     baseline_path = ROOT / 'state/last-tested.json'
     if not baseline_path.exists():
-        baseline_path = ROOT / 'state/deployment.json'
+        baseline_path = ROOT / 'state/initial-baseline.json'
+        if not baseline_path.exists():
+            # Installing a validation/blocked release must not move the baseline
+            # before the first completed main report exists.
+            initial = json.loads((ROOT / 'state/deployment.json').read_text()).get('source_commit')
+            if not re.fullmatch(r'[a-f0-9]{40}', initial or ''):
+                raise RuntimeError('A verified baseline commit is required')
+            temporary = baseline_path.with_suffix('.tmp')
+            temporary.write_text(json.dumps({'source_commit': initial}))
+            temporary.replace(baseline_path)
     base = json.loads(baseline_path.read_text()).get('source_commit')
     if not base or not re.fullmatch(r'[a-f0-9]{40}', base):
         raise RuntimeError('A verified baseline commit is required')
