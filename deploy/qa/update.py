@@ -167,7 +167,8 @@ def export_release(metadata_path, destination=None):
     if not archive.exists():
         with archive.open('wb') as output:
             save = subprocess.Popen(['docker', 'save', '--platform', 'linux/amd64', *images], stdout=subprocess.PIPE)
-            compress = subprocess.Popen(['gzip', '-1'], stdin=save.stdout, stdout=output)
+            # Compression happens off the VPS; smaller transfers preserve its reserve.
+            compress = subprocess.Popen(['gzip', '-9'], stdin=save.stdout, stdout=output)
             save.stdout.close()
             if compress.wait() or save.wait():
                 raise RuntimeError('Image export failed')

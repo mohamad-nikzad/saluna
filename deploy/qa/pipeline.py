@@ -35,13 +35,33 @@ def load_metadata(directory):
     return paths[0], data
 
 
+def retire_images():
+    """Remove only unreferenced QA release tags, preserving the installed release."""
+    if controller('status')['state'] != 'asleep':
+        return
+    protected = {control.deployment().get('revision')}
+    env = (ROOT / '.env.qa.local').read_text()
+    protected.update(line.split('=', 1)[1] for line in env.splitlines() if line.startswith('QA_REVISION='))
+    references = set(control.command(['docker', 'ps', '-aq']).splitlines())
+    used_images = set()
+    if references:
+        used_images.update(control.command(['docker', 'inspect', '--format', '{{.Image}}', *sorted(references)]).splitlines())
+    images = control.command(['docker', 'image', 'ls', '--no-trunc', '--format', '{{.Repository}}:{{.Tag}} {{.ID}}', 'saluna-qa-*'])
+    for line in images.splitlines():
+        tag, image_id = line.split()
+        match = re.fullmatch(r'saluna-qa-(?:api|tools|pwa|web):(qa-[a-f0-9]{8}-[a-f0-9]{12}|[a-f0-9]{8})', tag)
+        if match and match[1] not in protected and image_id not in used_images:
+            # No force or global prune: Docker also refuses removal of a used image.
+            control.command(['nice', '-n', '19', 'ionice', '-c', '3', 'docker', 'image', 'rm', tag], timeout=60)
+
+
 def preflight(metadata, downloaded=False):
     reason = control.pressure_reason(control.headroom(), starting=True)
     if reason or not control.production_healthy():
         raise RuntimeError(reason or 'production_unhealthy')
     # Reserve both downloaded zip/extracted archive, image expansion, and 5 GiB.
     if shutil.disk_usage(ROOT).free < metadata['archive_bytes'] * (1 if downloaded else 2) + metadata['images_bytes'] + 5 * 1024**3:
-        raise RuntimeError('insufficient_disk_for_release')
+        raise RuntimeError('insufficient_disk_for_release; keep the 5 GiB reserve and retry after QA cleanup')
 
 
 def plan_for(head, repository):
@@ -147,6 +167,7 @@ if __name__ == '__main__':
         (args.directory / 'plan.json').write_text(json.dumps({'baseline_commit': base, 'source_commit': args.head, **plan}, ensure_ascii=False, indent=2))
         print('required=' + str(plan['required']).lower())
     elif args.action == 'preflight':
+        retire_images()
         preflight(load_metadata(args.directory)[1])
     else:
         if not args.repository or not re.fullmatch(r'[0-9]+', args.run_number or '') or not re.fullmatch(r'[0-9]+', args.attempt or ''):

@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - 'deploy/qa/**'
+      - '!deploy/qa/**/*.md'
       - 'scripts/qa-seed.ts'
       - '.github/workflows/qa-main.yml'
   workflow_dispatch:

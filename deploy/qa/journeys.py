@@ -4,7 +4,7 @@ import json
 import subprocess
 
 JOURNEYS = {
-    'appointment': ['Customer creates AppointmentRequest', 'Owner approves and assigns Staff Profile', 'Assigned Staff sees Appointment', 'Exercise allowed status changes and forbidden writes', 'Owner checks status history', 'Cancel only this run’s Appointment'],
+    'appointment': ['Customer creates AppointmentRequest', 'Owner approves and assigns Staff Profile', 'Assigned Staff sees Appointment', 'Exercise allowed status changes and forbidden writes', 'Owner sees the updated Appointment state', 'Cancel only this run’s Appointment'],
     'client': ['Owner creates a synthetic Client', 'Check Client search, details and validation', 'Staff cannot read private Client contact or notes', 'Owner retains contact/history access'],
     'team': ['Owner inspects Staff Profile and assignment', 'Assigned and unassigned Staff access differs', 'Second Salon cannot access the record'],
     'catalog': ['Inspect ServiceCategory and ServiceVariant', 'Create run-owned ServiceVariant if needed', 'Use it in AppointmentRequest approval', 'Verify booked name, duration and price snapshot'],

@@ -10,6 +10,30 @@ import pipeline
 
 
 class PipelineSafetyTests(unittest.TestCase):
+    def test_retirement_preserves_installed_and_referenced_images(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            current = 'qa-aaaaaaaa-bbbbbbbbbbbb'
+            retired = 'qa-cccccccc-dddddddddddd'
+            (root / '.env.qa.local').write_text('QA_REVISION=' + current)
+            def output(args, timeout=30):
+                if args[:3] == ['docker', 'ps', '-aq']:
+                    return 'container-id\n'
+                if args[:2] == ['docker', 'inspect']:
+                    return 'sha256:used\n'
+                if args[:3] == ['docker', 'image', 'ls']:
+                    return f'saluna-qa-api:{current} sha256:current\nsaluna-qa-web:{retired} sha256:used\nsaluna-qa-tools:{retired} sha256:unused\nsaluna-qa-control:1 sha256:control\nghcr.io/owner/saluna-api:old sha256:production\n'
+                return ''
+            with patch.object(pipeline, 'ROOT', root), patch.object(pipeline, 'controller', return_value={'state': 'asleep'}), patch.object(pipeline.control, 'deployment', return_value={'revision': current}), patch.object(pipeline.control, 'command', side_effect=output) as command:
+                pipeline.retire_images()
+            removals = [call.args[0] for call in command.call_args_list if 'rm' in call.args[0]]
+            self.assertEqual(removals, [['nice', '-n', '19', 'ionice', '-c', '3', 'docker', 'image', 'rm', 'saluna-qa-tools:' + retired]])
+
+    def test_retirement_stays_quiet_during_a_browser_lease(self):
+        with patch.object(pipeline, 'controller', return_value={'state': 'awake'}), patch.object(pipeline.control, 'command') as command:
+            pipeline.retire_images()
+        command.assert_not_called()
+
     def test_plan_includes_changes_before_a_later_documentation_push(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
