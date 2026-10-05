@@ -77,6 +77,73 @@ def save_state(data):
     temporary.replace(STATE)
 
 
+def read_document(name):
+    try:
+        return json.loads((STATE.parent / name).read_text())
+    except FileNotFoundError:
+        return None
+
+
+def save_document(name, data):
+    target = STATE.parent / name
+    temporary = target.with_suffix('.tmp')
+    temporary.write_text(json.dumps(data, ensure_ascii=False))
+    temporary.replace(target)
+
+
+def pending_job():
+    job = read_document('job.json')
+    report = read_document('report.json')
+    if not job or report and report.get('job_id') == job['id']:
+        return None
+    if job['revision'] != deployment().get('revision'):
+        raise ValueError('job_revision_not_installed')
+    claim = read_document('job-claim.json')
+    return {**job, 'state': 'claimed' if claim and claim.get('job_id') == job['id'] else 'ready'}
+
+
+def record_report(body):
+    with LOCK:
+        job = read_document('job.json')
+        claim = read_document('job-claim.json')
+        previous = read_document('report.json')
+        if previous and previous.get('job_id') == body.get('job_id'):
+            if previous.get('run_id') == body.get('run_id'):
+                return previous  # retry a lost acknowledgement without duplicating findings
+            raise ValueError('job_already_reported')
+        if not job or not claim or body.get('job_id') != job['id'] or claim.get('job_id') != job['id'] or body.get('run_id') != claim.get('run_id'):
+            raise ValueError('report_does_not_own_job')
+        if body.get('revision') != job['revision'] or deployment().get('revision') != job['revision']:
+            raise ValueError('report_revision_mismatch')
+        if read_state().get('state') != 'asleep':
+            raise ValueError('sleep_before_reporting')
+        outcome = body.get('outcome')
+        coverage = body.get('coverage')
+        if outcome not in ('pass', 'fail', 'blocked') or not isinstance(coverage, list) or len(coverage) > 30:
+            raise ValueError('invalid_report')
+        expected = {j['area'] for j in job['plan']['journeys']}
+        if any(not isinstance(c, dict) for c in coverage) or {c.get('area') for c in coverage} != expected or len(coverage) != len(expected) or any(c.get('status') not in ('pass', 'fail', 'blocked') or not isinstance(c.get('summary'), str) or len(c['summary']) > 2000 for c in coverage):
+            raise ValueError('report_missing_coverage')
+        blocked = bool(job['plan'].get('coverage_gaps')) or any(c['status'] == 'blocked' for c in coverage)
+        failed = any(c['status'] == 'fail' for c in coverage)
+        if outcome != ('blocked' if blocked else 'fail' if failed else 'pass'):
+            raise ValueError('report_outcome_disagrees_with_coverage')
+        issues = body.get('issues', [])
+        if not isinstance(issues, list) or len(issues) > 20 or any(not isinstance(url, str) or not re.fullmatch(r'https://github.com/mohamad-nikzad/saluna/issues/[0-9]+', url) for url in issues):
+            raise ValueError('invalid_issue_links')
+        report = {'job_id': job['id'], 'run_id': body['run_id'], 'revision': job['revision'], 'source_commit': job['source_commit'], 'outcome': outcome, 'coverage': coverage, 'issues': issues, 'reported_at': time.time()}
+        serialized = json.dumps(report)
+        env = dict(line.split('=', 1) for line in (ROOT / '.env.qa.local').read_text().splitlines() if '=' in line and not line.startswith('#'))
+        secrets = [TOKEN, *(value for key, value in env.items() if any(word in key for word in ('PASSWORD', 'SECRET', 'TOKEN')))]
+        if any(len(secret) >= 8 and secret in serialized for secret in secrets):
+            raise ValueError('report_contains_credential')
+        save_document('report.json', report)
+        save_document('report-' + job['id'] + '.json', report)
+        if not blocked and not job.get('source_dirty') and job.get('source_branch') == 'main':
+            save_document('last-tested.json', {'source_commit': job['source_commit'], 'job_id': job['id']})
+        return report
+
+
 def sleep(reason, run_id=None):
     global BOOT_PROCESS
     with LOCK:
@@ -99,7 +166,7 @@ def sleep(reason, run_id=None):
             raise
 
 
-def start(run_id):
+def start(run_id, job_id=None):
     with LOCK:
         session = read_state()
         if session.get('state') in ('starting', 'awake'):
@@ -110,11 +177,17 @@ def start(run_id):
             raise ValueError('qa_cleanup_required')
         if BOOT_PROCESS is not None:
             raise ValueError('startup_cleanup_in_progress')
+        if job_id:
+            job = pending_job()
+            if not job or job['id'] != job_id:
+                raise ValueError('job_not_pending')
         reason = pressure_reason(headroom(), starting=True)
         if reason or not production_healthy():
             raise ValueError(reason or 'production_unhealthy')
         session = {'state': 'starting', 'run_id': run_id, 'started_at': time.time(), 'deadline': time.time() + SESSION_SECONDS}
         save_state(session)
+        if job_id:
+            save_document('job-claim.json', {'job_id': job_id, 'run_id': run_id})
         threading.Thread(target=boot, args=(session,), daemon=True).start()
         return session
 
@@ -190,33 +263,37 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self.authorized():
             return
-        if self.path != '/_qa/status':
+        if self.path not in ('/_qa/status', '/_qa/job'):
             self.reply(404, {'error': 'not_found'})
             return
         try:
-            self.reply(200, {**read_state(), **deployment(), 'resources': headroom()})
+            self.reply(200, {'job': pending_job()} if self.path == '/_qa/job' else {**read_state(), **deployment(), 'resources': headroom()})
         except Exception:
             self.reply(503, {'error': 'monitor_unavailable'})
 
     def do_POST(self):
         if not self.authorized():
             return
-        if self.path not in ('/_qa/wake', '/_qa/sleep'):
+        if self.path not in ('/_qa/wake', '/_qa/sleep', '/_qa/report'):
             self.reply(404, {'error': 'not_found'})
             return
         try:
             length = int(self.headers.get('Content-Length', '0'))
-            if length < 0 or length > 2048:
+            if length < 0 or length > (65536 if self.path == '/_qa/report' else 2048):
                 raise ValueError('invalid_body_size')
             body = json.loads(self.rfile.read(length)) if length else {}
-            if self.path == '/_qa/sleep':
+            if not isinstance(body, dict):
+                raise ValueError('invalid_body')
+            if self.path == '/_qa/report':
+                self.reply(200, record_report(body))
+            elif self.path == '/_qa/sleep':
                 sleep('requested', body.get('run_id'))
                 self.reply(200, read_state())
             else:
                 run_id = body.get('run_id', '')
                 if not isinstance(run_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', run_id):
                     raise ValueError('invalid_run_id')
-                self.reply(202, start(run_id))
+                self.reply(202, start(run_id, body.get('job_id')))
         except ValueError as error:
             self.reply(409, {'error': str(error)})
         except Exception:

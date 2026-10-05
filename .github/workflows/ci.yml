@@ -47,6 +47,9 @@ jobs:
       - name: Unit tests
         run: pnpm test:unit
 
+      - name: QA controller, release and journey checks
+        run: python3 -m unittest discover -s deploy/qa -p '*_test.py'
+
       - name: Database integration tests
         run: pnpm --filter @repo/database test:integration
         env:

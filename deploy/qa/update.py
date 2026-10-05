@@ -112,6 +112,7 @@ def main():
     parser.add_argument('--ssh-key', type=Path, default=Path('/Users/mohamad/Projects/saluna/.codex/deploy/saluna_vps_ed25519'))
     parser.add_argument('--access-file', type=Path, default=CHECKOUT / '.codex/qa/qa-access.local.json')
     parser.add_argument('--build-only', action='store_true')
+    parser.add_argument('--export-dir', type=Path, help='Export images and metadata for the GitHub staging installer')
     args = parser.parse_args()
     if args.resume:
         deploy_release(args.resume.resolve(), args)
@@ -143,6 +144,8 @@ def main():
           '--build-arg', 'PUBLIC_APP_URL=https://staging.saluna.ir', '--build-arg', 'PUBLIC_API_URL=https://staging.saluna.ir',
           '--build-arg', 'PUBLIC_MANAGER_APP_URL=https://staging-app.saluna.ir')
     if args.build_only:
+        if args.export_dir:
+            export_release(metadata_path, args.export_dir)
         print('Build complete. Staging was not changed. Metadata:', metadata_path)
         return
     try:
@@ -153,7 +156,7 @@ def main():
         raise
 
 
-def deploy_release(metadata_path, args):
+def export_release(metadata_path, destination=None):
     metadata = json.loads(metadata_path.read_text())
     revision = metadata['revision']
     if not re.fullmatch(r'qa-[a-f0-9]{8}-[a-f0-9]{12}', revision):
@@ -168,14 +171,28 @@ def deploy_release(metadata_path, args):
             save.stdout.close()
             if compress.wait() or save.wait():
                 raise RuntimeError('Image export failed')
+    metadata['archive_bytes'] = archive.stat().st_size
+    with archive.open('rb') as source:
+        metadata['archive_sha256'] = hashlib.file_digest(source, 'sha256').hexdigest()
+    metadata['images_bytes'] = sum(int(value) for value in command(['docker', 'image', 'inspect', '--format', '{{.Size}}', *images], capture=True).splitlines())
+    metadata_path.write_text(json.dumps(metadata, indent=2))
+    if destination:
+        destination.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(archive, destination / archive.name)
+        shutil.copy2(metadata_path, destination / metadata_path.name)
+    return archive, metadata
+
+
+def deploy_release(metadata_path, args):
+    archive, metadata = export_release(metadata_path)
+    revision = metadata['revision']
     ssh = ['ssh', '-i', str(args.ssh_key), '-o', 'BatchMode=yes', 'deploy@195.177.255.24']
     scp = ['scp', '-l', '12000', '-i', str(args.ssh_key)]
     if interface := os.environ.get('SALUNA_QA_NETWORK_INTERFACE'):
         ssh[1:1] = ['-o', 'BindInterface=' + interface, '-o', 'ConnectTimeout=15']
         scp[1:1] = ['-o', 'BindInterface=' + interface, '-o', 'ConnectTimeout=15']
     free_disk = int(command(ssh + ["python3 -c \"import shutil; print(shutil.disk_usage('/opt/saluna/qa').free)\""], capture=True).strip())
-    image_sizes = command(['docker', 'image', 'inspect', '--format', '{{.Size}}', *images], capture=True)
-    required_disk = archive.stat().st_size + sum(int(value) for value in image_sizes.splitlines()) + 5 * 1024**3
+    required_disk = archive.stat().st_size + metadata['images_bytes'] + 5 * 1024**3
     if free_disk < required_disk:
         raise RuntimeError('Not enough VPS disk for this release while retaining the 5 GiB reserve')
     remote_hash = command(ssh + ["nice -n 19 ionice -c 3 python3 -c \"import hashlib,pathlib; p=pathlib.Path('/opt/saluna/qa/" + revision + ".tar.gz'); print(hashlib.file_digest(p.open('rb'),'sha256').hexdigest() if p.exists() else '')\""], capture=True).strip()

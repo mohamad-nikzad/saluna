@@ -35,6 +35,14 @@ Verify staff identity through `/api/v1/auth/me` before privacy checks. Inspect C
 
 ## Updating staging
 
+Relevant pushes to `main` now use `.github/workflows/qa-main.yml` after successful CI. A short job on the existing deployment runner compares the selected SHA with the last fully tested commit. Documentation-only changes do not build or wake staging. GitHub's hosted runner builds staging images; the VPS runner checks health/disk reserves, transfers at 12 Mbps, waits for an active QA lease to finish, installs/migrates only QA, runs the synthetic API smoke, sleeps and publishes a job. It shares the existing deployment runner, so deployment jobs are serialized. No SSH key or QA password is added to GitHub secrets.
+
+Grok's native GitHub `ci-passed` listener on `main` reads the authenticated `/_qa/job` endpoint. No job means quiet exit. A job supplies the exact revision, source SHA, changed files and affected journeys. QA Lead tests those journeys and touched screens for mobile/desktop layout, RTL and Persian UX, reproduces defects, files or updates confirmed GitHub issues with `needs-triage`, and sends subjective suggestions/results through Growth Lead to Slack. See `BOT_PROTOCOL.md` for the report schema and reporting rules. GitHub findings enter the reporting inbox; implementation work remains in the primary local backlog.
+
+The controller accepts a job report only for its claimed job/revision after verified sleep and explicit coverage of every selected area. Blocked coverage does not advance the baseline. Waiting GitHub releases may be coalesced, but subsequent plans include every change since the last completed QA report. No nightly QA or QA polling schedule is enabled. Slack on-demand requests remain available. Admin has no QA deployment and is reported uncovered; external delivery and pixel comparisons against approved screenshot baselines are also untested. Changes to the QA infrastructure also receive a same-repository PR validation run; this does not advance the main test baseline.
+
+The following workstation updater remains available for explicit branch/commit or uncommitted-work testing:
+
 Use the updater from the workstation to stage a committed `main` revision, then send the exact Slack command it prints:
 
 ```sh
@@ -55,7 +63,7 @@ RUN QA REV <revision printed by the updater> FOCUS staff appointment status and 
 
 `RUN QA <focus>` tests the currently deployed staging revision. QA Lead checks the actual controller revision and reports it with the result. An explicit revision mismatch stops the test and requests a staging update. Growth Lead accepts only the configured owner and deduplicates Slack messages. The existing connector polls every 15 minutes, so on-demand dispatch can take up to that long. Directly messaging QA Lead also works. Tests wake staging for their bounded session and sleep it afterward.
 
-Build Linux amd64 images on the workstation, then transfer runtime images. Do not build on the VPS. Initial image tags identify base revision `ec2c4641`, with the QA configuration and private SSR API routing changes in this checkout. Updates are deliberate and do not follow production deploys automatically.
+Build Linux amd64 images on the workstation or GitHub hosted runner, then transfer runtime images. Do not build on the VPS. Initial image tags identify base revision `ec2c4641`, with the QA configuration and private SSR API routing changes in this checkout. Production deployments remain separate; their images contain production URLs and must not be reused as staging browser images.
 
 ```sh
 docker build --platform linux/amd64 --target build -f apps/api/Dockerfile -t saluna-qa-api-build:ec2c4641 .
@@ -93,4 +101,4 @@ docker compose --env-file deploy/qa/.env.qa.local -f deploy/qa/compose.yaml conf
 docker compose --env-file deploy/qa/.env.qa.local -f deploy/qa/control.compose.yaml config -q
 ```
 
-Deployment verification should cover private access, seed account login, the public salon page, same-origin browser API requests, wake/status/sleep, stopped QA containers after sleep, and unchanged healthy production containers. The current main working-tree snapshot, `qa-ec2c4641-0693b69c9af4`, passed the focused API smoke and a cloud browser journey for Customer request, Owner approval/assignment, and Staff no-show and Client privacy. Cleanup cancelled the run's Appointment and staging was independently verified asleep. See `VALIDATION.md` for scope and evidence. Nightly QA is enabled at 02:00 Asia/Tehran; its first unattended run is pending. The existing Slack poll accepts on-demand QA every 15 minutes. The 18:00 build-check routine stays paused because staging updates are manual.
+Deployment verification should cover private access, seed account login, the public salon page, same-origin browser API requests, wake/status/sleep, stopped QA containers after sleep, and unchanged healthy production containers. The initial main working-tree snapshot, `qa-ec2c4641-0693b69c9af4`, passed the focused API smoke and a cloud browser journey for Customer request, Owner approval/assignment, and Staff no-show and Client privacy. Cleanup cancelled the run's Appointment and staging was independently verified asleep. See `VALIDATION.md` for scope and subsequent checks. Nightly QA and the 18:00 build check are paused. The existing Slack poll accepts on-demand QA every 15 minutes; GitHub events dispatch change-driven jobs.

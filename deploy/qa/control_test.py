@@ -14,10 +14,14 @@ class ControlSafetyTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.state = patch.object(control, 'STATE', Path(self.tmp.name) / 'session.json')
         self.state.start()
+        self.root = patch.object(control, 'ROOT', Path(self.tmp.name))
+        self.root.start()
+        (Path(self.tmp.name) / '.env.qa.local').write_text('QA_SEED_PASSWORD=private-test-password\n')
         self.resources = {'available_memory_mb': 2400, 'free_disk_mb': 9000, 'load_1m': 0.2, 'cpu_count': 2}
 
     def tearDown(self):
         self.state.stop()
+        self.root.stop()
         self.tmp.cleanup()
 
     def test_refuses_start_when_production_needs_memory(self):
@@ -81,6 +85,61 @@ class ControlSafetyTests(unittest.TestCase):
             self.assertEqual(control.command(control.COMPOSE + ['up', '-d']), 'ok')
         self.assertNotIn('QA_REVISION', run.call_args.kwargs['env'])
         self.assertEqual(run.call_args.kwargs['env']['PATH'], '/bin')
+
+    def job(self):
+        control.save_document('job.json', {'id': 'gh-123-1', 'revision': 'qa-test', 'source_commit': 'a' * 40, 'source_branch': 'main', 'source_dirty': False, 'plan': {'journeys': [{'area': 'appointment'}], 'coverage_gaps': []}})
+        control.save_document('job-claim.json', {'job_id': 'gh-123-1', 'run_id': 'browser-1'})
+        return {'job_id': 'gh-123-1', 'run_id': 'browser-1', 'revision': 'qa-test', 'outcome': 'pass', 'coverage': [{'area': 'appointment', 'status': 'pass', 'summary': 'Own request approved and cleaned up'}], 'issues': []}
+
+    def test_job_wake_refuses_wrong_installed_revision(self):
+        self.job()
+        with patch.object(control, 'deployment', return_value={'revision': 'other'}), patch.object(control, 'command') as command:
+            with self.assertRaisesRegex(ValueError, 'job_revision_not_installed'):
+                control.start('browser-2', 'gh-123-1')
+            command.assert_not_called()
+
+    def test_report_requires_owned_job_and_verified_sleep(self):
+        report = self.job()
+        with patch.object(control, 'deployment', return_value={'revision': 'qa-test'}):
+            with self.assertRaisesRegex(ValueError, 'report_does_not_own_job'):
+                control.record_report({**report, 'run_id': 'other'})
+            control.save_state({'state': 'awake'})
+            with self.assertRaisesRegex(ValueError, 'sleep_before_reporting'):
+                control.record_report(report)
+
+    def test_successful_report_acknowledges_once_and_advances_baseline(self):
+        report = self.job()
+        with patch.object(control, 'deployment', return_value={'revision': 'qa-test'}):
+            first = control.record_report(report)
+            self.assertEqual(control.record_report(report), first)
+            self.assertIsNone(control.pending_job())
+        self.assertEqual(control.read_document('last-tested.json')['source_commit'], 'a' * 40)
+
+    def test_partial_or_credential_report_cannot_claim_success(self):
+        report = self.job()
+        with patch.object(control, 'deployment', return_value={'revision': 'qa-test'}):
+            with self.assertRaisesRegex(ValueError, 'report_missing_coverage'):
+                control.record_report({**report, 'coverage': []})
+            with self.assertRaisesRegex(ValueError, 'report_contains_credential'):
+                control.record_report({**report, 'coverage': [{'area': 'appointment', 'status': 'pass', 'summary': 'private-test-password'}]})
+        self.assertIsNone(control.read_document('last-tested.json'))
+
+    def test_blocked_report_does_not_lose_untested_changes(self):
+        report = self.job()
+        report['outcome'] = 'blocked'
+        report['coverage'][0]['status'] = 'blocked'
+        with patch.object(control, 'deployment', return_value={'revision': 'qa-test'}):
+            control.record_report(report)
+        self.assertIsNone(control.read_document('last-tested.json'))
+
+    def test_validation_branch_does_not_advance_main_baseline(self):
+        report = self.job()
+        job = control.read_document('job.json')
+        job['source_branch'] = 'codex/qa-validation'
+        control.save_document('job.json', job)
+        with patch.object(control, 'deployment', return_value={'revision': 'qa-test'}):
+            control.record_report(report)
+        self.assertIsNone(control.read_document('last-tested.json'))
 
 
 if __name__ == '__main__':

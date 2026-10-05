@@ -16,10 +16,11 @@ import uuid
 from pathlib import Path
 from network import opener
 
-access = json.loads(Path('.codex/qa/qa-access.local.json').read_text())
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--staff-privacy', action='store_true')
+parser.add_argument('--access-file', type=Path, default=Path('.codex/qa/qa-access.local.json'))
 args = parser.parse_args()
+access = json.loads(args.access_file.read_text())
 ROOT = 'https://staging-app.saluna.ir'
 basic = base64.b64encode(f"{access['gateway_username']}:{access['gateway_password']}".encode()).decode()
 headers = {'Authorization': 'Basic ' + basic, 'Content-Type': 'application/json', 'Origin': ROOT}

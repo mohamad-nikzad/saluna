@@ -19,7 +19,7 @@ server {
     auth_basic off;
     return 200 "User-agent: *\nDisallow: /\n";
   }
-  location ~ ^/_qa/(status|wake|sleep)$ {
+  location ~ ^/_qa/(status|job|wake|sleep|report)$ {
     set $qa_control http://saluna-qa-control-control-1:8086;
     proxy_pass $qa_control;
     proxy_set_header Host $host;
