@@ -1,6 +1,6 @@
 # Triage labels
 
-Use the same five labels in local backlog items and GitHub Issues.
+Use these five values in local backlog frontmatter's `triage` field.
 
 | Label             | Meaning                                      | Typical local stage |
 | ----------------- | -------------------------------------------- | ------------------- |

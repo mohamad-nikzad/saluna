@@ -169,6 +169,6 @@ Do not judge the work solely by favicon appearance or a broad keyword's first-pa
 | Currency serialization and visible formatting | `apps/web/src/lib/seo.ts`, `apps/web/src/lib/format.ts` |
 | Duplicate salon shell | `apps/web/src/components/SalonShell.astro`, `apps/web/src/pages/salons/[slug]/index.astro` |
 | Sitemap/slash/domain behavior | `apps/web/astro.config.mjs`, `apps/web/src/pages/salons-sitemap.xml.ts`, `deploy/nginx/templates/saluna.conf.template` |
-| Product/commercial boundaries | `CONTEXT.md`, `docs/adr/0019-salon-funded-saas.md`, `docs/adr/0035-read-only-salons-keep-public-presence-without-intake.md`, `docs/adr/0040-emdash-for-public-content.md` |
+| Product/commercial boundaries | `GLOSSARY.md`, `docs/adr/0019-salon-funded-saas.md`, `docs/adr/0035-read-only-salons-keep-public-presence-without-intake.md`, `docs/adr/0040-emdash-for-public-content.md` |
 
 Production behavior and its saved evidence take precedence over assumptions from source files.

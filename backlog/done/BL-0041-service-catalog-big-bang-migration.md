@@ -27,7 +27,7 @@ Ship one coordinated cutover that keeps existing appointments, appointment reque
 - [x] Manager-only package scheduling creates a package booking header and normal task Appointment rows transactionally, validating staff capability, working hours, and conflicts before writing anything.
 - [x] Public booking remains single-service only; package tasks do not support add-ons in v1.
 - [x] CatalogPresets import categories and services only; packages are not imported in this pass.
-- [x] OpenAPI, HeyAPI client, Drizzle migration metadata, `CONTEXT.md`, and a superseding ADR are updated.
+- [x] OpenAPI, HeyAPI client, Drizzle migration metadata, `GLOSSARY.md`, and a superseding ADR are updated.
 - [x] Verification passes: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, `pnpm test`, plus targeted PWA/admin visual checks.
 
 ## Child Implementation Slices

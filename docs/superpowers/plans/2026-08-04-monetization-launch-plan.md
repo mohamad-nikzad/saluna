@@ -313,7 +313,7 @@ Rules:
 
 ### Domain language
 
-Use the accepted definitions in `CONTEXT.md` and ADR-0019 through ADR-0037.
+Use the accepted definitions in `GLOSSARY.md` and ADR-0019 through ADR-0037.
 Implementation must not introduce alternate meanings for Trial, Salon
 Subscription, Unlimited Access, Staff Profile Limit, SMS Credit, SMS Allowance,
 SMS Credit Bundle, SMS Credit Grant, Verified Payment, Grace Period, or
@@ -705,7 +705,7 @@ this package.
 
 Changes:
 
-- Add the resolved subscription terms to `CONTEXT.md`, not to unrelated
+- Add the resolved subscription terms to `GLOSSARY.md`, not to unrelated
   appointment types.
 - Reuse existing date, Persian-digit, money, and validation helpers where they
   already fit.

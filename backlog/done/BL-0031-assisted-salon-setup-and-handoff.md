@@ -132,5 +132,5 @@ The public salon page remains disabled unless the admin explicitly enables it at
 - This feature deliberately serves a small, high-touch team. The product object is the Setup Salon itself; there is no parallel setup-workflow aggregate.
 - The existing admin app, platform RBAC, admin audit log, salon onboarding operations, CatalogPreset support, OTP signup, and Client Import behavior provide substantial prior art.
 - Assisted onboarding in comparable salon products commonly combines configuration, migration, and handoff to the business; Saluna's first version keeps only the parts needed by its current team.
-- Domain language and architectural boundaries are recorded in `CONTEXT.md` and ADRs 0006–0008.
+- Domain language and architectural boundaries are recorded in `GLOSSARY.md` and ADRs 0006–0008.
 - Closed 2026-07-11: all child slices BL-0032 through BL-0040 are done. Parent tracker closed after verifying no open children remain.

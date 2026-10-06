@@ -27,4 +27,4 @@ Define plan tiers and gate one non-critical feature behind a server-side entitle
 
 - Original note: "Add payment plans and feature gates".
 
-- Status reviewed on 2026-09-07. `CONTEXT.md` and ADR-0021 through ADR-0037 document the subscription and monetization model. Server entitlement enforcement and locked-feature UI are still outstanding, so this item remains open.
+- Status reviewed on 2026-09-07. `GLOSSARY.md` and ADR-0021 through ADR-0037 document the subscription and monetization model. Server entitlement enforcement and locked-feature UI are still outstanding, so this item remains open.

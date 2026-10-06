@@ -1,23 +1,17 @@
 # Domain docs
 
-## Read before exploring
+Saluna has one domain glossary, [GLOSSARY.md](../../GLOSSARY.md), and
+[architecture decisions](../adr/). Read the relevant terms and ADRs before
+exploring or changing a domain area.
 
-Read [CONTEXT.md](../../CONTEXT.md) and the relevant
-[architecture decisions](../adr/) before working on a domain area.
+- Use the glossary's canonical terms in code, tests, specs, and tickets.
+- Keep definitions short. Storage mappings, algorithms, workflows, and
+  implementation plans belong in ADRs, technical docs, or backlog items.
+- Respect superseding ADRs. Flag contradictions with the decision's ID;
+  update an ADR when the decision changes.
+- The glossary names the domain. ADRs record decisions. Backlog items record
+  delivery status. An accepted decision does not imply shipped behavior.
 
-This repo has one domain context. If either location is absent, proceed without
-creating it. The domain-modeling skill records terms and decisions when they
-are resolved.
-
-## Use the glossary
-
-Use the terms in `CONTEXT.md` in code, tests, issues, and documentation. Avoid
-synonyms the glossary excludes.
-
-If a needed term is missing, check whether an existing term fits before adding
-a new concept.
-
-## Conflicting decisions
-
-Call out any proposed change that contradicts an ADR. Name the ADR, explain the
-conflict, and record a superseding decision when the rule changes.
+Update `GLOSSARY.md` when terminology is resolved. Keep this single-context
+layout when running skill setup; the package structure does not create
+separate domain contexts.

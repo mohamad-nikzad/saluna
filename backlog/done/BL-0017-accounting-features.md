@@ -30,4 +30,4 @@ Choose the first accounting workflow instead of building a broad accounting modu
 
 ## Completion review
 
-Status reviewed on 2026-09-07. The first workflow is the Salon Money Report, completed under BL-0078 in commit `f85c709`, alongside Staff Commission reporting from BL-0019. `CONTEXT.md` names AppointmentTotalsSnapshot, Staff Commission, Eligible Commission Basis, and Salon Retained Amount and documents their relationship. ADR-0023 separates Client Payments from booked totals. This closes the selection/documentation scope of this item; expenses, collected-payment accounting, and settlement are not implemented by that report.
+Status reviewed on 2026-09-07. The first workflow is the Salon Money Report, completed under BL-0078 in commit `f85c709`, alongside Staff Commission reporting from BL-0019. `GLOSSARY.md` names AppointmentTotalsSnapshot, Staff Commission, Eligible Commission Basis, and Salon Retained Amount and documents their relationship. ADR-0023 separates Client Payments from booked totals. This closes the selection/documentation scope of this item; expenses, collected-payment accounting, and settlement are not implemented by that report.

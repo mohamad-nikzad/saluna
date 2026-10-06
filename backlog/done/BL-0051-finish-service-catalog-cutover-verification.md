@@ -21,7 +21,7 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 - [x] Drizzle migration metadata is regenerated and committed with schema changes.
 - [x] OpenAPI contract and HeyAPI client are regenerated and committed.
-- [x] `CONTEXT.md` marks ServiceFamily/combo as legacy storage only and Service Package scheduling as manager-only implemented scope.
+- [x] `GLOSSARY.md` marks ServiceFamily/combo as legacy storage only and Service Package scheduling as manager-only implemented scope.
 - [x] A new ADR supersedes the previous decision to defer Service Package scheduling and records the manager-only same-day package scope.
 - [x] Seeds and starter catalog data match the category/service target model.
 - [x] Verification passes: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test`.
@@ -43,7 +43,7 @@ Finish the big-bang cutover by regenerating artifacts, updating domain documenta
 
 - Type: AFK.
 - Requirements from [BL-0041](BL-0041-service-catalog-big-bang-migration.md).
-- Partial implementation note: OpenAPI/client artifacts, `CONTEXT.md`, and the manager package scheduling ADR appear to exist, but this item remains open until seeds are fully flat and the listed full verification commands plus targeted visual checks are run and recorded.
+- Partial implementation note: OpenAPI/client artifacts, `GLOSSARY.md`, and the manager package scheduling ADR appear to exist, but this item remains open until seeds are fully flat and the listed full verification commands plus targeted visual checks are run and recorded.
 - Verification note: `pnpm db:check`, `pnpm generate:api-contract`, `pnpm generate:api-client`, `pnpm typecheck`, and `pnpm test` pass after the flat seed and UI cutover cleanup.
 - Visual verification note: authenticated PWA checks covered `/services` (category/service catalog, no family/combo controls, package staff capability checkboxes) and `/calendar` (manager package booking tab plus assigned-staff-only package picker). Authenticated admin checks covered `/salons/d6b08ecf-e697-41dd-b9e8-ed6e003d537e/services` setup catalog (service form without family/combo controls and add-on all/category/service scope controls).
 - Fix note: visual verification exposed migrated dev DBs with `staff_package_capabilities.staff_user_id`; added forward migration `0018_staff_package_capabilities_column_rename` to align them with the current `staff_id` schema.

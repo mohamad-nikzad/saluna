@@ -2,7 +2,10 @@
 
 ### Issue tracker
 
-Local markdown under `backlog/` (primary); GitHub Issues on `origin` is secondary. See `docs/agents/issue-tracker.md`.
+Specs and tickets live only in local Markdown under `backlog/`. Read
+`docs/agents/issue-tracker.md` before using any engineering skill. A GitHub
+remote does not select the tracker. Create remote issues or PRs only when the
+user explicitly requests them.
 
 ### Triage labels
 
@@ -10,4 +13,6 @@ Canonical five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`,
 
 ### Domain docs
 
-Single-context — `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+One `GLOSSARY.md` at the repo root and decisions in `docs/adr/`. See
+`docs/agents/domain.md`. These project paths override skill defaults;
+setup must preserve them.

@@ -18,7 +18,7 @@ Move an item by changing its `status` frontmatter and moving the file to the mat
 - Preserve the `id` once created.
 - Update `updated` whenever changing status, priority, size, or acceptance criteria.
 - Prefer adding notes over deleting historical context.
-- Use project language from `CONTEXT.md`, especially `Appointment`, `AppointmentRequest`, `Client`, `Salon Presence`, and `ServiceVariant`.
+- Use project language from `GLOSSARY.md`, especially `Appointment`, `AppointmentRequest`, `Client`, `Salon Presence`, and `ServiceVariant`.
 - Do not move more than one item into `now` unless the user explicitly asks.
 
 ## Parent Features and Subtasks

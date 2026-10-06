@@ -28,7 +28,7 @@ One release cutover (ADR-0039): drop `appointments.staff_id`, own roster through
 - [x] Staff-scoped calendar UI shows an Appointment under every assignee, not only the lead.
 - [x] AppointmentRequest pending/draft may keep its own `staffId`; only approve → Appointment adopts `staffAssignments[]`.
 - [x] Profile remap/claim/revoke paths update assignment `staff_id` (not a dropped appointment lead column).
-- [x] CONTEXT.md and ADR-0039 reflect the decision; automated tests cover multi-staff create/update persistence through the seam.
+- [x] GLOSSARY.md and ADR-0039 reflect the decision; automated tests cover multi-staff create/update persistence through the seam.
 - [x] Lands as one PR (stacked commits OK).
 
 ## Notes
