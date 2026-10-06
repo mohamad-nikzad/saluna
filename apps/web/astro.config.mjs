@@ -4,6 +4,9 @@ import { defineConfig, envField, fontProviders } from 'astro/config'
 import node from '@astrojs/node'
 import react from '@astrojs/react'
 import sitemap from '@astrojs/sitemap'
+import emdash, { local } from 'emdash/astro'
+import { postgres } from 'emdash/db'
+import { fileURLToPath } from 'node:url'
 import { buildRobotsTxt } from './src/lib/robots.ts'
 
 const publicApiUrl = process.env.PUBLIC_API_URL ?? 'http://localhost:3002'
@@ -45,7 +48,25 @@ export default defineConfig({
   output: 'server',
   trailingSlash: 'never',
   adapter: node({ mode: 'standalone' }),
-  integrations: [react(), sitemap(), robotsSitemapIntegration()],
+  integrations: [
+    react(),
+    emdash({
+      database: {
+        ...postgres({ migrationConnectionStringEnv: 'CMS_DATABASE_URL' }),
+        // Resolve credentials when the server starts, never during the build.
+        entrypoint: fileURLToPath(
+          new URL('./cms/database.mjs', import.meta.url),
+        ),
+      },
+      storage: local({
+        directory: './.emdash/uploads',
+        baseUrl: '/_emdash/api/media/file',
+      }),
+      maxUploadSize: 4 * 1024 * 1024,
+    }),
+    sitemap(),
+    robotsSitemapIntegration(),
+  ],
   image: {
     service: { entrypoint: 'astro/assets/services/sharp' },
     responsiveStyles: true,
@@ -53,6 +74,10 @@ export default defineConfig({
   security: {
     csp: {
       directives: [`connect-src 'self' ${apiConnectOrigin}`],
+      scriptDirective: {
+        // EmDash 1.1.0's inline theme initializer is not bundled by Astro.
+        hashes: ['sha256-1v8Ah3SYqBY03Gly/3EAPKBtMEL2cbmxCIVejWMUYbY='],
+      },
     },
   },
   fonts: [

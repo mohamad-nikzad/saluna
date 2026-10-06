@@ -10,6 +10,9 @@ next.user-config.*
 # Environment variables
 .env*.local
 .env.production
+.env.cms.local
+apps/web/.emdash/
+apps/web/emdash-env.d.ts
 
 # Common ignores
 node_modules

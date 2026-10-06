@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-06 (BL-0090 first-time staff login implemented)
+Last organized: 2026-10-06 (BL-0090 first-time staff login implemented; BL-0087 specified and split into BL-0092 through BL-0103; BL-0092 production-image persistence verified)
 
 ## Now
 
@@ -12,6 +12,19 @@ No active backlog items.
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
 - [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
+- [BL-0087 Publish Blog Articles and Product Guides with EmDash](ready/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
+  - [BL-0092 Run EmDash with persistent storage](done/BL-0092-run-emdash-with-persistent-storage.md)
+  - [BL-0093 Configure Blog Article drafting and editor access](ready/BL-0093-configure-blog-article-drafting-and-editor-access.md)
+  - [BL-0094 Render blog pages and private previews](ready/BL-0094-render-blog-pages-and-private-previews.md)
+  - [BL-0095 Complete blog publishing and URL lifecycle](ready/BL-0095-complete-blog-publishing-and-url-lifecycle.md)
+  - [BL-0096 Add Blog Article SEO and discovery](ready/BL-0096-add-blog-article-seo-and-discovery.md)
+  - [BL-0097 Verify CMS recovery and editor usability](ready/BL-0097-verify-cms-recovery-and-editor-usability.md)
+  - [BL-0098 Enable agent Blog Article drafting](ready/BL-0098-enable-agent-blog-article-drafting.md)
+  - [BL-0099 Deliver three initial Blog Article drafts](ready/BL-0099-deliver-three-initial-blog-article-drafts.md)
+  - [BL-0100 Publish Product Guides](ready/BL-0100-publish-product-guides.md)
+  - [BL-0101 Connect manager screens to Product Guides](ready/BL-0101-connect-manager-screens-to-product-guides.md)
+  - [BL-0102 Prove one Grok drafting run](ready/BL-0102-prove-one-grok-drafting-run.md)
+  - [BL-0103 Enable daily Grok drafting](ready/BL-0103-enable-daily-grok-drafting.md)
 
 ## Inbox
 
@@ -23,7 +36,6 @@ No active backlog items.
 - [BL-0020 Public salon explorer](inbox/BL-0020-public-salon-explorer.md)
 - [BL-0021 Saluna customer app](inbox/BL-0021-saluna-customer-app.md)
 - [BL-0022 Service sample support](inbox/BL-0022-service-sample-support.md)
-- [BL-0087 Publish Blog Articles and Product Guides with EmDash](inbox/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
 - Architecture deepenings (review 2026-08-26; salon money done in-session)
   - [BL-0082 Deepen Appointment Intake into trusted persist](inbox/BL-0082-deepen-appointment-intake-persist.md)
   - [BL-0084 Deepen Staff Commission earning away from reports](inbox/BL-0084-deepen-staff-commission-earning.md)

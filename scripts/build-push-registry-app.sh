@@ -17,7 +17,7 @@ Required:
 Optional:
   ENV_FILE                Env file to load first (default: .env.production)
   DOCKER_PLATFORM         Target platform (default: linux/amd64)
-  SALUNA_NODE_IMAGE       Node base image (default: node:22.12.0-alpine)
+  SALUNA_NODE_IMAGE       Node base image (default: node:22.16.0-alpine)
   SALUNA_NGINX_IMAGE      Nginx base image for PWA (default: nginx:1.27-alpine)
   SALUNA_ALPINE_MIRROR    Alpine repository mirror URL
   SALUNA_NPM_REGISTRY     npm registry URL
@@ -96,7 +96,7 @@ version="$(node -e "console.log(require('./apps/${app}/package.json').version)")
 default_tag="${version}-${short_sha}"
 
 common_build_args=(
-  --build-arg "NODE_IMAGE=${SALUNA_NODE_IMAGE:-node:22.12.0-alpine}"
+  --build-arg "NODE_IMAGE=${SALUNA_NODE_IMAGE:-node:22.16.0-alpine}"
   --build-arg "ALPINE_MIRROR=${SALUNA_ALPINE_MIRROR:-}"
   --build-arg "NPM_REGISTRY=${SALUNA_NPM_REGISTRY:-}"
   --build-arg "PNPM_VERSION=${SALUNA_PNPM_VERSION:-9.15.9}"

@@ -1,7 +1,8 @@
 # Deploy the public web app
 
 `@repo/web` uses the Astro Node standalone adapter. It requires Node
-`>=22.12.0` and listens on port 3001.
+`>=22.16.0` and listens on port 3001. EmDash provisioning, runtime secrets,
+and durable media are documented in [EmDash deployment](../../docs/EMDASH_DEPLOYMENT.md).
 
 Production releases use the [repo deployment workflow](../../docs/DEPLOYMENTS.md).
 For a VPS without registry access, use the

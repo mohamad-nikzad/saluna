@@ -139,6 +139,7 @@ jobs:
           install -m 755 -d /opt/saluna/scripts /opt/saluna/deploy/nginx/templates
           install -m 644 docker-compose.prod.yml /opt/saluna/docker-compose.prod.yml
           install -m 755 scripts/deploy-registry-app.sh /opt/saluna/scripts/deploy-registry-app.sh
+          install -m 755 scripts/provision-cms.sh /opt/saluna/scripts/provision-cms.sh
           if [[ -f scripts/publish_release_announcement.py ]]; then
             install -m 755 scripts/publish_release_announcement.py \
               /opt/saluna/scripts/publish_release_announcement.py

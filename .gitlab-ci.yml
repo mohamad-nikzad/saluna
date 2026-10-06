@@ -4,7 +4,7 @@ stages:
 
 variables:
   DOCKER_PLATFORM: linux/amd64
-  SALUNA_NODE_IMAGE: hub.hamdocker.ir/library/node:22.12.0-alpine
+  SALUNA_NODE_IMAGE: hub.hamdocker.ir/library/node:22.16.0-alpine
   SALUNA_NGINX_IMAGE: hub.hamdocker.ir/library/nginx:1.27-alpine
   SALUNA_ALPINE_MIRROR: https://mirror.arvancloud.ir/alpine
   SALUNA_NPM_REGISTRY: https://repo.hmirror.ir/npm/
@@ -43,6 +43,7 @@ variables:
     - ssh "$VPS_SSH_USER@$VPS_HOST" "mkdir -p /opt/saluna/scripts /opt/saluna/deploy/nginx/templates"
     - scp docker-compose.prod.yml "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/docker-compose.prod.yml"
     - scp scripts/deploy-registry-app.sh "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/scripts/deploy-registry-app.sh"
+    - scp scripts/provision-cms.sh "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/scripts/provision-cms.sh"
     - scp deploy/nginx/templates/saluna.conf.template "$VPS_SSH_USER@$VPS_HOST:/opt/saluna/deploy/nginx/templates/"
     - ssh "$VPS_SSH_USER@$VPS_HOST" "chmod +x /opt/saluna/scripts/deploy-registry-app.sh"
   rules:

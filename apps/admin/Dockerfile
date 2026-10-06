@@ -1,4 +1,4 @@
-ARG NODE_IMAGE=node:22.12.0-alpine
+ARG NODE_IMAGE=node:22.16.0-alpine
 ARG NGINX_IMAGE=nginx:1.27-alpine
 
 FROM ${NODE_IMAGE} AS base

@@ -14,7 +14,7 @@
 # scripts/with-root-env.mjs during build — copy env files into the build stage first
 # if you use this (e.g. CI secret mount).
 
-ARG NODE_VERSION=22.12.0
+ARG NODE_VERSION=22.16.0
 ARG NODE_IMAGE=node:${NODE_VERSION}-alpine
 
 FROM ${NODE_IMAGE} AS base
@@ -41,7 +41,8 @@ COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/salon-core/package.json ./packages/salon-core/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 
-RUN pnpm install --frozen-lockfile --filter @repo/web...
+RUN --mount=type=cache,id=saluna-web-pnpm9,target=/root/.local/share/pnpm/store \
+  pnpm install --frozen-lockfile --filter @repo/web...
 
 # --- Stage 1 (continued): build ---
 FROM deps AS build
@@ -63,6 +64,7 @@ ARG PUBLIC_API_URL=http://localhost:3000
 ARG PUBLIC_MANAGER_APP_URL=https://app.saluna.ir
 ARG ROOT_ENV_FILES=
 ENV PUBLIC_APP_URL=${PUBLIC_APP_URL} \
+  EMDASH_SITE_URL=${PUBLIC_APP_URL} \
   PUBLIC_API_URL=${PUBLIC_API_URL} \
   PUBLIC_MANAGER_APP_URL=${PUBLIC_MANAGER_APP_URL} \
   ROOT_ENV_FILES=${ROOT_ENV_FILES} \
@@ -87,6 +89,10 @@ COPY --from=build /app/packages/brand /app/packages/brand
 COPY --from=build /app/packages/salon-core /app/packages/salon-core
 COPY --from=build /app/packages/typescript-config /app/packages/typescript-config
 COPY --from=build /app/apps/web/dist ./dist
+
+# Docker initializes a new named volume from this node-owned directory.
+RUN mkdir -p .emdash/uploads node_modules/.astro/sessions \
+  && chown -R node:node .emdash node_modules/.astro
 
 USER node
 

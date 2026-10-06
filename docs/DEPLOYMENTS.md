@@ -185,7 +185,7 @@ Builds use mirrored infrastructure so the pipeline does not depend on blocked
 international endpoints:
 
 ```env
-SALUNA_NODE_IMAGE=hub.hamdocker.ir/library/node:22.12.0-alpine
+SALUNA_NODE_IMAGE=hub.hamdocker.ir/library/node:22.16.0-alpine
 SALUNA_NGINX_IMAGE=hub.hamdocker.ir/library/nginx:1.27-alpine
 SALUNA_ALPINE_MIRROR=https://mirror.arvancloud.ir/alpine
 SALUNA_NPM_REGISTRY=https://repo.hmirror.ir/npm/

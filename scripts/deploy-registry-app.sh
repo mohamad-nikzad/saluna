@@ -282,6 +282,14 @@ if [[ "$app" == "api" ]]; then
   fi
 fi
 
+if [[ "$app" == "web" ]]; then
+  echo "Starting Postgres for EmDash"
+  compose up -d postgres
+  wait_for_postgres
+  # First request applies EmDash's locked core migrations and fresh-site seed.
+  # Provision the dedicated database once before the first web deployment.
+fi
+
 echo "Restarting ${app}"
 compose up -d --no-deps "$app"
 wait_for_service_health "$app"

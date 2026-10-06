@@ -11,8 +11,8 @@ Saluna will use EmDash in the existing Astro `apps/web` application to let nonte
 ## Consequences
 
 - EmDash's admin, public content routes, and content runtime share the web deployment. Keep CMS data separate from Salon operational data, back up the database and media independently, and check CMS health as well as the existing landing-page health check.
-- Content model changes, runtime upgrades, and media storage become Saluna operations. The current web Docker image defaults to Node 22.12.0; verify and raise it to EmDash's supported version before integration.
+- Content model changes, runtime upgrades, and media storage become Saluna operations. EmDash 1.1.0 requires Node 22.16 or later; the web image and shared build defaults use Node 22.16.0. Provisioning and durable media configuration are documented in [EmDash deployment](../EMDASH_DEPLOYMENT.md).
 - Preserve Saluna's Persian design and existing canonical, Open Graph, and sitemap behavior when adding CMS pages. The editor's Persian RTL interface must pass a hands-on trial: Persian is enabled upstream, but the translation catalog was incomplete on 2026-09-29.
 - Blog Articles and Product Guides are separate content types in one CMS. Guide videos are referenced from a video host/CDN rather than stored as large uploads in the web container. Product staff review guides when the corresponding user flow changes.
 
-Implementation evidence and open checks are in [the public content CMS research note](../research/2026-09-29-public-content-cms.md). The implementation is tracked by [BL-0087](../../backlog/inbox/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+Implementation evidence and open checks are in [the public content CMS research note](../research/2026-09-29-public-content-cms.md). The implementation is tracked by [BL-0087](../../backlog/ready/BL-0087-publish-blog-and-product-guides-with-emdash.md).

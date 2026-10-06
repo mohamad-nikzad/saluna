@@ -71,6 +71,14 @@ services:
       PORT: "3001"
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://saluna.ir}
       PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api.saluna.ir}
+      EMDASH_SITE_URL: ${PUBLIC_APP_URL:-https://saluna.ir}
+      CMS_DATABASE_URL: ${CMS_DATABASE_URL:?Set CMS_DATABASE_URL in .env.production}
+      EMDASH_ENCRYPTION_KEY: ${EMDASH_ENCRYPTION_KEY:?Set EMDASH_ENCRYPTION_KEY in .env.production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - cms_media:/app/apps/web/.emdash/uploads
     expose:
       - "3001"
     healthcheck:
@@ -79,7 +87,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:3001/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+          "Promise.all(['/', '/_emdash/api/setup/status'].map(p=>fetch('http://127.0.0.1:3001'+p))).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 10s
       timeout: 5s
@@ -149,6 +157,7 @@ services:
 volumes:
   postgres_data:
   registry_data:
+  cms_media:
 
 networks:
   saluna:

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.16.0"
   },
   "scripts": {
     "dev": "node ../../scripts/with-root-env.mjs astro dev --port 3001",
@@ -28,19 +28,21 @@
     "@repo/salon-core": "workspace:*",
     "@resvg/resvg-js": "^2.6.2",
     "astro": "^6.4.2",
+    "emdash": "1.1.0",
     "lucide-react": "^0.564.0",
+    "pg": "8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "satori": "^0.18.3",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.6",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@astrojs/check": "^0.9.6",
     "eslint-plugin-astro": "^1.5.0",
     "prettier-plugin-astro": "^0.14.1",
     "tailwindcss": "^4.2.2",

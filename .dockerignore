@@ -1,6 +1,7 @@
 # Monorepo Docker build context (e.g. apps/web/Dockerfile)
 .git
 .codex
+output
 .env*
 **/.env*.local
 **/.turbo
@@ -12,6 +13,8 @@ apps/admin/dist
 apps/pwa/dist
 apps/web/dist
 apps/web/.astro
+apps/web/.emdash
+apps/web/emdash-env.d.ts
 apps/**/.next
 **/coverage
 **/playwright-report
