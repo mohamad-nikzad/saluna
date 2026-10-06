@@ -1,17 +1,7 @@
-name: Change-driven staging QA
-run-name: QA ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || inputs.ref }}
+name: Staging QA
+run-name: QA ${{ inputs.ref }}
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
-  pull_request:
-    paths:
-      - 'deploy/qa/**'
-      - '!deploy/qa/**/*.md'
-      - 'scripts/qa-seed.ts'
-      - '.github/workflows/qa-main.yml'
   workflow_dispatch:
     inputs:
       ref:
@@ -24,20 +14,13 @@ permissions:
   contents: read
   actions: read
 
-# Coalesce waiting releases. The installed plan includes every change since the
-# last completed QA report, including changes from superseded waiting pushes.
+# Serialize requested releases and preserve any active QA session.
 concurrency:
   group: qa-release
   cancel-in-progress: false
 
 jobs:
   plan:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: [self-hosted, Linux, X64, saluna-deploy]
     timeout-minutes: 10
     outputs:
@@ -47,14 +30,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha || inputs.ref }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
           persist-credentials: false
       - id: revision
         name: Verify CI for the selected commit
         env:
           GH_TOKEN: ${{ github.token }}
-          QA_BRANCH: ${{ github.head_ref || inputs.ref || 'main' }}
+          QA_BRANCH: ${{ inputs.ref }}
         run: |
           set -euo pipefail
           sha="$(git rev-parse HEAD)"

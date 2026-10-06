@@ -14,12 +14,15 @@ import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
-from network import opener
+from network import opener as network_opener
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--staff-privacy', action='store_true')
 parser.add_argument('--access-file', type=Path, default=Path('.codex/qa/qa-access.local.json'))
+parser.add_argument('--local-gateway', action='store_true', help='Use only the VPS loopback gateway, with the staging Host')
 args = parser.parse_args()
+def opener(*handlers):
+    return network_opener(*handlers, local_gateway=args.local_gateway)
 access = json.loads(args.access_file.read_text())
 ROOT = 'https://staging-app.saluna.ir'
 basic = base64.b64encode(f"{access['gateway_username']}:{access['gateway_password']}".encode()).decode()
@@ -46,6 +49,7 @@ def request(browser, path, body=None, method=None):
                     continue
             # Never print auth responses, session cookies, or confirmation tokens.
             safe_path = re.sub(r'[0-9a-f]{8}-[0-9a-f-]{27,}', '[id]', path.split('?')[0])
+            safe_path = re.sub(r'(/appointment-requests/)[^/]+', r'\1[id]', safe_path)
             raise RuntimeError(f'{req.get_method()} {safe_path} returned {error.code}') from None
 
 

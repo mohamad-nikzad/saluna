@@ -155,7 +155,7 @@ def install(directory, repository, run_number, attempt, source_branch='main'):
             time.sleep(3)
         else:
             raise RuntimeError('Smoke startup timed out')
-        result = subprocess.run(['python3', str(Path(__file__).with_name('smoke.py')), '--access-file', str(ROOT / 'access.local.json')], timeout=300)
+        result = subprocess.run(['python3', str(Path(__file__).with_name('smoke.py')), '--local-gateway', '--access-file', str(ROOT / 'access.local.json')], timeout=300)
         smoke = 'pass' if result.returncode == 0 else 'fail'
     finally:
         controller('sleep', {'run_id': smoke_id})
