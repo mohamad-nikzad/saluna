@@ -31,7 +31,11 @@ export function requireTenant(permission?: TenantPermission) {
     if (!session?.user) return error(c, 'دسترسی غیرمجاز', 401)
 
     const manager = await getManagerMemberForUser(session.user.id)
-    if (manager) {
+    const requestedSalonId = requestedSalonIdFromHeaders(c.req.raw.headers)
+    if (
+      manager &&
+      (!requestedSalonId || requestedSalonId === manager.organizationId)
+    ) {
       if (manager.salonStatus && manager.salonStatus !== 'active') {
         return error(c, 'دسترسی سالن غیرفعال است', 403)
       }
@@ -54,7 +58,7 @@ export function requireTenant(permission?: TenantPermission) {
 
     const staff = await resolveStaffTenantContext({
       userId: session.user.id,
-      requestedSalonId: requestedSalonIdFromHeaders(c.req.raw.headers),
+      requestedSalonId,
     })
     if (staff.status === 'rejected') {
       return error(c, 'دسترسی غیرمجاز', 403)

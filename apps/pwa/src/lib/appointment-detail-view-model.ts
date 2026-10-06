@@ -19,7 +19,7 @@ export function formatTomans(price: number | null | undefined) {
 }
 
 export const STATUS_CHANGE_SEGMENTS = (
-  ['scheduled', 'confirmed', 'completed', 'cancelled'] as const
+  ['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show'] as const
 ).map((key) => ({ key, label: APPOINTMENT_STATUS[key].label }))
 
 export function filterStaffRoleOnly(staff: User[]) {
@@ -103,9 +103,11 @@ export function clientsForAppointmentEdit(
 ) {
   if (
     appointment.client.isPlaceholder &&
+    appointment.client.phone !== undefined &&
+    appointment.client.createdAt !== undefined &&
     !clients.some((client) => client.id === appointment.client.id)
   ) {
-    return [appointment.client, ...clients]
+    return [appointment.client as Client, ...clients]
   }
   return clients
 }

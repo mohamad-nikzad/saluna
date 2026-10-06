@@ -2602,7 +2602,72 @@
             ]
           },
           "client": {
-            "$ref": "#/components/schemas/Client"
+            "$ref": "#/components/schemas/AppointmentClient"
+          },
+          "statusHistory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "salonId": {
+                  "type": "string"
+                },
+                "appointmentId": {
+                  "type": "string"
+                },
+                "actorUserId": {
+                  "type": "string"
+                },
+                "actorName": {
+                  "type": "string"
+                },
+                "previousStatus": {
+                  "type": "string",
+                  "enum": [
+                    "scheduled",
+                    "confirmed",
+                    "completed",
+                    "cancelled",
+                    "no-show"
+                  ]
+                },
+                "newStatus": {
+                  "type": "string",
+                  "enum": [
+                    "scheduled",
+                    "confirmed",
+                    "completed",
+                    "cancelled",
+                    "no-show"
+                  ]
+                },
+                "changedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "salonId",
+                "appointmentId",
+                "actorUserId",
+                "actorName",
+                "previousStatus",
+                "newStatus",
+                "changedAt"
+              ]
+            },
+            "description": "Manager-only status transition history, oldest first."
           },
           "staff": {
             "$ref": "#/components/schemas/User"
@@ -2747,6 +2812,68 @@
         "additionalProperties": {
           "nullable": true
         }
+      },
+      "AppointmentClient": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPlaceholder": {
+            "type": "boolean"
+          },
+          "birthDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "acquisitionSource": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "instagram",
+              "website",
+              "google",
+              "referral",
+              "walk_in",
+              "other",
+              "unknown",
+              null
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClientTag"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "isPlaceholder"
+        ],
+        "description": "Staff responses include only id, name, and isPlaceholder. Private Client fields are manager-only."
       },
       "Service": {
         "type": "object",
@@ -16409,7 +16536,7 @@
           "Appointments"
         ],
         "summary": "Update appointment or status",
-        "description": "Managers may update any field. Staff may patch status on their own appointments. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.",
+        "description": "Managers may update any field and correct closed statuses. Staff with active access may send only status on assigned open Appointments: confirmed or no-show, and completed only as the lead. Extra fields are rejected. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.",
         "security": [
           {
             "bearerAuth": []

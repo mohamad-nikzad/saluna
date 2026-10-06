@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-05 (staff login clarity and Appointment permissions/privacy tasks added)
+Last organized: 2026-10-05 (BL-0091 implemented; staff login clarity remains ready)
 
 ## Now
 
@@ -8,7 +8,6 @@ No active backlog items.
 
 ## Ready
 
-- [BL-0091 Let staff update assigned Appointment status while protecting Client details](ready/BL-0091-staff-appointment-status-and-client-privacy.md)
 - [BL-0090 Make first-time staff login clear](ready/BL-0090-make-first-time-staff-login-clear.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
@@ -32,6 +31,8 @@ No active backlog items.
   - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
+
+- [BL-0091 Let staff update assigned Appointment status while protecting Client details](done/BL-0091-staff-appointment-status-and-client-privacy.md)
 
 - [BL-0089 Classify internal Salon pages before excluding them from search](done/BL-0089-classify-internal-salons-for-search.md) (three confirmed exclusions implemented; deployment pending)
 

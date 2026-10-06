@@ -45,7 +45,7 @@ export type AppointmentAvailabilitySelection = {
 
 export type AppointmentStatusActionState = {
   status: AppointmentWithDetails['status']
-  mode: 'saving' | 'saved' | 'queued'
+  mode: 'saving' | 'saved' | 'queued' | 'error'
   message: string
 } | null
 

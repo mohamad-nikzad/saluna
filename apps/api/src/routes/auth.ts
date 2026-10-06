@@ -333,7 +333,11 @@ export const authRoute = new Hono<AppEnv>()
     if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
 
     const manager = await getManagerMemberForUser(sessionUser.id)
-    if (manager) {
+    const requestedSalonId = requestedSalonIdFromHeaders(c.req.raw.headers)
+    if (
+      manager &&
+      (!requestedSalonId || requestedSalonId === manager.organizationId)
+    ) {
       const role = mapRole(manager.role)
       const userId = manager.userId
       const salonId = manager.organizationId
@@ -395,7 +399,6 @@ export const authRoute = new Hono<AppEnv>()
       return error(c, 'دسترسی غیرمجاز', 403)
     }
 
-    const requestedSalonId = requestedSalonIdFromHeaders(c.req.raw.headers)
     if (salonOptions.length > 1) {
       const selected = requestedSalonId
         ? salonOptions.find((option) => option.salonId === requestedSalonId)
@@ -419,6 +422,7 @@ export const authRoute = new Hono<AppEnv>()
           ...user,
           role: 'staff' as const,
           salonName: selected.salonName,
+          staffProfileId: selected.staffProfileId,
         },
       })
     }
@@ -433,6 +437,7 @@ export const authRoute = new Hono<AppEnv>()
         ...user,
         role: 'staff' as const,
         salonName: sole.salonName,
+        staffProfileId: sole.staffProfileId,
       },
     })
   })

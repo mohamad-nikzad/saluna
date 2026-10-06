@@ -1,3 +1,4 @@
+import { staffAppointmentView } from '@repo/salon-core/appointment-staff-policy'
 import { Hono } from 'hono'
 import { getTodayData } from '@repo/database/dashboard'
 import { staffAppointmentStaffIds } from '@repo/auth/tenant'
@@ -13,7 +14,16 @@ export const today = new Hono<AppEnv>()
     const date = c.req.query('date') || salonTodayYmd()
     const staffFilter = staffAppointmentStaffIds(tenant)
     const data = await getTodayData(tenant.salonId, date, staffFilter)
-    return ok(c, data)
+    return ok(
+      c,
+      tenant.role === 'staff'
+        ? {
+            ...data,
+            appointments: data.appointments.map(staffAppointmentView),
+            attentionItems: [],
+          }
+        : data,
+    )
   })
 
 export type TodayRoute = typeof today

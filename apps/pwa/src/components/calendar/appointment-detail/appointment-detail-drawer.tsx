@@ -44,7 +44,7 @@ export function AppointmentDetailDrawer({
   onSuccess,
   onClientsChanged,
   readOnly = false,
-  canChangeStatus = !readOnly,
+  canChangeStatus = true,
   unavailableDates = [],
 }: AppointmentDetailDrawerProps) {
   const drawer = useAppointmentDetailDrawer({

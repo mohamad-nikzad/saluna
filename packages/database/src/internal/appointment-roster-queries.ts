@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists, inArray } from 'drizzle-orm'
+import { sql, and, asc, desc, eq, exists, inArray } from 'drizzle-orm'
 import type { AppointmentStaffAssignment } from '@repo/salon-core/types'
 import {
   EmptyAppointmentRosterError,
@@ -20,7 +20,7 @@ export function appointmentHasAssignedStaff(
 ) {
   const staffIds =
     typeof staffIdFilter === 'string' ? [staffIdFilter] : [...staffIdFilter]
-  if (staffIds.length === 0) return undefined
+  if (staffIds.length === 0) return sql`false`
   return exists(
     getDb()
       .select({ id: appointmentStaffAssignments.id })

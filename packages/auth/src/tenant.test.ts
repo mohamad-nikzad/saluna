@@ -32,13 +32,13 @@ describe('staff appointment ownership', () => {
     ).toBe(true)
   })
 
-  it('matches the legacy claimed user id used as staffId', () => {
+  it('rejects the login identity when it is not the linked Staff Profile', () => {
     expect(
       staffOwnsAppointment('u1', {
         userId: 'u1',
         staffProfileId: 'profile-a',
       }),
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('rejects appointments for another Staff Profile', () => {
@@ -50,14 +50,14 @@ describe('staff appointment ownership', () => {
     ).toBe(false)
   })
 
-  it('lists both user and Staff Profile ids for staff filters', () => {
+  it('lists only the active Staff Profile id for staff filters', () => {
     expect(
       staffAppointmentStaffIds({
         role: 'staff',
         userId: 'u1',
         staffProfileId: 'profile-a',
       }),
-    ).toEqual(['u1', 'profile-a'])
+    ).toEqual(['profile-a'])
   })
 
   it('returns undefined staff filter for managers', () => {

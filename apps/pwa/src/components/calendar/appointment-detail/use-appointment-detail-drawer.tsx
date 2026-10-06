@@ -526,9 +526,15 @@ export function useAppointmentDetailDrawer({
               source: 'status',
             },
       )
-    } catch {
-      setStatusAction(null)
-      // Toast handled by mutation cache.
+    } catch (err) {
+      setStatusAction({
+        status: nextStatus,
+        mode: 'error',
+        message:
+          err instanceof Error
+            ? err.message
+            : 'ثبت وضعیت انجام نشد. دوباره تلاش کنید.',
+      })
     }
   }
 

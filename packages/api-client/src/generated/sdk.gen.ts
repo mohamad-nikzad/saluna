@@ -801,7 +801,7 @@ export const getApiV1AppointmentsById = <ThrowOnError extends boolean = false>(o
 /**
  * Update appointment or status
  *
- * Managers may update any field. Staff may patch status on their own appointments. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.
+ * Managers may update any field and correct closed statuses. Staff with active access may send only status on assigned open Appointments: confirmed or no-show, and completed only as the lead. Extra fields are rejected. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.
  */
 export const patchApiV1AppointmentsById = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1AppointmentsByIdData, ThrowOnError>): RequestResult<PatchApiV1AppointmentsByIdResponses, PatchApiV1AppointmentsByIdErrors, ThrowOnError> => (options.client ?? client).patch<PatchApiV1AppointmentsByIdResponses, PatchApiV1AppointmentsByIdErrors, ThrowOnError>({
     url: '/api/v1/appointments/{id}',

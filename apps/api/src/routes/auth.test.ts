@@ -609,6 +609,46 @@ describe('auth /me shim', () => {
   })
 })
 
+it('resolves staff privacy in the selected salon for an identity that also manages another salon', async () => {
+  vi.mocked(authServer.api.getSession).mockResolvedValue({
+    user: { id: 'u2', name: 'Staff', phoneNumber: '09120000001' },
+  } as never)
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u2',
+    organizationId: 'manager-salon',
+    role: 'owner',
+    name: 'Manager',
+    username: '09120000001',
+  })
+  vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+    {
+      salonId: 'staff-salon',
+      salonName: 'Staff Salon',
+      staffProfileId: 'profile-staff',
+    },
+  ])
+  vi.mocked(getUserWithServiceIds).mockResolvedValue({
+    id: 'u2',
+    salonId: 'staff-salon',
+    name: 'Staff',
+    role: 'staff',
+    color: 'blue',
+    phone: '09120000001',
+    createdAt: new Date(),
+  })
+  const response = await app.request('/api/v1/auth/me', {
+    headers: { 'X-Saluna-Salon-Id': 'staff-salon' },
+  })
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    user: {
+      role: 'staff',
+      salonId: 'staff-salon',
+      staffProfileId: 'profile-staff',
+    },
+  })
+})
+
 describe('auth staff-salons route', () => {
   it('lists accepted salons for staff', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({

@@ -1,3 +1,6 @@
+import { staffAppointmentStatusActions } from '@repo/salon-core/appointment-staff-policy'
+import { useAuth } from '#/lib/auth'
+import { AppointmentStatusHistory } from './appointment-status-history'
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
 import type { AppointmentWithDetails } from '@repo/salon-core/types'
@@ -45,6 +48,11 @@ export function AppointmentDetailReadView({
   onStatusChange,
   onOpenCompleteClient,
 }: AppointmentDetailReadViewProps) {
+  const { user } = useAuth()
+  const isStaff = user?.role === 'staff'
+  const allowedStatuses = isStaff
+    ? staffAppointmentStatusActions(appointment, user.staffProfileId)
+    : undefined
   return (
     <div className="flex flex-col gap-3 overflow-auto px-5 py-4">
       <div className="flex items-center gap-3 rounded-2xl bg-blush-soft p-3.5">
@@ -65,7 +73,7 @@ export function AppointmentDetailReadView({
               <Badge variant="amber">اطلاعات ناقص</Badge>
             ) : null}
           </div>
-          {appointment.client.phone ? (
+          {!isStaff && appointment.client.phone ? (
             <div
               dir="ltr"
               className="mt-0.5 text-right text-[13px] text-muted-foreground tabular-nums"
@@ -74,7 +82,7 @@ export function AppointmentDetailReadView({
             </div>
           ) : null}
         </div>
-        {appointment.client.phone ? (
+        {!isStaff && appointment.client.phone ? (
           <a
             href={`tel:${appointment.client.phone}`}
             aria-label="تماس"
@@ -87,7 +95,7 @@ export function AppointmentDetailReadView({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-blush-soft p-3.5 text-right">
-          <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-start gap-1.5 text-xs text-muted-foreground">
             <span>ساعت</span>
             <Clock className="size-3.5" />
           </div>
@@ -108,7 +116,7 @@ export function AppointmentDetailReadView({
           </div>
         </div>
         <div className="rounded-2xl bg-blush-soft p-3.5 text-right">
-          <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-start gap-1.5 text-xs text-muted-foreground">
             <span>مبلغ</span>
             <Wallet className="size-3.5" />
           </div>
@@ -208,10 +216,19 @@ export function AppointmentDetailReadView({
       <AppointmentDetailStatusActions
         appointment={appointment}
         canChangeStatus={canChangeStatus}
+        allowedStatuses={allowedStatuses}
         statusAction={statusAction}
         isMutating={isMutating}
         onStatusChange={onStatusChange}
       />
+
+      {isStaff ? (
+        <p className="text-xs text-muted-foreground">
+          برای تماس با مشتری از مدیر سالن کمک بگیرید.
+        </p>
+      ) : (
+        <AppointmentStatusHistory appointmentId={appointment.id} />
+      )}
 
       {appointment.notes ? (
         <div className="flex items-start gap-2 rounded-2xl bg-amber-soft p-3.5 text-[13px] text-amber-fg">

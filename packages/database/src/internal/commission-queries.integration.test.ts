@@ -1131,5 +1131,277 @@ describe.skipIf(!runIntegration)(
         }),
       ).resolves.toEqual({ ok: false, reason: 'category' })
     })
+    it('audits staff transitions atomically with every assignment commission and preserves manager corrections', async () => {
+      await testSql!`insert into staff_profile_accesses (salon_id, staff_profile_id, user_id, accepted_at)
+        values (${ids.salon}, ${ids.profileA}, ${ids.staffUser}, now())`
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileA,
+        percentageBasisPoints: 2000,
+      })
+      await commissions.setCommissionAgreement({
+        salonId: ids.salon,
+        staffProfileId: ids.profileB,
+        percentageBasisPoints: 3000,
+      })
+      const actor = {
+        userId: ids.staffUser,
+        name: 'Staff Identity',
+        staffProfileId: ids.profileA,
+      }
+      const manager = { userId: randomUUID(), name: 'Manager' }
+      const id = await insertAppointment({
+        date: '2026-12-01',
+        price: 100,
+        staffAssignments: [
+          { staffId: ids.profileA, allocationBasisPoints: 5000, isLead: true },
+          { staffId: ids.profileB, allocationBasisPoints: 5000 },
+        ],
+      })
+      await Promise.all(
+        [1, 2].map(() =>
+          appointmentQueries.updateAppointment(
+            id,
+            ids.salon,
+            { status: 'completed' },
+            actor,
+          ),
+        ),
+      )
+      let history = await appointmentQueries.getAppointmentStatusHistory(
+        id,
+        ids.salon,
+      )
+      expect(history).toEqual([
+        expect.objectContaining({
+          salonId: ids.salon,
+          appointmentId: id,
+          actorUserId: ids.staffUser,
+          actorName: actor.name,
+          previousStatus: 'scheduled',
+          newStatus: 'completed',
+          changedAt: expect.any(Date),
+        }),
+      ])
+      let rows =
+        await testSql!`select * from staff_commissions where appointment_id = ${id}`
+      expect(rows).toHaveLength(2)
+      expect(rows.every((row) => row.voided_at === null)).toBe(true)
+      await expect(
+        appointmentQueries.updateAppointment(
+          id,
+          ids.salon,
+          { status: 'confirmed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(id, ids.salon),
+      ).toHaveLength(1)
+      await appointmentQueries.updateAppointment(
+        id,
+        ids.salon,
+        { status: 'no-show' },
+        manager,
+      )
+      await expect(
+        appointmentQueries.updateAppointment(
+          id,
+          ids.salon,
+          { status: 'completed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      rows =
+        await testSql!`select * from staff_commissions where appointment_id = ${id}`
+      expect(rows.every((row) => row.voided_at !== null)).toBe(true)
+      await appointmentQueries.updateAppointment(
+        id,
+        ids.salon,
+        { status: 'completed' },
+        manager,
+      )
+      await appointmentQueries.updateAppointment(
+        id,
+        ids.salon,
+        { status: 'completed' },
+        manager,
+      )
+      rows =
+        await testSql!`select * from staff_commissions where appointment_id = ${id}`
+      expect(rows).toHaveLength(2)
+      expect(rows.every((row) => row.voided_at === null)).toBe(true)
+      history = await appointmentQueries.getAppointmentStatusHistory(
+        id,
+        ids.salon,
+      )
+      expect(history.map((row) => [row.previousStatus, row.newStatus])).toEqual(
+        [
+          ['scheduled', 'completed'],
+          ['completed', 'no-show'],
+          ['no-show', 'completed'],
+        ],
+      )
+      expect(history[1]?.actorUserId).toBe(manager.userId)
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(id, randomUUID()),
+      ).toEqual([])
+      expect(
+        await appointmentQueries.updateAppointment(
+          id,
+          randomUUID(),
+          { status: 'confirmed' },
+          actor,
+        ),
+      ).toBeUndefined()
+      const additional = await insertAppointment({
+        date: '2026-12-02',
+        price: 100,
+        staffAssignments: [
+          { staffId: ids.profileB, allocationBasisPoints: 5000, isLead: true },
+          { staffId: ids.profileA, allocationBasisPoints: 5000 },
+        ],
+      })
+      await expect(
+        appointmentQueries.updateAppointment(
+          additional,
+          ids.salon,
+          { status: 'completed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      await expect(
+        appointmentQueries.updateAppointment(
+          additional,
+          ids.salon,
+          { status: 'confirmed', notes: 'forbidden' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      await appointmentQueries.updateAppointment(
+        additional,
+        ids.salon,
+        { status: 'confirmed' },
+        actor,
+      )
+      await appointmentQueries.updateAppointment(
+        additional,
+        ids.salon,
+        { status: 'no-show' },
+        actor,
+      )
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(
+          additional,
+          ids.salon,
+        ),
+      ).toHaveLength(2)
+      const unassigned = await insertAppointment({
+        date: '2026-12-03',
+        price: 100,
+        staffId: ids.profileB,
+      })
+      await expect(
+        appointmentQueries.updateAppointment(
+          unassigned,
+          ids.salon,
+          { status: 'confirmed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      const solo = await insertAppointment({ date: '2026-12-04', price: 100 })
+      await appointmentQueries.updateAppointment(
+        solo,
+        ids.salon,
+        { status: 'completed' },
+        actor,
+      )
+      expect(
+        await testSql!`select * from staff_commissions where appointment_id = ${solo}`,
+      ).toHaveLength(1)
+      const inactive = await insertAppointment({
+        date: '2026-12-06',
+        price: 100,
+      })
+      await testSql!`update staff_profiles set active = false where id = ${ids.profileA}`
+      await expect(
+        appointmentQueries.updateAppointment(
+          inactive,
+          ids.salon,
+          { status: 'completed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(
+          inactive,
+          ids.salon,
+        ),
+      ).toEqual([])
+      await testSql!`update staff_profiles set active = true where id = ${ids.profileA}`
+      const cancelled = await insertAppointment({
+        date: '2026-12-07',
+        price: 100,
+        status: 'cancelled',
+      })
+      await expect(
+        appointmentQueries.updateAppointment(
+          cancelled,
+          ids.salon,
+          { status: 'confirmed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      const temporaryClientId = randomUUID()
+      await testSql!`insert into clients (id, salon_id, name, is_placeholder) values (${temporaryClientId}, ${ids.salon}, 'Temporary Client', true)`
+      const temporary = await insertAppointment({
+        date: '2026-12-08',
+        price: 100,
+      })
+      await testSql!`update appointments set client_id = ${temporaryClientId} where id = ${temporary}`
+      const { cancelIncompletePlaceholderAppointment } =
+        await import('./placeholder-client-queries')
+      expect(
+        await cancelIncompletePlaceholderAppointment({
+          salonId: ids.salon,
+          appointmentId: temporary,
+          actor: manager,
+        }),
+      ).toMatchObject({ ok: true, appointmentDeleted: true })
+      expect(
+        await appointmentQueries.getAppointmentById(temporary, ids.salon),
+      ).toBeUndefined()
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(
+          temporary,
+          ids.salon,
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          previousStatus: 'scheduled',
+          newStatus: 'cancelled',
+          actorUserId: manager.userId,
+        }),
+      ])
+      const revoked = await insertAppointment({
+        date: '2026-12-05',
+        price: 100,
+      })
+      await testSql!`update staff_profile_accesses set revoked_at = now() where user_id = ${ids.staffUser}`
+      await expect(
+        appointmentQueries.updateAppointment(
+          revoked,
+          ids.salon,
+          { status: 'completed' },
+          actor,
+        ),
+      ).rejects.toThrow()
+      expect(
+        await appointmentQueries.getAppointmentStatusHistory(
+          revoked,
+          ids.salon,
+        ),
+      ).toEqual([])
+    })
   },
 )

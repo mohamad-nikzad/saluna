@@ -2,10 +2,16 @@ import { Hono } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { z } from 'zod'
 import type { Appointment } from '@repo/salon-core/types'
+import {
+  staffAppointmentStatusActions,
+  staffAppointmentView,
+} from '@repo/salon-core/appointment-staff-policy'
 import type { AvailabilityMode } from '@repo/salon-core/availability'
 import { dayOfWeekFromDate } from '@repo/salon-core/staff-availability'
 import { canEditAppointmentPrice } from '@repo/salon-core/salon-local-time'
 import {
+  AppointmentStatusPermissionError,
+  getAppointmentStatusHistory,
   createAppointment,
   deleteAppointment,
   getAppointmentById,
@@ -93,7 +99,10 @@ export const appointments = new Hono<AppEnv>()
         endDate,
         staffFilter,
       )
-      return ok(c, { appointments: list })
+      return ok(c, {
+        appointments:
+          tenant.role === 'staff' ? list.map(staffAppointmentView) : list,
+      })
     },
   )
   .post(
@@ -250,7 +259,18 @@ export const appointments = new Hono<AppEnv>()
       ) {
         return error(c, 'دسترسی غیرمجاز', 403)
       }
-      return ok(c, { appointment })
+      return ok(c, {
+        appointment:
+          tenant.role === 'staff'
+            ? staffAppointmentView(appointment)
+            : {
+                ...appointment,
+                statusHistory: await getAppointmentStatusHistory(
+                  id,
+                  tenant.salonId,
+                ),
+              },
+      })
     },
   )
   .patch(
@@ -271,7 +291,7 @@ export const appointments = new Hono<AppEnv>()
       if (!existingClient) return error(c, 'مشتری یافت نشد', 404)
 
       const isStatusOnlyPatch =
-        Object.keys(body).every((key) => key === 'status') &&
+        Object.keys(await c.req.json()).every((key) => key === 'status') &&
         typeof status === 'string'
 
       if (!isManagerRole(role)) {
@@ -285,6 +305,19 @@ export const appointments = new Hono<AppEnv>()
           STAFF_STATUS_UPDATES.has(status as Appointment['status'])
         if (!staffCanPatchOwnStatus) {
           return error(c, 'دسترسی غیرمجاز', 403)
+        }
+        if (
+          status !== existing.status &&
+          !staffAppointmentStatusActions(
+            existing,
+            tenant.staffProfileId,
+          ).includes(status!)
+        ) {
+          return error(
+            c,
+            'این تغییر وضعیت مجاز نیست. فقط مسئول اصلی می‌تواند نوبت باز را تکمیل کند و اصلاح نوبت بسته‌شده با مدیر است.',
+            403,
+          )
         }
       }
 
@@ -338,6 +371,7 @@ export const appointments = new Hono<AppEnv>()
           const cancelled = await cancelIncompletePlaceholderAppointment({
             salonId,
             appointmentId: id,
+            actor: { userId: tenant.userId, name: tenant.name },
           })
           if (!cancelled.ok) {
             return error(
@@ -375,7 +409,18 @@ export const appointments = new Hono<AppEnv>()
           )
         }
 
-        const appointment = await updateAppointment(id, salonId, intake.patch)
+        const appointment = await updateAppointment(
+          id,
+          salonId,
+          isManagerRole(role) ? intake.patch : { status },
+          {
+            userId: tenant.userId,
+            name: tenant.name,
+            ...(role === 'staff'
+              ? { staffProfileId: tenant.staffProfileId }
+              : {}),
+          },
+        )
         if (!appointment) {
           return error(c, 'به‌روزرسانی انجام نشد', 500)
         }
@@ -418,15 +463,24 @@ export const appointments = new Hono<AppEnv>()
           appointment.id,
           salonId,
         )
+        const response = detail ?? {
+          ...appointment,
+          client: intake.client,
+          staff: intake.staff,
+          service: intake.service,
+        }
         return ok(c, {
-          appointment: detail ?? {
-            ...appointment,
-            client: intake.client,
-            staff: intake.staff,
-            service: intake.service,
-          },
+          appointment:
+            role === 'staff'
+              ? staffAppointmentView(response)
+              : {
+                  ...response,
+                  statusHistory: await getAppointmentStatusHistory(id, salonId),
+                },
         })
       } catch (err) {
+        if (err instanceof AppointmentStatusPermissionError)
+          return error(c, err.message, 403)
         if (createdPlaceholderId) {
           await deletePlaceholderClientIfOrphaned(
             createdPlaceholderId,

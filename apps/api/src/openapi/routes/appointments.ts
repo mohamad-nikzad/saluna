@@ -129,7 +129,7 @@ export const updateAppointmentRoute = createRoute({
   tags: ['Appointments'],
   summary: 'Update appointment or status',
   description:
-    'Managers may update any field. Staff may patch status on their own appointments. ' +
+    'Managers may update any field and correct closed statuses. Staff with active access may send only status on assigned open Appointments: confirmed or no-show, and completed only as the lead. Extra fields are rejected. ' +
     'Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.',
   security: tenantSecurity,
   request: {

@@ -271,7 +271,41 @@ export const appointmentWithDetailsSchema = z
     notes: z.string().optional(),
     createdAt: isoDateTimeSchema,
     updatedAt: isoDateTimeSchema,
-    client: clientSchema,
+    client: clientSchema
+      .partial({ phone: true, createdAt: true })
+      .openapi('AppointmentClient', {
+        description:
+          'Staff responses include only id, name, and isPlaceholder. Private Client fields are manager-only.',
+      }),
+    statusHistory: z
+      .array(
+        z.object({
+          id: z.string(),
+          salonId: z.string(),
+          appointmentId: z.string(),
+          actorUserId: z.string(),
+          actorName: z.string(),
+          previousStatus: z.enum([
+            'scheduled',
+            'confirmed',
+            'completed',
+            'cancelled',
+            'no-show',
+          ]),
+          newStatus: z.enum([
+            'scheduled',
+            'confirmed',
+            'completed',
+            'cancelled',
+            'no-show',
+          ]),
+          changedAt: isoDateTimeSchema,
+        }),
+      )
+      .optional()
+      .openapi({
+        description: 'Manager-only status transition history, oldest first.',
+      }),
     staff: userSchema,
     service: serviceSchema,
   })

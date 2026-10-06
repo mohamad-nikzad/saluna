@@ -1227,6 +1227,39 @@ export const appointments = pgTable(
   ],
 )
 
+// Keep transitions after Appointment deletion, including temporary Client cleanup.
+export const appointmentStatusHistory = pgTable(
+  'appointment_status_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    appointmentId: uuid('appointment_id').notNull(),
+    actorUserId: uuid('actor_user_id').notNull(),
+    actorName: text('actor_name').notNull(),
+    previousStatus: text('previous_status')
+      .notNull()
+      .$type<
+        'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
+      >(),
+    newStatus: text('new_status')
+      .notNull()
+      .$type<
+        'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
+      >(),
+    changedAt: timestamp('changed_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('appointment_status_history_salon_appointment_idx').on(
+      t.salonId,
+      t.appointmentId,
+    ),
+  ],
+)
+
 export const appointmentStaffAssignments = pgTable(
   'appointment_staff_assignments',
   {

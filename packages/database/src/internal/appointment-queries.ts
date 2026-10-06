@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, or } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm'
 import type {
   Appointment,
   AppointmentWithDetails,
@@ -6,6 +6,7 @@ import type {
   ServiceAddon,
 } from '@repo/salon-core/types'
 import type { AppointmentStaffAssignmentInput } from '@repo/salon-core/appointment-roster'
+import { staffAppointmentStatusActions } from '@repo/salon-core/appointment-staff-policy'
 import { leadStaffId } from '@repo/salon-core/appointment-roster'
 import { detectScheduleOverlaps } from '@repo/salon-core/appointment-conflict'
 import {
@@ -15,6 +16,8 @@ import {
 } from '@repo/salon-core/appointment-time'
 import { getDb } from '../client'
 import {
+  appointmentStatusHistory,
+  staffProfileAccesses,
   appointmentAddonLines,
   appointmentStaffAssignments,
   appointments,
@@ -536,10 +539,39 @@ export async function createAppointment(
   )[0]
 }
 
+export type AppointmentMutationActor = {
+  userId: string
+  name: string
+  /** Present for staff writes; checked again inside the transaction. */
+  staffProfileId?: string
+}
+
+export class AppointmentStatusPermissionError extends Error {}
+
+export async function getAppointmentStatusHistory(
+  appointmentId: string,
+  salonId: string,
+) {
+  return getDb()
+    .select()
+    .from(appointmentStatusHistory)
+    .where(
+      and(
+        eq(appointmentStatusHistory.appointmentId, appointmentId),
+        eq(appointmentStatusHistory.salonId, salonId),
+      ),
+    )
+    .orderBy(
+      asc(appointmentStatusHistory.changedAt),
+      asc(appointmentStatusHistory.id),
+    )
+}
+
 export async function updateAppointment(
   id: string,
   salonId: string,
   data: AppointmentPatch,
+  actor?: AppointmentMutationActor,
 ): Promise<Appointment | undefined> {
   const db = getDb()
   const existing = await getAppointmentById(id, salonId)
@@ -619,6 +651,65 @@ export async function updateAppointment(
   }
 
   const [row] = await db.transaction(async (tx) => {
+    // Serialize status changes with commission sync and audit insertion. Use the locked
+    // status, not the intake snapshot, so concurrent submissions record one transition.
+    const [current] = await tx
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.id, id), eq(appointments.salonId, salonId)))
+      .for('update')
+    if (!current) return []
+    if (actor?.staffProfileId) {
+      const [access] = await tx
+        .select({ id: staffProfileAccesses.id })
+        .from(staffProfileAccesses)
+        .innerJoin(
+          staffProfiles,
+          and(
+            eq(staffProfiles.id, staffProfileAccesses.staffProfileId),
+            eq(staffProfiles.salonId, salonId),
+          ),
+        )
+        .where(
+          and(
+            eq(staffProfileAccesses.salonId, salonId),
+            eq(staffProfileAccesses.userId, actor.userId),
+            eq(staffProfileAccesses.staffProfileId, actor.staffProfileId),
+            isNull(staffProfileAccesses.revokedAt),
+            eq(staffProfiles.active, true),
+          ),
+        )
+        .for('share')
+      const assignments = await tx
+        .select()
+        .from(appointmentStaffAssignments)
+        .where(
+          and(
+            eq(appointmentStaffAssignments.appointmentId, id),
+            eq(appointmentStaffAssignments.salonId, salonId),
+          ),
+        )
+      if (
+        !access ||
+        Object.keys(data).some((key) => key !== 'status') ||
+        !assignments.some(
+          (assignment) => assignment.staffId === actor.staffProfileId,
+        )
+      ) {
+        throw new AppointmentStatusPermissionError('دسترسی غیرمجاز')
+      }
+      if (
+        data.status !== current.status &&
+        !staffAppointmentStatusActions(
+          { status: current.status, staffAssignments: assignments },
+          actor.staffProfileId,
+        ).includes(data.status!)
+      ) {
+        throw new AppointmentStatusPermissionError(
+          'این تغییر وضعیت مجاز نیست. فقط مسئول اصلی می‌تواند نوبت باز را تکمیل کند و اصلاح نوبت بسته‌شده با مدیر است.',
+        )
+      }
+    }
     if (data.date !== undefined && data.date !== existing.date) {
       await assertSalonDateOpen(tx, salonId, data.date)
     }
@@ -654,7 +745,18 @@ export async function updateAppointment(
       })
     }
     if (updated)
-      await syncAppointmentCommission(tx, existing, updated, assignmentsChanged)
+      await syncAppointmentCommission(tx, current, updated, assignmentsChanged)
+    if (updated && actor && current.status !== updated.status) {
+      await tx.insert(appointmentStatusHistory).values({
+        salonId,
+        appointmentId: id,
+        actorUserId: actor.userId,
+        actorName: actor.name,
+        previousStatus: current.status,
+        newStatus: updated.status,
+        changedAt: new Date(),
+      })
+    }
     return [updated]
   })
   if (!row) return undefined

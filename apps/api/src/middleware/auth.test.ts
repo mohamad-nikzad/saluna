@@ -285,3 +285,30 @@ describe('requireTenant', () => {
     expect(res.status).toBe(403)
   })
 })
+
+it('uses the staff role in the requested salon even when the identity manages another salon', async () => {
+  vi.mocked(getManagerMemberForUser).mockResolvedValue({
+    userId: 'u1',
+    organizationId: 'manager-salon',
+    role: 'owner',
+    name: 'Manager',
+    username: '09121111111',
+  })
+  vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+    status: 'ok',
+    userId: 'u1',
+    salonId: 'staff-salon',
+    staffProfileId: 'profile',
+    name: 'Staff',
+    phone: '09121111111',
+  } as never)
+  const response = await appWithTenant().request('/tenant', {
+    headers: { 'X-Saluna-Salon-Id': 'staff-salon' },
+  })
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    salonId: 'staff-salon',
+    role: 'staff',
+    staffProfileId: 'profile',
+  })
+})

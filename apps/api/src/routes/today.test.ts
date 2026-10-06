@@ -104,7 +104,7 @@ describe('today router', () => {
     )
   })
 
-  it('staff role filters by linked Staff Profile and user id', async () => {
+  it('staff role filters by active Staff Profile and omits protected Client fields', async () => {
     vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined as never)
     vi.mocked(resolveStaffTenantContext).mockResolvedValue({
       status: 'ok',
@@ -115,11 +115,41 @@ describe('today router', () => {
       phone: '09120000001',
       salonStatus: 'active',
     } as never)
-    vi.mocked(dashboardDb.getTodayData).mockResolvedValue({} as never)
+    vi.mocked(dashboardDb.getTodayData).mockResolvedValue({
+      appointments: [
+        {
+          id: 'a1',
+          client: {
+            id: 'c1',
+            name: 'Client',
+            isPlaceholder: false,
+            phone: '09121111111',
+            notes: 'private',
+            tags: [{ label: 'VIP' }],
+          },
+          notes: 'service instructions',
+        },
+      ],
+      attentionItems: [{ title: 'Private Client history' }],
+    } as never)
     const res = await app.request('/api/v1/today', { headers: authHeaders })
     expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      appointments: [
+        {
+          client: { id: 'c1', name: 'Client', isPlaceholder: false },
+          notes: 'service instructions',
+        },
+      ],
+      attentionItems: [],
+    })
+    const second = await app.request('/api/v1/today', { headers: authHeaders })
+    expect((await second.json()).appointments[0].client).toEqual({
+      id: 'c1',
+      name: 'Client',
+      isPlaceholder: false,
+    })
     expect(dashboardDb.getTodayData).toHaveBeenCalledWith('s1', '2026-05-18', [
-      'u2',
       'profile-u2',
     ])
   })

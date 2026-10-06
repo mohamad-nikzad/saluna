@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@repo/database/appointments', () => ({
+  AppointmentStatusPermissionError: class extends Error {},
+  getAppointmentStatusHistory: vi.fn(),
   createAppointment: vi.fn(),
   deleteAppointment: vi.fn(),
   getAppointmentById: vi.fn(),
@@ -101,6 +103,7 @@ const jsonHeaders = { ...authHeaders, 'Content-Type': 'application/json' }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(appts.getAppointmentStatusHistory).mockResolvedValue([])
   vi.mocked(authServer.api.getSession).mockImplementation(
     async (args: any) =>
       (args?.headers?.get?.('Authorization')
@@ -126,15 +129,19 @@ beforeEach(() => {
   )
 })
 
-
 function soloAssignments(staffId: string) {
-  return [
-    { staffId, isLead: true as const, allocationBasisPoints: 10_000 },
-  ]
+  return [{ staffId, isLead: true as const, allocationBasisPoints: 10_000 }]
 }
 
 function soloRoster(staffId: string) {
-  return [{ id: `asg-${staffId}`, staffId, isLead: true, allocationBasisPoints: 10_000 }]
+  return [
+    {
+      id: `asg-${staffId}`,
+      staffId,
+      isLead: true,
+      allocationBasisPoints: 10_000,
+    },
+  ]
 }
 
 describe('appointments router', () => {
@@ -179,7 +186,7 @@ describe('appointments router', () => {
       's1',
       '2026-01-01',
       '2026-01-02',
-      ['u2', 'profile-u2'],
+      ['profile-u2'],
     )
   })
 
@@ -496,6 +503,8 @@ describe('appointments router', () => {
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
       staffAssignments: soloRoster('profile-u2'),
+      status: 'scheduled',
+      client: { id: 'c1', name: 'Client', isPlaceholder: false },
     } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       headers: authHeaders,
@@ -587,6 +596,8 @@ describe('appointments router', () => {
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
       staffAssignments: soloRoster('profile-u2'),
+      status: 'scheduled',
+      client: { id: 'c1', name: 'Client', isPlaceholder: false },
       clientId: 'c1',
       date: '2026-06-01',
       endTime: '10:00',
@@ -619,8 +630,9 @@ describe('appointments router', () => {
     } as never)
     vi.mocked(appts.getAppointmentById).mockResolvedValue({
       id: 'a1',
-      staffAssignments: soloRoster('u2'),
+      staffAssignments: soloRoster('profile-u2'),
       clientId: 'c1',
+      status: 'scheduled',
     } as never)
     vi.mocked(clientsDb.getClientById).mockResolvedValue({
       id: 'c1',
@@ -637,10 +649,12 @@ describe('appointments router', () => {
     vi.mocked(appts.updateAppointment).mockResolvedValue({
       id: 'a1',
       clientId: 'c1',
+      status: 'scheduled',
     } as never)
     vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue({
       id: 'a1',
       status: 'completed',
+      client: { id: 'c1', name: 'Client', isPlaceholder: false },
     } as never)
     const res = await app.request('/api/v1/appointments/a1', {
       method: 'PATCH',
@@ -720,6 +734,7 @@ describe('appointments router', () => {
       'a1',
       's1',
       expect.objectContaining({ status: 'cancelled' }),
+      { userId: 'u1', name: 'Manager' },
     )
   })
 
@@ -876,5 +891,195 @@ describe('appointments router', () => {
       appointment: { id: 'a1' },
       outcome: 'completed',
     })
+  })
+})
+
+describe('staff status authority and Client privacy', () => {
+  const privateClient = {
+    id: 'c1',
+    name: 'Client',
+    isPlaceholder: false,
+    phone: '09121111111',
+    notes: 'private note',
+    birthDate: '1370/01/01',
+    acquisitionSource: 'referral',
+    tags: [{ label: 'VIP' }],
+    createdAt: new Date(),
+  }
+  const appointment = {
+    id: 'a1',
+    clientId: 'c1',
+    status: 'scheduled',
+    staffAssignments: soloRoster('profile-u2'),
+    client: privateClient,
+    notes: 'Service instructions',
+    bookedServiceName: 'Booked cut',
+    date: '2026-10-05',
+    startTime: '10:00',
+    endTime: '11:00',
+    staff: { name: 'Staff' },
+    service: { name: 'Cut' },
+  }
+  beforeEach(() => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue(undefined)
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u2' },
+    } as never)
+    vi.mocked(resolveStaffTenantContext).mockResolvedValue({
+      status: 'ok',
+      userId: 'u2',
+      salonId: 's1',
+      staffProfileId: 'profile-u2',
+      name: 'Staff',
+      phone: '09120000001',
+      salonStatus: 'active',
+    } as never)
+    vi.mocked(appts.getAppointmentById).mockResolvedValue(appointment as never)
+    vi.mocked(appts.getAppointmentWithDetailsById).mockResolvedValue(
+      appointment as never,
+    )
+    vi.mocked(appts.getAppointmentsWithDetailsByDateRange).mockResolvedValue([
+      appointment,
+    ] as never)
+    vi.mocked(clientsDb.getClientById).mockResolvedValue(privateClient as never)
+    vi.mocked(appts.validateUpdateAppointmentIntake).mockResolvedValue({
+      ok: true,
+      patch: { status: 'confirmed' },
+      client: privateClient,
+      staff: appointment.staff,
+      staffMembers: [appointment.staff],
+      service: appointment.service,
+    } as never)
+    vi.mocked(appts.updateAppointment).mockResolvedValue(appointment as never)
+  })
+  const patch = (body: unknown) =>
+    app.request('/api/v1/appointments/a1', {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify(body),
+    })
+  function expectPrivateClientOmitted(client: unknown) {
+    expect(client).toEqual({ id: 'c1', name: 'Client', isPlaceholder: false })
+  }
+  it('omits private fields from lists, detail, and mutation responses', async () => {
+    const list = await app.request(
+      '/api/v1/appointments?startDate=2026-10-05&endDate=2026-10-05',
+      { headers: authHeaders },
+    )
+    expect(list.status).toBe(200)
+    expectPrivateClientOmitted((await list.json()).appointments[0].client)
+    for (const response of [
+      await app.request('/api/v1/appointments/a1', { headers: authHeaders }),
+      await patch({ status: 'confirmed' }),
+    ]) {
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expectPrivateClientOmitted(body.appointment.client)
+      expect(body.appointment.notes).toBe('Service instructions')
+      expect(body.appointment).not.toHaveProperty('statusHistory')
+    }
+  })
+  it.each(['other-profile', 'u2'])(
+    'rejects status-only writes assigned to %s',
+    async (staffId) => {
+      vi.mocked(appts.getAppointmentById).mockResolvedValue({
+        ...appointment,
+        staffAssignments: soloRoster(staffId),
+      } as never)
+      expect((await patch({ status: 'confirmed' })).status).toBe(403)
+      expect(appts.updateAppointment).not.toHaveBeenCalled()
+    },
+  )
+  it('does not read another salon Appointment even when the profile id matches', async () => {
+    vi.mocked(appts.getAppointmentById).mockResolvedValue(undefined)
+    expect((await patch({ status: 'confirmed' })).status).toBe(404)
+    expect(appts.getAppointmentById).toHaveBeenCalledWith('a1', 's1')
+    expect(appts.updateAppointment).not.toHaveBeenCalled()
+  })
+  it.each(['completed', 'cancelled', 'no-show'])(
+    'rejects correction of %s by staff',
+    async (status) => {
+      vi.mocked(appts.getAppointmentById).mockResolvedValue({
+        ...appointment,
+        status,
+      } as never)
+      expect((await patch({ status: 'confirmed' })).status).toBe(403)
+      expect(appts.updateAppointment).not.toHaveBeenCalled()
+    },
+  )
+  it.each([
+    'date',
+    'clientId',
+    'serviceId',
+    'notes',
+    'finalPrice',
+    'staffAssignments',
+    'unknownField',
+  ])('rejects status requests containing %s', async (key) => {
+    const values: Record<string, unknown> = {
+      date: '2026-10-06',
+      clientId: 'c2',
+      serviceId: 'svc2',
+      notes: 'note',
+      finalPrice: 100,
+      staffAssignments: soloAssignments('profile-u2'),
+      unknownField: true,
+    }
+    expect([400, 403]).toContain(
+      (await patch({ status: 'confirmed', [key]: values[key] })).status,
+    )
+    expect(appts.updateAppointment).not.toHaveBeenCalled()
+  })
+  it('allows additional staff to confirm or record no-show but reserves completion for the lead', async () => {
+    vi.mocked(appts.getAppointmentById).mockResolvedValue({
+      ...appointment,
+      staffAssignments: [
+        ...soloRoster('other-lead'),
+        { ...soloRoster('profile-u2')[0], isLead: false },
+      ],
+    } as never)
+    expect((await patch({ status: 'completed' })).status).toBe(403)
+    expect((await patch({ status: 'confirmed' })).status).toBe(200)
+    expect((await patch({ status: 'no-show' })).status).toBe(200)
+  })
+  it.each([
+    '/clients',
+    '/clients/c1',
+    '/clients/c1/summary',
+    '/clients?search=09121111111',
+    '/clients/export',
+    '/retention',
+    '/dashboard',
+  ])('blocks manager Client read path %s', async (path) => {
+    expect(
+      (await app.request(`/api/v1${path}`, { headers: authHeaders })).status,
+    ).toBe(403)
+  })
+  it('keeps manager Client fields and exposes transition history', async () => {
+    vi.mocked(getManagerMemberForUser).mockResolvedValue({
+      userId: 'u1',
+      organizationId: 's1',
+      role: 'owner',
+      name: 'Manager',
+      username: '09120000000',
+    })
+    const history = [
+      {
+        actorUserId: 'u2',
+        previousStatus: 'scheduled',
+        newStatus: 'confirmed',
+      },
+    ]
+    vi.mocked(appts.getAppointmentStatusHistory).mockResolvedValue(
+      history as never,
+    )
+    const response = await app.request('/api/v1/appointments/a1', {
+      headers: authHeaders,
+    })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.appointment.client.phone).toBe(privateClient.phone)
+    expect(body.appointment.client.notes).toBe(privateClient.notes)
+    expect(body.appointment.statusHistory).toEqual(history)
   })
 })

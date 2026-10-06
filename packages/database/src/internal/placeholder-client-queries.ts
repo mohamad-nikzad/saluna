@@ -2,7 +2,7 @@ import { and, count, eq } from 'drizzle-orm'
 import type { AppointmentWithDetails, Client } from '@repo/salon-core/types'
 import { normalizePhone } from '@repo/salon-core/phone'
 import { getDb } from '../client'
-import { appointments, clients } from '../schema'
+import { appointmentStatusHistory, appointments, clients } from '../schema'
 import { rowToClient } from './row-mappers'
 import { getAppointmentWithDetailsById } from './appointment-queries'
 import {
@@ -181,6 +181,7 @@ export async function cleanupPlaceholderAfterAppointmentMutation(input: {
 export async function cancelIncompletePlaceholderAppointment(input: {
   salonId: string
   appointmentId: string
+  actor?: { userId: string; name: string }
 }): Promise<CancelIncompletePlaceholderAppointmentResult> {
   const db = getDb()
   const appointmentRows = await db
@@ -214,6 +215,30 @@ export async function cancelIncompletePlaceholderAppointment(input: {
   }
 
   return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.id, input.appointmentId),
+          eq(appointments.salonId, input.salonId),
+        ),
+      )
+      .for('update')
+    if (!current) return fail(404, 'نوبت یافت نشد')
+    if (current.status === 'completed')
+      return fail(409, 'وضعیت نوبت تغییر کرده است. دوباره تلاش کنید.')
+    if (input.actor && current.status !== 'cancelled') {
+      await tx.insert(appointmentStatusHistory).values({
+        salonId: input.salonId,
+        appointmentId: input.appointmentId,
+        actorUserId: input.actor.userId,
+        actorName: input.actor.name,
+        previousStatus: current.status,
+        newStatus: 'cancelled',
+        changedAt: new Date(),
+      })
+    }
     const deleted = await tx
       .delete(appointments)
       .where(

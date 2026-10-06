@@ -1,3 +1,5 @@
+import { staffAppointmentStatusActions } from '@repo/salon-core/appointment-staff-policy'
+import { useAuth } from '#/lib/auth'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
@@ -23,7 +25,6 @@ import {
   type StatusActionFeedback,
 } from '#/lib/use-staff-today-status-mutation'
 import {
-  ACTIVE_STATUSES,
   bookedServiceWithAddonCount,
   buildStaffTodayViewModel,
   firstNameOf,
@@ -99,7 +100,12 @@ function StaffActionButtons({
   const currentFeedback =
     feedback?.appointmentId === appointment.id ? feedback : null
   const isSaving = currentFeedback?.mode === 'saving'
-  const canActOnVisit = ACTIVE_STATUSES.has(appointment.status)
+  const { user } = useAuth()
+  const actions = staffAppointmentStatusActions(
+    appointment,
+    user?.staffProfileId,
+  )
+  const canActOnVisit = actions.length > 0
 
   if (!canActOnVisit) {
     return null
@@ -108,7 +114,7 @@ function StaffActionButtons({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {appointment.status === 'scheduled' ? (
+        {actions.includes('confirmed') ? (
           <Button
             size="sm"
             variant="outline"
@@ -122,17 +128,19 @@ function StaffActionButtons({
             تایید
           </Button>
         ) : null}
-        <Button
-          size="sm"
-          className="h-8 touch-manipulation text-xs"
-          disabled={isSaving}
-          onClick={() => onPatchStatus(appointment.id, 'completed')}
-        >
-          {isSaving && currentFeedback.status === 'completed' && (
-            <Spinner className="ml-1.5 size-3" />
-          )}
-          انجام شد
-        </Button>
+        {actions.includes('completed') ? (
+          <Button
+            size="sm"
+            className="h-8 touch-manipulation text-xs"
+            disabled={isSaving}
+            onClick={() => onPatchStatus(appointment.id, 'completed')}
+          >
+            {isSaving && currentFeedback.status === 'completed' && (
+              <Spinner className="ml-1.5 size-3" />
+            )}
+            انجام شد
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="secondary"

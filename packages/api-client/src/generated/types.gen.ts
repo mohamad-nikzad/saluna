@@ -692,7 +692,20 @@ export type AppointmentWithDetails = {
     notes?: string;
     createdAt: string | string;
     updatedAt: string | string;
-    client: Client;
+    client: AppointmentClient;
+    /**
+     * Manager-only status transition history, oldest first.
+     */
+    statusHistory?: Array<{
+        id: string;
+        salonId: string;
+        appointmentId: string;
+        actorUserId: string;
+        actorName: string;
+        previousStatus: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+        newStatus: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+        changedAt: string | string;
+    }>;
     staff: User;
     service: Service;
     [key: string]: unknown;
@@ -725,6 +738,21 @@ export type BookedAppointmentAddonLine = {
     sortOrder: number;
     createdAt: string | string;
     [key: string]: unknown;
+};
+
+/**
+ * Staff responses include only id, name, and isPlaceholder. Private Client fields are manager-only.
+ */
+export type AppointmentClient = {
+    id: string;
+    name: string;
+    phone?: string | null;
+    isPlaceholder: boolean;
+    birthDate?: string | null;
+    acquisitionSource?: 'instagram' | 'website' | 'google' | 'referral' | 'walk_in' | 'other' | 'unknown' | null;
+    notes?: string;
+    createdAt?: string | string;
+    tags?: Array<ClientTag>;
 };
 
 export type Service = {

@@ -2041,7 +2041,7 @@ export const getApiV1AppointmentsByIdOptions = (options: Options<GetApiV1Appoint
 /**
  * Update appointment or status
  *
- * Managers may update any field. Staff may patch status on their own appointments. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.
+ * Managers may update any field and correct closed statuses. Staff with active access may send only status on assigned open Appointments: confirmed or no-show, and completed only as the lead. Extra fields are rejected. Cancelling a placeholder appointment may return a cleanup payload instead of an appointment.
  */
 export const patchApiV1AppointmentsByIdMutation = (options?: Partial<Options<PatchApiV1AppointmentsByIdData>>): UseMutationOptions<PatchApiV1AppointmentsByIdResponse, PatchApiV1AppointmentsByIdError, Options<PatchApiV1AppointmentsByIdData>> => {
     const mutationOptions: UseMutationOptions<PatchApiV1AppointmentsByIdResponse, PatchApiV1AppointmentsByIdError, Options<PatchApiV1AppointmentsByIdData>> = {

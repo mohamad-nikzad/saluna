@@ -7,6 +7,8 @@ export type StaffInviteListStatus = 'pending' | 'expired'
 export interface User {
   id: string
   salonId: string
+  /** Active Staff Profile Access in this salon; distinct from the login identity. */
+  staffProfileId?: string
   /** Display name of the active salon when known (staff multi-salon context). */
   salonName?: string
   /** Compact salon-facing label. Uses nickname when one exists, otherwise fullName. */
@@ -258,9 +260,22 @@ export interface AppointmentStaffAssignment {
 }
 
 export interface AppointmentWithDetails extends Appointment {
-  client: Client
+  /** Staff reads include only id, name, and placeholder state. */
+  client: Pick<Client, 'id' | 'name' | 'isPlaceholder'> & Partial<Client>
+  statusHistory?: AppointmentStatusTransition[]
   staff: User
   service: Service
+}
+
+export interface AppointmentStatusTransition {
+  id: string
+  salonId: string
+  appointmentId: string
+  actorUserId: string
+  actorName: string
+  previousStatus: Appointment['status']
+  newStatus: Appointment['status']
+  changedAt: Date
 }
 
 export type CalendarView = 'day' | 'week' | 'month' | 'list'
