@@ -43,7 +43,8 @@
     "brand:icons": "node scripts/generate-saluna-icons.mjs",
     "brand:sync": "tsx scripts/sync-brand-static.mjs",
     "generate:api-contract": "pnpm --filter @repo/api generate:openapi",
-    "generate:api-client": "pnpm --filter @repo/api-client generate"
+    "generate:api-client": "pnpm --filter @repo/api-client generate",
+    "test:e2e:cms": "playwright test --config playwright.cms.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
