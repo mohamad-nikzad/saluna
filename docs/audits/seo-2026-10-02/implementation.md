@@ -54,7 +54,7 @@ No production Core Web Vitals improvement is claimed. Local browser checks cover
 3. Re-run the production audit into a separate snapshot so the saved before-state evidence is retained. Check OG, icon, sitemap, visible Salon HTML and a known toman price against deployed JSON-LD.
 4. Submit/inspect the sitemap and important URLs in Search Console after publication. Confirm Google's chosen canonicals and request recrawls after these material changes. Favicon appearance and search rankings need later observation.
 5. Deploy the confirmed test Salon exclusions from [BL-0089](../../../backlog/done/BL-0089-classify-internal-salons-for-search.md), refresh cached Salon HTML and the runtime sitemap, and inspect their noindex metadata in Search Console. The owner confirmed `salon-a027zt`, `salon-vubbcn` and `salon-gzwp7u`; public links remain available. No other Salon is excluded based on its name, sparse details, or Unlimited Access.
-6. Keep Blog Articles and Product Guides in the agreed EmDash work, [BL-0087](../../../backlog/ready/BL-0087-publish-blog-and-product-guides-with-emdash.md). The new feature pages link to their own workflow sections and working contact pages; they do not link to unshipped guide URLs.
+6. Keep Blog Articles and Product Guides in the agreed EmDash work, [BL-0087](../../../backlog/now/BL-0087-publish-blog-and-product-guides-with-emdash.md). The new feature pages link to their own workflow sections and working contact pages; they do not link to unshipped guide URLs.
 7. Add reviewed product demonstrations, consented case studies, editorial mentions and regional uptime checks when the needed access/content exists. Measure branded versus non-brand impressions and signup outcomes after deployment.
 
 ## Header correction
