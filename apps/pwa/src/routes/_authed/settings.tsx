@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   Moon,
+  Monitor,
   Pencil,
   Scissors,
   Sun,
@@ -24,6 +25,7 @@ import { Badge } from '@repo/ui/badge'
 import { Card, CardContent, CardHeader } from '@repo/ui/card'
 import { FieldError } from '@repo/ui/field'
 import { Skeleton } from '@repo/ui/skeleton'
+import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group'
 import { brand } from '@repo/brand'
 import { SakuraMark } from '@repo/ui/sakura-mark'
 import { cn } from '@repo/ui/utils'
@@ -237,10 +239,6 @@ function SettingsPage() {
     }
   }
 
-  const toggleDarkMode = (enabled: boolean) => {
-    setTheme(enabled ? 'dark' : 'light')
-  }
-
   const toggleLocalAlerts = (next: boolean) => {
     setLocalAlerts(next)
     updateLocalAlerts.mutate(
@@ -274,8 +272,6 @@ function SettingsPage() {
           newClientsThisMonth: dashboardQuery.data.newClientsThisMonth,
         }
       : null
-  const darkMode = theme === 'dark'
-
   const handleProfileSaved = () => {
     setProfileDrawerOpen(false)
     void refreshAuth()
@@ -459,13 +455,47 @@ function SettingsPage() {
           {isManager ? <SalonClosures workingDays={workingDays} /> : null}
 
           <SettingsGroup label="ظاهر">
-            <ToggleRow
-              icon={darkMode ? Moon : Sun}
-              label="حالت تاریک"
-              hint="هماهنگ با سیستم"
-              checked={darkMode}
-              onChange={toggleDarkMode}
-            />
+            <div className="flex flex-col gap-3 px-4 py-3">
+              <div className="text-sm font-semibold text-foreground">پوسته</div>
+              <ToggleGroup
+                type="single"
+                dir="rtl"
+                aria-label="پوسته"
+                value={theme}
+                onValueChange={(value) => {
+                  if (
+                    value === 'system' ||
+                    value === 'light' ||
+                    value === 'dark'
+                  ) {
+                    setTheme(value)
+                  }
+                }}
+                className="w-full gap-2"
+              >
+                <ToggleGroupItem
+                  value="system"
+                  className="rounded-md first:rounded-md last:rounded-md"
+                >
+                  <Monitor />
+                  سیستم
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="light"
+                  className="rounded-md first:rounded-md last:rounded-md"
+                >
+                  <Sun />
+                  روشن
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="dark"
+                  className="rounded-md first:rounded-md last:rounded-md"
+                >
+                  <Moon />
+                  تاریک
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           </SettingsGroup>
 
           <SettingsGroup label="حساب">

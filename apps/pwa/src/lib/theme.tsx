@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react'
@@ -60,7 +61,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const resolvedTheme: ResolvedTheme =
     theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyTheme(resolvedTheme)
   }, [resolvedTheme])
 
