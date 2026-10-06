@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { spawnSync } from 'node:child_process'
 import { blogArticleBylines } from '../../apps/web/src/lib/blog-byline'
 import { configureCmsBlog } from '../../scripts/configure-cms-blog.mjs'
 import { cms, invitedAccount, openAdmin, operatorAccount } from './accounts'
@@ -225,7 +226,7 @@ test('Author publishes own content; Editor manages another author without CMS ad
       'POST',
       { slug: 'unauthorized', label: 'Unauthorized' },
     ],
-    ['settings', 'PUT', { title: 'Unauthorized' }],
+    ['settings', 'POST', { title: 'Unauthorized' }],
     ['admin/users', 'GET', undefined],
     ['admin/plugins/nonexistent/enable', 'POST', {}],
   ] as const) {
@@ -555,5 +556,499 @@ test('a signed preview requires a real content session and never leaks into anon
   } finally {
     await contributor.context().close()
     await subscriber.context().close()
+  }
+})
+
+test('an Author illustrates, previews, publishes, revises, republishes, and withdraws an article without a rebuild', async ({
+  page,
+}) => {
+  await openAdmin(author)
+  await author.goto('/_emdash/admin/content/blog_articles/new')
+  await author
+    .getByLabel('عنوان', { exact: true })
+    .fill('برنامه روزانه نوبت‌های سالن')
+  await author
+    .getByLabel('خلاصه', { exact: true })
+    .fill('درخواست‌های نوبت را در ابتدای روز بررسی کنید.')
+  await author
+    .locator('[contenteditable="true"]')
+    .first()
+    .fill('درخواست نوبت با نوبت تأییدشده تفاوت دارد.')
+  await author
+    .getByRole('button', { name: 'Select image', exact: true })
+    .click()
+  const picker = author.getByRole('dialog')
+  await picker.getByLabel('Choose files to upload').setInputFiles({
+    name: 'appointment-requests.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=',
+      'base64',
+    ),
+  })
+  await expect(
+    picker.getByRole('button', { name: 'Select', exact: true }),
+  ).toBeEnabled()
+  await picker.getByRole('button', { name: 'Select', exact: true }).click()
+  await author.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(author).toHaveURL(
+    /content\/blog_articles\/[A-Z0-9]+(?:\?locale=en)?$/,
+  )
+  const id = new URL(author.url()).pathname.split('/').at(-1)!
+  const original = (await cms(author, `content/blog_articles/${id}`)).item
+  const publicPath = `/blog/${encodeURIComponent(original.slug)}`
+  const previewDraft = async (title: string, body: string) => {
+    const [preview] = await Promise.all([
+      author.context().waitForEvent('page'),
+      author
+        .getByRole('button', { name: /^Preview(?: draft)?$/, exact: true })
+        .first()
+        .click(),
+    ])
+    await expect(preview.getByRole('heading', { level: 1 })).toHaveText(title)
+    await expect(preview.locator('article')).toContainText(body)
+    await expect(preview.locator('article img')).toHaveCount(1)
+    expect(
+      (
+        await preview.request.get(
+          (await preview.locator('article img').getAttribute('src'))!,
+        )
+      ).ok(),
+    ).toBe(true)
+    await expect(
+      preview.getByText('پیش‌نمایش پیش‌نویس', { exact: true }),
+    ).toBeVisible()
+    await preview.close()
+  }
+  const publish = async (label: string) => {
+    await author
+      .getByRole('button', { name: label, exact: true })
+      .first()
+      .click()
+    const [response] = await Promise.all([
+      author.waitForResponse(
+        (r) =>
+          new URL(r.url()).pathname.endsWith(`/blog_articles/${id}/publish`) &&
+          r.request().method() === 'POST',
+      ),
+      author
+        .getByRole('dialog')
+        .getByRole('button', { name: label, exact: true })
+        .click(),
+    ])
+    expect(response.ok()).toBe(true)
+  }
+  await previewDraft('برنامه روزانه نوبت‌های سالن', 'نوبت تأییدشده')
+  expect((await page.request.get(publicPath)).status()).toBe(404)
+  await publish('Publish now')
+  const first = await page.goto(publicPath)
+  expect(first!.status()).toBe(200)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'برنامه روزانه نوبت‌های سالن',
+  )
+  await expect(page.locator('article')).toContainText('نوبت تأییدشده')
+  expect(await (await page.request.get('/blog')).text()).toContain(
+    'برنامه روزانه نوبت‌های سالن',
+  )
+  await author
+    .getByLabel('عنوان', { exact: true })
+    .fill('رسیدگی روزانه به درخواست‌های نوبت')
+  await author
+    .locator('[contenteditable="true"]')
+    .first()
+    .fill('ابتدا درخواست‌های تازه را بررسی و سپس نوبت را ثبت کنید.')
+  await author.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect
+    .poll(
+      async () =>
+        (await cms(author, `content/blog_articles/${id}`)).item.data.title,
+    )
+    .toBe('رسیدگی روزانه به درخواست‌های نوبت')
+  expect((await cms(author, `content/blog_articles/${id}`)).item.slug).toBe(
+    original.slug,
+  )
+  await previewDraft(
+    'رسیدگی روزانه به درخواست‌های نوبت',
+    'ابتدا درخواست‌های تازه',
+  )
+  const liveDraft = await page.request.get(publicPath)
+  expect(liveDraft.status()).toBe(200)
+  const html = await liveDraft.text()
+  expect(html).toContain('برنامه روزانه نوبت‌های سالن')
+  expect(html).toContain('نوبت تأییدشده')
+  expect(html).not.toContain('رسیدگی روزانه به درخواست‌های نوبت')
+  expect(html).not.toContain('ابتدا درخواست‌های تازه')
+  await publish('Publish changes')
+  const republished = await page.request.get(publicPath)
+  expect(republished.status()).toBe(200)
+  expect(await republished.text()).toContain('ابتدا درخواست‌های تازه')
+  expect(await (await page.request.get('/blog')).text()).toContain(
+    'رسیدگی روزانه به درخواست‌های نوبت',
+  )
+  await expect(
+    author.getByRole('button', { name: /^Unpublish / }).first(),
+  ).toBeVisible()
+  const [withdrawn] = await Promise.all([
+    author.waitForResponse(
+      (r) =>
+        new URL(r.url()).pathname.endsWith(`/blog_articles/${id}/unpublish`) &&
+        r.request().method() === 'POST',
+    ),
+    author
+      .getByRole('button', { name: /^Unpublish / })
+      .first()
+      .click(),
+  ])
+  expect(withdrawn.ok()).toBe(true)
+  expect((await page.request.get(publicPath)).status()).toBe(404)
+  expect(await (await page.request.get('/blog')).text()).not.toContain(
+    'رسیدگی روزانه به درخواست‌های نوبت',
+  )
+})
+
+test('published Blog Article slash variants permanently redirect to the current canonical URL', async ({
+  page,
+}) => {
+  const created = await cms(author, 'content/blog_articles', {
+    slug: 'canonical-blog-path',
+    status: 'draft',
+    data: { title: 'نشانی ثابت مقاله' },
+  })
+  await cms(author, `content/blog_articles/${created.item.id}/publish`, {
+    _rev: created._rev,
+  })
+  for (const [path, canonical] of [
+    ['/blog/', '/blog'],
+    ['/blog/canonical-blog-path/', '/blog/canonical-blog-path'],
+  ]) {
+    const response = await page.request.get(path, { maxRedirects: 0 })
+    expect([301, 308]).toContain(response.status())
+    expect(response.headers().location).toBe(canonical)
+    expect(response.headers()['cache-control']).toContain('no-store')
+  }
+  expect(
+    (
+      await page.request.get('/blog/not-a-blog-article/', { maxRedirects: 0 })
+    ).status(),
+  ).toBe(404)
+})
+
+test('published slug changes remain private until publishing and former URLs disappear on withdrawal', async ({
+  page,
+}) => {
+  const created = await cms(author, 'content/blog_articles', {
+    slug: 'stable-article-first',
+    status: 'draft',
+    data: { title: 'راهنمای نشانی پایدار مقاله' },
+  })
+  const id = created.item.id
+  await cms(editor, `content/blog_articles/${id}/publish`, {
+    _rev: created._rev,
+    overrideLock: true,
+  })
+  expect((await page.request.get('/blog/stable-article-first')).status()).toBe(
+    200,
+  )
+  expect(await (await page.request.get('/blog')).text()).toContain(
+    '/blog/stable-article-first',
+  )
+  const live = await cms(editor, `content/blog_articles/${id}`)
+  await cms(
+    editor,
+    `content/blog_articles/${id}`,
+    {
+      slug: 'stable-article-second',
+      data: { title: 'عنوان پیش‌نویس با نشانی تازه' },
+      _rev: live._rev,
+    },
+    'PUT',
+  )
+  const previewLink = (
+    await cms(editor, `content/blog_articles/${id}/preview-url`, {})
+  ).url
+  const preview = await editor.request.get(previewLink)
+  expect(preview.status()).toBe(200)
+  expect(await preview.text()).toContain('عنوان پیش‌نویس با نشانی تازه')
+  expect(preview.headers()['x-robots-tag']).toContain('noindex')
+  const beforeRename = await page.request.get('/blog/stable-article-first', {
+    maxRedirects: 0,
+  })
+  expect(beforeRename.status()).toBe(200)
+  expect(await beforeRename.text()).toContain('راهنمای نشانی پایدار مقاله')
+  expect(
+    (
+      await page.request.get('/blog/stable-article-second', { maxRedirects: 0 })
+    ).status(),
+  ).toBe(404)
+  expect(await (await page.request.get('/blog')).text()).not.toContain(
+    '/blog/stable-article-second',
+  )
+  let pending = await cms(editor, `content/blog_articles/${id}`)
+  await cms(editor, `content/blog_articles/${id}/publish`, {
+    _rev: pending._rev,
+  })
+  const firstRename = await page.request.get('/blog/stable-article-first', {
+    maxRedirects: 0,
+  })
+  expect([301, 308]).toContain(firstRename.status())
+  expect(firstRename.headers().location).toBe('/blog/stable-article-second')
+  expect((await page.request.get('/blog/stable-article-second')).status()).toBe(
+    200,
+  )
+  expect(await (await page.request.get('/blog')).text()).toContain(
+    '/blog/stable-article-second',
+  )
+  pending = await cms(editor, `content/blog_articles/${id}`)
+  await cms(
+    editor,
+    `content/blog_articles/${id}`,
+    { slug: 'stable-article-third', data: {}, _rev: pending._rev },
+    'PUT',
+  )
+  pending = await cms(editor, `content/blog_articles/${id}`)
+  const publishedThird = await cms(
+    editor,
+    `content/blog_articles/${id}/publish`,
+    {
+      _rev: pending._rev,
+    },
+  )
+  expect(publishedThird.item.slug).toBe('stable-article-third')
+  expect((await page.request.get('/blog/stable-article-third')).status()).toBe(
+    200,
+  )
+  for (const former of ['stable-article-first', 'stable-article-second']) {
+    for (const suffix of ['', '/']) {
+      const response = await page.request.get(`/blog/${former}${suffix}`, {
+        maxRedirects: 0,
+      })
+      expect([301, 308]).toContain(response.status())
+      expect(response.headers().location).toBe('/blog/stable-article-third')
+    }
+  }
+  const currentPreview = (
+    await cms(editor, `content/blog_articles/${id}/preview-url`, {})
+  ).url
+  const expiredPreview = (
+    await cms(editor, `content/blog_articles/${id}/preview-url`, {
+      expiresIn: -1,
+    })
+  ).url
+  for (const search of [
+    new URL(currentPreview, 'http://localhost:3303').search,
+    '?_preview=invalid',
+    new URL(expiredPreview, 'http://localhost:3303').search,
+  ]) {
+    for (const session of [editor, page]) {
+      const formerPreview = await session.request.get(
+        `/blog/stable-article-first${search}`,
+        { maxRedirects: 0 },
+      )
+      expect([403, 404]).toContain(formerPreview.status())
+      expect(formerPreview.headers()['cache-control']).toContain(
+        'private, no-store',
+      )
+      expect(formerPreview.headers()['x-robots-tag']).toContain('noindex')
+      expect(await formerPreview.text()).not.toContain(
+        'عنوان پیش‌نویس با نشانی تازه',
+      )
+    }
+  }
+  pending = await cms(editor, `content/blog_articles/${id}`)
+  await cms(editor, `content/blog_articles/${id}/unpublish`, {
+    _rev: pending._rev,
+  })
+  for (const slug of [
+    'stable-article-first',
+    'stable-article-second',
+    'stable-article-third',
+  ]) {
+    for (const suffix of ['', '/'])
+      expect(
+        (
+          await page.request.get(`/blog/${slug}${suffix}`, { maxRedirects: 0 })
+        ).status(),
+      ).toBe(404)
+  }
+  expect(await (await page.request.get('/blog')).text()).not.toContain(
+    'عنوان پیش‌نویس با نشانی تازه',
+  )
+  pending = await cms(editor, `content/blog_articles/${id}`)
+  await cms(editor, `content/blog_articles/${id}/publish`, {
+    _rev: pending._rev,
+  })
+  expect((await page.request.get('/blog/stable-article-third')).status()).toBe(
+    200,
+  )
+  await cms(editor, `content/blog_articles/${id}`, undefined, 'DELETE')
+  for (const slug of [
+    'stable-article-first',
+    'stable-article-second',
+    'stable-article-third',
+  ]) {
+    expect(
+      (await page.request.get(`/blog/${slug}`, { maxRedirects: 0 })).status(),
+    ).toBe(404)
+  }
+  await cms(
+    operator,
+    `content/blog_articles/${id}/permanent`,
+    undefined,
+    'DELETE',
+  )
+  expect(
+    (
+      await page.request.get('/blog/stable-article-first', { maxRedirects: 0 })
+    ).status(),
+  ).toBe(404)
+  expect(await (await page.request.get('/blog')).text()).not.toContain(
+    'عنوان پیش‌نویس با نشانی تازه',
+  )
+})
+
+test('former Blog Article URLs remain correct when automatic redirects span multiple pages', async ({
+  page,
+}) => {
+  const created = await cms(author, 'content/blog_articles', {
+    slug: 'paged-redirect',
+    status: 'draft',
+    data: { title: 'مقاله با چند تغییر نشانی' },
+  })
+  const id = created.item.id
+  let saved = await cms(author, `content/blog_articles/${id}/publish`, {
+    _rev: created._rev,
+  })
+  for (let rename = 1; rename <= 101; rename++) {
+    saved = await cms(
+      author,
+      `content/blog_articles/${id}`,
+      { slug: `paged-redirect-${rename}`, data: {}, _rev: saved._rev },
+      'PUT',
+    )
+    saved = await cms(author, `content/blog_articles/${id}/publish`, {
+      _rev: saved._rev,
+    })
+  }
+  const oldest = await page.request.get('/blog/paged-redirect', {
+    maxRedirects: 0,
+  })
+  expect(oldest.status()).toBe(301)
+  expect(oldest.headers().location).toBe('/blog/paged-redirect-101')
+  await cms(author, `content/blog_articles/${id}/unpublish`, {
+    _rev: saved._rev,
+  })
+  expect(
+    (
+      await page.request.get('/blog/paged-redirect', { maxRedirects: 0 })
+    ).status(),
+  ).toBe(404)
+})
+
+test('production public pages keep canonical metadata and slash redirects with query parameters', async ({
+  page,
+}) => {
+  test.skip(
+    process.env.CMS_E2E_PRODUCTION !== '1',
+    'Static redirect behavior is handled by the production Node adapter',
+  )
+  for (const path of [
+    '/services',
+    '/about',
+    '/features/online-appointment-requests',
+  ]) {
+    const variant = await page.request.get(`${path}/?campaign=seo%20check`, {
+      maxRedirects: 0,
+    })
+    expect([301, 308]).toContain(variant.status())
+    expect(
+      new URL(variant.headers().location, 'http://localhost:3303').pathname,
+    ).toBe(path)
+    expect(
+      new URL(variant.headers().location, 'http://localhost:3303').search,
+    ).toBe('?campaign=seo%20check')
+    const existingPage = await page.request.get(path)
+    expect(existingPage.status()).toBe(200)
+    expect(await existingPage.text()).toContain(
+      `rel="canonical" href="http://localhost:3303${path}"`,
+    )
+    expect(await existingPage.text()).not.toContain(
+      '<meta http-equiv="refresh"',
+    )
+  }
+  const sitemap = await page.request.get('/sitemap-0.xml')
+  expect(sitemap.status()).toBe(200)
+  expect(await sitemap.text()).toContain(
+    '<loc>http://localhost:3303/about</loc>',
+  )
+  const robots = await page.request.get('/robots.txt')
+  expect(await robots.text()).toContain(
+    'Sitemap: http://localhost:3303/sitemap-index.xml',
+  )
+  expect(await robots.text()).toContain(
+    'Sitemap: http://localhost:3303/salons-sitemap.xml',
+  )
+})
+
+test('a CMS outage returns errors instead of cached redirects or successful published content', async ({
+  page,
+}) => {
+  const created = await cms(author, 'content/blog_articles', {
+    slug: 'outage-article',
+    status: 'draft',
+    data: { title: 'مقاله هنگام قطعی سامانه محتوا' },
+  })
+  let saved = await cms(
+    author,
+    `content/blog_articles/${created.item.id}/publish`,
+    { _rev: created._rev },
+  )
+  saved = await cms(
+    author,
+    `content/blog_articles/${created.item.id}`,
+    { slug: 'outage-article-current', data: {}, _rev: saved._rev },
+    'PUT',
+  )
+  await cms(author, `content/blog_articles/${created.item.id}/publish`, {
+    _rev: saved._rev,
+  })
+  expect(
+    (
+      await page.request.get('/blog/outage-article', { maxRedirects: 0 })
+    ).status(),
+  ).toBe(301)
+  expect(
+    (await page.request.get('/blog/outage-article-current')).status(),
+  ).toBe(200)
+  expect((await page.request.get('/blog')).status()).toBe(200)
+  // Fault the disposable external service, not CMS tables or query helpers.
+  // This is the final test; fixture cleanup tolerates the removed container.
+  const containers = spawnSync(
+    'docker',
+    [
+      'ps',
+      '--filter',
+      'label=saluna.cms-e2e-port=3303',
+      '--format',
+      '{{.Names}}',
+    ],
+    { encoding: 'utf8' },
+  )
+  expect(containers.status).toBe(0)
+  const names = containers.stdout.trim().split('\n')
+  expect(names).toHaveLength(1)
+  expect(names[0]).toMatch(/^saluna-cms-e2e-\d+$/)
+  expect(
+    spawnSync('docker', ['stop', '--time', '1', names[0]], { stdio: 'ignore' })
+      .status,
+  ).toBe(0)
+  for (const path of [
+    '/blog/outage-article',
+    '/blog/outage-article-current',
+    '/blog',
+  ]) {
+    const response = await page.request.get(path, { maxRedirects: 0 })
+    expect(response.status()).toBe(500)
+    expect(response.headers()['cache-control']).toContain('private, no-store')
+    expect(response.headers().location).toBeUndefined()
   }
 })

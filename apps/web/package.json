@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node ../../scripts/with-root-env.mjs astro dev --port 3001",
     "build": "node ../../scripts/with-root-env.mjs astro build",
-    "start": "HOST=0.0.0.0 PORT=3001 node ../../scripts/with-root-env.mjs node ./dist/server/entry.mjs",
+    "start": "HOST=0.0.0.0 PORT=3001 node ../../scripts/with-root-env.mjs node ./server.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "smoke": "node ../../scripts/smoke-web.mjs",

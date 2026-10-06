@@ -46,7 +46,8 @@ const vazirmatnVariants = [400, 500, 600, 700, 800].map((weight) => ({
 export default defineConfig({
   site: process.env.PUBLIC_APP_URL ?? 'http://localhost:3001',
   output: 'server',
-  trailingSlash: 'never',
+  // Blog slash variants must reach the CMS before deciding redirect or 404.
+  trailingSlash: 'ignore',
   adapter: node({ mode: 'standalone' }),
   integrations: [
     react(),
@@ -63,8 +64,18 @@ export default defineConfig({
         baseUrl: '/_emdash/api/media/file',
       }),
       maxUploadSize: 4 * 1024 * 1024,
+      middleware: {
+        outer: new URL('./src/cms/blog-middleware.ts', import.meta.url),
+      },
     }),
-    sitemap(),
+    sitemap({
+      serialize(item) {
+        const url = new URL(item.url)
+        if (url.pathname !== '/')
+          url.pathname = url.pathname.replace(/\/+$/, '')
+        return { ...item, url: url.href }
+      },
+    }),
     robotsSitemapIntegration(),
   ],
   image: {

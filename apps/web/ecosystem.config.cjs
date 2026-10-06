@@ -13,7 +13,7 @@ module.exports = {
     {
       name: 'saloon-web',
       cwd: __dirname,
-      script: 'dist/server/entry.mjs',
+      script: 'server.mjs',
       interpreter: 'node',
       instances: 1,
       exec_mode: 'fork',

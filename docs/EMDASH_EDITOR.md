@@ -1,7 +1,7 @@
 # Blog Article editor
 
 EmDash 1.1.0 stores Blog Articles in `blog_articles`. Saluna's model is in
-`apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, and SEO sit
+`apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, preview, and SEO sit
 alongside the title, summary, Portable Text body, and optional cover image.
 The public URL pattern is `/blog/{slug}`. Saving a title change preserves the
 existing slug. Published articles appear at `/blog` and `/blog/{slug}`.
@@ -69,7 +69,8 @@ on incomplete translations in this release.
 
 ## Preview an unpublished article
 
-Use View on site after saving an article. EmDash generates a signed,
+Use Preview after saving an article, or Preview draft when a published article
+has saved changes. EmDash generates a signed,
 time-limited preview link to the article's Saluna design. The link requires
 an active CMS session with draft-read permission. Contributor, Author,
 Editor, and Administrator accounts have this native permission. A copied
@@ -82,10 +83,47 @@ revision, even when an editor has visual editing enabled. The public index
 lists all published articles and omits drafts. CMS read failures return 500
 instead of an empty successful article list.
 
+## Publish and change an article URL
+
+Publish now opens the native confirmation dialog. Confirming publishes your
+saved draft immediately. Visitors see the new title, body, and index entry
+on their next request. A separate reviewer and a Saluna rebuild are not
+required. Save subsequent changes, use Preview draft to check them, then
+confirm Publish changes to replace the live revision. Unpublish removes the
+article from the public index and makes its current and former URLs return 404. Moving an article to Trash also removes those public URLs.
+
+Changing the title or body keeps the slug. To rename a URL, change Slug in
+URL & language, then Save. The existing public URL stays live until you
+confirm Publish changes. Publication permanently redirects the previous
+URL directly to the new canonical URL, including after later renames. The
+canonical URL has no trailing slash. A preview link generated before a
+published rename is obsolete; reopen Preview for the current signed link.
+Obsolete preview addresses return a private, nonindexable error instead of
+following the public redirect.
+
+For REST saves that change a slug, send a `data` object with the `slug`, even
+when no body fields changed. An empty `data: {}` uses the same draft-staging
+path as the native admin. EmDash 1.1.0's legacy slug-only REST update bypasses
+that path. Supported MCP draft updates have their own draft-aware handling.
+
+Saluna reads automatic redirect rules through the supported EmDash runtime
+and validates their destinations against published content on every request.
+It does not alter the CMS publication workflow or write a second redirect
+history. This prevents cached aliases from keeping withdrawn or deleted
+articles reachable. CMS outages return 500 rather than a stale redirect.
+
+Production starts through `apps/web/server.mjs` (`pnpm --filter @repo/web start`
+or the Docker image). It retains the Node adapter's server and static handler,
+and applies the existing non-blog slash redirects before static serving.
+Blog slash variants reach CMS middleware, so unknown or withdrawn URLs return
+404 directly. Starting `dist/server/entry.mjs` alone bypasses that site's
+canonical redirect boundary.
+
 ## Browser checks
 
 ```sh
 pnpm test:e2e:cms
+pnpm test:e2e:cms:production
 ```
 
 Docker with `postgres:16-alpine` and a Playwright Chromium browser are required.
@@ -99,8 +137,13 @@ For an existing browser binary, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, or
 set `PLAYWRIGHT_SYSTEM_BROWSER=chrome`. Failure traces, screenshots,
 and video are under `test-results/cms`; the report is under
 `playwright-report/cms`. These local artifacts can contain disposable CMS
-sessions, so keep them private. `pnpm test:e2e` still runs the manager PWA
-suite and excludes the CMS directory.
+sessions, so keep them private. The production target first builds with the
+raw Astro command and no CMS database or encryption credentials, then runs
+that bundle against the disposable fixture. It checks the real Node adapter's
+static canonical redirects and query strings as well as the CMS journey.
+The final outage check stops only the labelled disposable Postgres service
+and verifies live pages and warm aliases return 500. `pnpm test:e2e` still
+runs the manager PWA suite and excludes the CMS directory.
 
 [Upstream authentication](https://docs.emdashcms.com/guides/authentication/)
 and [seed format](https://docs.emdashcms.com/themes/seed-files/) describe the
