@@ -1,0 +1,23 @@
+name: saluna-qa-control
+services:
+  control:
+    image: saluna-qa-control:1
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.1
+    cpu_shares: 128
+    pids_limit: 128
+    environment:
+      QA_CONTROL_TOKEN: ${QA_CONTROL_TOKEN:?QA control token required}
+    networks: [production_gateway]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/saluna/qa:/opt/saluna/qa:ro
+      - /opt/saluna/qa/state:/opt/saluna/qa/state
+    logging:
+      driver: json-file
+      options: { max-size: '2m', max-file: '2' }
+networks:
+  production_gateway:
+    external: true
+    name: saluna_saluna

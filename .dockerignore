@@ -1,5 +1,8 @@
 # Monorepo Docker build context (e.g. apps/web/Dockerfile)
 .git
+.codex
+.env*
+**/.env*.local
 **/.turbo
 **/.DS_Store
 **/node_modules

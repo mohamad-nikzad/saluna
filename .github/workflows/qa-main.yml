@@ -1,0 +1,162 @@
+name: Staging QA
+run-name: QA ${{ inputs.ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Committed revision to stage after its CI passes
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+# Serialize requested releases and preserve any active QA session.
+concurrency:
+  group: qa-release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: [self-hosted, Linux, X64, saluna-deploy]
+    timeout-minutes: 10
+    outputs:
+      required: ${{ steps.plan.outputs.required }}
+      sha: ${{ steps.revision.outputs.sha }}
+      branch: ${{ steps.revision.outputs.branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: revision
+        name: Verify CI for the selected commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_BRANCH: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          ci_ready=false
+          for attempt in {1..30}; do
+            readiness="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${sha}&per_page=1" \
+              | python3 -c 'import json,sys; runs=json.load(sys.stdin)["workflow_runs"]; r=runs[0] if runs else {}; print("ready" if r.get("conclusion")=="success" else "failed" if r.get("status")=="completed" else "pending")')"
+            if [[ "$readiness" == ready ]]; then ci_ready=true; break; fi
+            if [[ "$readiness" == failed ]]; then echo 'Selected revision failed CI'; exit 1; fi
+            sleep 15
+          done
+          if [[ "$ci_ready" != true ]]; then echo 'Selected revision needs successful CI; retry after CI finishes'; exit 1; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "branch=$QA_BRANCH" >> "$GITHUB_OUTPUT"
+      - id: plan
+        name: Select journeys from changes since the last tested commit
+        env:
+          QA_SHA: ${{ steps.revision.outputs.sha }}
+        run: |
+          python3 deploy/qa/pipeline.py plan --head "$QA_SHA" --repository "$PWD" --directory /opt/saluna/qa/plan-preview >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      metadata_id: ${{ steps.metadata.outputs.artifact-id }}
+      images_id: ${{ steps.images.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: docker/setup-docker-action@v4
+        with:
+          daemon-config: |
+            {"features":{"containerd-snapshotter":true}}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build QA images outside the VPS
+        env:
+          QA_SHA: ${{ needs.plan.outputs.sha }}
+        run: |
+          python3 deploy/qa/update.py --source "$PWD" --ref "$QA_SHA" --focus 'Changed journeys and UI/Persian UX review' --build-only --export-dir "$RUNNER_TEMP/qa-export"
+          mkdir -p "$RUNNER_TEMP/qa-metadata"
+          cp "$RUNNER_TEMP"/qa-export/*.json "$RUNNER_TEMP/qa-metadata/"
+      - uses: actions/upload-artifact@v4
+        id: metadata
+        with:
+          name: qa-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa-metadata/*.json
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        id: images
+        with:
+          name: qa-images-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa-export/*.tar.gz
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  stage:
+    needs: [plan, build]
+    runs-on: [self-hosted, Linux, X64, saluna-deploy]
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.metadata_id }}
+          path: ${{ runner.temp }}/qa-release
+          merge-multiple: true
+      - name: Verify production health and reserve space before image transfer
+        run: python3 deploy/qa/pipeline.py preflight --directory "$RUNNER_TEMP/qa-release"
+      - name: Download images with bounded transfer rate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_IMAGES_ID: ${{ needs.build.outputs.images_id }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --limit-rate 1500k --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${QA_IMAGES_ID}/zip" \
+            --output "$RUNNER_TEMP/qa-release/images.zip"
+          python3 - <<'PY'
+          import os,re,zipfile
+          from pathlib import Path
+          folder=Path(os.environ['RUNNER_TEMP'])/'qa-release'
+          archive=folder/'images.zip'
+          with zipfile.ZipFile(archive) as z:
+              names=z.namelist()
+              assert len(names)==1 and re.fullmatch(r'qa-[a-f0-9]{8}-[a-f0-9]{12}\.tar\.gz',names[0]), 'Unexpected release archive'
+              z.extract(names[0],folder)
+          archive.unlink()
+          PY
+      - name: Install only staging, smoke-test, sleep and publish the bot job
+        env:
+          QA_RUN: ${{ github.run_id }}
+          QA_ATTEMPT: ${{ github.run_attempt }}
+          QA_BRANCH: ${{ needs.plan.outputs.branch }}
+        run: |
+          python3 deploy/qa/pipeline.py install --directory "$RUNNER_TEMP/qa-release" --repository "$PWD" --run-number "$QA_RUN" --attempt "$QA_ATTEMPT" --source-branch "$QA_BRANCH"
+      - name: Remove disposable image artifacts and local transfer files
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_IMAGES_ID: ${{ needs.build.outputs.images_id }}
+        run: |
+          curl --fail --silent --show-error -X DELETE \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/${QA_IMAGES_ID}"
+          rm -rf "$RUNNER_TEMP/qa-release"
