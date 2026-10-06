@@ -32,6 +32,6 @@ Create a Saluna writing skill and use it in one manually triggered Grok drafting
 
 ## Notes
 
-- This is a later phase of [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- This is a later phase of [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - Neither Product Guides nor completion, review, or publication of the first three drafts blocks this work.
 - Daily scheduling, duplicate avoidance on retries, and failure reporting follow in BL-0103. Publication remains a later explicit editor action.

@@ -9,7 +9,7 @@ size: medium
 parent: BL-0087
 blocked_by: [BL-0102]
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-07
 ---
 
 ## Problem
@@ -32,6 +32,8 @@ Enable one daily Persian Blog Article drafting run using the Saluna writing skil
 
 ## Notes
 
-- This completes the recurring drafting criteria in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md). It is not required for the first blog release.
+- On 2026-10-07, the user delegated the run-time choice and requested their currently logged-in Grok account. The selected time is 09:00 `Asia/Tehran`; scheduling remains disabled until BL-0102 passes. Actual schedule timezone and execution must still be verified.
+
+- This completes the recurring drafting criteria in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md). It is not required for the first blog release.
 - Selecting the schedule is an implementation-time rollout input. Do not invent a run time while writing tickets.
 - Review is optional. Publication remains a later explicit action outside this routine; a reviewer queue, publication cadence, and conversion attribution remain outside scope.

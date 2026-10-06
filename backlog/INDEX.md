@@ -1,18 +1,10 @@
 # Backlog Index
 
-Last organized: 2026-10-06 (BL-0090 first-time staff login implemented; BL-0087 specified and split into BL-0092 through BL-0103; BL-0092 production-image persistence verified)
+Last organized: 2026-10-07 (BL-0087 implementation resumed; BL-0092 remains verified complete)
 
 ## Now
 
-No active backlog items.
-
-## Ready
-
-- [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
-- [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
-- [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
-- [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
-- [BL-0087 Publish Blog Articles and Product Guides with EmDash](ready/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
+- [BL-0087 Publish Blog Articles and Product Guides with EmDash](now/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
   - [BL-0092 Run EmDash with persistent storage](done/BL-0092-run-emdash-with-persistent-storage.md)
   - [BL-0093 Configure Blog Article drafting and editor access](ready/BL-0093-configure-blog-article-drafting-and-editor-access.md)
   - [BL-0094 Render blog pages and private previews](ready/BL-0094-render-blog-pages-and-private-previews.md)
@@ -25,6 +17,14 @@ No active backlog items.
   - [BL-0101 Connect manager screens to Product Guides](ready/BL-0101-connect-manager-screens-to-product-guides.md)
   - [BL-0102 Prove one Grok drafting run](ready/BL-0102-prove-one-grok-drafting-run.md)
   - [BL-0103 Enable daily Grok drafting](ready/BL-0103-enable-daily-grok-drafting.md)
+
+## Ready
+
+- [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
+- [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
+- [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
+- [BL-0076 Allow multiple Staff Profiles on one Appointment](ready/BL-0076-allow-multiple-staff-on-appointment.md)
+
 
 ## Inbox
 

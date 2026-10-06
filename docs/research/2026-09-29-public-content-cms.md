@@ -1,6 +1,6 @@
 # Public content CMS findings
 
-Decision date: 2026-09-29. [ADR-0040](../adr/0040-emdash-for-public-content.md) selects EmDash; [BL-0087](../../backlog/ready/BL-0087-publish-blog-and-product-guides-with-emdash.md) tracks implementation. This note records the facts and checks that matter when work starts. Recheck upstream versions, pricing, and translation coverage then.
+Decision date: 2026-09-29. [ADR-0040](../adr/0040-emdash-for-public-content.md) selects EmDash; [BL-0087](../../backlog/now/BL-0087-publish-blog-and-product-guides-with-emdash.md) tracks implementation. This note records the facts and checks that matter when work starts. Recheck upstream versions, pricing, and translation coverage then.
 
 ## Saluna's current shape
 

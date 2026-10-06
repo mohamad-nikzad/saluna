@@ -31,5 +31,5 @@ Extend the site's shared metadata rendering and runtime sitemap discovery for Bl
 
 ## Notes
 
-- Follow [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
+- Follow [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
 - Reuse the existing public-web metadata, sitemap, and smoke coverage. Article-to-signup attribution remains separate work.

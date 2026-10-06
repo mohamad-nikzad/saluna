@@ -31,7 +31,7 @@ Run a pinned EmDash release inside the existing Astro/Node deployment, with sepa
 
 ## Notes
 
-- Parent scope and deployment boundary are defined in [BL-0087](../ready/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
+- Parent scope and deployment boundary are defined in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
 - This task proves CMS operation and container replacement. Blog Article fields and editor roles follow in BL-0093; upgrade and backup restoration rehearsals follow in BL-0097.
 - The manager PWA remains at `app.saluna.ir`.
 
