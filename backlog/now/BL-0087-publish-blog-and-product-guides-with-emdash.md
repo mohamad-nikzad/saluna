@@ -116,6 +116,8 @@ BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and
 
 ## Further Notes
 
+- Implementation resumed on 2026-10-07 on the existing integration branch `codex/bl-0087-emdash-blog-and-guides`. The fixed review base for the remaining tasks is `4dd5a8ecb882593f949fa19587230136decd1b7f`, the verified BL-0092 completion. Work proceeds one ticket at a time in separate implementer worktrees.
+
 - On 2026-10-07, the user authorized using their currently logged-in Grok account and delegated the daily run-time choice. Selected 09:00 `Asia/Tehran`. The local Grok Bot application has an existing Saluna Content Studio bot; its connection and actual CMS access still require BL-0102 verification before BL-0103 enables a routine. No daily blog routine has been enabled.
 
 - The parent remains open until its later Product Guide and Grok criteria are satisfied. Foundation, Blog Article pages, launch drafts, Product Guides, and daily drafting can be delivered separately; the initial blog launch does not mark the entire parent done.
