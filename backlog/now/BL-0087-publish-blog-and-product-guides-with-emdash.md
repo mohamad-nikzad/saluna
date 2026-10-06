@@ -116,6 +116,8 @@ BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and
 
 ## Further Notes
 
+- On 2026-10-07, the user authorized using their currently logged-in Grok account and delegated the daily run-time choice. Selected 09:00 `Asia/Tehran`. The local Grok Bot application has an existing Saluna Content Studio bot; its connection and actual CMS access still require BL-0102 verification before BL-0103 enables a routine. No daily blog routine has been enabled.
+
 - The parent remains open until its later Product Guide and Grok criteria are satisfied. Foundation, Blog Article pages, launch drafts, Product Guides, and daily drafting can be delivered separately; the initial blog launch does not mark the entire parent done.
 - Before enabling production publishing, identify the intended editor and complete the staging checks. Before enabling Grok, choose its run time and confirm version-specific connection details. These are rollout inputs, not invented defaults in this spec.
 - The redirect-on-rename policy is the recommended default proposed during specification. The publishing tests cover draft privacy, an editor publishing their own article, draft-only agent deliveries, and real-editor usability.
