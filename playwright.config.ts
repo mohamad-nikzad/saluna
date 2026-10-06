@@ -27,6 +27,7 @@ function browserFromEnv(): Record<string, unknown> {
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/cms/**',
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

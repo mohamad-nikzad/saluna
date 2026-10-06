@@ -49,5 +49,8 @@
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vite": "^7.3.2",
     "vitest": "^3.0.5"
+  },
+  "emdash": {
+    "seed": "cms/seed.json"
   }
 }

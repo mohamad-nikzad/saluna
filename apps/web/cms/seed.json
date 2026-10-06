@@ -1,0 +1,38 @@
+{
+  "$schema": "https://emdashcms.com/seed.schema.json",
+  "version": "1",
+  "meta": {
+    "name": "Saluna public content",
+    "description": "Persian Blog Articles and public author profiles"
+  },
+  "settings": { "title": "سالونا", "timezone": "Asia/Tehran" },
+  "collections": [
+    {
+      "slug": "blog_articles",
+      "label": "مقاله‌های وبلاگ",
+      "labelSingular": "مقاله وبلاگ",
+      "description": "مقاله‌های مدیریت سالن. نام نویسنده عمومی را در Bylines انتخاب کنید؛ بدون انتخاب، نام تیم سالونا نمایش داده می‌شود.",
+      "supports": ["drafts", "revisions", "seo"],
+      "urlPattern": "/blog/{slug}",
+      "fields": [
+        {
+          "slug": "title",
+          "label": "عنوان",
+          "type": "string",
+          "required": true
+        },
+        { "slug": "summary", "label": "خلاصه", "type": "text" },
+        { "slug": "body", "label": "متن مقاله", "type": "portableText" },
+        { "slug": "cover", "label": "تصویر روی جلد", "type": "image" }
+      ]
+    }
+  ],
+  "bylines": [
+    {
+      "id": "saluna-team",
+      "slug": "saluna-team",
+      "displayName": "تیم سالونا",
+      "isGuest": true
+    }
+  ]
+}

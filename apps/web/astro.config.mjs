@@ -59,7 +59,7 @@ export default defineConfig({
         ),
       },
       storage: local({
-        directory: './.emdash/uploads',
+        directory: process.env.CMS_MEDIA_DIRECTORY ?? './.emdash/uploads',
         baseUrl: '/_emdash/api/media/file',
       }),
       maxUploadSize: 4 * 1024 * 1024,
