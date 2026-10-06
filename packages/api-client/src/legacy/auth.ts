@@ -18,7 +18,7 @@ export type MeResponse =
     }
   | {
       status: 'needs_staff_password'
-      user: PreWorkspaceUser & { salonId: string }
+      user: PreWorkspaceUser & { salonId?: string }
     }
   | {
       status: 'needs_staff_invite'
@@ -79,6 +79,7 @@ export type PreWorkspaceAccountResponse = { user: PreWorkspaceUser }
 
 export type PhoneStatusResponse = {
   registered: boolean
+  hasPassword: boolean
   otpLoginEnabled: boolean
 }
 

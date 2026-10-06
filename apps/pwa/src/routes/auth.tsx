@@ -6,7 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/field'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@repo/ui/field'
 import { FormRootError } from '@repo/ui/form'
 import { Spinner } from '@repo/ui/spinner'
 import { ApiError } from '@repo/api-client'
@@ -18,6 +24,7 @@ import { formMessages } from '@repo/salon-core/forms/messages'
 import { phoneSchema } from '@repo/salon-core/forms/primitives'
 
 import { brand } from '@repo/brand'
+import { SalunaMark } from '#/components/brand/saluna-mark'
 import { OtpCodeInput } from '#/components/auth/otp-code-input'
 import { PasswordInput } from '#/components/password-input'
 import { api } from '#/lib/api-client'
@@ -43,16 +50,36 @@ const searchSchema = z.object({
 
 type AuthMode =
   | 'phone'
+  | 'firstTime'
   | 'password'
   | 'otp'
   | 'recoveryOtp'
   | 'recoveryPassword'
   | 'staffPassword'
-type OtpIntent = 'login' | 'register'
+type OtpIntent = 'login' | 'firstTime'
 
-/** Only honor internal relative paths to avoid open-redirect. */
-function safeInternalRedirect(value: string | undefined): string | null {
-  return value && value.startsWith('/') ? value : null
+/** Session state wins over saved links, especially old salon setup links. */
+export function destinationAfterLogin(
+  session: NonNullable<AuthSession>,
+  saved?: string,
+): string {
+  if (session.status === 'needs_staff_password') return '/auth'
+  if (session.status === 'needs_salon_selection') return '/select-salon'
+  if (
+    session.status === 'needs_workspace' ||
+    session.status === 'needs_staff_invite'
+  )
+    return '/staff-invites'
+  const safe =
+    saved?.startsWith('/') && !saved.startsWith('//') && !saved.includes('\\')
+      ? saved
+      : null
+  const path = safe?.split(/[?#]/)[0]
+  if (session.user.role === 'staff') {
+    if (!path || /^\/(?:onboarding|signup|auth)(?:\/|$)/.test(path))
+      return homePathForRole(session.user.role)
+  }
+  return safe ?? homePathForRole(session.user.role)
 }
 
 function formatOtpCountdown(seconds: number): string {
@@ -69,22 +96,8 @@ export const Route = createFileRoute('/auth')({
     const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
-    if (session?.status === 'needs_salon_selection') {
-      throw redirect({ to: '/staff-invites' })
-    }
-    if (session?.status === 'needs_staff_invite') {
-      throw redirect({ to: '/staff-invites' })
-    }
-    if (
-      session &&
-      session.status !== 'needs_workspace' &&
-      session.status !== 'needs_staff_password'
-    ) {
-      const { user } = session
-      const safe = safeInternalRedirect(search.redirect)
-      if (safe) throw redirect({ href: safe })
-      if (user.role === 'staff') throw redirect({ to: '/staff-invites' })
-      throw redirect({ to: homePathForRole(user.role) })
+    if (session && session.status !== 'needs_staff_password') {
+      throw redirect({ href: destinationAfterLogin(session, search.redirect) })
     }
   },
   component: AuthPage,
@@ -93,7 +106,7 @@ export const Route = createFileRoute('/auth')({
 function AuthPage() {
   const navigate = useNavigate()
   const { redirect: redirectTo } = Route.useSearch()
-  const { session: authSession, refresh, setUser, setSession } = useAuth()
+  const { session: authSession, refresh, setSession } = useAuth()
   const showDemoCredentials = import.meta.env.DEV
   const [mode, setMode] = useState<AuthMode>('phone')
   const [otpIntent, setOtpIntent] = useState<OtpIntent>('login')
@@ -131,45 +144,34 @@ function AuthPage() {
   const isRecoveryOtp = mode === 'recoveryOtp'
   const isRecoveryPassword = mode === 'recoveryPassword'
   const isStaffPassword = mode === 'staffPassword'
-  const isRegistering = otpIntent === 'register'
+  const isFirstTime = mode === 'firstTime' || otpIntent === 'firstTime'
+
+  const continueSession = async (session: AuthSession) => {
+    if (!session) throw new Error('ورود انجام نشد. دوباره تلاش کنید.')
+    setSession(session)
+    if (session.status === 'needs_staff_password') {
+      setNewPassword('')
+      setConfirmPassword('')
+      setMode('staffPassword')
+      return
+    }
+    if (
+      (session.status === 'ready' || session.status === undefined) &&
+      session.user.role === 'staff'
+    ) {
+      setPersistedActiveSalonId(session.user.salonId)
+    }
+    await navigate({
+      href: destinationAfterLogin(session, redirectTo),
+      replace: true,
+    })
+  }
 
   const login = useMutation({
     mutationFn: (values: LoginFormInput) =>
-      api.auth.login(values, {
-        salonId: getPersistedActiveSalonId(),
-      }),
+      api.auth.login(values, { salonId: getPersistedActiveSalonId() }),
     meta: { skipToast: true },
-    onSuccess: async (session) => {
-      if (session.status === 'needs_workspace') {
-        setSession(session)
-        await navigate({ to: '/signup' })
-        return
-      }
-      if (session.status === 'needs_staff_password') {
-        setSession(session)
-        setMode('staffPassword')
-        return
-      }
-      if (session.status === 'needs_staff_invite') {
-        setSession(session)
-        await navigate({ to: '/staff-invites' })
-        return
-      }
-      if (session.status === 'needs_salon_selection') {
-        setSession(session)
-        await navigate({ to: '/staff-invites' })
-        return
-      }
-      setUser(session.user)
-      if (session.user.role === 'staff' && session.user.salonId) {
-        setPersistedActiveSalonId(session.user.salonId)
-      }
-      const safe = safeInternalRedirect(redirectTo)
-      if (safe) await navigate({ href: safe })
-      else if (session.user.role === 'staff') {
-        await navigate({ to: '/staff-invites' })
-      } else await navigate({ to: homePathForRole(session.user.role) })
-    },
+    onSuccess: (session) => continueSession(session),
   })
 
   const sendOtp = useMutation({
@@ -204,24 +206,12 @@ function AuthPage() {
       setOtp('')
       setOtpError(null)
       setOtpLoginEnabled(data.otpLoginEnabled)
-      if (data.registered) {
+      if (data.hasPassword) {
         setMode('password')
-        return
+      } else {
+        setOtpIntent('firstTime')
+        setMode('firstTime')
       }
-      sendOtp.mutate(
-        { phone: values.phone, intent: 'register' },
-        {
-          onError: (err) => {
-            const message =
-              err instanceof ApiError
-                ? err.status === 429
-                  ? 'برای دریافت کد جدید کمی صبر کنید.'
-                  : err.message || 'ارسال کد تایید انجام نشد.'
-                : getMutationErrorMessage(err, 'ارسال کد تایید انجام نشد.')
-            setError('root', { message })
-          },
-        },
-      )
     },
   })
 
@@ -231,43 +221,7 @@ function AuthPage() {
     meta: { skipToast: true },
     onSuccess: async () => {
       setOtpError(null)
-      const session = await refresh()
-      const safe = safeInternalRedirect(redirectTo)
-      if (session?.status === 'needs_workspace') {
-        await navigate({ to: '/signup', replace: true })
-        return
-      }
-      if (session?.status === 'needs_staff_password') {
-        setNewPassword('')
-        setConfirmPassword('')
-        setMode('staffPassword')
-        return
-      }
-      if (session?.status === 'needs_staff_invite') {
-        setSession(session)
-        await navigate({ to: '/staff-invites', replace: true })
-        return
-      }
-      if (session?.status === 'needs_salon_selection') {
-        setSession(session)
-        await navigate({ to: '/staff-invites', replace: true })
-        return
-      }
-      if (
-        session &&
-        (session.status === 'ready' || session.status === undefined)
-      ) {
-        if (session.user.role === 'staff' && session.user.salonId) {
-          setPersistedActiveSalonId(session.user.salonId)
-        }
-        setUser(session.user)
-        if (safe) await navigate({ href: safe })
-        else if (session.user.role === 'staff') {
-          await navigate({ to: '/staff-invites' })
-        } else await navigate({ to: homePathForRole(session.user.role) })
-        return
-      }
-      setOtpError('ورود انجام نشد. دوباره تلاش کنید.')
+      await continueSession(await refresh())
     },
   })
 
@@ -317,28 +271,7 @@ function AuthPage() {
     mutationFn: () => api.auth.completeStaffClaim({ password: newPassword }),
     meta: { skipToast: true },
     onSuccess: async () => {
-      const session = await refresh()
-      if (session?.status === 'needs_salon_selection') {
-        setSession(session)
-        await navigate({ to: '/staff-invites' })
-        return
-      }
-      if (
-        !session ||
-        (session.status !== 'ready' && session.status !== undefined)
-      ) {
-        setRecoveryError('تکمیل حساب انجام نشد. دوباره تلاش کنید.')
-        return
-      }
-      if (session.user.role === 'staff' && session.user.salonId) {
-        setPersistedActiveSalonId(session.user.salonId)
-      }
-      setUser(session.user)
-      const safe = safeInternalRedirect(redirectTo)
-      if (safe) await navigate({ href: safe })
-      else if (session.user.role === 'staff') {
-        await navigate({ to: '/staff-invites' })
-      } else await navigate({ to: homePathForRole(session.user.role) })
+      await continueSession(await refresh())
     },
   })
 
@@ -350,7 +283,7 @@ function AuthPage() {
           err.message === 'authenticated user has no workspace'
         ) {
           await refresh()
-          await navigate({ to: '/signup' })
+          await navigate({ to: '/staff-invites' })
           return
         }
         const message =
@@ -396,7 +329,10 @@ function AuthPage() {
     }
     clearErrors()
     sendOtp.mutate(
-      { phone: parsedPhone.data, intent: 'login' },
+      {
+        phone: parsedPhone.data,
+        intent: mode === 'firstTime' ? 'firstTime' : 'login',
+      },
       {
         onError: (err) => {
           const message =
@@ -462,6 +398,7 @@ function AuthPage() {
   const editPhone = () => {
     otpHistoryPushedRef.current = false
     setMode('phone')
+    setOtpIntent('login')
     setOtpPhone('')
     setOtp('')
     setOtpError(null)
@@ -539,20 +476,21 @@ function AuthPage() {
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background p-4">
       <div className="relative w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-black text-foreground tracking-tight">
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <SalunaMark className="size-12" />
+          <h1 className="text-2xl font-extrabold text-foreground">
             {brand.name.fa}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            مدیریت هوشمند سالن زیبایی
-          </p>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-card/95 p-6 shadow-sm">
-          <div className="mb-6 text-center">
+          <div
+            className="mb-6 flex flex-col gap-2 text-right"
+            aria-live="polite"
+          >
             <h2 className="text-base font-semibold text-foreground">
               {isPhoneMode
-                ? 'ورود یا ثبت‌نام'
+                ? 'ورود به سالونا'
                 : isPasswordMode
                   ? 'ورود با رمز عبور'
                   : isRecoveryPassword || isStaffPassword
@@ -561,35 +499,63 @@ function AuthPage() {
                       : 'انتخاب رمز عبور جدید'
                     : isRecoveryOtp
                       ? 'بازیابی رمز عبور'
-                      : isRegistering
-                        ? 'ثبت‌نام با کد تایید'
+                      : isFirstTime
+                        ? mode === 'firstTime'
+                          ? 'اولین ورود شما'
+                          : 'تایید شماره موبایل'
                         : 'ورود با کد تایید'}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {isPhoneMode
-                ? 'برای شروع فقط شماره موبایل‌تان را وارد کنید'
+                ? 'با شماره خودتان وارد شوید. اگر سالن شما را دعوت کرده، از همین‌جا ادامه دهید.'
                 : isPasswordMode
                   ? 'رمز عبور را وارد کنید.'
                   : isRecoveryPassword || isStaffPassword
-                    ? 'رمز جدید را وارد و تایید کنید.'
+                    ? isStaffPassword
+                      ? 'برای ورودهای بعدی یک رمز عبور بسازید. سپس دسترسی سالن را بررسی می‌کنیم.'
+                      : 'رمز جدید را وارد و تایید کنید.'
                     : isRecoveryOtp
                       ? 'کد بازیابی پیامک‌شده را وارد کنید.'
-                      : 'کد تایید را وارد کنید.'}
+                      : isFirstTime
+                        ? mode === 'firstTime'
+                          ? 'برای این شماره هنوز رمزی نساخته‌اید. شماره را با پیامک تایید کنید و رمز خودتان را بسازید.'
+                          : 'کد پیامک‌شده را وارد کنید. بعد از تایید شماره، رمز خودتان را می‌سازید.'
+                        : 'کد تایید را وارد کنید.'}
             </p>
           </div>
 
           <form
-            onSubmit={
-              isPasswordMode ? onSubmit : (event) => event.preventDefault()
-            }
+            onSubmit={(event) => {
+              if (isPasswordMode) return onSubmit(event)
+              event.preventDefault()
+              if (isBusy) return
+              if (isPhoneMode) startPhoneFlow()
+              else if (mode === 'firstTime') startOtpLogin()
+              else if (isStaffPassword || isRecoveryPassword)
+                submitNewPassword()
+              else submitOtp()
+            }}
             noValidate
           >
+            {isPasswordMode || isRecoveryPassword || isStaffPassword ? (
+              <input
+                type="hidden"
+                name="username"
+                autoComplete="username"
+                value={
+                  isPasswordMode
+                    ? phoneValue
+                    : (authSession?.user.phone ?? otpPhone)
+                }
+              />
+            ) : null}
             <FieldGroup>
               {isPhoneMode ? (
-                <Field>
+                <Field data-invalid={Boolean(errors.phone)}>
                   <FieldLabel htmlFor="phone">شماره موبایل</FieldLabel>
                   <Input
                     id="phone"
+                    aria-invalid={Boolean(errors.phone)}
                     type="tel"
                     value={displayPhone(phoneValue)}
                     onChange={(event) =>
@@ -611,17 +577,18 @@ function AuthPage() {
               ) : null}
 
               {isPasswordMode ? (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                     <span>رمز عبور را وارد کنید.</span>
                   </div>
 
-                  <Field>
+                  <Field data-invalid={Boolean(errors.password)}>
                     <FieldLabel htmlFor="password" className="sr-only">
                       رمز عبور
                     </FieldLabel>
                     <PasswordInput
                       id="password"
+                      aria-invalid={Boolean(errors.password)}
                       placeholder="رمز عبور"
                       autoComplete="current-password"
                       disabled={isBusy}
@@ -635,7 +602,7 @@ function AuthPage() {
 
                   <div className="flex items-center justify-between gap-3 text-sm">
                     <span className="min-w-0 truncate text-muted-foreground">
-                      در حال ورود با شماره {displayPhone(phoneValue)}
+                      <bdi>{displayPhone(phoneValue)}</bdi>
                     </span>
                     <button
                       type="button"
@@ -647,7 +614,7 @@ function AuthPage() {
                   </div>
                 </div>
               ) : mode === 'otp' || isRecoveryOtp ? (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                     <span>کد تایید را وارد کنید.</span>
                     {resendRemaining > 0 ? (
@@ -692,8 +659,7 @@ function AuthPage() {
 
                   <div className="flex items-center justify-between gap-3 text-sm">
                     <span className="min-w-0 truncate text-muted-foreground">
-                      {isRecoveryOtp ? 'بازیابی' : 'در حال ورود'} با شماره{' '}
-                      {displayPhone(otpPhone)}
+                      <bdi>{displayPhone(otpPhone)}</bdi>
                     </span>
                     <button
                       type="button"
@@ -705,10 +671,10 @@ function AuthPage() {
                   </div>
                 </div>
               ) : isRecoveryPassword || isStaffPassword ? (
-                <div className="space-y-4">
+                <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="new-password">
-                      رمز عبور جدید
+                      {isStaffPassword ? 'رمز عبور' : 'رمز عبور جدید'}
                     </FieldLabel>
                     <PasswordInput
                       id="new-password"
@@ -717,11 +683,17 @@ function AuthPage() {
                       autoComplete="new-password"
                       disabled={isBusy}
                       className="h-12 rounded-xl bg-muted/40 border-border/50"
+                      aria-describedby="password-requirements"
                     />
+                    <FieldDescription id="password-requirements">
+                      حداقل ۸ کاراکتر، با حروف، اعداد یا نمادهای انگلیسی.
+                    </FieldDescription>
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="confirm-password">
-                      تکرار رمز عبور جدید
+                      {isStaffPassword
+                        ? 'تکرار رمز عبور'
+                        : 'تکرار رمز عبور جدید'}
                     </FieldLabel>
                     <PasswordInput
                       id="confirm-password"
@@ -737,7 +709,7 @@ function AuthPage() {
                   {recoveryError ? (
                     <FieldError>{recoveryError}</FieldError>
                   ) : null}
-                </div>
+                </FieldGroup>
               ) : null}
 
               <FormRootError message={errors.root?.message} />
@@ -793,6 +765,32 @@ function AuthPage() {
                     </Button>
                   ) : null}
                 </>
+              ) : mode === 'firstTime' ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    کد تایید به <bdi>{displayPhone(otpPhone)}</bdi> ارسال
+                    می‌شود.
+                  </p>
+                  <Button
+                    type="button"
+                    size="lg"
+                    disabled={isBusy}
+                    onClick={startOtpLogin}
+                  >
+                    {sendOtp.isPending ? (
+                      <Spinner data-icon="inline-start" />
+                    ) : null}
+                    دریافت کد تایید
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={isBusy}
+                    onClick={editPhone}
+                  >
+                    تغییر شماره موبایل
+                  </Button>
+                </>
               ) : isRecoveryPassword || isStaffPassword ? (
                 <Button
                   type="button"
@@ -803,7 +801,7 @@ function AuthPage() {
                   {resetPassword.isPending || completeStaffClaim.isPending ? (
                     <Spinner className="ml-2" />
                   ) : null}
-                  {isStaffPassword ? 'ثبت رمز و ورود' : 'ثبت رمز عبور جدید'}
+                  {isStaffPassword ? 'ساخت رمز و ادامه' : 'ثبت رمز عبور جدید'}
                 </Button>
               ) : (
                 <>
@@ -820,8 +818,8 @@ function AuthPage() {
                     ) : null}
                     {isRecoveryOtp
                       ? 'تایید کد'
-                      : isRegistering
-                        ? 'تایید و ادامه ثبت‌نام'
+                      : isFirstTime
+                        ? 'تایید شماره و ادامه'
                         : 'تایید و ورود'}
                   </Button>
                 </>
@@ -829,6 +827,11 @@ function AuthPage() {
             </FieldGroup>
           </form>
         </div>
+
+        <p className="mt-5 text-center text-sm leading-6 text-muted-foreground">
+          پیوستن به سالن با پذیرفتن دعوت مدیر انجام می‌شود. ساخت سالن شخصی،
+          انتخاب جداگانه‌ای است.
+        </p>
 
         {showDemoCredentials && (
           <div className="mt-5 rounded-xl bg-muted/40 p-4">

@@ -24,9 +24,9 @@ test.describe('Critical salon journeys', () => {
       await page.goto('/')
       await expect(page).toHaveURL(/\/auth/)
     })
-    await test.step('Login form and signup CTA', async () => {
+    await test.step('Phone entry for existing and first-time users', async () => {
       await expect(
-        page.getByRole('heading', { name: 'ورود یا ثبت‌نام' }),
+        page.getByRole('heading', { name: 'ورود به سالونا' }),
       ).toBeVisible()
       await expect(
         page.getByRole('textbox', { name: 'شماره موبایل' }),

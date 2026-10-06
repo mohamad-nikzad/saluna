@@ -1,13 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
-import { ArrowLeft, LogIn, UserPlus, UserRoundX } from 'lucide-react'
 
 import { Button } from '@repo/ui/button'
 import { Spinner } from '@repo/ui/spinner'
 import { ApiError } from '@repo/api-client'
 
-import { SalunaMark } from '#/components/brand/saluna-mark'
+import { displayPhone } from '@repo/salon-core/phone'
+import { AuthShell } from '#/components/auth/auth-shell'
 import { api } from '#/lib/api-client'
 import { useAuth } from '#/lib/auth'
 
@@ -34,24 +33,33 @@ function StaffInviteLinkPage() {
 
   if (inviteQuery.isPending || authLoading) {
     return (
-      <InviteShell>
-        <div className="flex justify-center py-16">
-          <Spinner className="size-6" />
+      <AuthShell title="دعوت به سالن">
+        <div
+          role="status"
+          className="flex items-center gap-3 py-6 text-sm text-muted-foreground"
+        >
+          <Spinner />
+          در حال دریافت دعوت…
         </div>
-      </InviteShell>
+      </AuthShell>
     )
   }
 
   if (inviteQuery.isError || !inviteQuery.data) {
     return (
-      <InviteShell>
-        <p className="text-center text-sm text-muted-foreground">
-          {errorMessage(inviteQuery.error)}
-        </p>
-        <Button asChild className="mt-6 w-full" variant="outline">
+      <AuthShell
+        title="دعوت در دسترس نیست"
+        description={errorMessage(inviteQuery.error)}
+      >
+        <Button
+          asChild
+          size="lg"
+          className="h-12 w-full rounded-xl"
+          variant="outline"
+        >
           <Link to="/auth">ورود به سالونا</Link>
         </Button>
-      </InviteShell>
+      </AuthShell>
     )
   }
 
@@ -59,119 +67,75 @@ function StaffInviteLinkPage() {
 
   if (routing.action === 'unavailable') {
     return (
-      <InviteShell>
-        <h1 className="text-center text-lg font-bold text-foreground">
-          {routing.reason === 'expired'
+      <AuthShell
+        title={
+          routing.reason === 'expired'
             ? 'مهلت این دعوت به پایان رسیده'
-            : 'این دعوت دیگر فعال نیست'}
-        </h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          از مدیر سالن بخواهید در صورت نیاز دعوت تازه‌ای بفرستد.
-        </p>
-      </InviteShell>
-    )
-  }
-
-  if (routing.action === 'switch_account') {
-    return (
-      <InviteShell>
-        <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted">
-          <UserRoundX className="size-6 text-muted-foreground" />
-        </div>
-        <h1 className="mt-4 text-center text-lg font-bold text-foreground">
-          این دعوت برای حساب دیگری است
-        </h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          دعوت سالن «{invite.salonName}» برای شماره {invite.phone} است. برای
-          ادامه با حساب درست وارد شوید.
-        </p>
-        {user ? (
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            الان با {user.phone} وارد هستید.
-          </p>
-        ) : null}
-        <Button
-          className="mt-6 w-full"
-          onClick={async () => {
-            await logout()
-            await navigate({
-              to: '/auth',
-              search: { redirect: invitePath },
-            })
-          }}
-        >
-          تعویض حساب
+            : 'این دعوت دیگر فعال نیست'
+        }
+        description="از مدیر سالن بخواهید دعوت را دوباره بفرستد."
+      >
+        <Button asChild size="lg" className="h-12 w-full rounded-xl">
+          <Link to="/auth">ورود و بررسی دعوت‌ها</Link>
         </Button>
-      </InviteShell>
+      </AuthShell>
     )
   }
 
-  if (routing.action === 'continue') {
-    return (
-      <InviteShell>
-        <h1 className="text-center text-lg font-bold text-foreground">
-          دعوت به {invite.salonName}
-        </h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          شماره شما با این دعوت هم‌خوان است. پذیرش دعوت فقط بعد از تایید شماره و
-          انتخاب صریح شما انجام می‌شود.
-        </p>
-        <Button
-          className="mt-6 w-full"
-          onClick={() => {
-            void navigate({ to: '/staff-invites', replace: true })
-          }}
-        >
-          ادامه
-        </Button>
-      </InviteShell>
-    )
-  }
-
-  const isRegister = routing.action === 'register'
+  const switchAccount = routing.action === 'switch_account'
+  const canContinue = routing.action === 'continue'
 
   return (
-    <InviteShell>
-      <h1 className="text-center text-lg font-bold text-foreground">
-        دعوت به {invite.salonName}
-      </h1>
-      <p className="mt-2 text-center text-sm text-muted-foreground">
-        {invite.staffName} با شماره {invite.phone} دعوت شده‌اید. لینک به‌تنهایی
-        دسترسی نمی‌دهد — ابتدا{' '}
-        {isRegister ? 'ثبت‌نام و تایید شماره' : 'ورود و تایید شماره'} لازم است.
-      </p>
+    <AuthShell
+      title={switchAccount ? 'این دعوت برای حساب دیگری است' : 'دعوت به سالن'}
+      description={
+        switchAccount
+          ? 'با شماره‌ای که در دعوت ثبت شده وارد شوید.'
+          : canContinue
+            ? 'نام و شماره‌تان را بررسی کنید.'
+            : 'با شماره زیر وارد شوید و دعوت را بررسی کنید.'
+      }
+    >
+      <div className="mb-7 flex flex-col gap-4 rounded-xl border border-line-soft p-5">
+        <h2 className="break-words text-xl font-bold leading-8">
+          {invite.salonName}
+        </h2>
+        <dl className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <dt className="text-muted-foreground">دعوت برای</dt>
+            <dd className="break-words font-medium">{invite.staffName}</dd>
+          </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <dt className="text-muted-foreground">شماره موبایل</dt>
+            <dd>
+              <bdi className="tabular-nums">{displayPhone(invite.phone)}</bdi>
+            </dd>
+          </div>
+        </dl>
+      </div>
+      {switchAccount && user ? (
+        <p className="mb-5 text-sm leading-7 text-muted-foreground">
+          حساب فعلی شما: <bdi>{displayPhone(user.phone)}</bdi>
+        </p>
+      ) : null}
       <Button
-        className="mt-6 w-full gap-2"
-        onClick={() => {
-          void navigate({
-            to: '/auth',
-            search: { redirect: invitePath },
-          })
+        size="lg"
+        className="h-12 w-full rounded-xl"
+        onClick={async () => {
+          if (switchAccount) await logout()
+          if (canContinue) {
+            await navigate({ to: '/staff-invites', replace: true })
+          } else {
+            await navigate({ to: '/auth', search: { redirect: invitePath } })
+          }
         }}
       >
-        {isRegister ? (
-          <UserPlus className="size-4" />
-        ) : (
-          <LogIn className="size-4" />
-        )}
-        {isRegister ? 'ثبت‌نام با این شماره' : 'ورود با این شماره'}
+        {switchAccount
+          ? 'تغییر حساب'
+          : canContinue
+            ? 'بررسی دعوت'
+            : 'ورود و بررسی دعوت'}
       </Button>
-    </InviteShell>
-  )
-}
-
-function InviteShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <SalunaMark className="h-8" />
-        <Button asChild size="icon-sm" variant="ghost">
-          <Link to="/auth" aria-label="بازگشت">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-      </div>
-      {children}
-    </div>
+    </AuthShell>
   )
 }

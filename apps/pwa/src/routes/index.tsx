@@ -13,7 +13,7 @@ export const Route = createFileRoute('/')({
       throw redirect({ to: '/auth' })
     }
     if (session.status === 'needs_workspace') {
-      throw redirect({ to: '/signup' })
+      throw redirect({ to: '/staff-invites' })
     }
     if (session.status === 'needs_staff_password') {
       throw redirect({ to: '/auth' })

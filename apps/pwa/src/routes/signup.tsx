@@ -81,7 +81,8 @@ type AccountStepPayload =
 type SignupStep = 'phone' | 'otp' | 'account' | 'workspace'
 
 export const Route = createFileRoute('/signup')({
-  beforeLoad: async ({ context }) => {
+  validateSearch: z.object({ create: z.literal(true).optional() }),
+  beforeLoad: async ({ context, search }) => {
     const session = await context.queryClient.ensureQueryData<AuthSession>({
       queryKey: authQueryKey,
     })
@@ -96,6 +97,9 @@ export const Route = createFileRoute('/signup')({
     }
     if (session.status === 'needs_salon_selection') {
       throw redirect({ to: '/select-salon' })
+    }
+    if (session.status === 'needs_workspace' && search.create !== true) {
+      throw redirect({ to: '/staff-invites' })
     }
     if (session.status !== 'needs_workspace') {
       throw redirect({ to: homePathForRole(session.user.role) })
@@ -311,9 +315,7 @@ function SignupPage() {
             {displayStep}
           </span>
           <h1 className="mt-3 text-2xl font-extrabold leading-snug tracking-tight text-foreground">
-            {step === 'workspace'
-              ? 'سالن‌تان را بسازیم'
-              : 'ثبت‌نام با شماره موبایل'}
+            {step === 'workspace' ? 'سالن‌تان را بسازیم' : 'ساخت سالن خودتان'}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-sage-deep">
             {step === 'phone'

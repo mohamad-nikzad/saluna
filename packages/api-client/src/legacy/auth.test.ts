@@ -154,7 +154,11 @@ describe('legacy auth API wrapper', () => {
   it('maps phone status to the app-owned auth helper endpoint', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
       new Response(
-        JSON.stringify({ registered: true, otpLoginEnabled: false }),
+        JSON.stringify({
+          registered: true,
+          hasPassword: true,
+          otpLoginEnabled: false,
+        }),
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -173,6 +177,7 @@ describe('legacy auth API wrapper', () => {
     const response = await auth.getPhoneStatus({ phone: '09121234567' })
 
     expect(response.registered).toBe(true)
+    expect(response.hasPassword).toBe(true)
     expect(response.otpLoginEnabled).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/v1/auth/phone-status',

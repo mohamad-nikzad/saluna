@@ -44,9 +44,9 @@ export function OtpCodeInput({
         inputMode="numeric"
         autoComplete="one-time-code"
         disabled={disabled}
-        containerClassName="justify-center gap-2"
+        containerClassName="w-full min-w-0 justify-center"
       >
-        <InputOTPGroup className="gap-2">
+        <InputOTPGroup className="w-full max-w-[328px] gap-2">
           {Array.from({ length: AUTH_OTP_CODE_LENGTH }, (_, index) => (
             <InputOTPSlot
               key={index}
@@ -54,7 +54,7 @@ export function OtpCodeInput({
               formatChar={toPersianDigits}
               aria-invalid={invalid}
               className={cn(
-                'h-[52px] w-12 rounded-lg border text-xl font-bold',
+                'h-[52px] min-w-0 flex-1 rounded-lg border text-xl font-bold',
                 slotClassName,
               )}
             />

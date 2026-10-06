@@ -49,12 +49,14 @@ vi.mock('@repo/database/staff', () => ({
 
 vi.mock('@repo/database/client', () => {
   let selectRows: unknown[] = []
+  let selectResults: unknown[][] = []
   type SelectChain = {
     innerJoin: () => SelectChain
     where: () => { limit: () => Promise<unknown[]> }
   }
   const stub: {
     __setSelectRows: (rows: unknown[]) => void
+    __setSelectResults: (results: unknown[][]) => void
     transaction: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>
     insert: () => { values: () => Promise<void> }
     update: () => { set: () => { where: () => Promise<void> } }
@@ -64,6 +66,10 @@ vi.mock('@repo/database/client', () => {
   } = {
     __setSelectRows: (rows) => {
       selectRows = rows
+      selectResults = []
+    },
+    __setSelectResults: (results) => {
+      selectResults = results
     },
     transaction: async (fn) => fn(stub),
     insert: () => ({ values: async () => undefined }),
@@ -72,7 +78,9 @@ vi.mock('@repo/database/client', () => {
       from: () => {
         const chain: SelectChain = {
           innerJoin: () => chain,
-          where: () => ({ limit: async () => selectRows }),
+          where: () => ({
+            limit: async () => selectResults.shift() ?? selectRows,
+          }),
         }
         return chain
       },
@@ -294,7 +302,7 @@ describe('auth /me shim', () => {
   })
 
   it.each(['pending', 'expired'])(
-    'routes a verified identity with a %s Staff Invite to invitations',
+    'asks a verified identity with a %s Staff Invite and no password to create one',
     async (status) => {
       vi.mocked(authServer.api.getSession).mockResolvedValue({
         user: {
@@ -313,7 +321,7 @@ describe('auth /me shim', () => {
 
       expect(res.status).toBe(200)
       expect(await res.json()).toEqual({
-        status: 'needs_staff_invite',
+        status: 'needs_staff_password',
         user: {
           id: 'u1',
           name: 'Sara',
@@ -404,6 +412,9 @@ describe('auth /me shim', () => {
   })
 
   it('lets single-salon staff enter without a salon header', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'credential' }])
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
         id: 'u2',
@@ -444,6 +455,9 @@ describe('auth /me shim', () => {
   })
 
   it('auto-selects the sole salon when the stored salon header is stale', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'credential' }])
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
         id: 'u2',
@@ -487,6 +501,9 @@ describe('auth /me shim', () => {
   })
 
   it('returns needs_salon_selection for multi-salon staff without a salon header', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'credential' }])
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
         id: 'u2',
@@ -524,6 +541,9 @@ describe('auth /me shim', () => {
   })
 
   it('resolves multi-salon staff when X-Saluna-Salon-Id matches an accepted salon', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'credential' }])
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
         id: 'u2',
@@ -571,6 +591,9 @@ describe('auth /me shim', () => {
   })
 
   it('falls back to needs_salon_selection when the stored salon is no longer valid', async () => {
+    ;(
+      getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+    ).__setSelectRows([{ id: 'credential' }])
     vi.mocked(authServer.api.getSession).mockResolvedValue({
       user: {
         id: 'u2',
@@ -610,6 +633,9 @@ describe('auth /me shim', () => {
 })
 
 it('resolves staff privacy in the selected salon for an identity that also manages another salon', async () => {
+  ;(
+    getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+  ).__setSelectRows([{ id: 'credential' }])
   vi.mocked(authServer.api.getSession).mockResolvedValue({
     user: { id: 'u2', name: 'Staff', phoneNumber: '09120000001' },
   } as never)
@@ -702,6 +728,7 @@ describe('auth phone status route', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
       registered: true,
+      hasPassword: true,
       otpLoginEnabled: false,
     })
   })
@@ -716,6 +743,7 @@ describe('auth phone status route', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
       registered: false,
+      hasPassword: false,
       otpLoginEnabled: false,
     })
   })
@@ -927,7 +955,7 @@ describe('OTP signup continuation routes', () => {
 
   it('lets a newly claimed staff member establish their own password', async () => {
     vi.mocked(authServer.api.getSession).mockResolvedValue({
-      user: { id: 'u1' },
+      user: { id: 'u1', phoneNumberVerified: true },
     } as never)
     vi.mocked(getStaffProfileForUser).mockResolvedValue({
       id: 'profile-1',
@@ -1523,4 +1551,102 @@ describe('Staff Invite accept and decline', () => {
     expect(res.status).toBe(409)
     expect(await res.json()).toMatchObject({ code: 'invite_expired' })
   })
+})
+
+describe('first-time staff credentials', () => {
+  it('distinguishes an existing identity without a credential password', async () => {
+    ;(
+      getDb() as unknown as { __setSelectResults: (rows: unknown[][]) => void }
+    ).__setSelectResults([[{ id: 'u1' }], []])
+    const res = await app.request('/api/v1/auth/phone-status', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ phone: '09121234567' }),
+    })
+    expect(await res.json()).toEqual({
+      registered: true,
+      hasPassword: false,
+      otpLoginEnabled: false,
+    })
+  })
+
+  it.each(['pending', 'expired'])(
+    'allows password creation for a verified %s invite before acceptance',
+    async (status) => {
+      vi.mocked(authServer.api.getSession).mockResolvedValue({
+        user: { id: 'u1', phoneNumberVerified: true },
+      } as never)
+      vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([
+        { id: 'invite-1', status },
+      ] as never)
+      const res = await app.request('/api/v1/auth/staff-claim/password', {
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({ password: 'secret123' }),
+      })
+      expect(res.status).toBe(200)
+      expect(authServer.api.setPassword).toHaveBeenCalledOnce()
+      expect(acceptStaffInvite).not.toHaveBeenCalled()
+      expect(claimStaffProfile).not.toHaveBeenCalled()
+    },
+  )
+
+  it('requires verified phone ownership to establish staff credentials', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: { id: 'u1', phoneNumberVerified: false },
+    } as never)
+    vi.mocked(listUnacceptedStaffInvitesForUser).mockResolvedValue([
+      { id: 'invite-1' },
+    ] as never)
+    const res = await app.request('/api/v1/auth/staff-claim/password', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ password: 'secret123' }),
+    })
+    expect(res.status).toBe(403)
+    expect(authServer.api.setPassword).not.toHaveBeenCalled()
+  })
+
+  it('uses accepted access even when there is no legacy claimed profile', async () => {
+    vi.mocked(authServer.api.getSession).mockResolvedValue({
+      user: {
+        id: 'u1',
+        name: 'Sara',
+        phoneNumber: '09121234567',
+        phoneNumberVerified: true,
+      },
+    } as never)
+    vi.mocked(listStaffSalonOptionsForUser).mockResolvedValue([
+      { salonId: 'salon-a', salonName: 'Salon A', staffProfileId: 'profile-a' },
+    ])
+    const res = await app.request('/api/v1/auth/me')
+    expect(await res.json()).toMatchObject({
+      status: 'needs_staff_password',
+      user: { id: 'u1' },
+    })
+    const password = await app.request('/api/v1/auth/staff-claim/password', {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ password: 'secret123' }),
+    })
+    expect(password.status).toBe(200)
+    expect(authServer.api.setPassword).toHaveBeenCalledOnce()
+    expect(acceptStaffInvite).not.toHaveBeenCalled()
+  })
+
+  it.each(['send-otp', 'verify'])(
+    'blocks repeat SMS %s for password identities without salon membership',
+    async (endpoint) => {
+      ;(
+        getDb() as unknown as { __setSelectRows: (rows: unknown[]) => void }
+      ).__setSelectRows([{ id: 'u1' }])
+      const res = await app.request(`/api/v1/auth/phone-number/${endpoint}`, {
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({ phoneNumber: '09121234567', code: '123456' }),
+      })
+      expect(res.status).toBe(403)
+      expect(authServer.handler).not.toHaveBeenCalled()
+    },
+  )
 })

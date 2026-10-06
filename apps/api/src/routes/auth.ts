@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, eq, isNotNull, or } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { auth, getAuthForRequest } from '@repo/auth/server'
 import { isAuthOtpLoginEnabled } from '@repo/auth/phone-otp'
@@ -11,11 +11,11 @@ import { getDb } from '@repo/database/client'
 import {
   businessSettings,
   account,
-  member,
   organization,
   salonOnboarding,
   salonMember,
   salonProfile,
+  staffProfileAccesses,
   user,
 } from '@repo/database/schema'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
@@ -180,15 +180,18 @@ async function hasCredentialPassword(userId: string): Promise<boolean> {
   return Boolean(rows[0])
 }
 
-async function isCompletedAccount(phone: string): Promise<boolean> {
+async function phoneHasPassword(phone: string): Promise<boolean> {
   const rows = await getDb()
     .select({ id: user.id })
     .from(user)
     .innerJoin(
       account,
-      and(eq(account.userId, user.id), eq(account.providerId, 'credential')),
+      and(
+        eq(account.userId, user.id),
+        eq(account.providerId, 'credential'),
+        isNotNull(account.password),
+      ),
     )
-    .innerJoin(member, eq(member.userId, user.id))
     .where(or(eq(user.phoneNumber, phone), eq(user.username, phone)))
     .limit(1)
   return Boolean(rows[0])
@@ -204,7 +207,7 @@ async function guardOtpLogin(c: Parameters<typeof ok>[0]) {
       .catch(() => null),
   )
   if (!parsed.success) return handleAuthRequest(c)
-  if (await isCompletedAccount(parsed.data.phoneNumber)) {
+  if (await phoneHasPassword(parsed.data.phoneNumber)) {
     return error(
       c,
       'ورود با کد پیامکی موقتاً غیرفعال است',
@@ -235,7 +238,7 @@ async function verifyPhoneAndClaim(c: Parameters<typeof ok>[0]) {
   if (
     parsed.success &&
     !isAuthOtpLoginEnabled() &&
-    (await isCompletedAccount(parsed.data.phoneNumber))
+    (await phoneHasPassword(parsed.data.phoneNumber))
   ) {
     return error(
       c,
@@ -253,6 +256,26 @@ async function verifyPhoneAndClaim(c: Parameters<typeof ok>[0]) {
     .catch(() => null)) as { user?: { id?: string } } | null
   const userId = payload?.user?.id
   if (!userId) return response
+  // Accepted invite access already links the verified identity to its profiles.
+  // The legacy setup claim assumes one profile and can transfer that link.
+  const acceptedAccess = await getDb()
+    .select({ id: staffProfileAccesses.id })
+    .from(staffProfileAccesses)
+    .innerJoin(user, eq(user.id, staffProfileAccesses.userId))
+    .where(
+      and(
+        eq(staffProfileAccesses.userId, userId),
+        isNull(staffProfileAccesses.revokedAt),
+        eq(user.phoneNumberVerified, true),
+        or(
+          eq(user.phoneNumber, parsed.data.phoneNumber),
+          eq(user.username, parsed.data.phoneNumber),
+        ),
+      ),
+    )
+    .limit(1)
+  if (acceptedAccess[0]) return response
+
   const claim = await claimStaffProfile({
     userId,
     phone: parsed.data.phoneNumber,
@@ -360,7 +383,7 @@ export const authRoute = new Hono<AppEnv>()
       return ok(c, {
         status: 'needs_staff_password',
         user: {
-          id: claimedProfile.id,
+          id: sessionUser.id,
           name: claimedProfile.name,
           phone: claimedProfile.phone,
           salonId: claimedProfile.salonId,
@@ -369,13 +392,28 @@ export const authRoute = new Hono<AppEnv>()
     }
 
     const salonOptions = await listStaffSalonOptionsForUser(sessionUser.id)
+    if (
+      salonOptions.length > 0 &&
+      !(await hasCredentialPassword(sessionUser.id))
+    ) {
+      return ok(c, {
+        status: 'needs_staff_password',
+        user: {
+          id: sessionUser.id,
+          name: sessionUser.name,
+          phone: sessionUser.phoneNumber ?? sessionUser.username ?? '',
+        },
+      })
+    }
     if (salonOptions.length === 0) {
       const unacceptedInvites = await listUnacceptedStaffInvitesForUser(
         sessionUser.id,
       )
       if (unacceptedInvites.length > 0) {
         return ok(c, {
-          status: 'needs_staff_invite',
+          status: (await hasCredentialPassword(sessionUser.id))
+            ? 'needs_staff_invite'
+            : 'needs_staff_password',
           user: {
             id: sessionUser.id,
             name: sessionUser.name,
@@ -461,8 +499,20 @@ export const authRoute = new Hono<AppEnv>()
     async (c) => {
       const sessionUser = await getSessionUser(c)
       if (!sessionUser) return error(c, 'وارد نشده‌اید', 401)
+      if (!sessionUser.phoneNumberVerified) {
+        return error(
+          c,
+          'ابتدا شماره موبایل خود را تایید کنید',
+          403,
+          'phone_unverified',
+        )
+      }
       const profile = await getStaffProfileForUser(sessionUser.id)
-      if (!profile) return error(c, 'پروفایل پرسنل یافت نشد', 404)
+      const salons = await listStaffSalonOptionsForUser(sessionUser.id)
+      const invites = await listUnacceptedStaffInvitesForUser(sessionUser.id)
+      if (!profile && salons.length === 0 && invites.length === 0) {
+        return error(c, 'دعوت یا دسترسی پرسنل یافت نشد', 404)
+      }
       if (await hasCredentialPassword(sessionUser.id)) {
         return ok(c, { success: true })
       }
@@ -476,6 +526,12 @@ export const authRoute = new Hono<AppEnv>()
         if (code === 'PASSWORD_ALREADY_SET') return ok(c, { success: true })
         if (code === 'PASSWORD_TOO_SHORT') {
           return error(c, 'رمز عبور باید حداقل ۸ کاراکتر باشد', 400, code)
+        }
+        if (code === 'PASSWORD_TOO_LONG') {
+          return error(c, 'رمز عبور بیش از حد طولانی است', 400, code)
+        }
+        if (code === 'UNAUTHORIZED') {
+          return error(c, 'وارد نشده‌اید', 401, code)
         }
         throw err
       }
@@ -646,6 +702,7 @@ export const authRoute = new Hono<AppEnv>()
 
     return ok(c, {
       registered: Boolean(rows[0]),
+      hasPassword: rows[0] ? await hasCredentialPassword(rows[0].id) : false,
       otpLoginEnabled: isAuthOtpLoginEnabled(),
     })
   })
@@ -676,6 +733,10 @@ export const authRoute = new Hono<AppEnv>()
             // sessions. Treat that as an idempotent account-completion state.
           } else if (code === 'PASSWORD_TOO_SHORT') {
             return error(c, 'رمز عبور باید حداقل ۸ کاراکتر باشد', 400, code)
+          } else if (code === 'PASSWORD_TOO_LONG') {
+            return error(c, 'رمز عبور بیش از حد طولانی است', 400, code)
+          } else if (code === 'UNAUTHORIZED') {
+            return error(c, 'وارد نشده‌اید', 401, code)
           } else {
             throw err
           }

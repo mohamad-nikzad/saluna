@@ -4,6 +4,7 @@ import { username } from 'better-auth/plugins/username'
 import { phoneNumber } from 'better-auth/plugins/phone-number'
 import { organization } from 'better-auth/plugins/organization'
 import { bearer } from 'better-auth/plugins/bearer'
+import { firstPassword } from './first-password'
 import { getDb } from '@repo/database/client'
 import {
   hashCredentialPassword,
@@ -91,6 +92,7 @@ function createAuth(cookiePrefix: string) {
       database: { generateId: 'uuid' },
     },
     plugins: [
+      firstPassword(),
       username({ minUsernameLength: 10, maxUsernameLength: 15 }), // 11-digit 09xxxxxxxxx fits
       phoneNumber({
         otpLength: AUTH_OTP_LENGTH,

@@ -78,11 +78,14 @@ export async function signupNewSalon(
 
   await page.getByRole('textbox', { name: 'شماره موبایل' }).fill(input.phone)
   await page.getByRole('button', { name: 'ادامه' }).click()
+  await page.getByRole('button', { name: 'دریافت کد تایید' }).click()
   await expect(
-    page.getByRole('button', { name: 'تایید و ادامه ثبت‌نام' }),
+    page.getByRole('button', { name: 'تایید شماره و ادامه' }),
   ).toBeVisible()
   await page.locator('#otp').click()
   await page.keyboard.type(OTP_BYPASS_CODE)
+  await expect(page).toHaveURL(/\/staff-invites/)
+  await page.getByRole('button', { name: 'ساخت سالن خودم' }).click()
   await expect(page.locator('#managerName')).toBeVisible()
 
   await page.locator('#managerName').fill(input.managerName)
