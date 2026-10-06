@@ -36,6 +36,7 @@ export const publicSiteInfo: PublicSiteInfo = {
 export const publicNavLinks = [
   { href: '/', label: 'خانه' },
   { href: '/services', label: 'خدمات' },
+  { href: '/blog', label: 'وبلاگ' },
   { href: '/about', label: 'درباره ما' },
   { href: '/contact', label: 'تماس با ما' },
   { href: '/privacy', label: 'حریم خصوصی' },

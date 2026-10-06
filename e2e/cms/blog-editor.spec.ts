@@ -318,3 +318,242 @@ test('editor uploads a cover, places an inline image, and saves page SEO in the 
     editor.locator('[contenteditable="true"] img').first(),
   ).toBeVisible()
 })
+
+test('visitors read published Persian articles, public credit, and signup links', async ({
+  page,
+}) => {
+  const created = await cms(editor, 'content/blog_articles', {
+    slug: 'staff-commission-guide',
+    status: 'draft',
+    data: {
+      title: 'کمیسیون کارکنان سالن چگونه محاسبه می‌شود؟',
+      summary: 'یک مثال روشن برای تقسیم مبلغ خدمت بین سالن و همکاران.',
+      body: [
+        {
+          _type: 'block',
+          _key: 'heading',
+          style: 'h2',
+          children: [
+            {
+              _type: 'span',
+              _key: 's1',
+              text: 'مبنای محاسبه را مشخص کنید',
+              marks: [],
+            },
+          ],
+          markDefs: [],
+        },
+        {
+          _type: 'block',
+          _key: 'text',
+          style: 'normal',
+          children: [
+            {
+              _type: 'span',
+              _key: 's2',
+              text: 'برای یک خدمت یک میلیون تومانی با کمیسیون سی درصد، سهم همکار سیصد هزار تومان است.',
+              marks: [],
+            },
+          ],
+          markDefs: [],
+        },
+      ],
+    },
+  })
+  await cms(editor, `content/blog_articles/${created.item.id}/publish`, {
+    _rev: created._rev,
+  })
+  const live = await cms(editor, `content/blog_articles/${created.item.id}`)
+  await cms(
+    editor,
+    `content/blog_articles/${created.item.id}`,
+    { data: { title: 'عنوان ویرایش‌شده در پیش‌نویس' }, _rev: live._rev },
+    'PUT',
+  )
+  await editor
+    .context()
+    .addCookies([
+      { name: 'emdash-edit-mode', value: 'true', url: 'http://localhost:3303' },
+    ])
+  const signedInPublic = await editor.request.get(
+    '/blog/staff-commission-guide',
+  )
+  expect(await signedInPublic.text()).not.toContain(
+    'عنوان ویرایش‌شده در پیش‌نویس',
+  )
+  await editor.context().clearCookies({ name: 'emdash-edit-mode' })
+  const response = await page.goto('/blog/staff-commission-guide')
+  expect(response!.status()).toBe(200)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fa')
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'کمیسیون کارکنان سالن چگونه محاسبه می‌شود؟',
+  )
+  await expect(
+    page.getByRole('heading', { name: 'مبنای محاسبه را مشخص کنید' }),
+  ).toBeVisible()
+  await expect(page.locator('article')).toContainText('سیصد هزار تومان')
+  await expect(page.locator('article')).toContainText('تیم سالونا')
+  await expect(page.locator('article')).not.toContainText('نام حساب ویرایشگر')
+  await expect(page.locator('article img')).toHaveCount(0)
+  const signup = page.getByRole('link', {
+    name: 'شروع استفاده از سالونا',
+    exact: true,
+  })
+  expect(new URL((await signup.getAttribute('href'))!).pathname).toBe('/signup')
+  await expect(page.locator('header nav a[href="/blog"]')).toBeVisible()
+  await page
+    .locator('astro-dev-toolbar')
+    .evaluateAll((toolbars) => toolbars.forEach((toolbar) => toolbar.remove()))
+  await page.screenshot({
+    path: test.info().outputPath('blog-article-desktop.png'),
+    fullPage: true,
+  })
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+  await page.screenshot({
+    path: test.info().outputPath('blog-article-mobile.png'),
+    fullPage: true,
+  })
+  const index = await page.request.get('/blog')
+  expect(index.status()).toBe(200)
+  const html = await index.text()
+  expect(html).toContain('کمیسیون کارکنان سالن چگونه محاسبه می‌شود؟')
+  expect(html).not.toContain('محاسبه دقیق کمیسیون کارکنان سالن')
+  expect((await page.request.get('/blog/default-credit')).status()).toBe(404)
+  expect((await page.request.get('/blog/not-a-real-article')).status()).toBe(
+    404,
+  )
+})
+
+test('published named credit and CMS images render without changing the writing account', async ({
+  page,
+}) => {
+  const items = (await cms(editor, 'content/blog_articles')).items
+  const imageArticle = items.find(
+    (item: { data: { title: string } }) =>
+      item.data.title === 'مقاله با تصویر و فراداده',
+  )
+  const credits = (await cms(editor, 'admin/bylines')).items
+  const leila = credits.find(
+    (byline: { slug: string }) => byline.slug === 'leila',
+  )
+  const saved = await cms(editor, `content/blog_articles/${imageArticle.id}`)
+  await cms(
+    editor,
+    `content/blog_articles/${imageArticle.id}`,
+    { bylines: [{ bylineId: leila.id }], _rev: saved._rev },
+    'PUT',
+  )
+  const credited = await cms(editor, `content/blog_articles/${imageArticle.id}`)
+  await cms(editor, `content/blog_articles/${imageArticle.id}/publish`, {
+    _rev: credited._rev,
+  })
+  await page.goto(`/blog/${encodeURIComponent(credited.item.slug)}`)
+  await expect(page.locator('article')).toContainText('لیلا رضایی')
+  await expect(page.locator('article img')).toHaveCount(2)
+  for (const image of await page.locator('article img').all()) {
+    expect(
+      (await page.request.get((await image.getAttribute('src'))!)).ok(),
+    ).toBe(true)
+    await expect(image).toBeVisible()
+  }
+})
+
+test('a signed preview requires a real content session and never leaks into anonymous responses', async ({
+  browser,
+  page,
+}) => {
+  const contributor = await invitedAccount(browser, operator, 'contributor', 20)
+  const subscriber = await invitedAccount(browser, operator, 'subscriber', 10)
+  try {
+    const draft = await cms(contributor, 'content/blog_articles', {
+      slug: 'private-draft-preview',
+      status: 'draft',
+      data: {
+        title: 'پیش‌نویس خصوصی برنامه همکاران',
+        summary: 'این متن هنوز برای انتشار آماده نیست.',
+      },
+    })
+    const link = (
+      await cms(
+        contributor,
+        `content/blog_articles/${draft.item.id}/preview-url`,
+        {},
+      )
+    ).url
+    const preview = await contributor.goto(link)
+    expect(preview!.status()).toBe(200)
+    await expect(contributor.getByRole('heading', { level: 1 })).toHaveText(
+      'پیش‌نویس خصوصی برنامه همکاران',
+    )
+    await expect(
+      contributor.getByText('پیش‌نمایش پیش‌نویس', { exact: true }),
+    ).toBeVisible()
+    expect(preview!.headers()['cache-control']).toContain('private, no-store')
+    expect(preview!.headers()['x-robots-tag']).toContain('noindex')
+    await expect(contributor.locator('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow',
+    )
+    const copied = await page.request.get(link)
+    expect(copied.status()).toBe(403)
+    expect(await copied.text()).not.toContain('پیش‌نویس خصوصی برنامه همکاران')
+    expect(copied.headers()['cache-control']).toContain('private, no-store')
+    expect(copied.headers()['x-robots-tag']).toContain('noindex')
+    expect((await subscriber.request.get(link)).status()).toBe(403)
+    const invalid = await contributor.request.get(
+      '/blog/staff-commission-guide?_preview=invalid',
+    )
+    expect(invalid.status()).toBe(404)
+    expect(invalid.headers()['cache-control']).toContain('private, no-store')
+    expect(invalid.headers()['x-robots-tag']).toContain('noindex')
+    const unknown = await contributor.request.get(
+      '/blog/unknown/nested?_preview=invalid',
+    )
+    expect(unknown.status()).toBe(404)
+    expect(unknown.headers()['cache-control']).toContain('private, no-store')
+    expect(unknown.headers()['x-robots-tag']).toContain('noindex')
+    const token = new URL(link, 'http://localhost:3303').searchParams.get(
+      '_preview',
+    )!
+    await contributor.context().addCookies([
+      {
+        name: 'emdash-edit-mode',
+        value: 'true',
+        url: 'http://localhost:3303',
+      },
+    ])
+    const wrongEntry = await contributor.request.get(
+      `/blog/staff-commission-guide?_preview=${encodeURIComponent(token)}`,
+    )
+    expect(wrongEntry.status()).toBe(404)
+    const expiredLink = (
+      await cms(
+        contributor,
+        `content/blog_articles/${draft.item.id}/preview-url`,
+        { expiresIn: -1 },
+      )
+    ).url
+    const expired = await contributor.request.get(expiredLink)
+    expect(expired.status()).toBe(404)
+    expect(expired.headers()['cache-control']).toContain('private, no-store')
+    expect(expired.headers()['x-robots-tag']).toContain('noindex')
+    expect(
+      (await page.request.get('/blog/private-draft-preview')).status(),
+    ).toBe(404)
+    expect(await (await page.request.get('/blog')).text()).not.toContain(
+      'پیش‌نویس خصوصی برنامه همکاران',
+    )
+    expect(
+      await (await page.request.get('/blog/staff-commission-guide')).text(),
+    ).not.toContain('پیش‌نویس خصوصی برنامه همکاران')
+  } finally {
+    await contributor.context().close()
+    await subscriber.context().close()
+  }
+})

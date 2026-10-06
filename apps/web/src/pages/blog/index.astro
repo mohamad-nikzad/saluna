@@ -1,0 +1,56 @@
+---
+export const prerender = false
+import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
+import { readPublicBlogArticles } from '@/lib/blog-content'
+import { displayClass } from '@/content/landing'
+import { titleWithBrand } from '@repo/brand'
+const articles = await readPublicBlogArticles()
+const canonical = new URL('/blog', Astro.site ?? Astro.url.origin).toString()
+---
+
+<PublicInfoLayout
+  title={titleWithBrand('وبلاگ')}
+  description="نوشته‌هایی درباره مدیریت نوبت‌ها، مشتریان و همکاران سالن زیبایی."
+  canonical={canonical}
+>
+  <section class="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-20">
+    <h1 class={`${displayClass} text-5xl leading-tight sm:text-7xl`}>
+      وبلاگ سالونا
+    </h1>
+    <p class="mt-5 max-w-2xl text-lg leading-9 text-[#6b4955]">
+      برای تصمیم‌های روزانه سالن، از برنامه نوبت‌ها تا حساب سهم همکاران.
+    </p>
+    <div class="mt-12 divide-y divide-[#f3d5dd] border-y border-[#f3d5dd]">
+      {
+        articles.map((article) => (
+          <article class="py-9">
+            <h2 class={`${displayClass} text-3xl leading-normal sm:text-4xl`}>
+              <a
+                href={`/blog/${encodeURIComponent(article.slug)}`}
+                class="hover:text-[#7a2a40]"
+              >
+                {article.title}
+              </a>
+            </h2>
+            {article.summary && (
+              <p class="mt-3 max-w-2xl text-base leading-8 text-[#6b4955]">
+                {article.summary}
+              </p>
+            )}
+            <p class="mt-4 text-sm text-[#6b4955]">
+              {article.bylines.join('، ')}
+            </p>
+          </article>
+        ))
+      }
+      {
+        articles.length === 0 && (
+          <p class="py-9 text-base leading-8 text-[#6b4955]">
+            هنوز مقاله‌ای منتشر نشده است. نوشته‌های تازه را به‌زودی اینجا
+            بخوانید.
+          </p>
+        )
+      }
+    </div>
+  </section>
+</PublicInfoLayout>

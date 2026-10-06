@@ -1,0 +1,35 @@
+---
+export const prerender = false
+import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
+import BlogArticleView from '@/components/blog/BlogArticleView.astro'
+import { readPublicBlogArticle, readBlogPreview } from '@/lib/blog-content'
+import { titleWithBrand } from '@repo/brand'
+const preview = Astro.url.searchParams.has('_preview')
+const article = preview
+  ? await readBlogPreview(Astro.params.slug!)
+  : await readPublicBlogArticle(Astro.params.slug!)
+if (!article) return new Response('مقاله یافت نشد.', { status: 404 })
+const canonical = new URL(
+  `/blog/${encodeURIComponent(article.slug)}`,
+  Astro.site ?? Astro.url.origin,
+).toString()
+---
+
+<PublicInfoLayout
+  title={titleWithBrand(article.title)}
+  description={article.summary ?? ''}
+  canonical={canonical}
+  noIndex={preview}
+>
+  {
+    preview && (
+      <div
+        role="status"
+        class="border-b border-[#f3d5dd] bg-[#f3d5dd] px-5 py-3 text-center text-sm font-bold text-[#7a2a40]"
+      >
+        پیش‌نمایش پیش‌نویس
+      </div>
+    )
+  }
+  <BlogArticleView article={article} />
+</PublicInfoLayout>
