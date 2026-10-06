@@ -32,5 +32,5 @@ Use the supported agent connection to prepare three Blog Article drafts on Staff
 
 ## Notes
 
-- This completes the first-batch content milestone in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- This completes the first-batch content milestone in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - Publication is a later explicit action by an authorized editor, including the editor who wrote the article. This task does not launch a daily routine or add conversion attribution.

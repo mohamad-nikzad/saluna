@@ -31,6 +31,6 @@ Use the installed EmDash release's supported MCP or remote CLI with a dedicated 
 
 ## Notes
 
-- Follow the current agent contract in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md). Scopes and roles need separate verification; role names alone are insufficient evidence.
+- Follow the current agent contract in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md). Scopes and roles need separate verification; role names alone are insufficient evidence.
 - A mandatory reviewer and custom publication-denial layer are outside scope. Draft-only behavior belongs to the drafting job's operations and deliverable.
 - This connection supports both BL-0099 and BL-0102. It does not depend on publication of any initial article or on Product Guides.

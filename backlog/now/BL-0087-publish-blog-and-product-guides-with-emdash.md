@@ -1,13 +1,13 @@
 ---
 id: BL-0087
 title: Publish Blog Articles and Product Guides with EmDash
-status: ready
+status: now
 type: feature
 triage: ready-for-agent
 priority: medium
 size: large
 created: 2026-09-29
-updated: 2026-10-06
+updated: 2026-10-07
 ---
 
 ## Problem Statement
@@ -100,17 +100,17 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | Task                                                                                                                      | Blocked by |
 | ------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | [BL-0092 Run EmDash with persistent storage](../done/BL-0092-run-emdash-with-persistent-storage.md)                       | None       |
-| [BL-0093 Configure Blog Article drafting and editor access](BL-0093-configure-blog-article-drafting-and-editor-access.md) | BL-0092    |
-| [BL-0094 Render blog pages and private previews](BL-0094-render-blog-pages-and-private-previews.md)                       | BL-0093    |
-| [BL-0095 Complete blog publishing and URL lifecycle](BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
-| [BL-0096 Add Blog Article SEO and discovery](BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
-| [BL-0097 Verify CMS recovery and editor usability](BL-0097-verify-cms-recovery-and-editor-usability.md)                   | BL-0096    |
-| [BL-0098 Enable agent Blog Article drafting](BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
-| [BL-0099 Deliver three initial Blog Article drafts](BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
-| [BL-0100 Publish Product Guides](BL-0100-publish-product-guides.md)                                                       | BL-0096    |
-| [BL-0101 Connect manager screens to Product Guides](BL-0101-connect-manager-screens-to-product-guides.md)                 | BL-0100    |
-| [BL-0102 Prove one Grok drafting run](BL-0102-prove-one-grok-drafting-run.md)                                             | BL-0098    |
-| [BL-0103 Enable daily Grok drafting](BL-0103-enable-daily-grok-drafting.md)                                               | BL-0102    |
+| [BL-0093 Configure Blog Article drafting and editor access](../ready/BL-0093-configure-blog-article-drafting-and-editor-access.md) | BL-0092    |
+| [BL-0094 Render blog pages and private previews](../ready/BL-0094-render-blog-pages-and-private-previews.md)                       | BL-0093    |
+| [BL-0095 Complete blog publishing and URL lifecycle](../ready/BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
+| [BL-0096 Add Blog Article SEO and discovery](../ready/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
+| [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                   | BL-0096    |
+| [BL-0098 Enable agent Blog Article drafting](../ready/BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
+| [BL-0099 Deliver three initial Blog Article drafts](../ready/BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
+| [BL-0100 Publish Product Guides](../ready/BL-0100-publish-product-guides.md)                                                       | BL-0096    |
+| [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                 | BL-0100    |
+| [BL-0102 Prove one Grok drafting run](../ready/BL-0102-prove-one-grok-drafting-run.md)                                             | BL-0098    |
+| [BL-0103 Enable daily Grok drafting](../ready/BL-0103-enable-daily-grok-drafting.md)                                               | BL-0102    |
 
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 

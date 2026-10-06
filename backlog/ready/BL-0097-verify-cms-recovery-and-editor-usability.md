@@ -32,6 +32,6 @@ Complete and record the first blog release's staging usability and recovery chec
 
 ## Notes
 
-- The release checks are required by [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
+- The release checks are required by [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
 - Coordinate the editor trial when implementing this task; do not invent an editor or claim completion without their participation. Staging access is also a rollout input.
 - Production publishing waits for these checks. Preparing private drafts does not wait for this task. Three launch drafts, Product Guides, and Grok drafting have their own subtasks.

@@ -32,6 +32,6 @@ Enable one daily Persian Blog Article drafting run using the Saluna writing skil
 
 ## Notes
 
-- This completes the recurring drafting criteria in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md). It is not required for the first blog release.
+- This completes the recurring drafting criteria in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md). It is not required for the first blog release.
 - Selecting the schedule is an implementation-time rollout input. Do not invent a run time while writing tickets.
 - Review is optional. Publication remains a later explicit action outside this routine; a reviewer queue, publication cadence, and conversion attribution remain outside scope.

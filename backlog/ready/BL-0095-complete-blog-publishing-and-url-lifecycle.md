@@ -33,5 +33,5 @@ Complete the editor-to-visitor publication journey and stable URL behavior. Publ
 
 ## Notes
 
-- Apply the current publication and redirect decisions in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- Apply the current publication and redirect decisions in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - BL-0096 extends these same state transitions to sitemap discovery and metadata checks. Drafting jobs remain unpublished by their own delivery contract; no custom publication-denial layer is required.

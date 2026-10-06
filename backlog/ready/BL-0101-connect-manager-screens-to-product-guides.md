@@ -31,5 +31,5 @@ Link at least one relevant manager PWA screen to its accurate public Product Gui
 
 ## Notes
 
-- This completes the manager-link and real-editor guide criteria in [BL-0087](BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- This completes the manager-link and real-editor guide criteria in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - Coordinate the intended editor and staging access during implementation. Automated tests do not substitute for the required hands-on trial.
