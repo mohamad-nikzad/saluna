@@ -10,9 +10,10 @@ interface Props {
   description: string
   canonical: string
   jsonLd?: unknown | unknown[]
+  noIndex?: boolean
 }
 
-const { title, description, canonical, jsonLd } = Astro.props
+const { title, description, canonical, jsonLd, noIndex = false } = Astro.props
 ---
 
 <Base
@@ -20,6 +21,7 @@ const { title, description, canonical, jsonLd } = Astro.props
   description={description}
   canonical={canonical}
   jsonLd={jsonLd}
+  noIndex={noIndex}
   ogImage={new URL('/og/landing.png', canonical).toString()}
   ogImageAlt="سالونا، نرم‌افزار مدیریت سالن زیبایی"
   preloadLalezar={true}

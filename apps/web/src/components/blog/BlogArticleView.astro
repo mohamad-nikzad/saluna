@@ -1,0 +1,150 @@
+---
+import { Image, PortableText } from 'emdash/ui'
+import { displayClass, signupHref } from '@/content/landing'
+import type { BlogArticle } from '@/lib/blog-content'
+
+interface Props {
+  article: BlogArticle
+}
+const { article } = Astro.props
+const publishedDate = article.publishedAt
+  ? new Intl.DateTimeFormat('fa-IR', {
+      dateStyle: 'long',
+      timeZone: 'Asia/Tehran',
+    }).format(new Date(article.publishedAt))
+  : null
+---
+
+<article class="px-5 py-10 sm:px-8 sm:py-16">
+  <header class="mx-auto max-w-3xl">
+    <a href="/blog" class="text-sm text-[#7a2a40] underline underline-offset-4"
+      >وبلاگ سالونا</a
+    >
+    <h1 class={`${displayClass} mt-7 text-4xl leading-tight sm:text-6xl`}>
+      {article.title}
+    </h1>
+    {
+      article.summary && (
+        <p class="mt-6 text-lg leading-9 text-[#6b4955]">{article.summary}</p>
+      )
+    }
+    <div
+      class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#6b4955]"
+    >
+      <p>{article.bylines.join('، ')}</p>
+      {
+        publishedDate && (
+          <time datetime={article.publishedAt}>{publishedDate}</time>
+        )
+      }
+    </div>
+  </header>
+  {
+    article.cover && (
+      <figure class="mx-auto mt-10 max-w-4xl overflow-hidden rounded-2xl">
+        <Image
+          image={article.cover}
+          priority
+          placeholder={false}
+          class="h-auto w-full"
+        />
+      </figure>
+    )
+  }
+  <div class="blog-prose mx-auto mt-12 max-w-[40rem] text-lg leading-[2.1]">
+    {article.body && <PortableText value={article.body} />}
+  </div>
+  <aside
+    class="mx-auto mt-16 max-w-3xl rounded-2xl bg-[#7a2a40] p-7 text-white sm:p-10"
+    aria-label="شروع مدیریت سالن"
+  >
+    <h2 class={`${displayClass} text-3xl leading-normal`}>
+      مدیریت روزانه سالن را منظم‌تر کنید
+    </h2>
+    <p class="mt-3 text-base leading-8 text-[#f3d5dd]">
+      نوبت‌ها، اطلاعات مشتریان و سهم همکاران را در سالونا کنار هم نگه دارید.
+    </p>
+    <a
+      href={signupHref}
+      class="mt-6 inline-block rounded-md bg-white px-6 py-3 font-bold text-[#7a2a40]"
+      >شروع استفاده از سالونا</a
+    >
+  </aside>
+</article>
+
+<style is:global>
+  .blog-prose {
+    overflow-wrap: anywhere;
+  }
+  .blog-prose > * + * {
+    margin-block-start: 1.5rem;
+  }
+  .blog-prose h2,
+  .blog-prose h3,
+  .blog-prose h4 {
+    font-family: var(--font-lalezar), sans-serif;
+    line-height: 1.5;
+    margin-block-start: 2.5rem;
+  }
+  .blog-prose h2 {
+    font-size: 2rem;
+  }
+  .blog-prose h3 {
+    font-size: 1.65rem;
+  }
+  .blog-prose ul {
+    list-style: disc;
+    padding-inline-start: 1.5rem;
+  }
+  .blog-prose ol {
+    list-style: decimal;
+    padding-inline-start: 1.5rem;
+  }
+  .blog-prose li + li {
+    margin-block-start: 0.5rem;
+  }
+  .blog-prose a {
+    color: #7a2a40;
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+  }
+  .blog-prose blockquote {
+    border-inline-start: 3px solid #7a2a40;
+    padding-inline-start: 1.5rem;
+    color: #6b4955;
+  }
+  .blog-prose img,
+  .blog-prose video,
+  .blog-prose iframe {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+  }
+  .blog-prose figcaption {
+    color: #6b4955;
+    font-size: 0.875rem;
+    text-align: center;
+    margin-block-start: 0.75rem;
+  }
+  .blog-prose pre {
+    overflow-x: auto;
+    direction: ltr;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: #f3d5dd;
+  }
+  .blog-prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    border-collapse: collapse;
+  }
+  .blog-prose td,
+  .blog-prose th {
+    padding: 0.75rem;
+    border: 1px solid #f3d5dd;
+  }
+  .blog-prose hr {
+    border-color: #f3d5dd;
+  }
+</style>

@@ -4,7 +4,7 @@ EmDash 1.1.0 stores Blog Articles in `blog_articles`. Saluna's model is in
 `apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, and SEO sit
 alongside the title, summary, Portable Text body, and optional cover image.
 The public URL pattern is `/blog/{slug}`. Saving a title change preserves the
-existing slug. Public routes and private page previews follow in BL-0094.
+existing slug. Published articles appear at `/blog` and `/blog/{slug}`.
 
 ## Configure a new or existing CMS
 
@@ -66,6 +66,21 @@ Persian field labels and text saving are verified locally. The editor's
 complete Persian RTL usability trial with the intended writer belongs to
 BL-0097. The test journey uses the English admin interface to avoid depending
 on incomplete translations in this release.
+
+## Preview an unpublished article
+
+Use View on site after saving an article. EmDash generates a signed,
+time-limited preview link to the article's Saluna design. The link requires
+an active CMS session with draft-read permission. Contributor, Author,
+Editor, and Administrator accounts have this native permission. A copied
+link cannot expose the draft to an anonymous visitor or a Subscriber account.
+
+The preview shows `پیش‌نمایش پیش‌نویس` and has a noindex policy and private,
+no-store cache headers. Invalid, expired, and mismatched tokens return 404
+for authorized sessions. Ordinary public URLs always show the published
+revision, even when an editor has visual editing enabled. The public index
+lists all published articles and omits drafts. CMS read failures return 500
+instead of an empty successful article list.
 
 ## Browser checks
 

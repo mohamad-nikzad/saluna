@@ -82,6 +82,7 @@ try {
         CMS_MEDIA_DIRECTORY: uploads,
         EMDASH_ENCRYPTION_KEY: `emdash_enc_v1_${randomBytes(32).toString('base64url')}`,
         EMDASH_SITE_URL: 'http://localhost:3303',
+        PUBLIC_APP_URL: 'http://localhost:3303',
       },
     },
   )
