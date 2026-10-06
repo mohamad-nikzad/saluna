@@ -1,7 +1,10 @@
 name: Staging QA
-run-name: QA ${{ inputs.ref }}
+run-name: QA ${{ inputs.ref || 'main' }}
 
 on:
+  schedule:
+    # 02:00 Asia/Tehran, whose UTC offset is +03:30.
+    - cron: '30 22 * * *'
   workflow_dispatch:
     inputs:
       ref:
@@ -30,14 +33,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref || 'main' }}
           fetch-depth: 0
           persist-credentials: false
       - id: revision
         name: Verify CI for the selected commit
         env:
           GH_TOKEN: ${{ github.token }}
-          QA_BRANCH: ${{ inputs.ref }}
+          QA_BRANCH: ${{ inputs.ref || 'main' }}
         run: |
           set -euo pipefail
           sha="$(git rev-parse HEAD)"

@@ -1,6 +1,16 @@
-# Change-driven QA handoff
+# Nightly and on-demand QA handoff
 
-Automatic QA after pushes is disabled. The change-driven, nightly and 18:00 bot routines are paused. Only an explicit owner request in Grok or owner-authorized Slack RUN QA may start tests. Do not claim a pending job merely because it exists, a CI event arrived, or a timer fired.
+Automatic QA after pushes is disabled. The owner authorizes nightly testing of untested main changes at 02:00 Asia/Tehran, plus explicit owner requests in Grok or owner-authorized Slack RUN QA. The change-driven and 18:00 bot routines stay paused. A pending job alone or a CI event never authorizes a run.
+
+## Nightly gate
+
+The Staging QA GitHub workflow qa-main.yml starts nightly at 22:30 UTC, which is 02:00 Tehran. It resolves committed main, requires that exact commit's successful CI, compares against the last completed test baseline, builds on a hosted runner only when product changes remain untested, then installs QA, smoke-tests and sleeps before publishing a job. GitHub scheduling may be delayed. Grok's existing 02:00 nightly routine handles only that night's scheduled workflow, not arbitrary main CI events or older ready jobs.
+
+On the nightly wake, use the existing GitHub read connector to find qa-main.yml runs with event=schedule for the current Tehran night. Require created_at at or after that night's 02:00 Tehran due time minus five minutes; never select the preceding night's run or a manual workflow. Persist a ledger keyed by Tehran date, workflow ID and job ID. Allow up to three hours from the due time for discovery and completion, checking no faster than once every two minutes. Waiting is read-only and never wakes QA. If the workflow succeeded with build skipped, end quietly: nothing remains untested. Failed/cancelled workflows or expired waits get one deduplicated setup-blocked note through Growth, not a product bug.
+
+After a successful build/stage, GET /_qa/job and require job.workflow_url to match that scheduled workflow's exact run ID, source_branch=main and installed revision/source_commit to match the job. Null/mismatched/already-reported jobs never start browser work. A superseding manual release is not a nightly job; report blocked rather than testing unrelated code. Freeze expectations to the job's actual pinned SHA even if main advances during the build; report the actual SHA, and later changes remain for the next night. Apply every ownership, coverage, evidence, cleanup, sleep and reporting rule below. Never claim a skipped/blocked scenario passed. Blocked reports keep the baseline unchanged.
+
+## On-demand
 
 For "test latest changes", read the latest committed main SHA using the existing GitHub connector and compare it with staging's installed source_commit. The connector currently cannot dispatch Actions. If staging is stale, ask the maintainer to run the manual Staging QA workflow for that exact revision; do not wake stale staging or claim it represents latest main. No new credentials or connections. Explicit branch validation requires the owner's request. Uncommitted local work is excluded unless staged explicitly by the workstation updater.
 
