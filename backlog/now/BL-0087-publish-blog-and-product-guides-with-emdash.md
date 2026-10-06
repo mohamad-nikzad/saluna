@@ -100,7 +100,7 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | Task                                                                                                                      | Blocked by |
 | ------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | [BL-0092 Run EmDash with persistent storage](../done/BL-0092-run-emdash-with-persistent-storage.md)                       | None       |
-| [BL-0093 Configure Blog Article drafting and editor access](../ready/BL-0093-configure-blog-article-drafting-and-editor-access.md) | BL-0092    |
+| [BL-0093 Configure Blog Article drafting and editor access](../done/BL-0093-configure-blog-article-drafting-and-editor-access.md) | BL-0092    |
 | [BL-0094 Render blog pages and private previews](../ready/BL-0094-render-blog-pages-and-private-previews.md)                       | BL-0093    |
 | [BL-0095 Complete blog publishing and URL lifecycle](../ready/BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
 | [BL-0096 Add Blog Article SEO and discovery](../ready/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |

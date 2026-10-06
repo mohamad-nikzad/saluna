@@ -1,12 +1,12 @@
 # Backlog Index
 
-Last organized: 2026-10-07 (BL-0087 implementation resumed; BL-0092 remains verified complete)
+Last organized: 2026-10-07 (BL-0087 implementation resumed; BL-0092 and BL-0093 verified complete)
 
 ## Now
 
 - [BL-0087 Publish Blog Articles and Product Guides with EmDash](now/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
   - [BL-0092 Run EmDash with persistent storage](done/BL-0092-run-emdash-with-persistent-storage.md)
-  - [BL-0093 Configure Blog Article drafting and editor access](ready/BL-0093-configure-blog-article-drafting-and-editor-access.md)
+  - [BL-0093 Configure Blog Article drafting and editor access](done/BL-0093-configure-blog-article-drafting-and-editor-access.md)
   - [BL-0094 Render blog pages and private previews](ready/BL-0094-render-blog-pages-and-private-previews.md)
   - [BL-0095 Complete blog publishing and URL lifecycle](ready/BL-0095-complete-blog-publishing-and-url-lifecycle.md)
   - [BL-0096 Add Blog Article SEO and discovery](ready/BL-0096-add-blog-article-seo-and-discovery.md)
