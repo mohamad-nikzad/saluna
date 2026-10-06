@@ -89,6 +89,7 @@ COPY --from=build /app/packages/brand /app/packages/brand
 COPY --from=build /app/packages/salon-core /app/packages/salon-core
 COPY --from=build /app/packages/typescript-config /app/packages/typescript-config
 COPY --from=build /app/apps/web/dist ./dist
+COPY --from=build /app/apps/web/server.mjs ./server.mjs
 
 # Docker initializes a new named volume from this node-owned directory.
 RUN mkdir -p .emdash/uploads node_modules/.astro/sessions \
@@ -98,4 +99,4 @@ USER node
 
 EXPOSE 3001
 
-CMD ["node", "dist/server/entry.mjs"]
+CMD ["node", "server.mjs"]

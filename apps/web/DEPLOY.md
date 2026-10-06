@@ -34,7 +34,12 @@ pnpm --filter @repo/web start
 The build writes static assets to `apps/web/dist/client/` and the server to
 `apps/web/dist/server/entry.mjs`.
 
-For a process manager, load the environment and run the entry file from
+Production must start through `apps/web/server.mjs`. This delegates to the
+Node adapter while preserving non-blog canonical redirects before static
+serving. Blog variants reach the CMS, where unpublished addresses return 404.
+Do not start the generated entry file directly.
+
+For a process manager, load the environment and run `server.mjs` from
 `apps/web`. A [PM2 config](ecosystem.config.cjs) is included:
 
 ```bash

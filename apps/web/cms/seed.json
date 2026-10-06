@@ -12,7 +12,7 @@
       "label": "مقاله‌های وبلاگ",
       "labelSingular": "مقاله وبلاگ",
       "description": "مقاله‌های مدیریت سالن. نام نویسنده عمومی را در Bylines انتخاب کنید؛ بدون انتخاب، نام تیم سالونا نمایش داده می‌شود.",
-      "supports": ["drafts", "revisions", "seo"],
+      "supports": ["drafts", "revisions", "preview", "seo"],
       "urlPattern": "/blog/{slug}",
       "fields": [
         {
