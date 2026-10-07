@@ -12,9 +12,10 @@ export async function cms(
     ...(body === undefined ? {} : { data: body }),
   })
   const json = await response.json()
-  expect(response.ok(), `${method} ${path} returned ${response.status()}`).toBe(
-    true,
-  )
+  expect(
+    response.ok(),
+    `${method} ${path} returned ${response.status()}: ${json.error?.code ?? ''} ${json.error?.message ?? ''}`,
+  ).toBe(true)
   expect(json.success).toBe(true)
   return json.data
 }

@@ -40,7 +40,12 @@ async function blogRedirect(path: string): Promise<string | null | undefined> {
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
   const { pathname, searchParams } = context.url
-  if (pathname !== '/blog' && !pathname.startsWith('/blog/')) return next()
+  if (
+    pathname !== '/blog-sitemap.xml' &&
+    pathname !== '/blog' &&
+    !pathname.startsWith('/blog/')
+  )
+    return next()
 
   const preview = searchParams.has('_preview')
   context.cache?.set(false)

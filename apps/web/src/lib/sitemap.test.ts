@@ -86,12 +86,13 @@ describe('runtime Salon sitemap', () => {
     expect(await (await GET({} as never)).text()).not.toContain('/salons/aftab')
   })
 
-  it('declares both static and runtime sitemaps in robots.txt', async () => {
+  it('declares static, Salon, and Blog Article sitemaps in robots.txt', async () => {
     const expected = `User-agent: *
 Allow: /
 
 Sitemap: https://saluna.example.test/sitemap-index.xml
 Sitemap: https://saluna.example.test/salons-sitemap.xml
+Sitemap: https://saluna.example.test/blog-sitemap.xml
 `
 
     expect(
@@ -106,6 +107,9 @@ Sitemap: https://saluna.example.test/salons-sitemap.xml
     )
     expect(devRobots).toContain(
       'Sitemap: http://localhost:3001/salons-sitemap.xml',
+    )
+    expect(devRobots).toContain(
+      'Sitemap: http://localhost:3001/blog-sitemap.xml',
     )
   })
 })

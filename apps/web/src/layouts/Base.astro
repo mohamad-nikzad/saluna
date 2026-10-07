@@ -3,15 +3,9 @@ import '../styles/globals.css'
 import { Font } from 'astro:assets'
 import Head from '../components/Head.astro'
 
-interface Props {
-  title: string
-  description?: string
-  canonical?: string
-  ogImage?: string
-  ogImageAlt?: string
-  jsonLd?: unknown | unknown[]
+import type { PageMetadata } from '../lib/seo'
+interface Props extends PageMetadata {
   preloadLalezar?: boolean
-  noIndex?: boolean
 }
 
 const {
@@ -21,6 +15,9 @@ const {
   ogImage,
   ogImageAlt,
   jsonLd,
+  ogType,
+  ogImageWidth,
+  ogImageHeight,
   preloadLalezar = false,
   noIndex = false,
 } = Astro.props
@@ -49,6 +46,9 @@ const {
       ogImage={ogImage}
       ogImageAlt={ogImageAlt}
       jsonLd={jsonLd}
+      ogType={ogType}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
       noIndex={noIndex}
     />
   </head>

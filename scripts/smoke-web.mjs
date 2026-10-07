@@ -9,6 +9,7 @@
  *   SLUG=saluna MANAGER_PHONE=09120000000 MANAGER_PASSWORD=admin123 node scripts/smoke-web.mjs
  */
 import sharp from 'sharp'
+import { checkBlogArticle, checkBlogDiscovery } from './smoke-blog.mjs'
 
 const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(
   /\/$/,
@@ -333,6 +334,10 @@ async function checkUnpublishedSalon(salonSlug, canonical) {
 }
 
 async function main() {
+  const articleUrls = await checkBlogDiscovery(base)
+  for (const url of articleUrls) await checkBlogArticle(url)
+  pass(`Blog discovery and metadata (${articleUrls.length} published articles)`)
+
   if (Boolean(managerPhone) !== Boolean(managerPassword)) {
     throw new Error('Set both MANAGER_PHONE and MANAGER_PASSWORD')
   }

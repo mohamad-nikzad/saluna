@@ -15,6 +15,23 @@ describe('rendered page robots metadata', () => {
     expect(html).toContain('<meta name="robots" content="noindex, nofollow">')
   })
 
+  it('keeps CMS-authored closing-script text inside shared JSON-LD', async () => {
+    const headline = '</script><script id="cms-injection">alert(1)</script>'
+    const html = await (
+      await AstroContainer.create()
+    ).renderToString(Base, {
+      props: { title: 'مقاله', jsonLd: { '@type': 'Article', headline } },
+    })
+    expect(html).not.toContain('<script id="cms-injection">')
+    const blocks = [
+      ...html.matchAll(
+        /<script[^>]+type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs,
+      ),
+    ]
+    expect(blocks).toHaveLength(1)
+    expect(JSON.parse(blocks[0][1]).headline).toBe(headline)
+  })
+
   it('leaves public Salon metadata indexable by default', async () => {
     const html = await (
       await AstroContainer.create()
