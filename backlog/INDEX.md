@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-07 (BL-0087 implementation ongoing; BL-0092 through BL-0096 verified complete)
+Last organized: 2026-10-07 (BL-0087 implementation ongoing; BL-0092 through BL-0096 verified complete; BL-0097 technical work verified, human trial pending)
 
 ## Now
 
@@ -10,7 +10,7 @@ Last organized: 2026-10-07 (BL-0087 implementation ongoing; BL-0092 through BL-0
   - [BL-0094 Render blog pages and private previews](done/BL-0094-render-blog-pages-and-private-previews.md)
   - [BL-0095 Complete blog publishing and URL lifecycle](done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)
   - [BL-0096 Add Blog Article SEO and discovery](done/BL-0096-add-blog-article-seo-and-discovery.md)
-  - [BL-0097 Verify CMS recovery and editor usability](ready/BL-0097-verify-cms-recovery-and-editor-usability.md)
+  - [BL-0097 Verify CMS recovery and editor usability](ready/BL-0097-verify-cms-recovery-and-editor-usability.md) (ready-for-human; technical checks passed)
   - [BL-0098 Enable agent Blog Article drafting](ready/BL-0098-enable-agent-blog-article-drafting.md)
   - [BL-0099 Deliver three initial Blog Article drafts](ready/BL-0099-deliver-three-initial-blog-article-drafts.md)
   - [BL-0100 Publish Product Guides](ready/BL-0100-publish-product-guides.md)
