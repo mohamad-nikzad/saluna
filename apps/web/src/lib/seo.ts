@@ -1,3 +1,4 @@
+import type { BlogArticle } from './blog-content'
 import { brand, titleWithBrand } from '@repo/brand'
 import { presenceSameAs } from '@repo/salon-core/presence-links'
 import type { Service } from '@repo/salon-core/types'
@@ -215,5 +216,75 @@ export function buildSalonBreadcrumbJsonLd(
         item: pageUrl.toString(),
       },
     ],
+  }
+}
+
+export interface PageMetadata {
+  title: string
+  description?: string
+  canonical?: string
+  ogImage?: string
+  ogImageAlt?: string
+  ogImageWidth?: number
+  ogImageHeight?: number
+  ogType?: 'website' | 'article'
+  jsonLd?: unknown | unknown[]
+  noIndex?: boolean
+}
+
+export function buildBlogCanonicalUrl(
+  slug: string,
+  publicOrigin: URL | string,
+): URL {
+  return new URL(
+    `/blog/${encodeURIComponent(slug)}`,
+    new URL(publicOrigin).origin,
+  )
+}
+
+/** Article content, search snippets and sharing all describe the same revision. */
+export function buildBlogMetadata(
+  article: BlogArticle,
+  publicOrigin: URL | string,
+  preview = false,
+) {
+  const canonical = buildBlogCanonicalUrl(article.slug, publicOrigin).href
+  const title = titleWithBrand(article.seo_title?.trim() || article.title)
+  const description =
+    article.seo_description?.trim() ||
+    article.summary ||
+    `${article.title}، نوشته‌ای از وبلاگ سالونا درباره مدیریت سالن.`
+  const cover = article.cover
+  const image = new URL(cover?.src || '/og/landing.png', canonical).href
+  return {
+    title,
+    description,
+    canonical,
+    ogType: 'article' as const,
+    ogImage: image,
+    ogImageAlt:
+      cover?.alt ||
+      (cover ? article.title : 'سالونا، نرم‌افزار مدیریت سالن زیبایی'),
+    ogImageWidth: cover?.width ?? 1200,
+    ogImageHeight: cover?.height ?? 630,
+    noIndex: preview || article.search_excluded === true,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article.title,
+      description,
+      url: canonical,
+      mainEntityOfPage: canonical,
+      inLanguage: 'fa-IR',
+      image,
+      author: article.bylines.map((name) => ({ '@type': 'Person', name })),
+      publisher: {
+        '@type': 'Organization',
+        name: brand.name.fa,
+        url: new URL('/', canonical).href,
+      },
+      ...(article.publishedAt ? { datePublished: article.publishedAt } : {}),
+      ...(article.modifiedAt ? { dateModified: article.modifiedAt } : {}),
+    },
   }
 }

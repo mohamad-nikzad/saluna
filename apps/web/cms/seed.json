@@ -5,14 +5,33 @@
     "name": "Saluna public content",
     "description": "Persian Blog Articles and public author profiles"
   },
-  "settings": { "title": "سالونا", "timezone": "Asia/Tehran" },
+  "settings": {
+    "title": "سالونا",
+    "timezone": "Asia/Tehran"
+  },
   "collections": [
+    {
+      "slug": "public_authors",
+      "label": "نویسندگان عمومی",
+      "labelSingular": "نویسنده عمومی",
+      "description": "نام عمومی مستقل از حساب کاربری است. پروفایل را منتشر کنید تا در مقاله منتشرشده دیده شود.",
+      "routable": false,
+      "supports": ["drafts", "revisions"],
+      "fields": [
+        {
+          "slug": "title",
+          "label": "نام عمومی",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
     {
       "slug": "blog_articles",
       "label": "مقاله‌های وبلاگ",
       "labelSingular": "مقاله وبلاگ",
-      "description": "مقاله‌های مدیریت سالن. نام نویسنده عمومی را در Bylines انتخاب کنید؛ بدون انتخاب، نام تیم سالونا نمایش داده می‌شود.",
-      "supports": ["drafts", "revisions", "preview", "seo"],
+      "description": "نویسنده عمومی را از فیلد «نویسندگان عمومی» انتخاب کنید؛ بدون انتخاب، تیم سالونا نمایش داده می‌شود. عنوان و توضیح جستجو همراه پیش‌نویس ذخیره می‌شوند.",
+      "supports": ["drafts", "revisions", "preview"],
       "urlPattern": "/blog/{slug}",
       "fields": [
         {
@@ -21,9 +40,45 @@
           "type": "string",
           "required": true
         },
-        { "slug": "summary", "label": "خلاصه", "type": "text" },
-        { "slug": "body", "label": "متن مقاله", "type": "portableText" },
-        { "slug": "cover", "label": "تصویر روی جلد", "type": "image" }
+        {
+          "slug": "summary",
+          "label": "خلاصه",
+          "type": "text"
+        },
+        {
+          "slug": "body",
+          "label": "متن مقاله",
+          "type": "portableText"
+        },
+        {
+          "slug": "cover",
+          "label": "تصویر روی جلد",
+          "type": "image"
+        },
+        {
+          "slug": "public_authors",
+          "label": "نویسندگان عمومی",
+          "type": "reference",
+          "validation": {
+            "targetCollection": "public_authors",
+            "multiple": true
+          }
+        },
+        {
+          "slug": "seo_title",
+          "label": "عنوان برای جستجو",
+          "type": "string"
+        },
+        {
+          "slug": "seo_description",
+          "label": "توضیح برای جستجو",
+          "type": "text"
+        },
+        {
+          "slug": "search_excluded",
+          "label": "نمایش ندادن در موتورهای جستجو",
+          "type": "boolean"
+        }
       ]
     }
   ],

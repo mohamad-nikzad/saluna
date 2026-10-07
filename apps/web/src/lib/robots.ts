@@ -5,5 +5,6 @@ Allow: /
 
 Sitemap: ${origin}/sitemap-index.xml
 Sitemap: ${origin}/salons-sitemap.xml
+Sitemap: ${origin}/blog-sitemap.xml
 `
 }

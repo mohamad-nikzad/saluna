@@ -5,15 +5,24 @@ import { displayClass } from '@/content/landing'
 import { publicNavLinks } from '@/content/public-site'
 import { brand } from '@repo/brand'
 
-interface Props {
-  title: string
+import type { PageMetadata } from '../lib/seo'
+interface Props extends PageMetadata {
   description: string
   canonical: string
-  jsonLd?: unknown | unknown[]
-  noIndex?: boolean
 }
 
-const { title, description, canonical, jsonLd, noIndex = false } = Astro.props
+const {
+  title,
+  description,
+  canonical,
+  jsonLd,
+  noIndex = false,
+  ogType,
+  ogImageWidth,
+  ogImageHeight,
+  ogImage = new URL('/og/landing.png', canonical).toString(),
+  ogImageAlt = 'سالونا، نرم‌افزار مدیریت سالن زیبایی',
+} = Astro.props
 ---
 
 <Base
@@ -22,8 +31,11 @@ const { title, description, canonical, jsonLd, noIndex = false } = Astro.props
   canonical={canonical}
   jsonLd={jsonLd}
   noIndex={noIndex}
-  ogImage={new URL('/og/landing.png', canonical).toString()}
-  ogImageAlt="سالونا، نرم‌افزار مدیریت سالن زیبایی"
+  ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
+  ogType={ogType}
+  ogImageWidth={ogImageWidth}
+  ogImageHeight={ogImageHeight}
   preloadLalezar={true}
 >
   <main dir="rtl" class="min-h-dvh bg-[#fdf5f8] text-[#3f2730]">

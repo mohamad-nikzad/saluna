@@ -1,0 +1,26 @@
+---
+import PublicInfoLayout from './PublicInfoLayout.astro'
+import BlogArticleView from '../components/blog/BlogArticleView.astro'
+import { buildBlogMetadata } from '../lib/seo'
+import type { BlogArticle } from '../lib/blog-content'
+interface Props {
+  article: BlogArticle
+  publicOrigin: URL | string
+  preview?: boolean
+}
+const { article, publicOrigin, preview = false } = Astro.props
+---
+
+<PublicInfoLayout {...buildBlogMetadata(article, publicOrigin, preview)}>
+  {
+    preview && (
+      <div
+        role="status"
+        class="border-b border-[#f3d5dd] bg-[#f3d5dd] px-5 py-3 text-center text-sm font-bold text-[#7a2a40]"
+      >
+        پیش‌نمایش پیش‌نویس
+      </div>
+    )
+  }
+  <BlogArticleView article={article} />
+</PublicInfoLayout>

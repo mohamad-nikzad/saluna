@@ -1,10 +1,21 @@
 import { expect, test, type Page } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
-import { blogArticleBylines } from '../../apps/web/src/lib/blog-byline'
+import {
+  checkBlogArticle,
+  checkBlogDiscovery as smokeBlogDiscovery,
+} from '../../scripts/smoke-blog.mjs'
 import { configureCmsBlog } from '../../scripts/configure-cms-blog.mjs'
 import { cms, invitedAccount, openAdmin, operatorAccount } from './accounts'
 
 test.describe.configure({ mode: 'serial' })
+
+// Dev serves the checked-in robots file; production writes its configured origin.
+const checkBlogDiscovery = (base: string, options = {}) =>
+  smokeBlogDiscovery(base, {
+    ...options,
+    robotsOrigin:
+      process.env.CMS_E2E_PRODUCTION === '1' ? base : 'http://localhost:3001',
+  })
 
 let operator: Page
 let author: Page
@@ -27,6 +38,8 @@ test.beforeAll(async ({ browser }) => {
   })
   author = await invitedAccount(browser, operator, 'author', 30)
   editor = await invitedAccount(browser, operator, 'editor', 40)
+  await openAdmin(author)
+  await openAdmin(editor)
 })
 
 test.afterAll(async () => {
@@ -35,7 +48,6 @@ test.afterAll(async () => {
 })
 
 test('editor saves, reopens, and revises a Persian Blog Article draft', async () => {
-  await openAdmin(editor)
   await editor
     .getByRole('link', { name: 'مقاله‌های وبلاگ', exact: true })
     .first()
@@ -58,7 +70,6 @@ test('editor saves, reopens, and revises a Persian Blog Article draft', async ()
   const id = new URL(editor.url()).pathname.split('/').at(-1)!
   const original = (await cms(editor, `content/blog_articles/${id}`)).item
   expect(original.status).toBe('draft')
-  expect(blogArticleBylines(original.bylines)).toEqual(['تیم سالونا'])
   expect(original.data.summary).toBe('یک مثال برای تقسیم مبلغ خدمت')
   expect(JSON.stringify(original.data.body)).toContain('سهم کارکنان')
   await editor.reload()
@@ -93,15 +104,12 @@ test('editor saves, reopens, and revises a Persian Blog Article draft', async ()
 })
 
 test('editor selects a named public byline without changing the editing account', async () => {
-  const bylines = await cms(editor, 'admin/bylines')
-  expect(
-    bylines.items.map((item: { displayName: string }) => item.displayName),
-  ).toContain('تیم سالونا')
-  await cms(editor, 'admin/bylines', {
+  const profile = await cms(editor, 'content/public_authors', {
     slug: 'leila',
-    displayName: 'لیلا رضایی',
-    isGuest: true,
+    status: 'draft',
+    data: { title: 'لیلا رضایی' },
   })
+  await cms(editor, `content/public_authors/${profile.item.id}/publish`, {})
   await editor.goto('/_emdash/admin/content/blog_articles/new')
   await editor
     .getByLabel('عنوان', { exact: true })
@@ -111,30 +119,34 @@ test('editor selects a named public byline without changing the editing account'
     /content\/blog_articles\/[A-Z0-9]+(?:\?locale=en)?$/,
   )
   await editor
-    .getByRole('button', { name: 'Choose bylines', exact: true })
+    .getByRole('button', { name: 'Add reference', exact: true })
     .click()
   await editor
-    .getByRole('textbox', { name: 'Search bylines', exact: true })
-    .fill('لیلا')
-  await editor
-    .getByRole('button', { name: 'Add لیلا رضایی', exact: true })
+    .getByRole('dialog')
+    .getByText('لیلا رضایی', { exact: true })
     .click()
-  await editor.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(editor).toHaveURL(
-    /content\/blog_articles\/[A-Z0-9]+(?:\?locale=en)?$/,
-  )
+  await editor
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Add selected', exact: true })
+    .click()
+  await expect(editor.getByRole('dialog')).not.toBeVisible()
   const id = new URL(editor.url()).pathname.split('/').at(-1)!
-  await expect
-    .poll(
-      async () =>
-        (await cms(editor, `content/blog_articles/${id}`)).item.bylines?.[0]
-          ?.byline.displayName,
-    )
-    .toBe('لیلا رضایی')
+  const [response] = await Promise.all([
+    editor.waitForResponse(
+      (response) =>
+        response.request().method() === 'PUT' &&
+        new URL(response.url()).pathname.endsWith(`/blog_articles/${id}`),
+    ),
+    editor.getByRole('button', { name: 'Save', exact: true }).click(),
+  ])
+  expect(response.ok()).toBe(true)
+  const preview = (
+    await cms(editor, `content/blog_articles/${id}/preview-url`, {})
+  ).url
+  expect(await (await editor.request.get(preview)).text()).toContain(
+    'لیلا رضایی',
+  )
   const saved = (await cms(editor, `content/blog_articles/${id}`)).item
-  expect(saved.bylines[0].byline.displayName).toBe('لیلا رضایی')
-  expect(saved.bylines[0].source).toBe('explicit')
-  expect(blogArticleBylines(saved.bylines)).toEqual(['لیلا رضایی'])
   const account = await cms(editor, 'auth/me')
   expect(saved.authorId).toBe(account.id)
   await cms(editor, 'admin/bylines', {
@@ -151,7 +163,12 @@ test('editor selects a named public byline without changing the editing account'
     await cms(editor, `content/blog_articles/${noCredit.item.id}`)
   ).item
   expect(inferred.bylines[0].source).toBe('inferred')
-  expect(blogArticleBylines(inferred.bylines)).toEqual(['تیم سالونا'])
+  await cms(editor, `content/blog_articles/${noCredit.item.id}/publish`, {})
+  const publicHtml = await (
+    await editor.request.get('/blog/default-credit')
+  ).text()
+  expect(publicHtml).toContain('تیم سالونا')
+  expect(publicHtml).not.toContain('نام حساب ویرایشگر')
 })
 
 test('Author publishes own content; Editor manages another author without CMS administration', async () => {
@@ -284,17 +301,19 @@ test('editor uploads a cover, places an inline image, and saves page SEO in the 
     /content\/blog_articles\/[A-Z0-9]+(?:\?locale=en)?$/,
   )
   const id = new URL(editor.url()).pathname.split('/').at(-1)!
+  await expect(editor.getByLabel('SEO Title', { exact: true })).toHaveCount(0)
   await editor
-    .getByLabel('SEO Title', { exact: true })
+    .getByLabel(/^عنوان برای جستجو/)
     .fill('راهنمای مدیریت سالن با تصویر')
   await editor
-    .getByLabel('Meta Description', { exact: true })
+    .getByLabel(/^توضیح برای جستجو/)
     .fill('توضیحات اختصاصی این مقاله برای جستجو')
-  // The native SEO panel saves its changes independently of the article body.
+  await editor.getByRole('button', { name: 'Save', exact: true }).click()
+  // Search fields are saved with the article revision.
   await expect
     .poll(async () => {
-      const seo = (await cms(editor, `content/blog_articles/${id}`)).item.seo
-      return { title: seo?.title, description: seo?.description }
+      const data = (await cms(editor, `content/blog_articles/${id}`)).item.data
+      return { title: data.seo_title, description: data.seo_description }
     })
     .toEqual({
       title: 'راهنمای مدیریت سالن با تصویر',
@@ -304,7 +323,9 @@ test('editor uploads a cover, places an inline image, and saves page SEO in the 
   expect(saved.status).toBe('draft')
   expect(saved.data.cover).toBeTruthy()
   expect(JSON.stringify(saved.data.body)).toContain('image')
-  expect(saved.seo.description).toBe('توضیحات اختصاصی این مقاله برای جستجو')
+  expect(saved.data.seo_description).toBe(
+    'توضیحات اختصاصی این مقاله برای جستجو',
+  )
   const media = (await cms(editor, 'media')).items
   const uploaded = media.find(
     (item: { filename: string }) => item.filename === 'cms-editor.png',
@@ -312,7 +333,7 @@ test('editor uploads a cover, places an inline image, and saves page SEO in the 
   expect(uploaded.status).toBe('ready')
   expect((await editor.request.get(uploaded.url)).ok()).toBe(true)
   await editor.reload()
-  await expect(editor.getByLabel('SEO Title', { exact: true })).toHaveValue(
+  await expect(editor.getByLabel(/^عنوان برای جستجو/)).toHaveValue(
     'راهنمای مدیریت سالن با تصویر',
   )
   await expect(
@@ -425,7 +446,7 @@ test('visitors read published Persian articles, public credit, and signup links'
   const html = await index.text()
   expect(html).toContain('کمیسیون کارکنان سالن چگونه محاسبه می‌شود؟')
   expect(html).not.toContain('محاسبه دقیق کمیسیون کارکنان سالن')
-  expect((await page.request.get('/blog/default-credit')).status()).toBe(404)
+  expect((await page.request.get('/blog/default-credit')).status()).toBe(200)
   expect((await page.request.get('/blog/not-a-real-article')).status()).toBe(
     404,
   )
@@ -439,15 +460,15 @@ test('published named credit and CMS images render without changing the writing 
     (item: { data: { title: string } }) =>
       item.data.title === 'مقاله با تصویر و فراداده',
   )
-  const credits = (await cms(editor, 'admin/bylines')).items
+  const credits = (await cms(editor, 'content/public_authors')).items
   const leila = credits.find(
-    (byline: { slug: string }) => byline.slug === 'leila',
+    (profile: { slug: string }) => profile.slug === 'leila',
   )
   const saved = await cms(editor, `content/blog_articles/${imageArticle.id}`)
   await cms(
     editor,
     `content/blog_articles/${imageArticle.id}`,
-    { bylines: [{ bylineId: leila.id }], _rev: saved._rev },
+    { data: {}, references: { public_authors: [leila.id] }, _rev: saved._rev },
     'PUT',
   )
   const credited = await cms(editor, `content/blog_articles/${imageArticle.id}`)
@@ -456,6 +477,9 @@ test('published named credit and CMS images render without changing the writing 
   })
   await page.goto(`/blog/${encodeURIComponent(credited.item.slug)}`)
   await expect(page.locator('article')).toContainText('لیلا رضایی')
+  const metadata = await checkBlogArticle(page.url())
+  expect(metadata.author).toEqual([{ '@type': 'Person', name: 'لیلا رضایی' }])
+  expect(metadata.image).not.toContain('/og/landing.png')
   await expect(page.locator('article img')).toHaveCount(2)
   for (const image of await page.locator('article img').all()) {
     expect(
@@ -497,6 +521,9 @@ test('a signed preview requires a real content session and never leaks into anon
     ).toBeVisible()
     expect(preview!.headers()['cache-control']).toContain('private, no-store')
     expect(preview!.headers()['x-robots-tag']).toContain('noindex')
+    await checkBlogDiscovery('http://localhost:3303', {
+      absent: ['private-draft-preview'],
+    })
     await expect(contributor.locator('meta[name="robots"]')).toHaveAttribute(
       'content',
       'noindex, nofollow',
@@ -562,7 +589,6 @@ test('a signed preview requires a real content session and never leaks into anon
 test('an Author illustrates, previews, publishes, revises, republishes, and withdraws an article without a rebuild', async ({
   page,
 }) => {
-  await openAdmin(author)
   await author.goto('/_emdash/admin/content/blog_articles/new')
   await author
     .getByLabel('عنوان', { exact: true })
@@ -742,6 +768,9 @@ test('published slug changes remain private until publishing and former URLs dis
     data: { title: 'راهنمای نشانی پایدار مقاله' },
   })
   const id = created.item.id
+  const discovery = (present: string[], absent: string[]) =>
+    checkBlogDiscovery('http://localhost:3303', { present, absent })
+  await discovery([], ['stable-article-first'])
   await cms(editor, `content/blog_articles/${id}/publish`, {
     _rev: created._rev,
     overrideLock: true,
@@ -752,6 +781,10 @@ test('published slug changes remain private until publishing and former URLs dis
   expect(await (await page.request.get('/blog')).text()).toContain(
     '/blog/stable-article-first',
   )
+  const firstMetadata = await checkBlogArticle(
+    'http://localhost:3303/blog/stable-article-first',
+  )
+  await discovery(['stable-article-first'], ['stable-article-second'])
   const live = await cms(editor, `content/blog_articles/${id}`)
   await cms(
     editor,
@@ -783,6 +816,11 @@ test('published slug changes remain private until publishing and former URLs dis
   expect(await (await page.request.get('/blog')).text()).not.toContain(
     '/blog/stable-article-second',
   )
+  expect(
+    (await checkBlogArticle('http://localhost:3303/blog/stable-article-first'))
+      .dateModified,
+  ).toBe(firstMetadata.dateModified)
+  await discovery(['stable-article-first'], ['stable-article-second'])
   let pending = await cms(editor, `content/blog_articles/${id}`)
   await cms(editor, `content/blog_articles/${id}/publish`, {
     _rev: pending._rev,
@@ -798,6 +836,12 @@ test('published slug changes remain private until publishing and former URLs dis
   expect(await (await page.request.get('/blog')).text()).toContain(
     '/blog/stable-article-second',
   )
+  await discovery(['stable-article-second'], ['stable-article-first'])
+  const renamedMetadata = await checkBlogArticle(
+    'http://localhost:3303/blog/stable-article-second',
+  )
+  expect(renamedMetadata.datePublished).toBe(firstMetadata.datePublished)
+  expect(renamedMetadata.dateModified).not.toBe(firstMetadata.dateModified)
   pending = await cms(editor, `content/blog_articles/${id}`)
   await cms(
     editor,
@@ -826,6 +870,11 @@ test('published slug changes remain private until publishing and former URLs dis
       expect(response.headers().location).toBe('/blog/stable-article-third')
     }
   }
+  await discovery(
+    ['stable-article-third'],
+    ['stable-article-first', 'stable-article-second'],
+  )
+  await checkBlogArticle('http://localhost:3303/blog/stable-article-third')
   const currentPreview = (
     await cms(editor, `content/blog_articles/${id}/preview-url`, {})
   ).url
@@ -870,6 +919,10 @@ test('published slug changes remain private until publishing and former URLs dis
         ).status(),
       ).toBe(404)
   }
+  await discovery(
+    [],
+    ['stable-article-first', 'stable-article-second', 'stable-article-third'],
+  )
   expect(await (await page.request.get('/blog')).text()).not.toContain(
     'عنوان پیش‌نویس با نشانی تازه',
   )
@@ -880,7 +933,15 @@ test('published slug changes remain private until publishing and former URLs dis
   expect((await page.request.get('/blog/stable-article-third')).status()).toBe(
     200,
   )
+  await discovery(
+    ['stable-article-third'],
+    ['stable-article-first', 'stable-article-second'],
+  )
   await cms(editor, `content/blog_articles/${id}`, undefined, 'DELETE')
+  await discovery(
+    [],
+    ['stable-article-first', 'stable-article-second', 'stable-article-third'],
+  )
   for (const slug of [
     'stable-article-first',
     'stable-article-second',
@@ -901,6 +962,10 @@ test('published slug changes remain private until publishing and former URLs dis
       await page.request.get('/blog/stable-article-first', { maxRedirects: 0 })
     ).status(),
   ).toBe(404)
+  await discovery(
+    [],
+    ['stable-article-first', 'stable-article-second', 'stable-article-third'],
+  )
   expect(await (await page.request.get('/blog')).text()).not.toContain(
     'عنوان پیش‌نویس با نشانی تازه',
   )
@@ -989,6 +1054,174 @@ test('production public pages keep canonical metadata and slash redirects with q
   )
 })
 
+test('saving public credit and SEO changes keeps the published presentation until republishing', async ({
+  page,
+}) => {
+  const profile = (
+    await cms(editor, 'content/public_authors', {
+      slug: 'staged-credit',
+      status: 'draft',
+      data: { title: 'نویسنده پیش‌نویس' },
+    })
+  ).item
+  await cms(editor, `content/public_authors/${profile.id}/publish`, {})
+  const legacyCredit = await cms(editor, 'admin/bylines', {
+    slug: 'legacy-credit',
+    displayName: 'اعتبار قدیمی غیرعمومی',
+    isGuest: true,
+  })
+  const created = await cms(editor, 'content/blog_articles', {
+    slug: 'staged-presentation',
+    status: 'draft',
+    data: {
+      title: 'مقاله منتشرشده با اعتبار ثابت',
+      seo_title: 'عنوان جستجوی منتشرشده',
+      seo_description: 'توضیح جستجوی منتشرشده',
+    },
+  })
+  await cms(editor, `content/blog_articles/${created.item.id}/publish`, {
+    _rev: created._rev,
+  })
+  const beforeDraft = await checkBlogArticle(
+    'http://localhost:3303/blog/staged-presentation',
+  )
+  const current = await cms(editor, `content/blog_articles/${created.item.id}`)
+  await cms(
+    editor,
+    `content/blog_articles/${created.item.id}`,
+    {
+      data: {
+        title:
+          'عنوان مقاله پیش‌نویس </script><script id="cms-injection">alert(1)</script>',
+        seo_title: 'عنوان جستجوی پیش‌نویس',
+        seo_description: 'توضیح جستجوی پیش‌نویس',
+        search_excluded: true,
+      },
+      references: { public_authors: [profile.id] },
+      bylines: [{ bylineId: legacyCredit.id }],
+      _rev: current._rev,
+    },
+    'PUT',
+  )
+  const live = await (
+    await page.request.get('/blog/staged-presentation')
+  ).text()
+  expect(live.includes('نویسنده پیش‌نویس')).toBe(false)
+  expect(live).not.toContain('اعتبار قدیمی غیرعمومی')
+  expect(live.includes('<title>عنوان جستجوی منتشرشده')).toBe(true)
+  expect(live.includes('content="noindex')).toBe(false)
+  await editor
+    .context()
+    .addCookies([
+      { name: 'emdash-edit-mode', value: 'true', url: 'http://localhost:3303' },
+    ])
+  expect(
+    await (await editor.request.get('/blog-sitemap.xml')).text(),
+  ).toContain('/blog/staged-presentation')
+  await editor.context().clearCookies({ name: 'emdash-edit-mode' })
+  expect(
+    (await checkBlogArticle('http://localhost:3303/blog/staged-presentation'))
+      .dateModified,
+  ).toBe(beforeDraft.dateModified)
+  const preview = (
+    await cms(
+      editor,
+      `content/blog_articles/${created.item.id}/preview-url`,
+      {},
+    )
+  ).url
+  await editor.goto(preview)
+  await expect(editor.locator('article')).toContainText('نویسنده پیش‌نویس')
+  expect(await editor.title()).toContain('عنوان جستجوی پیش‌نویس')
+  const sitemap = await page.request.get('/blog-sitemap.xml')
+  expect(sitemap.status()).toBe(200)
+  expect((await sitemap.text()).includes('/blog/staged-presentation')).toBe(
+    true,
+  )
+  const pending = await cms(editor, `content/blog_articles/${created.item.id}`)
+  await cms(editor, `content/blog_articles/${created.item.id}/publish`, {
+    _rev: pending._rev,
+  })
+  const republished = await (
+    await page.request.get('/blog/staged-presentation')
+  ).text()
+  expect(republished.includes('نویسنده پیش‌نویس')).toBe(true)
+  expect(republished.includes('<title>عنوان جستجوی پیش‌نویس')).toBe(true)
+  expect(republished.includes('content="noindex')).toBe(true)
+  expect(republished).not.toContain('<script id="cms-injection">')
+  const afterPublish = await checkBlogArticle(
+    'http://localhost:3303/blog/staged-presentation',
+  )
+  expect(afterPublish.headline).toContain(
+    '</script><script id="cms-injection">',
+  )
+  expect(afterPublish.datePublished).toBe(beforeDraft.datePublished)
+  expect(afterPublish.dateModified).not.toBe(beforeDraft.dateModified)
+  expect(
+    (await (await page.request.get('/blog-sitemap.xml')).text()).includes(
+      '/blog/staged-presentation',
+    ),
+  ).toBe(false)
+})
+
+test('public author profiles use their published names and never expose profile drafts', async ({
+  page,
+}) => {
+  const profile = await cms(editor, 'content/public_authors', {
+    slug: 'independent-profile',
+    status: 'draft',
+    data: { title: 'نام عمومی منتشرشده' },
+  })
+  const article = await cms(editor, 'content/blog_articles', {
+    slug: 'independent-profile-article',
+    status: 'draft',
+    data: { title: 'اعتبار عمومی با پروفایل مستقل' },
+    references: { public_authors: [profile.item.id] },
+  })
+  await cms(editor, `content/blog_articles/${article.item.id}/publish`, {})
+  expect(
+    (
+      await checkBlogArticle(
+        'http://localhost:3303/blog/independent-profile-article',
+      )
+    ).author,
+  ).toEqual([{ '@type': 'Person', name: 'تیم سالونا' }])
+  await cms(editor, `content/public_authors/${profile.item.id}/publish`, {})
+  expect(
+    (
+      await checkBlogArticle(
+        'http://localhost:3303/blog/independent-profile-article',
+      )
+    ).author,
+  ).toEqual([{ '@type': 'Person', name: 'نام عمومی منتشرشده' }])
+  const current = await cms(editor, `content/public_authors/${profile.item.id}`)
+  await cms(
+    editor,
+    `content/public_authors/${profile.item.id}`,
+    { data: { title: 'نام عمومی پیش‌نویس' }, _rev: current._rev },
+    'PUT',
+  )
+  const html = await (
+    await page.request.get('/blog/independent-profile-article')
+  ).text()
+  expect(html).toContain('نام عمومی منتشرشده')
+  expect(html).not.toContain('نام عمومی پیش‌نویس')
+  const preview = (
+    await cms(
+      editor,
+      `content/blog_articles/${article.item.id}/preview-url`,
+      {},
+    )
+  ).url
+  const previewHtml = await (await editor.request.get(preview)).text()
+  expect(previewHtml).toContain('نام عمومی منتشرشده')
+  expect(previewHtml).not.toContain('نام عمومی پیش‌نویس')
+  await checkBlogDiscovery('http://localhost:3303', {
+    present: ['independent-profile-article'],
+    absent: ['independent-profile'],
+  })
+})
+
 test('a CMS outage returns errors instead of cached redirects or successful published content', async ({
   page,
 }) => {
@@ -1045,6 +1278,7 @@ test('a CMS outage returns errors instead of cached redirects or successful publ
     '/blog/outage-article',
     '/blog/outage-article-current',
     '/blog',
+    '/blog-sitemap.xml',
   ]) {
     const response = await page.request.get(path, { maxRedirects: 0 })
     expect(response.status()).toBe(500)

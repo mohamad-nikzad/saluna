@@ -1,7 +1,7 @@
 # Blog Article editor
 
 EmDash 1.1.0 stores Blog Articles in `blog_articles`. Saluna's model is in
-`apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, preview, and SEO sit
+`apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, and preview sit
 alongside the title, summary, Portable Text body, and optional cover image.
 The public URL pattern is `/blog/{slug}`. Saving a title change preserves the
 existing slug. Published articles appear at `/blog` and `/blog/{slug}`.
@@ -18,7 +18,7 @@ node scripts/configure-cms-blog.mjs
 
 Provide `EMDASH_URL` and `EMDASH_API_TOKEN` through the private environment.
 The command applies the checked-in model through the real CMS API, creates
-missing fields and the reusable `تیم سالونا` profile, and keeps existing
+missing fields and the reusable public-author collection, and keeps existing
 articles and profiles. Repeating it keeps saved content. Field type changes
 require a separate migration. Revoke the temporary token afterward.
 
@@ -27,12 +27,30 @@ sites, and its local `emdash seed` CLI targets SQLite, so use this command on
 Saluna's Postgres deployment. Full-text search is SQLite-only in this release;
 the Blog Article collection does not enable it.
 
+## Existing content migration
+
+Before applying the new model to a site with articles, export the current
+articles, their native SEO settings, and explicitly selected native Bylines
+through the CMS administrator API. Keep this private backup outside the repo.
+The configuration command preserves those values and profiles, but does not
+copy them or publish any existing draft.
+
+For each article, copy the chosen title/description/noindex settings into
+`seo_title`, `seo_description`, and `search_excluded`; create and publish reusable
+`public_authors` entries for the chosen explicit names, then select them in the
+article. Account-inferred names should remain unselected. Review the entire
+saved article revision before explicitly publishing it: publication also
+promotes its existing body and slug changes. Coordinate this migration before
+switching the public reader, because articles without migrated values use the
+team credit and title/summary defaults. There is no automatic promotion of a
+user's staged draft and no deletion of legacy native profiles or SEO records.
+
 ## Invite content editors
 
 An Administrator opens Users and invites the intended writer. Use Editor for
-someone who must select public author profiles, publish their own articles,
+someone who must manage public author profiles, publish their own articles,
 or revise and publish other accounts' content. Author is narrower and can
-write and publish their own articles, but cannot manage public profiles or
+write and publish their own articles and author profiles, but cannot manage
 another account's content. The invitee registers their own passkey.
 
 Neither role can invite users, change collection schemas, install or enable
@@ -51,16 +69,29 @@ required. Draft-only automation is a separate scoped connection in BL-0098.
    text in the image settings.
 3. Select Save. This creates a draft. Reopen the article to revise it. Save
    keeps draft changes separate from the published revision.
-4. Once saved, Bylines in the settings panel selects reusable public author
-   profiles. Select a named profile without changing Ownership or your login.
-   With no explicitly selected profile, Saluna uses `تیم سالونا`. The public
-   reader must use `blogArticleBylines` and ignore EmDash's inferred
-   account-linked credits.
-5. Set the article's SEO Title, Meta Description, and optional social image
-   in its SEO panel. The panel saves these article settings automatically.
+4. In `نویسندگان عمومی`, use Add reference to select reusable public names.
+   Create a profile under `نویسندگان عمومی` and publish it before selecting it
+   for a live article. Selecting names does not change Ownership or your login.
+   With no selected published profile, Saluna displays `تیم سالونا`.
+5. Set `عنوان برای جستجو`, `توضیح برای جستجو`, and, when needed,
+   `نمایش ندادن در موتورهای جستجو`. These fields use Save with the body and
+   remain drafts until publication. Blank search fields use the article title
+   and summary. The cover supplies the sharing image; without one, Saluna's
+   branded image is used.
 6. Publish now explicitly promotes the saved draft. Publishing your own
    article is allowed. An Editor can also take over another writer's edit
    lock and publish their changes.
+
+Public names are independent reusable content. Saving a profile name change
+keeps its published name in articles; publishing the profile updates every
+article selecting it. An article preview previews its saved author selection,
+using each selected profile's published name. Publish profile changes separately.
+
+EmDash 1.1.0's native SEO and Bylines settings are not revisioned. Saluna disables
+the native SEO panel and uses the fields above. The native Bylines panel cannot
+be hidden through supported collection settings in this version; its legacy
+credits and account-inferred names do not supply Saluna's public article credit.
+Use `نویسندگان عمومی` for the visible credit.
 
 Persian field labels and text saving are verified locally. The editor's
 complete Persian RTL usability trial with the intended writer belongs to
@@ -118,6 +149,27 @@ and applies the existing non-blog slash redirects before static serving.
 Blog slash variants reach CMS middleware, so unknown or withdrawn URLs return
 404 directly. Starting `dist/server/entry.mjs` alone bypasses that site's
 canonical redirect boundary.
+
+## Search and sharing discovery
+
+`/blog-sitemap.xml` reads current published article slugs and search settings
+on every request. Robots advertises it alongside `/sitemap-index.xml` and
+`/salons-sitemap.xml`. Native EmDash discovery reads nonrevisioned SEO, so
+Blog Articles omit native SEO support and use this single advertised runtime
+blog sitemap. Saved draft settings cannot remove a live article from discovery.
+Publication and URL changes update it without a rebuild; withdrawals and
+Trash remove entries immediately. Articles explicitly excluded from search
+have noindex metadata and are absent from discovery.
+
+Published and modified dates use ISO UTC values. The modified date belongs to
+the live content revision, so saving another draft does not change public
+structured data or sitemap lastmod. The shared Head safely serializes CMS text
+inside JSON-LD, including closing-script text.
+
+`BASE_URL=http://localhost:3001 pnpm --filter @repo/web smoke` checks discovery,
+article structured data, and decodable social-image responses. The same HTTP
+checks run during the isolated CMS rename/withdraw/delete journey, after each
+publication state change.
 
 ## Browser checks
 
