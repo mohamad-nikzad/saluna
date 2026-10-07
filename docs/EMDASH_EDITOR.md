@@ -57,7 +57,8 @@ Neither role can invite users, change collection schemas, install or enable
 plugins, or change site settings. CMS accounts and database credentials are
 separate from Salon accounts and operational data, as described in
 [EmDash deployment](EMDASH_DEPLOYMENT.md). Review by a different person is not
-required. Draft-only automation is a separate scoped connection in BL-0098.
+required. [Agent drafting](EMDASH_AGENT.md) uses a dedicated Author and a
+separate four-scope OAuth connection with explicit draft-only operations.
 
 ## Write and revise an article
 
