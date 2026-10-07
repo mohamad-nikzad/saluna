@@ -103,7 +103,7 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0093 Configure Blog Article drafting and editor access](../done/BL-0093-configure-blog-article-drafting-and-editor-access.md) | BL-0092    |
 | [BL-0094 Render blog pages and private previews](../done/BL-0094-render-blog-pages-and-private-previews.md)                       | BL-0093    |
 | [BL-0095 Complete blog publishing and URL lifecycle](../done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
-| [BL-0096 Add Blog Article SEO and discovery](../ready/BL-0096-add-blog-article-seo-and-discovery.md)                              | BL-0095    |
+| [BL-0096 Add Blog Article SEO and discovery](../done/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
 | [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                  | BL-0096    |
 | [BL-0098 Enable agent Blog Article drafting](../ready/BL-0098-enable-agent-blog-article-drafting.md)                              | BL-0094    |
 | [BL-0099 Deliver three initial Blog Article drafts](../ready/BL-0099-deliver-three-initial-blog-article-drafts.md)                | BL-0098    |
@@ -121,6 +121,8 @@ BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and
 - Implementation resumed on 2026-10-07 on the existing integration branch `codex/bl-0087-emdash-blog-and-guides`. The fixed review base for the remaining tasks is `4dd5a8ecb882593f949fa19587230136decd1b7f`, the verified BL-0092 completion. Work proceeds one ticket at a time in separate implementer worktrees.
 
 - On 2026-10-07, the user authorized using their currently logged-in Grok account and delegated the daily run-time choice. Selected 09:00 `Asia/Tehran`. The local Grok Bot application has an existing Saluna Content Studio bot; its connection and actual CMS access still require BL-0102 verification before BL-0103 enables a routine. No daily blog routine has been enabled.
+
+- On 2026-10-07 after the user enabled their VPN, the existing Saluna Content Studio bot responded to a read-only connection check and reported HTTP 200 from `https://saluna.ir`. This confirms conversation and public-network connectivity; dedicated CMS access and actual drafting remain BL-0102 work.
 
 - The parent remains open until its later Product Guide and Grok criteria are satisfied. Foundation, Blog Article pages, launch drafts, Product Guides, and daily drafting can be delivered separately; the initial blog launch does not mark the entire parent done.
 - Before enabling production publishing, identify the intended editor and complete the staging checks. Before enabling Grok, choose its run time and confirm version-specific connection details. These are rollout inputs, not invented defaults in this spec.

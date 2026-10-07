@@ -54,3 +54,12 @@ This is local verification. The intended editor's staging usability trial remain
 BL-0097. Public output, authenticated previews, and full publication/metadata
 separation follow in BL-0094 through BL-0096. Provisioning and editor workflow are
 in [EmDash editor](../../docs/EMDASH_EDITOR.md).
+
+## Follow-up in BL-0096
+
+The historical implementation above used native SEO and Bylines. BL-0096 found
+that their saves bypass content revision staging in EmDash 1.1.0. The final public
+reader uses revisioned SEO fields and references to reusable `public_authors`
+entries instead. Legacy native data remains preserved. See
+[the editor guide](../../docs/EMDASH_EDITOR.md) for the current field labels,
+public credit behavior, and migration procedure.
