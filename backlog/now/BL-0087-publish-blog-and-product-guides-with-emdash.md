@@ -7,7 +7,7 @@ triage: ready-for-agent
 priority: medium
 size: large
 created: 2026-09-29
-updated: 2026-10-07
+updated: 2026-10-08
 ---
 
 ## Problem Statement
@@ -69,7 +69,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 - [x] CMS data uses a dedicated Postgres database or schema and role; media persists across container replacement. Runtime secrets, migrations, backups, and recovery are documented. Staging rehearsals cover container replacement, an EmDash upgrade, and restoring content, media, and required encryption keys from backup.
 - [x] The web runtime uses an EmDash-supported Node version. Production smoke checks exercise CMS content and editing dependencies, not only the static landing page.
 - [ ] The intended editor completes an end-to-end Persian RTL trial, including image upload and preview; any unacceptable untranslated UI or formatting behavior is resolved before launch.
-- [ ] An agent prepares three Blog Article drafts on Staff Commission calculations, organizing AppointmentRequests, and useful Client records, and delivers their preview links. All three remain unpublished on delivery. This first-batch milestone is complete with the three drafts; neither review by another person or agent nor publication is required.
+- [x] An agent prepares three Blog Article drafts on Staff Commission calculations, organizing AppointmentRequests, and useful Client records, and delivers their preview links. All three remain unpublished on delivery. This first-batch milestone is complete with the three drafts; neither review by another person or agent nor publication is required.
 
 ### Later Product Guides
 
@@ -106,7 +106,7 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0096 Add Blog Article SEO and discovery](../done/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
 | [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                  | BL-0096    |
 | [BL-0098 Enable agent Blog Article drafting](../done/BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
-| [BL-0099 Deliver three initial Blog Article drafts](../ready/BL-0099-deliver-three-initial-blog-article-drafts.md)                | BL-0098    |
+| [BL-0099 Deliver three initial Blog Article drafts](../done/BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
 | [BL-0100 Publish Product Guides](../ready/BL-0100-publish-product-guides.md)                                                      | BL-0096    |
 | [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                | BL-0100    |
 | [BL-0102 Prove one Grok drafting run](../ready/BL-0102-prove-one-grok-drafting-run.md)                                            | BL-0098    |
@@ -115,6 +115,8 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 
 ## Further Notes
+
+- On 2026-10-08, BL-0099 was independently verified at integration merge `947a191bb74bac376106bb10b3cc7b07ba38a516`. All three original Persian first-batch drafts are saved and unpublished on the Mac copy, with current-product sources, readable commission examples and authenticated previews. Native saved records match their editorial sources; renewal preserves IDs and editor content. Private links will be renewed at the final human handoff. Product Guides and Grok continue separately.
 
 - On 2026-10-07, BL-0098 was independently verified at integration merge `e3c5300458c16b73781af61d771229e831c45760`. The dedicated native Author/four-scope OAuth connection completed draft creation, revision, media and session-backed preview, with CMS administration and actual Salon operational authentication denials. Credentials and private preview results remain outside Git. The three launch drafts and actual Grok connection follow separately.
 
