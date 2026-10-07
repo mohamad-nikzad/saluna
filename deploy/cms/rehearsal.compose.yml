@@ -1,4 +1,4 @@
-# Disposable production-image rehearsal, independent of Salon development data.
+# Isolated production-image rehearsal, independent of Salon development data.
 name: saluna-cms-rehearsal
 services:
   postgres:
@@ -10,26 +10,27 @@ services:
     volumes:
       - cms_database:/var/lib/postgresql/data
     ports:
-      - '127.0.0.1:35432:5432'
+      - '127.0.0.1:${CMS_REHEARSAL_DB_PORT:-35432}:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U operator -d salon']
       interval: 2s
       timeout: 5s
       retries: 30
   web:
-    image: ${CMS_REHEARSAL_IMAGE:-saluna-web:bl-0092}
+    image: ${CMS_REHEARSAL_IMAGE:?Set the exact rehearsal image}
+    platform: linux/amd64
     environment:
       HOST: 0.0.0.0
       PORT: '3001'
       NODE_ENV: production
       CMS_DATABASE_URL: ${CMS_DATABASE_URL:?Set the disposable CMS database URL}
       EMDASH_ENCRYPTION_KEY: ${EMDASH_ENCRYPTION_KEY:?Generate a disposable EmDash key}
-      EMDASH_SITE_URL: http://localhost:3301
+      EMDASH_SITE_URL: http://localhost:${CMS_REHEARSAL_PORT:-3301}
       API_INTERNAL_URL: ${CMS_REHEARSAL_API_URL:-http://host.docker.internal:3302}
     volumes:
       - cms_media:/app/apps/web/.emdash/uploads
     ports:
-      - '127.0.0.1:3301:3001'
+      - '127.0.0.1:${CMS_REHEARSAL_PORT:-3301}:3001'
     depends_on:
       postgres:
         condition: service_healthy
