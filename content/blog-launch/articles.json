@@ -1,0 +1,56 @@
+[
+  {
+    "key": "staff-commission",
+    "slug": "salon-staff-commission-calculation",
+    "title": "کمیسیون پرسنل سالن را چطور بدون دوباره‌شماری حساب کنیم؟",
+    "summary": "با مثال‌های تومانی، سهم انجام کار را از درصد کمیسیون جدا کنید و تفاوت مبلغ نوبت، وجه وصول‌شده و مبلغ باقی‌مانده برای سالن را بشناسید.",
+    "seo_title": "محاسبه کمیسیون پرسنل سالن با مثال و سهم انجام کار",
+    "seo_description": "محاسبه کمیسیون یک یا چند پرسنل، درصد ویژه خدمت و سهم پکیج را با مثال یاد بگیرید؛ مبلغ ثبت‌شده نوبت با پرداخت مشتری و سود خالص فرق دارد.",
+    "body": "staff-commission.md",
+    "sources": [
+      "GLOSSARY.md",
+      "packages/salon-core/src/commissions.ts",
+      "packages/database/src/internal/commission-queries.ts",
+      "packages/database/src/internal/appointment-commission-basis.ts",
+      "docs/adr/0023-salons-receive-client-payments-directly.md"
+    ]
+  },
+  {
+    "key": "appointment-requests",
+    "slug": "organize-salon-appointment-requests",
+    "title": "درخواست نوبت با نوبت قطعی فرق دارد؛ چطور صف درخواست‌های سالن را مرتب کنیم؟",
+    "summary": "درخواست مشتری و درخواست منعطف مدیر را بدون رزرو زودهنگام زمان پیگیری کنید و صف در انتظار را به تصمیم روشن و نوبت قابل انجام تبدیل کنید.",
+    "seo_title": "مدیریت درخواست نوبت سالن و تفاوت آن با نوبت قطعی",
+    "seo_description": "درخواست نوبت جای خالی را رزرو نمی‌کند. تفاوت درخواست عمومی و منعطف، ترجیح زمان شروع و بررسی دوباره ظرفیت هنگام تأیید را بشناسید.",
+    "body": "appointment-requests.md",
+    "sources": [
+      "GLOSSARY.md",
+      "docs/adr/0001-appointment-request-as-distinct-aggregate.md",
+      "docs/adr/0014-appointment-request-supports-customer-and-manager-origins.md",
+      "packages/salon-core/src/appointment-request-timing.ts",
+      "apps/pwa/src/routes/_authed/requests.tsx"
+    ]
+  },
+  {
+    "key": "client-records",
+    "slug": "useful-salon-client-records",
+    "title": "پرونده مشتری سالن چه اطلاعاتی لازم دارد و چطور به پیگیری کمک می‌کند؟",
+    "summary": "نام و شماره درست، یادداشت کوتاه، منبع آشنایی و سابقه نوبت را به پرونده‌ای تبدیل کنید که برای هماهنگی و پیگیری بعدی مشتری کاربرد داشته باشد.",
+    "seo_title": "پرونده مشتری سالن؛ اطلاعات لازم و پیگیری کاربردی",
+    "seo_description": "نام و شماره لازم، یادداشت و برچسب، تاریخ تولد اختیاری و سابقه نوبت را درست ثبت کنید؛ پرونده مشتری با صف پیگیری و پیام خودکار فرق دارد.",
+    "body": "client-records.md",
+    "sources": [
+      "GLOSSARY.md",
+      "packages/salon-core/src/forms/client.ts",
+      "apps/pwa/src/components/clients/client-drawer.tsx",
+      "apps/pwa/src/routes/_authed/clients.$id.tsx",
+      "apps/pwa/src/routes/_authed/retention.tsx",
+      "packages/salon-core/src/client-birthday.ts",
+      "packages/database/src/internal/client-followup-queries.ts",
+      "apps/pwa/src/components/clients/client-import-preview-sheet.tsx",
+      "packages/salon-core/src/client-import.ts",
+      "docs/adr/0016-client-birth-date-is-complete-optional-jalali-date.md",
+      "docs/adr/0005-android-contact-picker-for-client-import.md"
+    ]
+  }
+]

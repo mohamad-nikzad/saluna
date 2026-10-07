@@ -1,0 +1,21 @@
+{
+  "batch": "BL-0099",
+  "origin": "http://localhost:3301",
+  "deliveredAt": "2026-10-07",
+  "sourceRevision": "b0dcee33f739e67e88ec51bfa4085e4d58dcf562",
+  "overlapBefore": { "drafts": 3, "published": 1, "overlappingSubjects": 0 },
+  "articles": {
+    "staff-commission": {
+      "id": "01M4C0D1WG6EG71VPJJ3VWE6XQ",
+      "slug": "salon-staff-commission-calculation"
+    },
+    "appointment-requests": {
+      "id": "01M4C0D1YXHAFADZRGKNYENZDX",
+      "slug": "organize-salon-appointment-requests"
+    },
+    "client-records": {
+      "id": "01M4C0D2127FPRX3PNX2A2CE0D",
+      "slug": "useful-salon-client-records"
+    }
+  }
+}
