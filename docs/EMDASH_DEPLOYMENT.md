@@ -1,6 +1,6 @@
 # EmDash deployment
 
-EmDash 1.1.0 runs inside `apps/web` on `saluna.ir`. Its npm metadata requires
+EmDash 1.1.0 is configured inside `apps/web` for `saluna.ir`. Its npm metadata requires
 Node 22.16 or later and Astro 6. The web image, shared build scripts, and CI now
 use Node 22.16.0. Astro remains at 6.4.2. The manager PWA stays at `app.saluna.ir`.
 
@@ -62,9 +62,12 @@ deployment. Core migrations run as the CMS role, which owns its tables. This
 ticket uses EmDash's default `auto` migration policy. Subsequent model changes
 belong to the content-model tickets.
 
-The built-in seed requests full-text search for Posts and Pages. EmDash 1.1.0
-supports that feature only on SQLite, so Postgres logs a nonfatal warning while
-applying this seed. Content editing and media storage still work.
+The checked-in CMS seed defines Blog Articles and reusable public authors.
+For an initialized installation, apply `scripts/configure-cms-blog.mjs` through
+the administrator API as described in `docs/EMDASH_EDITOR.md`. Seed loading
+alone does not evolve an existing content model. This configuration preserves
+content; promotion of older SEO and credit fields requires the documented
+editor review and publication, never an automatic draft publication.
 
 Before opening the initial setup wizard to public traffic, restrict access to
 `/_emdash/` at the edge to the operator's IP. Visit
@@ -75,15 +78,17 @@ production and the exact public origin. Compose sets `EMDASH_SITE_URL` from
 `PUBLIC_APP_URL`, so login works behind the existing TLS proxy.
 
 CMS login is separate from Salon and platform-admin authentication. Do not enable
-EmDash's development auth bypass in production. The built-in Posts collection is
-available for the persistence fixture; BL-0093 defines Blog Article fields and
-editor access.
+EmDash's development auth bypass in production. Blog Articles use Author and
+Editor accounts; administrative credentials are reserved for site management.
 
 Astro stores login sessions in the writable `node_modules/.astro/sessions`
 directory. Sessions are ephemeral, so editors sign in again after replacement.
 Their passkeys, drafts, and media remain in persistent storage. The CSP includes
 the hash of EmDash 1.1.0's inline theme initializer. Recheck this hash and the
-browser console when upgrading EmDash.
+browser console when upgrading EmDash. The optional public-page toolbar is
+disabled through the supported `toolbar:false` setting. Its injected inline
+CSS and session script do not fit this CSP. Native dashboard Preview, Save and
+Publish remain available; signed previews still require a permitted CMS session.
 
 ## Durable media
 
@@ -98,7 +103,7 @@ Ordinary `up`, image upgrades, and `--force-recreate web` keep both the Postgres
 and media volumes. `down --volumes` deletes them. Back up `saluna_cms` with
 `pg_dump`, archive `cms_media`, and retain the private encryption key. A volume
 survives container replacement on this VPS; it does not survive loss of the VPS.
-Upgrade and restore rehearsals are BL-0097.
+The recovery rehearsal below copies all three together.
 
 ## Local development
 
@@ -115,7 +120,11 @@ Then run `ROOT_ENV_FILES=.env.cms.local pnpm --filter @repo/web dev`. Local medi
 lives in the ignored `apps/web/.emdash/uploads` directory. Never use production
 CMS credentials for development, preview builds, or rehearsals.
 
-## Production-image persistence rehearsal
+## Historical BL-0092 persistence rehearsal
+
+This records the earlier rehearsal. Its old image was removed during cache
+cleanup. Use the current recovery procedure below for new runs and explicitly
+set `CMS_REHEARSAL_IMAGE`; the Compose file no longer supplies an old default.
 
 Use `deploy/cms/rehearsal.compose.yml` with a disposable private environment file.
 Generate fresh passwords and an EmDash key. Set `CMS_DATABASE_URL` to the
@@ -179,3 +188,143 @@ The verified local image ID was
 
 This was a local production-image rehearsal. Live deployment still requires
 private credentials, provisioning, and the operator's initial passkey setup.
+
+## Current local recovery rehearsal
+
+Use fresh, isolated projects named `saluna-cms-bl0087-*`, private environment
+files outside Git, and separate database ports. The retained local copy binds
+only `127.0.0.1:3301`; disposable Playwright fixtures use port 3303. Each project
+has its own database and media volumes. Do not reuse operational passwords,
+remove unrelated volumes, or run these scripts against production.
+
+Build the production image without runtime credentials. It starts through
+`apps/web/server.mjs`, which retains the canonical URL policy proved by the
+production browser suite. Set `CMS_REHEARSAL_IMAGE`, `COMPOSE_PROJECT_NAME`,
+`CMS_REHEARSAL_PORT=3301`, and a distinct `CMS_REHEARSAL_DB_PORT` in the private
+environment alongside the fresh database passwords, URL, and persisted key.
+
+```sh
+docker build --platform linux/amd64 -f apps/web/Dockerfile -t saluna-web:bl-0097-baseline \
+  --build-arg PUBLIC_APP_URL=http://localhost:3301 \
+  --build-arg PUBLIC_API_URL=http://host.docker.internal:3302 .
+docker compose --env-file "$PRIVATE_ENV" -f deploy/cms/rehearsal.compose.yml up -d --wait postgres
+ENV_FILE="$PRIVATE_ENV" COMPOSE_FILE=deploy/cms/rehearsal.compose.yml ./scripts/provision-cms.sh
+docker compose --env-file "$PRIVATE_ENV" -f deploy/cms/rehearsal.compose.yml up -d --wait web
+node deploy/cms/recovery.browser.mjs bootstrap "$PRIVATE_STATE" baseline
+docker compose --env-file "$PRIVATE_ENV" -f deploy/cms/rehearsal.compose.yml up -d --wait --force-recreate web
+node deploy/cms/recovery.browser.mjs verify "$PRIVATE_STATE" replacement
+deploy/cms/recovery.sh backup "$PRIVATE_ENV" "$PRIVATE_BACKUP"
+```
+
+The browser fixture registers separate technical operator and Editor passkeys,
+stores their credentials only in the protected state directory, and uses a fresh
+browser session to authenticate again on each run. It uploads cover and inline
+media in the native admin, saves Persian text, checks both the published article
+and its pending private revision, checks session-backed signed previews, denies
+anonymous copied preview links, and compares anonymous image bytes. Its screenshots
+and evidence files contain no passkey secrets or preview tokens. It also prepares
+an unconsumed Editor invitation using a local placeholder address and the native
+copy-link fallback; no email provider or outgoing email is involved.
+
+`recovery.sh backup` stops the web writer while it captures a custom-format
+Postgres dump, local media archive, encryption key and image identity. It resumes
+web even if copying fails. An incomplete directory is not a valid recovery point.
+Protect and copy the whole directory to independent backup storage. JSON content
+export does not replace the raw database backup: authentication, schema,
+references, revisions, migration history and settings also need restoration.
+[EmDash backup guidance](https://docs.emdashcms.com/guides/backups/) describes
+these requirements.
+
+Test an exact upgrade in a separate source copy and image. Align both `emdash`
+and the directly installed `@emdash-cms/auth` version there. Stop the baseline
+web service before binding the candidate to port 3301; retain its database and
+media volumes. Give the candidate fresh database credentials and volumes but
+the backed-up encryption key. Restore the baseline recovery point into that
+fresh environment, then run `candidate` mode for native Save, preview, media,
+publication and withdrawal checks. The repository remains pinned to the tested
+baseline until an intentional upgrade is approved. EmDash applies pending core
+migrations on the first request; the old image alone cannot reverse database
+migrations. [EmDash update guidance](https://docs.emdashcms.com/deployment/updating/)
+requires a recovery point and matching runtime packages.
+
+```sh
+deploy/cms/recovery.sh restore "$CANDIDATE_ENV" "$PRIVATE_BACKUP"
+node deploy/cms/recovery.browser.mjs candidate "$PRIVATE_STATE" upgrade
+# Stop candidate web, then restore into another fresh baseline project.
+deploy/cms/recovery.sh restore "$RECOVERY_ENV" "$PRIVATE_BACKUP"
+node deploy/cms/recovery.browser.mjs verify "$PRIVATE_STATE" restored
+```
+
+Restore refuses an existing CMS table set or any non-directory media entry,
+including symlinks and special files. Empty helper-image directories are safe.
+It restores
+CMS-role ownership, sets media ownership to UID 1000, and requires the matching
+backed-up key before starting web. Recovery must prove native editor
+reauthentication, private drafts, published output, exact media bytes and another
+saved edit. No encrypted external plugin setting is configured in the local
+fixture; retaining the key does not claim a tested external plugin connection.
+
+The persistent local copy and its private run-command pointers remain outside
+the implementer worktree after handoff. The intended editor's own physical
+passkey registration and complete Persian trial remain pending until the end of
+the parent spec. Automated technical accounts do not satisfy that trial.
+
+## CMS deployment smoke
+
+Run `BASE_URL=http://localhost:3301 pnpm smoke:web` against the local copy or set
+the deployed public origin. It must match the configured passkey relying-party
+host. Keep the existing `SLUG` and reachable operational API inputs for the public
+Salon checks. A healthy landing page alone does not prove the CMS works.
+
+The CMS checker requests native setup/database status, the public blog, the
+native editor's scripts and stylesheets, and native passkey login options. It
+fails on incomplete initial setup, failed content reads, unavailable editor
+assets or login dependencies, and an incompatible passkey origin. Requests have
+a ten-second timeout. Generating login options consumes a native rate-limit
+slot, so run this deliberate deployment smoke check rather than a frequent
+monitor. The container's frequent health probe remains the setup/status request.
+
+The production browser suite faults its own disposable database and built editor
+stylesheet. In both cases the landing page stays 200 while the CMS smoke fails.
+The stylesheet is restored in `finally`; the fixture removes only its labelled
+Postgres container and generated state. Existing landing-page and Salon smoke
+checks remain in the same command.
+
+## BL-0097 technical evidence on 2026-10-07
+
+The local Linux amd64 rehearsal used Node 22.16.0, Postgres 16, and aligned EmDash
+core/auth 1.1.0. It passed web-container replacement, quiesced database/media/key
+backup, isolated core/auth 1.2.0 upgrade, and fresh-volume 1.1.0 recovery. Each
+phase used native operator and Editor passkey reauthentication, Persian editing
+and Save/reopen, a published article with a pending private title, an unpublished
+draft, session-backed signed preview and anonymous denial, cover and inline
+image decoding, exact image bytes, public metadata and runtime discovery.
+The candidate also published and withdrew a disposable article without rebuild.
+
+The exact baseline image manifest is
+`sha256:8802387873aa7dc75064f386275a582db77ee38b554063eb56a5878a2fd95007`.
+The isolated candidate manifest is
+`sha256:f26ca87bf978ed49bac2b30a546a5e4619dbc025c8bdff1dae5a63eb72afce35`.
+The repository remains pinned to 1.1.0. Reproduce the candidate in a separate
+source copy with both direct native packages pinned to 1.2.0 and the candidate
+root manifest and lock override `@codemirror/language: 6.12.4`. Preserve unrelated
+baseline importer, package and snapshot entries. The initial candidate install
+resolved language 6.13.0, whose source imported undeclared
+`@codemirror/streamparser` and failed the build. Native admin 1.2.0 accepts
+language `^6.12.4`; the tested compatible override is confined to the candidate.
+
+The fresh restored 1.1.0 project remains healthy on loopback port 3301. Protected
+environment files, technical credential state, raw recovery points, invitation,
+screenshots and exact run pointers live outside Git under
+`/Users/mohamad/.codex/private/saluna-cms-bl0087`. Stable milestone notes are in
+`/Users/mohamad/.codex/saluna-bl0087-notes/bl0097-evidence.md`. The occupied-media
+guard also refused a sentinel upload and FIFO without overwriting either; only
+that temporary guard project's volumes were removed.
+
+The production CMS suite passed 16 tests; its default development target passed
+14 and skipped two production-only checks. The native editor still has English
+navigation and publication controls. Persian article fields and text render
+right-aligned, and the stray public toolbar was removed. The intended editor's
+own physical passkey registration and full Persian usability trial have not
+happened. BL-0097 stays open for that human trial, and production publishing is
+still gated by the parent release checks. No production deployment occurred.

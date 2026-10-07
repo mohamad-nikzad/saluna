@@ -52,6 +52,9 @@ export default defineConfig({
   integrations: [
     react(),
     emdash({
+      // Editing stays in the dashboard. The injected public toolbar's inline
+      // CSS and session script are incompatible with the site's strict CSP.
+      toolbar: false,
       database: {
         ...postgres({ migrationConnectionStringEnv: 'CMS_DATABASE_URL' }),
         // Resolve credentials when the server starts, never during the build.

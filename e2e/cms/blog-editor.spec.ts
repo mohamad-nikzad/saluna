@@ -1,9 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
+import { rename } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import {
   checkBlogArticle,
   checkBlogDiscovery as smokeBlogDiscovery,
 } from '../../scripts/smoke-blog.mjs'
+import { checkCmsHealth } from '../../scripts/smoke-cms.mjs'
 import { configureCmsBlog } from '../../scripts/configure-cms-blog.mjs'
 import { cms, invitedAccount, openAdmin, operatorAccount } from './accounts'
 
@@ -516,6 +519,7 @@ test('a signed preview requires a real content session and never leaks into anon
     await expect(contributor.getByRole('heading', { level: 1 })).toHaveText(
       'پیش‌نویس خصوصی برنامه همکاران',
     )
+    await expect(contributor.locator('#emdash-toolbar')).toHaveCount(0)
     await expect(
       contributor.getByText('پیش‌نمایش پیش‌نویس', { exact: true }),
     ).toBeVisible()
@@ -1222,6 +1226,33 @@ test('public author profiles use their published names and never expose profile 
   })
 })
 
+test('production smoke detects missing editor styles while the landing page stays healthy', async ({
+  page,
+}) => {
+  test.skip(
+    process.env.CMS_E2E_PRODUCTION !== '1',
+    'Requires built production assets',
+  )
+  const admin = await page.request.get('/_emdash/admin')
+  const href = (await admin.text()).match(
+    /<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"/,
+  )?.[1]
+  expect(href).toBeTruthy()
+  const assetPath = new URL(href!, 'http://localhost:3303').pathname
+  expect(assetPath).toMatch(/^\/_astro\/[^/]+\.css$/)
+  const file = resolve('apps/web/dist/client', `.${assetPath}`)
+  await checkCmsHealth('http://localhost:3303')
+  await rename(file, `${file}.cms-missing`)
+  try {
+    expect((await page.request.get('/')).status()).toBe(200)
+    expect((await page.request.get(assetPath)).status()).toBe(404)
+    await expect(checkCmsHealth('http://localhost:3303')).rejects.toThrow()
+  } finally {
+    await rename(`${file}.cms-missing`, file)
+  }
+  await checkCmsHealth('http://localhost:3303')
+})
+
 test('a CMS outage returns errors instead of cached redirects or successful published content', async ({
   page,
 }) => {
@@ -1253,6 +1284,7 @@ test('a CMS outage returns errors instead of cached redirects or successful publ
     (await page.request.get('/blog/outage-article-current')).status(),
   ).toBe(200)
   expect((await page.request.get('/blog')).status()).toBe(200)
+  await checkCmsHealth('http://localhost:3303')
   // Fault the disposable external service, not CMS tables or query helpers.
   // This is the final test; fixture cleanup tolerates the removed container.
   const containers = spawnSync(
@@ -1274,6 +1306,8 @@ test('a CMS outage returns errors instead of cached redirects or successful publ
     spawnSync('docker', ['stop', '--time', '1', names[0]], { stdio: 'ignore' })
       .status,
   ).toBe(0)
+  expect((await page.request.get('/')).status()).toBe(200)
+  await expect(checkCmsHealth('http://localhost:3303')).rejects.toThrow()
   for (const path of [
     '/blog/outage-article',
     '/blog/outage-article-current',

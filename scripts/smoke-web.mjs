@@ -4,12 +4,13 @@
  *
  * Usage:
  *   node scripts/smoke-web.mjs
- *   BASE_URL=http://127.0.0.1:3001 node scripts/smoke-web.mjs
- *   BASE_URL=http://127.0.0.1:3001 SLUG=my-salon node scripts/smoke-web.mjs
+ *   BASE_URL=http://localhost:3001 node scripts/smoke-web.mjs
+ *   BASE_URL=http://localhost:3001 SLUG=my-salon node scripts/smoke-web.mjs
  *   SLUG=saluna MANAGER_PHONE=09120000000 MANAGER_PASSWORD=admin123 node scripts/smoke-web.mjs
  */
 import sharp from 'sharp'
 import { checkBlogArticle, checkBlogDiscovery } from './smoke-blog.mjs'
+import { checkCmsHealth } from './smoke-cms.mjs'
 
 const base = (process.env.BASE_URL ?? 'http://localhost:3001').replace(
   /\/$/,
@@ -334,6 +335,8 @@ async function checkUnpublishedSalon(salonSlug, canonical) {
 }
 
 async function main() {
+  await checkCmsHealth(base)
+  pass('CMS content, editor assets and native passkey login dependencies')
   const articleUrls = await checkBlogDiscovery(base)
   for (const url of articleUrls) await checkBlogArticle(url)
   pass(`Blog discovery and metadata (${articleUrls.length} published articles)`)

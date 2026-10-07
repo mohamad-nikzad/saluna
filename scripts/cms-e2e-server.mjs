@@ -93,7 +93,7 @@ try {
         },
       },
     )
-    const deadline = setTimeout(() => build?.kill('SIGTERM'), 60_000)
+    const deadline = setTimeout(() => build?.kill('SIGTERM'), 120_000)
     try {
       const code = await new Promise((resolve, reject) => {
         build.once('exit', resolve)
