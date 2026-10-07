@@ -61,7 +61,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 ### First Blog Article release
 
 - [ ] An authorized nontechnical editor can draft, preview, publish, revise, and unpublish a Persian Blog Article without a code change or Saluna deployment. Draft changes to an existing article remain separate from its live version.
-- [ ] An authorized editor can create, preview, revise, and publish their own article without a separate reviewer. An editor with the appropriate role can also publish another editor's article. Verify content operations through the admin and draft creation, revision, preview access, and required image operations through the supported agent interface, without granting CMS administration or Salon operational access.
+- [x] An authorized editor can create, preview, revise, and publish their own article without a separate reviewer. An editor with the appropriate role can also publish another editor's article. Verify content operations through the admin and draft creation, revision, preview access, and required image operations through the supported agent interface, without granting CMS administration or Salon operational access.
 - [x] Blog Articles support a title, stable slug, summary, rich text body, public byline, optional cover image and inline images, and page-specific SEO metadata. Public credit defaults to `تیم سالونا` and can be changed to a named author independently of the writing account.
 - [x] The public `/blog/` index and individual pages use Saluna's Persian RTL design and are reachable through site navigation. Articles include a relevant signup link. An article without a cover image uses a Saluna-branded social preview.
 - [x] Published articles return crawlable HTML with one canonical URL, page-specific title/description, article structured data, and inclusion in a discoverable public sitemap. Anonymous requests cannot read draft or preview content. Preview responses are not indexable and cannot enter a shared public cache. Drafts and unpublished pages are not publicly listed or indexed; existing public Salon sitemap behavior remains intact. Use one metadata path, extending the shared helper where necessary for article metadata.
@@ -105,7 +105,7 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0095 Complete blog publishing and URL lifecycle](../done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
 | [BL-0096 Add Blog Article SEO and discovery](../done/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
 | [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                  | BL-0096    |
-| [BL-0098 Enable agent Blog Article drafting](../ready/BL-0098-enable-agent-blog-article-drafting.md)                              | BL-0094    |
+| [BL-0098 Enable agent Blog Article drafting](../done/BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
 | [BL-0099 Deliver three initial Blog Article drafts](../ready/BL-0099-deliver-three-initial-blog-article-drafts.md)                | BL-0098    |
 | [BL-0100 Publish Product Guides](../ready/BL-0100-publish-product-guides.md)                                                      | BL-0096    |
 | [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                | BL-0100    |
@@ -115,6 +115,8 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 
 ## Further Notes
+
+- On 2026-10-07, BL-0098 was independently verified at integration merge `e3c5300458c16b73781af61d771229e831c45760`. The dedicated native Author/four-scope OAuth connection completed draft creation, revision, media and session-backed preview, with CMS administration and actual Salon operational authentication denials. Credentials and private preview results remain outside Git. The three launch drafts and actual Grok connection follow separately.
 
 - On 2026-10-07, BL-0097 technical recovery and health work was independently verified at integration merge `817c485131b9005e49f0b609cac0fb327cc2240b`. Actual replacement, aligned 1.2.0 upgrade and fresh 1.1.0 restore passed. The retained Mac copy is `http://localhost:3301`. BL-0097 remains ready-for-human for the user's end-of-work physical passkey registration and Persian trial; private drafting and the remaining tickets continue.
 
