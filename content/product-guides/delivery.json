@@ -1,0 +1,11 @@
+{
+  "ticket": "BL-0100",
+  "origin": "http://localhost:3301",
+  "collection": "product_guides",
+  "id": "01M4C5C56VTQDM3K4Y2C833K4N",
+  "slug": "create-client",
+  "url": "http://localhost:3301/guides/create-client",
+  "status": "published",
+  "reviewedAt": "2026-10-08T09:00:00.000Z",
+  "humanTrial": "pending BL-0101 end-of-work trial"
+}

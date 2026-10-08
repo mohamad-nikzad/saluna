@@ -1,7 +1,7 @@
 ---
 export const prerender = false
 import BlogArticleLayout from '@/layouts/BlogArticleLayout.astro'
-import { readPublicBlogArticle, readBlogPreview } from '@/lib/blog-content'
+import { readPublicBlogArticle, readBlogPreview } from '@/lib/public-content'
 const preview = Astro.url.searchParams.has('_preview')
 const article = preview
   ? await readBlogPreview(Astro.params.slug!)

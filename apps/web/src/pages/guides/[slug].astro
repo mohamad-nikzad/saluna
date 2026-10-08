@@ -1,0 +1,16 @@
+---
+export const prerender = false
+import ProductGuideLayout from '@/layouts/ProductGuideLayout.astro'
+import { readPublicGuide, readGuidePreview } from '@/lib/public-content'
+const preview = Astro.url.searchParams.has('_preview')
+const guide = preview
+  ? await readGuidePreview(Astro.params.slug!)
+  : await readPublicGuide(Astro.params.slug!)
+if (!guide) return new Response('راهنما یافت نشد.', { status: 404 })
+---
+
+<ProductGuideLayout
+  guide={guide}
+  publicOrigin={Astro.site ?? Astro.url.origin}
+  preview={preview}
+/>

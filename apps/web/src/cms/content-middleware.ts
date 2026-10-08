@@ -1,12 +1,14 @@
 import { defineMiddleware } from 'astro:middleware'
 import { createRedirectAccess } from 'emdash'
 import { withEmDashRuntime } from 'emdash/middleware'
-import { readPublicBlogArticle } from '../lib/blog-content'
+import { readPublicBlogArticle, readPublicGuide } from '../lib/public-content'
 
 // Native automatic rules outlive withdrawal and their per-worker cache can
 // lag successive renames. Read supported redirect access freshly, without
 // writing rules or duplicating the CMS publication lifecycle.
-async function blogRedirect(path: string): Promise<string | null | undefined> {
+async function contentRedirect(
+  path: string,
+): Promise<string | null | undefined> {
   return withEmDashRuntime(async (runtime) => {
     const redirects = createRedirectAccess(runtime.db)
     let cursor: string | undefined
@@ -22,12 +24,17 @@ async function blogRedirect(path: string): Promise<string | null | undefined> {
         (item) => !item.isPattern && item.source.replace(/\/+$/, '') === path,
       )
       if (rule) {
-        const match = rule.destination.match(/^\/blog\/([^/?#]+)\/?$/)
+        const match = rule.destination.match(/^\/(blog|guides)\/([^/?#]+)\/?$/)
         if (!match) return null
-        const slug = decodeURIComponent(match[1])
+        const slug = decodeURIComponent(match[2])
         if (slug.includes('/') || slug.includes('\\')) return null
-        const article = await readPublicBlogArticle(slug)
-        return article ? `/blog/${encodeURIComponent(article.slug)}` : null
+        if (match[1] !== path.split('/')[1]) return null
+        const article = await (
+          match[1] === 'guides' ? readPublicGuide : readPublicBlogArticle
+        )(slug)
+        return article
+          ? `/${match[1]}/${encodeURIComponent(article.slug)}`
+          : null
       }
       cursor = page.cursor
     } while (cursor)
@@ -42,6 +49,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname, searchParams } = context.url
   if (
     pathname !== '/blog-sitemap.xml' &&
+    pathname !== '/guides-sitemap.xml' &&
+    pathname !== '/guides' &&
+    !pathname.startsWith('/guides/') &&
     pathname !== '/blog' &&
     !pathname.startsWith('/blog/')
   )
@@ -55,30 +65,34 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Native early redirects skip session/token middleware and discard query
     // parameters. An obsolete preview address must fail closed.
     if (preview && response.status >= 300 && response.status < 400) {
-      response = new Response('مقاله یافت نشد.', { status: 404 })
+      response = new Response('محتوا یافت نشد.', { status: 404 })
     }
     const canonical = pathname.replace(/\/+$/, '')
-    const match = canonical.match(/^\/blog\/([^/]+)$/)
+    const match = canonical.match(/^\/(blog|guides)\/([^/]+)$/)
     const destination =
-      !preview && match ? await blogRedirect(canonical) : undefined
+      !preview && match ? await contentRedirect(canonical) : undefined
     if (destination !== undefined) {
       response = destination
         ? context.redirect(destination + context.url.search, 301)
-        : new Response('مقاله یافت نشد.', { status: 404 })
+        : new Response('محتوا یافت نشد.', { status: 404 })
     } else if (!preview && pathname.endsWith('/')) {
       if (
         canonical === '/blog' ||
-        (match && (await readPublicBlogArticle(decodeURIComponent(match[1]))))
+        canonical === '/guides' ||
+        (match &&
+          (await (
+            match[1] === 'guides' ? readPublicGuide : readPublicBlogArticle
+          )(decodeURIComponent(match[2]))))
       ) {
         response = context.redirect(canonical + context.url.search, 301)
       }
     }
   } catch (error) {
     console.error(
-      '[blog] Content rendering failed',
+      '[public-content] Content rendering failed',
       error instanceof Error ? error.name : 'UnknownError',
     )
-    response = new Response('مقاله‌ها در حال حاضر در دسترس نیستند.', {
+    response = new Response('محتوا در حال حاضر در دسترس نیست.', {
       status: 500,
     })
   }

@@ -1,7 +1,7 @@
 ---
 export const prerender = false
 import PublicInfoLayout from '@/layouts/PublicInfoLayout.astro'
-import { readPublicBlogArticles } from '@/lib/blog-content'
+import { readPublicBlogArticles } from '@/lib/public-content'
 import { displayClass } from '@/content/landing'
 import { titleWithBrand } from '@repo/brand'
 const articles = await readPublicBlogArticles()

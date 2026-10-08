@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /** Apply Saluna's model through an authenticated CMS administrator account.
- * Existing article data and author profiles are never replaced. This also
+ * Existing articles, guides and author profiles are never replaced. This also
  * works on sites initialized before the Blog Article seed was introduced.
  */
 export async function configureCmsBlog({ url, token }) {
@@ -80,7 +80,9 @@ if (
     url: process.env.EMDASH_URL,
     token: process.env.EMDASH_API_TOKEN,
   })
-    .then(() => console.log('Blog Article model and public bylines configured'))
+    .then(() =>
+      console.log('Public content models and author profiles configured'),
+    )
     .catch((error) => {
       console.error(error.message)
       process.exitCode = 1

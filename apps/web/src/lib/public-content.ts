@@ -12,6 +12,8 @@ import {
 } from 'emdash'
 import { withEmDashRuntime } from 'emdash/middleware'
 
+type PublicCollection = 'blog_articles' | 'product_guides'
+
 interface BlogArticleData {
   id: string
   title: string
@@ -31,6 +33,14 @@ export interface BlogArticle extends Omit<BlogArticleData, 'publishedAt'> {
   bylines: string[]
 }
 
+export interface ProductGuide extends BlogArticle {
+  reviewed_at?: string
+  reviewer_name?: string
+  video_url?: string
+  video_transcript?: string
+  relatedGuides: { slug: string; title: string }[]
+}
+
 function isoDate(value?: Date | string | null): string | undefined {
   if (!value) return undefined
   const date = new Date(value)
@@ -39,28 +49,30 @@ function isoDate(value?: Date | string | null): string | undefined {
 
 async function article(
   entry: ContentEntry<BlogArticleData>,
+  collection: PublicCollection = 'blog_articles',
 ): Promise<BlogArticle> {
   const id = entry.data.id ?? entry.id
   const names: string[] = []
   let cursor: string | undefined
-  do {
-    const page = await getEmDashReferences<{ title: string }>(
-      'blog_articles',
-      id,
-      'public_authors',
-      { limit: 100, cursor },
-    )
-    if (page.error) throw page.error
-    names.push(...page.entries.map((profile) => profile.data.title))
-    cursor = page.nextCursor
-  } while (cursor)
+  if (collection === 'blog_articles')
+    do {
+      const page = await getEmDashReferences<{ title: string }>(
+        'blog_articles',
+        id,
+        'public_authors',
+        { limit: 100, cursor },
+      )
+      if (page.error) throw page.error
+      names.push(...page.entries.map((profile) => profile.data.title))
+      cursor = page.nextCursor
+    } while (cursor)
   // updatedAt belongs to the mutable entry, including draft saves. Only the
   // promoted revision's date may describe the public article's last change.
   const presentation = await withEmDashRuntime(async (runtime) => {
     const content = createContentAccess(runtime.db, { revisions: true })
-    const current = await content.get('blog_articles', id)
+    const current = await content.get(collection, id)
     const revision = current?.liveRevisionId
-      ? await content.getRevision!('blog_articles', id, current.liveRevisionId)
+      ? await content.getRevision!(collection, id, current.liveRevisionId)
       : null
     let cover = entry.data.cover
     if (cover && !cover.src) {
@@ -102,7 +114,7 @@ export async function readPublicBlogArticles(): Promise<BlogArticle[]> {
       { status: 'published', orderBy: { published_at: 'desc' } },
     )
     if (result.error) throw result.error
-    return Promise.all(result.entries.map(article))
+    return Promise.all(result.entries.map((entry) => article(entry)))
   })
 }
 
@@ -134,6 +146,92 @@ export async function readBlogPreview(
       )
       if (result.error) throw result.error
       return result.isPreview && result.entry ? article(result.entry) : null
+    },
+  )
+}
+
+async function guide(
+  entry: ContentEntry<BlogArticleData>,
+): Promise<ProductGuide> {
+  const common = await article(entry, 'product_guides')
+  const data = entry.data as BlogArticleData & {
+    reviewed_at?: Date | string
+    reviewer_name?: string
+    video_url?: string
+    video_transcript?: string
+  }
+  const relatedGuides: ProductGuide['relatedGuides'] = []
+  let cursor: string | undefined
+  do {
+    const page = await getEmDashReferences<{ slug: string; title: string }>(
+      'product_guides',
+      common.id,
+      'related_guides',
+      { limit: 100, cursor },
+    )
+    if (page.error) throw page.error
+    for (const related of page.entries) {
+      // A preview can select an unpublished related target. Public links still
+      // require its published revision, independently of the anchor's token.
+      const visible = await publicRead(() =>
+        getEmDashEntry<'product_guides', BlogArticleData>(
+          'product_guides',
+          related.id,
+        ),
+      )
+      if (visible.error) throw visible.error
+      if (visible.entry && visible.entry.data.id !== common.id)
+        relatedGuides.push({
+          slug: visible.entry.data.slug,
+          title: visible.entry.data.title,
+        })
+    }
+    cursor = page.nextCursor
+  } while (cursor)
+  return {
+    ...common,
+    reviewed_at: isoDate(data.reviewed_at),
+    reviewer_name: data.reviewer_name,
+    video_url: data.video_url,
+    video_transcript: data.video_transcript,
+    relatedGuides,
+  }
+}
+
+export async function readPublicGuides(): Promise<ProductGuide[]> {
+  return publicRead(async () => {
+    const result = await getEmDashCollection<'product_guides', BlogArticleData>(
+      'product_guides',
+      { status: 'published', orderBy: { published_at: 'desc' } },
+    )
+    if (result.error) throw result.error
+    return Promise.all(result.entries.map(guide))
+  })
+}
+export async function readPublicGuide(
+  slug: string,
+): Promise<ProductGuide | null> {
+  return publicRead(async () => {
+    const result = await getEmDashEntry<'product_guides', BlogArticleData>(
+      'product_guides',
+      slug,
+    )
+    if (result.error) throw result.error
+    return result.entry ? guide(result.entry) : null
+  })
+}
+export async function readGuidePreview(
+  slug: string,
+): Promise<ProductGuide | null> {
+  return runWithContext(
+    { ...getRequestContext(), editMode: false },
+    async () => {
+      const result = await getEmDashEntry<'product_guides', BlogArticleData>(
+        'product_guides',
+        slug,
+      )
+      if (result.error) throw result.error
+      return result.isPreview && result.entry ? guide(result.entry) : null
     },
   )
 }

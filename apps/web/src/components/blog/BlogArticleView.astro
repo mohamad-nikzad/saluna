@@ -1,7 +1,8 @@
 ---
-import { Image, PortableText } from 'emdash/ui'
+import { Image } from 'emdash/ui'
+import PublicRichText from '../PublicRichText.astro'
 import { displayClass, signupHref } from '@/content/landing'
-import type { BlogArticle } from '@/lib/blog-content'
+import type { BlogArticle } from '@/lib/public-content'
 
 interface Props {
   article: BlogArticle
@@ -51,8 +52,8 @@ const publishedDate = article.publishedAt
       </figure>
     )
   }
-  <div class="blog-prose mx-auto mt-12 max-w-[40rem] text-lg leading-[2.1]">
-    {article.body && <PortableText value={article.body} />}
+  <div class="mx-auto mt-12 max-w-[40rem]">
+    <PublicRichText value={article.body} />
   </div>
   <aside
     class="mx-auto mt-16 max-w-3xl rounded-2xl bg-[#7a2a40] p-7 text-white sm:p-10"
@@ -71,80 +72,3 @@ const publishedDate = article.publishedAt
     >
   </aside>
 </article>
-
-<style is:global>
-  .blog-prose {
-    overflow-wrap: anywhere;
-  }
-  .blog-prose > * + * {
-    margin-block-start: 1.5rem;
-  }
-  .blog-prose h2,
-  .blog-prose h3,
-  .blog-prose h4 {
-    font-family: var(--font-lalezar), sans-serif;
-    line-height: 1.5;
-    margin-block-start: 2.5rem;
-  }
-  .blog-prose h2 {
-    font-size: 2rem;
-  }
-  .blog-prose h3 {
-    font-size: 1.65rem;
-  }
-  .blog-prose ul {
-    list-style: disc;
-    padding-inline-start: 1.5rem;
-  }
-  .blog-prose ol {
-    list-style: decimal;
-    padding-inline-start: 1.5rem;
-  }
-  .blog-prose li + li {
-    margin-block-start: 0.5rem;
-  }
-  .blog-prose a {
-    color: #7a2a40;
-    text-decoration: underline;
-    text-underline-offset: 0.25rem;
-  }
-  .blog-prose blockquote {
-    border-inline-start: 3px solid #7a2a40;
-    padding-inline-start: 1.5rem;
-    color: #6b4955;
-  }
-  .blog-prose img,
-  .blog-prose video,
-  .blog-prose iframe {
-    max-width: 100%;
-    height: auto;
-    border-radius: 0.75rem;
-  }
-  .blog-prose figcaption {
-    color: #6b4955;
-    font-size: 0.875rem;
-    text-align: center;
-    margin-block-start: 0.75rem;
-  }
-  .blog-prose pre {
-    overflow-x: auto;
-    direction: ltr;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    background: #f3d5dd;
-  }
-  .blog-prose table {
-    display: block;
-    overflow-x: auto;
-    max-width: 100%;
-    border-collapse: collapse;
-  }
-  .blog-prose td,
-  .blog-prose th {
-    padding: 0.75rem;
-    border: 1px solid #f3d5dd;
-  }
-  .blog-prose hr {
-    border-color: #f3d5dd;
-  }
-</style>

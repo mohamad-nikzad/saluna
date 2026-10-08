@@ -5,6 +5,8 @@ import { resolve } from 'node:path'
 import {
   checkBlogArticle,
   checkBlogDiscovery as smokeBlogDiscovery,
+  checkGuideDiscovery,
+  checkProductGuide,
 } from '../../scripts/smoke-blog.mjs'
 import { checkCmsHealth } from '../../scripts/smoke-cms.mjs'
 import { configureCmsBlog } from '../../scripts/configure-cms-blog.mjs'
@@ -1253,6 +1255,298 @@ test('production smoke detects missing editor styles while the landing page stay
   await checkCmsHealth('http://localhost:3303')
 })
 
+test('an Editor maintains an illustrated Persian Product Guide through native publication and private preview', async ({
+  page,
+}) => {
+  const related = await cms(editor, 'content/product_guides', {
+    slug: 'related-guide',
+    status: 'draft',
+    data: { title: 'راهنمای مرتبط منتشرشده' },
+  })
+  await cms(editor, `content/product_guides/${related.item.id}/publish`, {})
+  await editor.goto('/_emdash/admin/content/product_guides/new')
+  await editor
+    .getByLabel('عنوان', { exact: true })
+    .fill('افزودن مشتری در سالونا')
+  await editor
+    .getByLabel('خلاصه', { exact: true })
+    .fill('نام و شماره مشتری را در بخش مشتریان ثبت کنید.')
+  const body = editor.locator('[contenteditable="true"]').first()
+  await body.fill('مشتری جدید را انتخاب کنید.')
+  await editor
+    .getByRole('button', { name: 'Numbered List', exact: true })
+    .click()
+  await body.press('End')
+  await body.press('Enter')
+  await body.pressSequentially('نام و شماره را وارد کنید.')
+  await editor.getByLabel('مسئول بازبینی').fill('تیم محصول سالونا')
+  await editor
+    .getByLabel('پیوند ویدئوی بیرونی')
+    .fill('https://www.youtube.com/watch?v=jNQXAC9IVRw')
+  await editor
+    .getByLabel('متن همراه ویدئو')
+    .fill(
+      'این ویدئو نمونه فنی پخش است؛ مراحل همین راهنما مستقل از ویدئو قابل خواندن‌اند.',
+    )
+  await editor
+    .getByRole('button', { name: 'Select image', exact: true })
+    .click()
+  const picker = editor.getByRole('dialog')
+  await picker.getByLabel('Choose files to upload').setInputFiles({
+    name: 'guide-example.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=',
+      'base64',
+    ),
+  })
+  await expect(
+    picker.getByRole('button', { name: 'Select', exact: true }),
+  ).toBeEnabled()
+  await picker.getByRole('button', { name: 'Select', exact: true }).click()
+  await editor.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(editor).toHaveURL(
+    /content\/product_guides\/[A-Z0-9]+(?:\?locale=en)?$/,
+  )
+  const id = new URL(editor.url()).pathname.split('/').at(-1)!
+  await editor
+    .getByRole('button', { name: 'Add reference', exact: true })
+    .click()
+  await editor
+    .getByRole('dialog')
+    .getByText('راهنمای مرتبط منتشرشده', { exact: true })
+    .click()
+  await editor
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Add selected', exact: true })
+    .click()
+  const save = async () => {
+    const [response] = await Promise.all([
+      editor.waitForResponse(
+        (r) =>
+          r.request().method() === 'PUT' &&
+          new URL(r.url()).pathname.endsWith(`/product_guides/${id}`),
+      ),
+      editor.getByRole('button', { name: 'Save', exact: true }).click(),
+    ])
+    expect(response.ok()).toBe(true)
+  }
+  await save()
+  await editor.reload()
+  await expect(editor.getByLabel('عنوان', { exact: true })).toHaveValue(
+    'افزودن مشتری در سالونا',
+  )
+  await expect(editor.locator('[contenteditable="true"] ol')).toHaveCount(1)
+  await expect(editor.getByLabel('متن همراه ویدئو')).toHaveValue(
+    /مستقل از ویدئو/,
+  )
+  let saved = await cms(editor, `content/product_guides/${id}`)
+  expect(saved.item.status).toBe('draft')
+  const path = `/guides/${encodeURIComponent(saved.item.slug)}`
+  const preview = (
+    await cms(editor, `content/product_guides/${id}/preview-url`, {})
+  ).url
+  const privatePage = await editor.request.get(preview)
+  expect(privatePage.status()).toBe(200)
+  expect(privatePage.headers()['cache-control']).toContain('private, no-store')
+  expect(privatePage.headers()['x-robots-tag']).toContain('noindex')
+  expect(await privatePage.text()).toContain('مراحل همین راهنما')
+  for (const url of [preview, '/guides/unknown/nested?_preview=invalid']) {
+    const response = await page.request.get(url, { maxRedirects: 0 })
+    expect(response.status()).toBeGreaterThanOrEqual(400)
+    expect(response.headers()['cache-control']).toContain('private, no-store')
+    expect(response.headers()['x-robots-tag']).toContain('noindex')
+  }
+  expect((await page.request.get(path)).status()).toBe(404)
+  expect(
+    await (await page.request.get('/guides-sitemap.xml')).text(),
+  ).not.toContain(path)
+  const publish = async (label: string) => {
+    await editor
+      .getByRole('button', { name: label, exact: true })
+      .first()
+      .click()
+    const [response] = await Promise.all([
+      editor.waitForResponse(
+        (r) =>
+          r.request().method() === 'POST' &&
+          new URL(r.url()).pathname.endsWith(`/product_guides/${id}/publish`),
+      ),
+      editor
+        .getByRole('dialog')
+        .getByRole('button', { name: label, exact: true })
+        .click(),
+    ])
+    expect(response.ok()).toBe(true)
+  }
+  await publish('Publish now')
+  const slash = await page.request.get(path + '/?from=slash', {
+    maxRedirects: 0,
+  })
+  expect(slash.status()).toBe(301)
+  expect(slash.headers().location).toBe(path + '?from=slash')
+  await page.goto(path)
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.locator('article ol li')).toHaveCount(2)
+  await expect(
+    page.getByRole('link', { name: 'راهنمای مرتبط منتشرشده', exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('iframe')).toHaveAttribute(
+    'src',
+    'https://www.youtube-nocookie.com/embed/jNQXAC9IVRw',
+  )
+  const image = page.locator('article img').first()
+  await expect
+    .poll(() =>
+      image.evaluate(
+        (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+      ),
+    )
+    .toBe(true)
+  const html = await page.content()
+  expect(html).toContain('"@type":"TechArticle"')
+  expect(html.match(/rel="canonical"/g)).toHaveLength(1)
+  expect(html).toContain('تیم محصول سالونا')
+  expect(await (await page.request.get('/guides')).text()).toContain(
+    'افزودن مشتری در سالونا',
+  )
+  expect(await (await page.request.get('/robots.txt')).text()).toContain(
+    '/guides-sitemap.xml',
+  )
+  expect(
+    await (await page.request.get('/guides-sitemap.xml')).text(),
+  ).toContain(path)
+  await editor
+    .getByLabel('عنوان', { exact: true })
+    .fill('ثبت دقیق مشتری در سالونا')
+  await editor
+    .locator('[contenteditable="true"]')
+    .first()
+    .fill('پس از ذخیره، نام مشتری را در فهرست پیدا کنید.')
+  await editor
+    .getByLabel('عنوان برای جستجو')
+    .fill('عنوان جستجوی پیش‌نویس راهنما')
+  await save()
+  const live = await (await page.request.get(path)).text()
+  expect(live).toContain('افزودن مشتری در سالونا')
+  expect(live).not.toContain('ثبت دقیق مشتری در سالونا')
+  expect(live).not.toContain('عنوان جستجوی پیش‌نویس راهنما')
+  const staged = (
+    await cms(editor, `content/product_guides/${id}/preview-url`, {})
+  ).url
+  expect(await (await editor.request.get(staged)).text()).toContain(
+    'ثبت دقیق مشتری در سالونا',
+  )
+  await publish('Publish changes')
+  expect(await (await page.request.get(path)).text()).toContain(
+    'ثبت دقیق مشتری در سالونا',
+  )
+  saved = await cms(editor, `content/product_guides/${id}`)
+  const renamed = await cms(
+    editor,
+    `content/product_guides/${id}`,
+    { slug: 'create-client-guide-renamed', data: {}, _rev: saved._rev },
+    'PUT',
+  )
+  expect(
+    (await page.request.get('/guides/create-client-guide-renamed')).status(),
+  ).toBe(404)
+  await cms(editor, `content/product_guides/${id}/publish`, {
+    _rev: renamed._rev,
+  })
+  const redirect = await page.request.get(`${path}?from=old`, {
+    maxRedirects: 0,
+  })
+  expect(redirect.status()).toBe(301)
+  expect(redirect.headers().location).toBe(
+    '/guides/create-client-guide-renamed?from=old',
+  )
+  expect(
+    await (await page.request.get('/guides-sitemap.xml')).text(),
+  ).not.toContain(path)
+  const oldPreview = await page.request.get(`${path}?_preview=invalid`, {
+    maxRedirects: 0,
+  })
+  expect(oldPreview.status()).toBe(404)
+  expect(oldPreview.headers()['cache-control']).toContain('private, no-store')
+  const relatedState = await cms(
+    editor,
+    `content/product_guides/${related.item.id}`,
+  )
+  await cms(
+    editor,
+    `content/product_guides/${related.item.id}`,
+    {
+      data: { title: 'نام خصوصی راهنمای مرتبط' },
+      slug: 'related-private-draft',
+      _rev: relatedState._rev,
+    },
+    'PUT',
+  )
+  const currentPreview = (
+    await cms(editor, `content/product_guides/${id}/preview-url`, {})
+  ).url
+  for (const response of [
+    await page.request.get('/guides/create-client-guide-renamed'),
+    await editor.request.get(currentPreview),
+  ]) {
+    const html = await response.text()
+    expect(html).toContain('href="/guides/related-guide"')
+    expect(html).toContain('راهنمای مرتبط منتشرشده')
+    expect(html).not.toContain('نام خصوصی راهنمای مرتبط')
+    expect(html).not.toContain('related-private-draft')
+  }
+  await checkProductGuide(
+    'http://localhost:3303/guides/create-client-guide-renamed',
+  )
+  await checkGuideDiscovery('http://localhost:3303', {
+    present: ['create-client-guide-renamed'],
+    robotsOrigin:
+      process.env.CMS_E2E_PRODUCTION === '1'
+        ? 'http://localhost:3303'
+        : 'http://localhost:3001',
+  })
+  await cms(editor, `content/product_guides/${related.item.id}/unpublish`, {})
+  expect(
+    await (
+      await page.request.get('/guides/create-client-guide-renamed')
+    ).text(),
+  ).not.toContain('href="/guides/related-guide"')
+  await editor.reload()
+  const [withdrawn] = await Promise.all([
+    editor.waitForResponse(
+      (r) =>
+        r.request().method() === 'POST' &&
+        new URL(r.url()).pathname.endsWith(`/product_guides/${id}/unpublish`),
+    ),
+    editor
+      .getByRole('button', { name: /^Unpublish / })
+      .first()
+      .click(),
+  ])
+  expect(withdrawn.ok()).toBe(true)
+  for (const url of [
+    path,
+    path + '/',
+    '/guides/create-client-guide-renamed',
+    '/guides/create-client-guide-renamed/',
+    '/guides/missing',
+  ])
+    expect((await page.request.get(url, { maxRedirects: 0 })).status()).toBe(
+      404,
+    )
+  expect(await (await page.request.get('/guides')).text()).not.toContain(
+    'ثبت دقیق مشتری در سالونا',
+  )
+  expect(
+    await (await page.request.get('/guides-sitemap.xml')).text(),
+  ).not.toContain('create-client-guide-renamed')
+  await cms(editor, `content/product_guides/${id}`, undefined, 'DELETE')
+  expect(
+    (await page.request.get('/guides/create-client-guide-renamed')).status(),
+  ).toBe(404)
+})
+
 test('a CMS outage returns errors instead of cached redirects or successful published content', async ({
   page,
 }) => {
@@ -1313,6 +1607,9 @@ test('a CMS outage returns errors instead of cached redirects or successful publ
     '/blog/outage-article-current',
     '/blog',
     '/blog-sitemap.xml',
+    '/guides',
+    '/guides/missing',
+    '/guides-sitemap.xml',
   ]) {
     const response = await page.request.get(path, { maxRedirects: 0 })
     expect(response.status()).toBe(500)

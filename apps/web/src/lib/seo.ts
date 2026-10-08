@@ -1,4 +1,5 @@
-import type { BlogArticle } from './blog-content'
+import type { BlogArticle } from './public-content'
+import type { ProductGuide } from './public-content'
 import { brand, titleWithBrand } from '@repo/brand'
 import { presenceSameAs } from '@repo/salon-core/presence-links'
 import type { Service } from '@repo/salon-core/types'
@@ -248,12 +249,41 @@ export function buildBlogMetadata(
   publicOrigin: URL | string,
   preview = false,
 ) {
-  const canonical = buildBlogCanonicalUrl(article.slug, publicOrigin).href
+  return buildEditorialMetadata(article, publicOrigin, preview, 'blog')
+}
+
+export function buildGuideCanonicalUrl(
+  slug: string,
+  publicOrigin: URL | string,
+): URL {
+  return new URL(
+    `/guides/${encodeURIComponent(slug)}`,
+    new URL(publicOrigin).origin,
+  )
+}
+
+export function buildGuideMetadata(
+  guide: ProductGuide,
+  publicOrigin: URL | string,
+  preview = false,
+) {
+  return buildEditorialMetadata(guide, publicOrigin, preview, 'guides')
+}
+
+function buildEditorialMetadata(
+  article: BlogArticle,
+  publicOrigin: URL | string,
+  preview: boolean,
+  section: 'blog' | 'guides',
+) {
+  const canonical = (
+    section === 'blog' ? buildBlogCanonicalUrl : buildGuideCanonicalUrl
+  )(article.slug, publicOrigin).href
   const title = titleWithBrand(article.seo_title?.trim() || article.title)
   const description =
     article.seo_description?.trim() ||
     article.summary ||
-    `${article.title}، نوشته‌ای از وبلاگ سالونا درباره مدیریت سالن.`
+    `${article.title}، ${section === 'guides' ? 'راهنمای استفاده از سالونا' : 'نوشته‌ای از وبلاگ سالونا درباره مدیریت سالن'}.`
   const cover = article.cover
   const image = new URL(cover?.src || '/og/landing.png', canonical).href
   return {
@@ -270,7 +300,7 @@ export function buildBlogMetadata(
     noIndex: preview || article.search_excluded === true,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Article',
+      '@type': section === 'blog' ? 'Article' : 'TechArticle',
       headline: article.title,
       description,
       url: canonical,

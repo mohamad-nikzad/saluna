@@ -46,7 +46,7 @@ const vazirmatnVariants = [400, 500, 600, 700, 800].map((weight) => ({
 export default defineConfig({
   site: process.env.PUBLIC_APP_URL ?? 'http://localhost:3001',
   output: 'server',
-  // Blog slash variants must reach the CMS before deciding redirect or 404.
+  // CMS content slash variants must reach the CMS before deciding redirect or 404.
   trailingSlash: 'ignore',
   adapter: node({ mode: 'standalone' }),
   integrations: [
@@ -68,7 +68,7 @@ export default defineConfig({
       }),
       maxUploadSize: 4 * 1024 * 1024,
       middleware: {
-        outer: new URL('./src/cms/blog-middleware.ts', import.meta.url),
+        outer: new URL('./src/cms/content-middleware.ts', import.meta.url),
       },
     }),
     sitemap({
@@ -87,7 +87,11 @@ export default defineConfig({
   },
   security: {
     csp: {
-      directives: [`connect-src 'self' ${apiConnectOrigin}`],
+      directives: [
+        `connect-src 'self' ${apiConnectOrigin}`,
+        "frame-src 'self' https://www.youtube-nocookie.com",
+        "media-src 'self' https:",
+      ],
       scriptDirective: {
         // EmDash 1.1.0's inline theme initializer is not bundled by Astro.
         hashes: ['sha256-1v8Ah3SYqBY03Gly/3EAPKBtMEL2cbmxCIVejWMUYbY='],

@@ -3,7 +3,7 @@
   "version": "1",
   "meta": {
     "name": "Saluna public content",
-    "description": "Persian Blog Articles and public author profiles"
+    "description": "Persian Blog Articles, Product Guides and public author profiles"
   },
   "settings": {
     "title": "سالونا",
@@ -47,7 +47,7 @@
         },
         {
           "slug": "body",
-          "label": "متن مقاله",
+          "label": "مراحل و تصویرهای راهنما",
           "type": "portableText"
         },
         {
@@ -78,6 +78,82 @@
           "slug": "search_excluded",
           "label": "نمایش ندادن در موتورهای جستجو",
           "type": "boolean"
+        }
+      ]
+    },
+    {
+      "slug": "product_guides",
+      "label": "راهنماهای محصول",
+      "labelSingular": "راهنمای محصول",
+      "description": "مراحل را با فهرست شماره‌دار و تصویر بنویسید. تیم محصول پس از تغییر صفحه‌های برنامه، دقت راهنما و تاریخ بازبینی را به‌روز می‌کند.",
+      "supports": ["drafts", "revisions", "preview"],
+      "urlPattern": "/guides/{slug}",
+      "fields": [
+        {
+          "slug": "title",
+          "label": "عنوان",
+          "type": "string",
+          "required": true
+        },
+        {
+          "slug": "summary",
+          "label": "خلاصه",
+          "type": "text"
+        },
+        {
+          "slug": "body",
+          "label": "مراحل و تصویرهای راهنما",
+          "type": "portableText"
+        },
+        {
+          "slug": "cover",
+          "label": "تصویر روی جلد",
+          "type": "image"
+        },
+        {
+          "slug": "seo_title",
+          "label": "عنوان برای جستجو",
+          "type": "string"
+        },
+        {
+          "slug": "seo_description",
+          "label": "توضیح برای جستجو",
+          "type": "text"
+        },
+        {
+          "slug": "search_excluded",
+          "label": "نمایش ندادن در موتورهای جستجو",
+          "type": "boolean"
+        },
+        {
+          "slug": "reviewed_at",
+          "label": "تاریخ آخرین بازبینی",
+          "type": "datetime"
+        },
+        {
+          "slug": "reviewer_name",
+          "label": "مسئول بازبینی",
+          "type": "string"
+        },
+        {
+          "slug": "video_url",
+          "label": "پیوند ویدئوی بیرونی",
+          "type": "url",
+          "description": "پیوند HTTPS ویدئو در یوتیوب یا فایل mp4/webm بیرونی؛ میزبان‌های دیگر به صورت پیوند نمایش داده می‌شوند. ویدئو را در کتابخانه تصویر بارگذاری نکنید."
+        },
+        {
+          "slug": "video_transcript",
+          "label": "متن همراه ویدئو",
+          "type": "text"
+        },
+        {
+          "slug": "related_guides",
+          "label": "راهنماهای مرتبط",
+          "type": "reference",
+          "validation": {
+            "targetCollection": "product_guides",
+            "multiple": true
+          }
         }
       ]
     }
