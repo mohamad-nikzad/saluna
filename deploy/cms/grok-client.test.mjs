@@ -59,3 +59,25 @@ test('Studio article input cannot read outside its exchange directory', async ()
     'CMS EXCHANGE_FILE_REQUIRED',
   )
 })
+
+test('daily inspection reports a new date without creating it, and rejects input outside the exchange', async () => {
+  async function command(...args) {
+    const child = spawn(
+      process.execPath,
+      ['scripts/grok-draft-cli.mjs', config, ...args],
+      { stdio: ['ignore', 'pipe', 'pipe'] },
+    )
+    const chunks = []
+    child.stdout.on('data', (chunk) => chunks.push(chunk))
+    child.stderr.on('data', (chunk) => chunks.push(chunk))
+    const code = await new Promise((done) => child.once('exit', done))
+    return { code, data: JSON.parse(Buffer.concat(chunks).toString()) }
+  }
+  const before = await command('daily-status', '2099-12-31')
+  assert.equal(before.data.status, 'new')
+  const denied = await command('daily', '2099-12-31', '../agent-oauth.json')
+  assert.equal(denied.code, 1)
+  assert.equal(denied.data.code, 'EXCHANGE_FILE_REQUIRED')
+  const after = await command('daily-status', '2099-12-31')
+  assert.equal(after.data.status, 'new')
+})

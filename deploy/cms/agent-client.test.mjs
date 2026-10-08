@@ -22,8 +22,35 @@ const state = await readPrivateJson(
 test('expired stored OAuth access is refreshed natively and the old access token is revoked', async () => {
   const before = await readPrivateJson(tokenPath)
   await writePrivateJson(tokenPath, { ...before, expiresAt: Date.now() - 1 })
+  // Separate commands start with the same expired grant. Only the lock holder
+  // refreshes it; the other reloads the already rotated credentials.
+  await Promise.all(
+    [1, 2].map(
+      () =>
+        new Promise((done, reject) => {
+          const child = spawn(
+            process.execPath,
+            [
+              '--input-type=module',
+              '-e',
+              `
+      import{cmsDraftClient}from'./scripts/cms-draft-client.mjs';
+      const c=await cmsDraftClient(process.argv[1]);await c.connect();await c.listArticles();
+    `,
+              tokenPath,
+            ],
+            { stdio: 'ignore' },
+          )
+          child.once('error', reject)
+          child.once('exit', (code) =>
+            code === 0
+              ? done()
+              : reject(new Error('Concurrent native refresh failed')),
+          )
+        }),
+    ),
+  )
   const client = await cmsDraftClient(tokenPath)
-  await client.connect()
   const after = await readPrivateJson(tokenPath)
   assert.notEqual(after.access_token, before.access_token)
   assert(after.expiresAt > Date.now())
@@ -52,17 +79,23 @@ test('expired stored OAuth access is refreshed natively and the old access token
 test('native stale revisions cannot overwrite a newer saved draft', async () => {
   const client = await cmsDraftClient(tokenPath)
   const current = await client.getArticle(state.draftId)
-  await client.reviseDraft(current, {
-    seo_description: `آزمون نسخه ذخیره‌شده ${Date.now()}`,
-  })
-  await assert.rejects(
-    client.reviseDraft(current, { title: 'نباید جایگزین شود' }),
-    /CMS CONFLICT/,
-  )
-  assert.equal(
-    (await client.getArticle(state.draftId)).item.data.title,
-    'پیش‌نویس فارسی از اتصال نویسنده',
-  )
+  try {
+    await client.reviseDraft(current, {
+      seo_description: `آزمون نسخه ذخیره‌شده ${Date.now()}`,
+    })
+    await assert.rejects(
+      client.reviseDraft(current, { title: 'نباید جایگزین شود' }),
+      /CMS CONFLICT/,
+    )
+    assert.equal(
+      (await client.getArticle(state.draftId)).item.data.title,
+      'پیش‌نویس فارسی از اتصال نویسنده',
+    )
+  } finally {
+    await client.reviseDraft(await client.getArticle(state.draftId), {
+      seo_description: current.item.data.seo_description,
+    })
+  }
 })
 
 test('draft operations cannot accidentally withdraw the existing published article', async () => {
