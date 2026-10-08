@@ -81,7 +81,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 
 - [ ] A separately enabled Grok routine creates one new Persian Blog Article draft per day within the agreed salon-management subjects, independently of earlier drafts' review or publication status.
 - [ ] The writing bot uses a dedicated identity with the minimum supported access needed to create and revise drafts and perform required media operations. Use the installed EmDash release's MCP or remote CLI after testing authentication and permissions. Create/update operations explicitly keep content as draft; the routine does not publish or schedule publication.
-- [ ] A Saluna writing skill records the audience, allowed subject areas, current product sources, article fields, default byline, optional-image behavior, and the draft-only deliverable. Writers check existing content for overlap but do not wait for earlier drafts to be reviewed or published.
+- [x] A Saluna writing skill records the audience, allowed subject areas, current product sources, article fields, default byline, optional-image behavior, and the draft-only deliverable. Writers check existing content for overlap but do not wait for earlier drafts to be reviewed or published.
 - [ ] Routine retries avoid duplicate drafts for the same daily run, and failed draft creation is reported. Choose the run time in `Asia/Tehran` when enabling the routine. Review is optional, and publication is a later explicit action outside the drafting routine.
 
 ## Out of Scope
@@ -109,12 +109,14 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0099 Deliver three initial Blog Article drafts](../done/BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
 | [BL-0100 Publish Product Guides](../done/BL-0100-publish-product-guides.md)                                                       | BL-0096    |
 | [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                | BL-0100    |
-| [BL-0102 Prove one Grok drafting run](../ready/BL-0102-prove-one-grok-drafting-run.md)                                            | BL-0098    |
+| [BL-0102 Prove one Grok drafting run](../done/BL-0102-prove-one-grok-drafting-run.md)                                             | BL-0098    |
 | [BL-0103 Enable daily Grok drafting](../ready/BL-0103-enable-daily-grok-drafting.md)                                              | BL-0102    |
 
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 
 ## Further Notes
+
+- On 2026-10-08, BL-0102 was independently verified at merge `b1c00c805c8a8b4c37ee4d8e0a7f4732dafedb32`. The actual logged-in Saluna Content Studio registered the private writing skill and created, revised, illustrated and returned an authenticated preview of one distinct Persian staff-scheduling draft. Native Author/four-scope permissions, real operational denials, saved source accuracy and anonymous exclusion passed. The original three drafts are preserved. The user's personally selected Grok Mac execution setting is Always allow; agents left security settings unchanged. No daily routine exists yet; BL-0103 is next.
 
 - On 2026-10-08, BL-0101 technical manager linking was independently verified at merge `65519f4d3516281111be1d8e28f63fe1c476dbec`, with complete lazy-image capture verification in `fe897b3ef04eacfdb13b7ca7ec81fb7bace4b26e`. The Clients screen opens the correct anonymous guide while creation and search remain usable. BL-0101 remains ready-for-human for the user's end-of-work guide trial; Grok implementation continues.
 
