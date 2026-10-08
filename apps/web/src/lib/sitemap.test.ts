@@ -44,22 +44,20 @@ describe('runtime Salon sitemap', () => {
   it('excludes only owner-confirmed internal Salons from discovery', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              slugs: [
-                'salon-a027zt',
-                'salon-vubbcn',
-                'salon-gzwp7u',
-                'aravirabeautylounge',
-                'mehrnanail',
-                'salon-wizjyw',
-              ],
-            }),
-          ),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            slugs: [
+              'salon-a027zt',
+              'salon-vubbcn',
+              'salon-gzwp7u',
+              'aravirabeautylounge',
+              'mehrnanail',
+              'salon-wizjyw',
+            ],
+          }),
         ),
+      ),
     )
 
     const xml = await (await GET({} as never)).text()
@@ -86,13 +84,14 @@ describe('runtime Salon sitemap', () => {
     expect(await (await GET({} as never)).text()).not.toContain('/salons/aftab')
   })
 
-  it('declares static, Salon, and Blog Article sitemaps in robots.txt', async () => {
+  it('declares static, Salon, Blog Article, and Product Guide sitemaps in robots.txt', async () => {
     const expected = `User-agent: *
 Allow: /
 
 Sitemap: https://saluna.example.test/sitemap-index.xml
 Sitemap: https://saluna.example.test/salons-sitemap.xml
 Sitemap: https://saluna.example.test/blog-sitemap.xml
+Sitemap: https://saluna.example.test/guides-sitemap.xml
 `
 
     expect(

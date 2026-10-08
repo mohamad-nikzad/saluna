@@ -1,5 +1,8 @@
 # Blog Article editor
 
+[Product Guide editing and maintenance](EMDASH_PRODUCT_GUIDES.md) uses the same
+CMS with its own collection and public pages.
+
 EmDash 1.1.0 stores Blog Articles in `blog_articles`. Saluna's model is in
 `apps/web/cms/seed.json`. Its built-in slug, drafts, revisions, and preview sit
 alongside the title, summary, Portable Text body, and optional cover image.

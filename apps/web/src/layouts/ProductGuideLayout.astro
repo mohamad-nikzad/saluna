@@ -1,0 +1,141 @@
+---
+import PublicInfoLayout from './PublicInfoLayout.astro'
+import PublicRichText from '../components/PublicRichText.astro'
+import { displayClass } from '../content/landing'
+import { buildGuideMetadata } from '../lib/seo'
+import type { ProductGuide } from '../lib/public-content'
+import { Image } from 'emdash/ui'
+import { guideVideo } from '../lib/guide-video'
+interface Props {
+  guide: ProductGuide
+  publicOrigin: URL | string
+  preview?: boolean
+}
+const { guide, publicOrigin, preview = false } = Astro.props
+const reviewed = guide.reviewed_at ? new Date(guide.reviewed_at) : null
+const video = guideVideo(guide.video_url)
+---
+
+<PublicInfoLayout {...buildGuideMetadata(guide, publicOrigin, preview)}>
+  {
+    preview && (
+      <div
+        role="status"
+        class="bg-[#f3d5dd] px-5 py-3 text-center text-sm font-bold text-[#7a2a40]"
+      >
+        پیش‌نمایش پیش‌نویس
+      </div>
+    )
+  }
+  <article class="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-20">
+    <header class="max-w-3xl">
+      <a
+        href="/guides"
+        class="text-sm text-[#7a2a40] underline underline-offset-4"
+        >راهنماهای سالونا</a
+      >
+      <h1 class={`${displayClass} mt-7 text-4xl leading-tight sm:text-6xl`}>
+        {guide.title}
+      </h1>
+      <p class="mt-6 text-lg leading-9 text-[#6b4955]">{guide.summary}</p>
+      <p class="mt-6 text-sm leading-7 text-[#6b4955]">
+        آخرین بازبینی: {
+          reviewed && (
+            <time datetime={reviewed.toISOString()}>
+              {new Intl.DateTimeFormat('fa-IR', {
+                dateStyle: 'long',
+                timeZone: 'Asia/Tehran',
+              }).format(reviewed)}
+            </time>
+          )
+        }
+        {guide.reviewer_name && <span>، {guide.reviewer_name}</span>}
+      </p>
+    </header>
+    {
+      guide.cover && (
+        <figure class="mt-10 overflow-hidden rounded-2xl">
+          <Image
+            image={guide.cover}
+            priority
+            placeholder={false}
+            class="h-auto w-full"
+          />
+        </figure>
+      )
+    }
+    <div class="mx-auto mt-10 max-w-[40rem]">
+      <PublicRichText value={guide.body} />
+      {
+        (video || guide.video_transcript) && (
+          <section
+            class="mt-12 border-t border-[#f3d5dd] pt-8"
+            aria-label="ویدئو و متن همراه"
+          >
+            <h2 class={`${displayClass} text-3xl`}>ویدئو و متن همراه</h2>
+            {video?.embed && (
+              <iframe
+                src={video.embed}
+                title={`ویدئو: ${guide.title}`}
+                loading="lazy"
+                allowfullscreen
+                referrerpolicy="strict-origin-when-cross-origin"
+                class="mt-6 aspect-video min-h-[200px] w-full rounded-xl border-0"
+              />
+            )}
+            {video?.file && (
+              <video
+                src={video.href}
+                controls
+                preload="none"
+                class="mt-6 w-full rounded-xl"
+              />
+            )}
+            {video && (
+              <a
+                href={video.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-4 inline-block text-[#7a2a40] underline underline-offset-4"
+              >
+                باز کردن ویدئو در سایت میزبان
+              </a>
+            )}
+            {guide.video_transcript && (
+              <div class="mt-6">
+                <h3 class="font-bold">متن همراه ویدئو</h3>
+                <p class="mt-3 whitespace-pre-line leading-9">
+                  {guide.video_transcript}
+                </p>
+              </div>
+            )}
+          </section>
+        )
+      }
+      {
+        guide.relatedGuides.length > 0 && (
+          <nav
+            class="mt-12 border-t border-[#f3d5dd] pt-8"
+            aria-label="راهنماهای مرتبط"
+          >
+            <>
+              <h2 class={`${displayClass} text-3xl`}>راهنماهای مرتبط</h2>
+              <ul class="mt-5 space-y-3">
+                {guide.relatedGuides.map((related) => (
+                  <li>
+                    <a
+                      href={`/guides/${encodeURIComponent(related.slug)}`}
+                      class="text-[#7a2a40] underline underline-offset-4"
+                    >
+                      {related.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          </nav>
+        )
+      }
+    </div>
+  </article>
+</PublicInfoLayout>

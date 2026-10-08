@@ -19,6 +19,8 @@ server.on('request', (request, response) => {
     pathname.length > 1 &&
     pathname.endsWith('/') &&
     pathname !== '/blog/' &&
+    pathname !== '/guides/' &&
+    !pathname.startsWith('/guides/') &&
     !pathname.startsWith('/blog/') &&
     !pathname.startsWith('/_emdash/')
   ) {

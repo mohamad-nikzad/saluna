@@ -1,0 +1,89 @@
+---
+import { PortableText } from 'emdash/ui'
+import type { PortableTextBlock } from 'emdash'
+interface Props {
+  value?: PortableTextBlock[]
+}
+const { value } = Astro.props
+---
+
+<div class="public-prose text-lg leading-[2.1]">
+  {value && <PortableText value={value} />}
+</div>
+
+<style is:global>
+  .public-prose {
+    overflow-wrap: anywhere;
+  }
+  .public-prose > * + * {
+    margin-block-start: 1.5rem;
+  }
+  .public-prose h2,
+  .public-prose h3,
+  .public-prose h4 {
+    font-family: var(--font-lalezar), sans-serif;
+    line-height: 1.5;
+    margin-block-start: 2.5rem;
+  }
+  .public-prose h2 {
+    font-size: 2rem;
+  }
+  .public-prose h3 {
+    font-size: 1.65rem;
+  }
+  .public-prose ul {
+    list-style: disc;
+    padding-inline-start: 1.5rem;
+  }
+  .public-prose ol {
+    list-style: decimal;
+    padding-inline-start: 1.5rem;
+  }
+  .public-prose li + li {
+    margin-block-start: 0.5rem;
+  }
+  .public-prose a {
+    color: #7a2a40;
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+  }
+  .public-prose blockquote {
+    border-inline-start: 3px solid #7a2a40;
+    padding-inline-start: 1.5rem;
+    color: #6b4955;
+  }
+  .public-prose img,
+  .public-prose video,
+  .public-prose iframe {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+  }
+  .public-prose figcaption {
+    color: #6b4955;
+    font-size: 0.875rem;
+    text-align: center;
+    margin-block-start: 0.75rem;
+  }
+  .public-prose pre {
+    overflow-x: auto;
+    direction: ltr;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: #f3d5dd;
+  }
+  .public-prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    border-collapse: collapse;
+  }
+  .public-prose td,
+  .public-prose th {
+    padding: 0.75rem;
+    border: 1px solid #f3d5dd;
+  }
+  .public-prose hr {
+    border-color: #f3d5dd;
+  }
+</style>

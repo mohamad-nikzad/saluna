@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { PUBLIC_APP_URL } from 'astro:env/client'
-import { readPublicBlogArticles } from '../lib/blog-content'
+import { readPublicBlogArticles } from '../lib/public-content'
 import { buildBlogCanonicalUrl } from '../lib/seo'
 
 export const prerender = false

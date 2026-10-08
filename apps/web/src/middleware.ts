@@ -5,7 +5,10 @@ import { hasPermission } from '@emdash-cms/auth'
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname, searchParams } = context.url
   if (
-    (pathname === '/blog' || pathname.startsWith('/blog/')) &&
+    (pathname === '/blog' ||
+      pathname.startsWith('/blog/') ||
+      pathname === '/guides' ||
+      pathname.startsWith('/guides/')) &&
     searchParams.has('_preview') &&
     !hasPermission(context.locals.user, 'content:read_drafts')
   ) {

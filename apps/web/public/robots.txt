@@ -5,3 +5,4 @@ Allow: /
 Sitemap: http://localhost:3001/sitemap-index.xml
 Sitemap: http://localhost:3001/salons-sitemap.xml
 Sitemap: http://localhost:3001/blog-sitemap.xml
+Sitemap: http://localhost:3001/guides-sitemap.xml

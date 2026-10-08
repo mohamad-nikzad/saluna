@@ -2,14 +2,23 @@ import assert from 'node:assert/strict'
 import sharp from 'sharp'
 
 /** Public HTTP checks shared by deployment smoke and the real CMS lifecycle. */
-export async function checkBlogDiscovery(
+export const checkBlogDiscovery = (base, options) =>
+  checkContentDiscovery(base, 'blog', options)
+export const checkGuideDiscovery = (base, options) =>
+  checkContentDiscovery(base, 'guides', options)
+
+async function checkContentDiscovery(
   base,
+  section,
   { present = [], absent = [], robotsOrigin = base } = {},
 ) {
-  const response = await fetch(new URL('/blog-sitemap.xml', base), {
-    cache: 'no-store',
-  })
-  assert.equal(response.status, 200, 'Blog sitemap must load')
+  const response = await fetch(
+    new URL(`/${section === 'blog' ? 'blog' : 'guides'}-sitemap.xml`, base),
+    {
+      cache: 'no-store',
+    },
+  )
+  assert.equal(response.status, 200, 'Content sitemap must load')
   assert.match(response.headers.get('content-type') ?? '', /application\/xml/)
   assert.match(response.headers.get('cache-control') ?? '', /no-store/)
   const xml = await response.text()
@@ -25,17 +34,21 @@ export async function checkBlogDiscovery(
   )
   for (const url of urls) {
     assert.equal(new URL(url).origin, new URL(base).origin)
-    assert.match(new URL(url).pathname, /^\/blog\/[^/]+$/)
+    assert.match(new URL(url).pathname, new RegExp(`^/${section}/[^/]+$`))
     assert.equal(new URL(url).search, '')
   }
   for (const slug of present)
     assert.ok(
-      urls.includes(new URL(`/blog/${encodeURIComponent(slug)}`, base).href),
+      urls.includes(
+        new URL(`/${section}/${encodeURIComponent(slug)}`, base).href,
+      ),
       `Missing published ${slug}`,
     )
   for (const slug of absent)
     assert.ok(
-      !urls.includes(new URL(`/blog/${encodeURIComponent(slug)}`, base).href),
+      !urls.includes(
+        new URL(`/${section}/${encodeURIComponent(slug)}`, base).href,
+      ),
       `Unexpected unpublished or former ${slug}`,
     )
   for (const match of xml.matchAll(/<lastmod>(.*?)<\/lastmod>/g)) {
@@ -50,6 +63,7 @@ export async function checkBlogDiscovery(
     '/sitemap-index.xml',
     '/salons-sitemap.xml',
     '/blog-sitemap.xml',
+    '/guides-sitemap.xml',
   ]) {
     assert.ok(
       robots.includes(`Sitemap: ${new URL(path, robotsOrigin).href}`),
@@ -59,7 +73,10 @@ export async function checkBlogDiscovery(
   return urls
 }
 
-export async function checkBlogArticle(url) {
+export const checkBlogArticle = (url) => checkEditorialPage(url, 'Article')
+export const checkProductGuide = (url) => checkEditorialPage(url, 'TechArticle')
+
+async function checkEditorialPage(url, schemaType) {
   const response = await fetch(url, { cache: 'no-store', redirect: 'manual' })
   assert.equal(response.status, 200, 'Published article must load')
   const html = await response.text()
@@ -77,7 +94,7 @@ export async function checkBlogArticle(url) {
       /<script[^>]+type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs,
     ),
   ].map((match) => JSON.parse(match[1]))
-  const article = blocks.find((value) => value['@type'] === 'Article')
+  const article = blocks.find((value) => value['@type'] === schemaType)
   assert.ok(article, 'Article structured data must exist')
   assert.ok(article.headline)
   assert.equal(article.url, canonical[0][1])
