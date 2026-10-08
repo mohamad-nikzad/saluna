@@ -1547,6 +1547,120 @@ test('an Editor maintains an illustrated Persian Product Guide through native pu
   ).toBe(404)
 })
 
+test('a current published Blog Article or Product Guide outranks a former slug alias', async ({
+  page,
+}) => {
+  for (const [collection, section] of [
+    ['blog_articles', 'blog'],
+    ['product_guides', 'guides'],
+  ]) {
+    const slug = `reused-${section}`
+    const old = await cms(editor, `content/${collection}`, {
+      slug,
+      status: 'draft',
+      data: { title: `محتوای نخست ${section}`, summary: 'خلاصه نخست' },
+    })
+    let saved = await cms(
+      editor,
+      `content/${collection}/${old.item.id}/publish`,
+      {},
+    )
+    saved = await cms(
+      editor,
+      `content/${collection}/${old.item.id}`,
+      {
+        slug: `${slug}-renamed`,
+        data: {},
+        _rev: saved._rev,
+      },
+      'PUT',
+    )
+    await cms(editor, `content/${collection}/${old.item.id}/publish`, {
+      _rev: saved._rev,
+    })
+    const alias = await page.request.get(`/${section}/${slug}`, {
+      maxRedirects: 0,
+    })
+    expect(alias.status()).toBe(301)
+    expect(alias.headers().location).toBe(`/${section}/${slug}-renamed`)
+
+    const replacement = await cms(editor, `content/${collection}`, {
+      slug,
+      status: 'draft',
+      data: { title: `محتوای جایگزین ${section}`, summary: 'خلاصه جایگزین' },
+    })
+    await cms(
+      editor,
+      `content/${collection}/${replacement.item.id}/publish`,
+      {},
+    )
+    const checkReplacement = async () => {
+      const response = await page.request.get(`/${section}/${slug}`, {
+        maxRedirects: 0,
+      })
+      expect.soft(response.status()).toBe(200)
+      const html = await response.text()
+      expect.soft(html).toContain(`محتوای جایگزین ${section}`)
+      expect
+        .soft(html)
+        .toContain(`href="http://localhost:3303/${section}/${slug}"`)
+      expect.soft(html).not.toContain('/_emdash/saluna-public-content/')
+      expect
+        .soft(response.headers()['cache-control'])
+        .toMatch(/private.*no-store/)
+    }
+    await checkReplacement()
+    expect(
+      (await page.request.get(`/${section}/${slug}-renamed`)).status(),
+    ).toBe(200)
+    for (const path of [`/${section}`, `/${section}-sitemap.xml`])
+      expect(await (await page.request.get(path)).text()).toContain(
+        `/${section}/${slug}`,
+      )
+    const slash = await page.request.get(`/${section}/${slug}/?from=reuse`, {
+      maxRedirects: 0,
+    })
+    expect.soft(slash.status()).toBe(301)
+    expect.soft(slash.headers().location).toBe(`/${section}/${slug}?from=reuse`)
+    const preview = (
+      await cms(
+        editor,
+        `content/${collection}/${replacement.item.id}/preview-url`,
+        {},
+      )
+    ).url
+    const copied = await page.request.get(preview, { maxRedirects: 0 })
+    expect([403, 404]).toContain(copied.status())
+    expect(copied.headers()['cache-control']).toMatch(/private.*no-store/)
+    expect(copied.headers()['x-robots-tag']).toMatch(/noindex/)
+    await cms(editor, `content/${collection}/${old.item.id}/unpublish`, {})
+    await checkReplacement()
+    await cms(
+      editor,
+      `content/${collection}/${old.item.id}`,
+      undefined,
+      'DELETE',
+    )
+    await checkReplacement()
+    expect(
+      (
+        await page.request.get(
+          `/_emdash/saluna-public-content/${section}/${slug}`,
+        )
+      ).status(),
+    ).toBe(404)
+    await cms(
+      editor,
+      `content/${collection}/${replacement.item.id}/unpublish`,
+      {},
+    )
+    for (const path of [`/${section}/${slug}`, `/${section}/${slug}/`])
+      expect((await page.request.get(path, { maxRedirects: 0 })).status()).toBe(
+        404,
+      )
+  }
+})
+
 test('a CMS outage returns errors instead of cached redirects or successful published content', async ({
   page,
 }) => {

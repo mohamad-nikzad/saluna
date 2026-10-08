@@ -147,6 +147,16 @@ It does not alter the CMS publication workflow or write a second redirect
 history. This prevents cached aliases from keeping withdrawn or deleted
 articles reachable. CMS outages return 500 rather than a stale redirect.
 
+If a former slug is reused by another published Blog Article or Product Guide,
+the current published entry owns that address. A native early alias is bypassed
+using Astro's supported rewrite into the guarded
+`/_emdash/saluna-public-content/{section}/{slug}` render route. Only a
+server-local published-source marker admits that route; direct requests return 404. It rereads published content and uses the existing public layout and
+canonical URL, so internal URLs never enter discovery. The route is registered
+through Astro's integration API because file routing ignores underscore
+directories. EmDash 1.1.0 excludes its namespace from aliases; retain this
+production lifecycle check when upgrading. CMS rules remain unchanged.
+
 Production starts through `apps/web/server.mjs` (`pnpm --filter @repo/web start`
 or the Docker image). It retains the Node adapter's server and static handler,
 and applies the existing non-blog slash redirects before static serving.

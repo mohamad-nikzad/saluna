@@ -1,0 +1,25 @@
+---
+export const prerender = false
+import BlogArticleLayout from '@/layouts/BlogArticleLayout.astro'
+import ProductGuideLayout from '@/layouts/ProductGuideLayout.astro'
+import { readPublicBlogArticle, readPublicGuide } from '@/lib/public-content'
+
+// EmDash excludes its namespace from aliases. Only the server's published
+// source check may enter this render route; direct HTTP requests stay private.
+const source = Astro.locals.publicContentRewrite
+if (
+  !source ||
+  source.section !== Astro.params.section ||
+  source.slug !== Astro.params.slug
+)
+  return new Response('محتوا یافت نشد.', { status: 404 })
+const article =
+  source.section === 'blog' ? await readPublicBlogArticle(source.slug) : null
+const guide =
+  source.section === 'guides' ? await readPublicGuide(source.slug) : null
+if (!article && !guide) return new Response('محتوا یافت نشد.', { status: 404 })
+const publicOrigin = Astro.site ?? Astro.url.origin
+---
+
+{article && <BlogArticleLayout article={article} publicOrigin={publicOrigin} />}
+{guide && <ProductGuideLayout guide={guide} publicOrigin={publicOrigin} />}

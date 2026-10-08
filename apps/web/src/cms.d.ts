@@ -6,6 +6,7 @@ declare global {
     interface Locals {
       emdash: EmDashHandlers
       user?: User
+      publicContentRewrite?: { section: 'blog' | 'guides'; slug: string }
     }
   }
 }

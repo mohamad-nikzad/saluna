@@ -51,6 +51,22 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   integrations: [
     react(),
+    {
+      // File routing ignores underscore directories. Register the guarded
+      // alias-free render path through Astro's supported integration API.
+      name: 'saluna-published-content',
+      hooks: {
+        'astro:config:setup': ({ injectRoute }) => {
+          injectRoute({
+            pattern: '/_emdash/saluna-public-content/[section]/[slug]',
+            entrypoint: fileURLToPath(
+              new URL('./src/cms/PublishedContent.astro', import.meta.url),
+            ),
+            prerender: false,
+          })
+        },
+      },
+    },
     emdash({
       // Editing stays in the dashboard. The injected public toolbar's inline
       // CSS and session script are incompatible with the site's strict CSP.

@@ -71,19 +71,41 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const match = canonical.match(/^\/(blog|guides)\/([^/]+)$/)
     const destination =
       !preview && match ? await contentRedirect(canonical) : undefined
-    if (destination !== undefined) {
+    const published =
+      !preview &&
+      match &&
+      (destination !== undefined ||
+        (response.status >= 300 && response.status < 400) ||
+        pathname.endsWith('/'))
+        ? await (
+            match[1] === 'guides' ? readPublicGuide : readPublicBlogArticle
+          )(decodeURIComponent(match[2]))
+        : null
+    if (published && match) {
+      const slug = encodeURIComponent(published.slug)
+      if (pathname.endsWith('/')) {
+        response = context.redirect(
+          `/${match[1]}/${slug}${context.url.search}`,
+          301,
+        )
+      } else {
+        // A freed slug can belong to new published content while the native
+        // alias still redirects before rendering. Astro's supported rewrite
+        // avoids that alias without retiring rules on an anonymous GET.
+        context.locals.publicContentRewrite = {
+          section: match[1] as 'blog' | 'guides',
+          slug: published.slug,
+        }
+        response = await context.rewrite(
+          `/_emdash/saluna-public-content/${match[1]}/${slug}`,
+        )
+      }
+    } else if (destination !== undefined) {
       response = destination
         ? context.redirect(destination + context.url.search, 301)
         : new Response('محتوا یافت نشد.', { status: 404 })
     } else if (!preview && pathname.endsWith('/')) {
-      if (
-        canonical === '/blog' ||
-        canonical === '/guides' ||
-        (match &&
-          (await (
-            match[1] === 'guides' ? readPublicGuide : readPublicBlogArticle
-          )(decodeURIComponent(match[2]))))
-      ) {
+      if (canonical === '/blog' || canonical === '/guides') {
         response = context.redirect(canonical + context.url.search, 301)
       }
     }
