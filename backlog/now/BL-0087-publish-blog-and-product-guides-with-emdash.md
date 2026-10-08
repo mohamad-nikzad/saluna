@@ -73,7 +73,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 
 ### Later Product Guides
 
-- [ ] Product Guides have their own content type and public template, with ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer.
+- [x] Product Guides have their own content type and public template, with ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer.
 - [ ] An authorized nontechnical editor can draft, preview, publish, revise, and unpublish a Persian Product Guide without a code change or Saluna deployment, including a real-editor trial of screenshot upload and video placement.
 - [ ] Public `/guides/` index and individual pages use Saluna's Persian RTL design, appear in navigation and discoverable sitemaps, and have appropriate metadata. At least one manager PWA screen links to its relevant Product Guide.
 
@@ -107,7 +107,7 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                  | BL-0096    |
 | [BL-0098 Enable agent Blog Article drafting](../done/BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
 | [BL-0099 Deliver three initial Blog Article drafts](../done/BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
-| [BL-0100 Publish Product Guides](../ready/BL-0100-publish-product-guides.md)                                                      | BL-0096    |
+| [BL-0100 Publish Product Guides](../done/BL-0100-publish-product-guides.md)                                                       | BL-0096    |
 | [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                | BL-0100    |
 | [BL-0102 Prove one Grok drafting run](../ready/BL-0102-prove-one-grok-drafting-run.md)                                            | BL-0098    |
 | [BL-0103 Enable daily Grok drafting](../ready/BL-0103-enable-daily-grok-drafting.md)                                              | BL-0102    |
@@ -115,6 +115,8 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 
 ## Further Notes
+
+- On 2026-10-08, BL-0100 was independently verified at merge `a4a17a45957e8ca3f74577ac3eeb8fcfe4a152ae`, with the Blog Article field-label correction `83f82960c9cab61a93099e8dfaac477988561908`. Separate native Product Guides, shared public rendering/privacy/metadata/discovery, and the published local Client guide passed. Its five ordered steps and three current-PWA demo screenshots match the source. Product staff maintenance is documented. Manager links and the user's guide trial remain BL-0101 work.
 
 - On 2026-10-08, BL-0099 was independently verified at integration merge `947a191bb74bac376106bb10b3cc7b07ba38a516`. All three original Persian first-batch drafts are saved and unpublished on the Mac copy, with current-product sources, readable commission examples and authenticated previews. Native saved records match their editorial sources; renewal preserves IDs and editor content. Private links will be renewed at the final human handoff. Product Guides and Grok continue separately.
 
