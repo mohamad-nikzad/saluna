@@ -19,7 +19,7 @@ export async function technicalSession(
     'http://localhost:3301',
     'Use only the retained isolated CMS',
   )
-  assert(['editor', 'operator'].includes(role))
+  assert(['author', 'editor', 'operator'].includes(role))
   const state = await readPrivateJson(statePath)
   const browser = await chromium.launch({
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
@@ -74,7 +74,11 @@ export async function technicalSession(
     )
     await api('auth/passkey/verify', { credential })
     const identity = await api('auth/me')
-    assert(role === 'editor' ? identity.role === 40 : identity.role >= 50)
+    assert(
+      role === 'operator'
+        ? identity.role >= 50
+        : identity.role === { author: 30, editor: 40 }[role],
+    )
     return {
       page,
       api,

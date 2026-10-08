@@ -1,0 +1,73 @@
+{
+  "createdOn": "2026-10-08",
+  "verifiedOn": "2026-10-08",
+  "bot": "Saluna Content Studio",
+  "privateSkill": "saluna-writing",
+  "id": "01M4D50D3J7W063DGAFEZ9R2YH",
+  "slug": "salon-hours-staff-schedule-closures",
+  "locale": "en",
+  "status": "draft",
+  "unscheduled": true,
+  "liveRevision": false,
+  "version": 3,
+  "draftRevisionId": "01M4DR7ASJV686YP65QZCBQ2QE",
+  "mediaId": "01M4D515KEQF2A0XY82P88WHW7",
+  "sourceCommit": "d06838bbfa99d178354db402162773c13fff455f",
+  "sources": [
+    {
+      "path": "GLOSSARY.md",
+      "sha256": "a4f24f4dd660e5944fce83b2e97f2bdcb852086421ec6b6fb7df533d75c6d3e1"
+    },
+    {
+      "path": "apps/web/cms/seed.json",
+      "sha256": "42b4cd48a2e524e914476704af57380cda1b3b252d00000b0d1c345e9ee6de51"
+    },
+    {
+      "path": "apps/web/src/content/landing.ts",
+      "sha256": "bdc70f53b7ed979cc99a225bc48dc0ee78e6ec3ebfff48e1073d812e9316e7c6"
+    },
+    {
+      "path": "apps/pwa/src/components/staff/staff-schedule-drawer.tsx",
+      "sha256": "ca6fa8c7fa3b9c37e649a02fecd90d51626c8a99a4da0bbe5f80156a9c07da93"
+    },
+    {
+      "path": "packages/salon-core/src/staff-availability.ts",
+      "sha256": "c0e489d25321df27777b497c2f1c313441d916a1d9a06ef871fed3fb633d7170"
+    },
+    {
+      "path": "docs/adr/0004-salon-level-working-days.md",
+      "sha256": "4b39931c78673339026f1aa0fcc6657aacb36acf29bb18c770ecf7325338730a"
+    },
+    {
+      "path": "docs/adr/0015-salon-closure-dates-override-recurring-availability.md",
+      "sha256": "c6cbf23cab1f6f51c66e5f9d97d489b3e317df212183437490ab318f542c04b3"
+    },
+    {
+      "path": "docs/adr/0039-appointment-staff-assignments-are-sole-roster.md",
+      "sha256": "705dab3e0e337d86d7256303e3f6e2884fbd98a3b9fdc8f5af59a277e3fb2487"
+    },
+    {
+      "path": "packages/database/src/internal/appointment-availability.ts",
+      "sha256": "1d30d75744652e29d5f08851c485bf1fa26666d8ce3e1b9897dd61899f9b16c1"
+    },
+    {
+      "path": "packages/database/src/internal/salon-closure-queries.ts",
+      "sha256": "94f60a8e22b4aa8a4226679f698ad21f85eb32e1a490aa4e72d86b7bc26cf2b1"
+    },
+    {
+      "path": "apps/api/src/routes/staff.ts",
+      "sha256": "4f107de1d09bbb6bfdf9c6b56bb72276c54f1e134517e09356dc08ba21cf9898"
+    },
+    {
+      "path": "apps/pwa/src/routes/_authed/staff.$id.tsx",
+      "sha256": "3308d4673d476476877ce41525fbccd4635f5aa4fe1309ea19121cf25f8ab69e"
+    },
+    {
+      "path": "packages/database/src/internal/appointment-request-queries.ts",
+      "sha256": "f6a438f313663d5cfc089637701fce1e6372272fe3b0a579bb2857d514595277"
+    }
+  ],
+  "preview": "Signed URL remains in protected local output and intended private Studio conversation; renew by saved ID. Native session required.",
+  "humanTrial": "pending end-of-work trial",
+  "dailyRoutine": "not configured"
+}

@@ -1,0 +1,37 @@
+{
+  "common": [
+    "GLOSSARY.md",
+    "apps/web/cms/seed.json",
+    "apps/web/src/content/landing.ts"
+  ],
+  "subjects": {
+    "staff-scheduling": [
+      "apps/pwa/src/components/staff/staff-schedule-drawer.tsx",
+      "packages/salon-core/src/staff-availability.ts",
+      "docs/adr/0004-salon-level-working-days.md",
+      "docs/adr/0015-salon-closure-dates-override-recurring-availability.md",
+      "docs/adr/0039-appointment-staff-assignments-are-sole-roster.md",
+      "packages/database/src/internal/appointment-availability.ts",
+      "packages/database/src/internal/salon-closure-queries.ts",
+      "apps/api/src/routes/staff.ts",
+      "apps/pwa/src/routes/_authed/staff.$id.tsx",
+      "packages/database/src/internal/appointment-request-queries.ts"
+    ],
+    "staff-commission": [
+      "packages/salon-core/src/commissions.ts",
+      "packages/database/src/internal/commission-queries.ts",
+      "packages/database/src/internal/appointment-commission-basis.ts"
+    ],
+    "appointment-requests": [
+      "packages/salon-core/src/appointment-request-timing.ts",
+      "docs/adr/0001-appointment-request-as-distinct-aggregate.md",
+      "docs/adr/0014-appointment-request-supports-customer-and-manager-origins.md"
+    ],
+    "client-records": [
+      "apps/pwa/src/components/clients/client-drawer.tsx",
+      "packages/salon-core/src/forms/client.ts",
+      "docs/adr/0016-client-birth-date-is-complete-optional-jalali-date.md",
+      "docs/adr/0005-android-contact-picker-for-client-import.md"
+    ]
+  }
+}
