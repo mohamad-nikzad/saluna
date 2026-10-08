@@ -139,6 +139,18 @@ try {
   ).toBeVisible()
   await expect(guidePage.locator('article ol li')).toHaveCount(5)
   await expect(guidePage.locator('article img')).toHaveCount(3)
+  for (const image of await guidePage.locator('article img').all()) {
+    await image.scrollIntoViewIfNeeded()
+    await expect
+      .poll(
+        () =>
+          image.evaluate(
+            (element) => element.complete && element.naturalWidth > 0,
+          ),
+        { timeout: 15000 },
+      )
+      .toBe(true)
+  }
   assert.deepEqual(
     await page.context().cookies('http://localhost:3301'),
     [],
