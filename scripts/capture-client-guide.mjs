@@ -114,6 +114,43 @@ try {
     page.getByRole('heading', { name: 'مشتریان', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /مشتری جدید/ })).toBeVisible()
+  const guideLink = page.getByRole('link', {
+    name: 'راهنمای افزودن مشتری',
+    exact: true,
+  })
+  await expect(guideLink).toBeVisible({ timeout: 5000 })
+  await expect(guideLink).toHaveAttribute(
+    'href',
+    'http://localhost:3301/guides/create-client',
+  )
+  const [guidePage] = await Promise.all([
+    page.context().waitForEvent('page'),
+    guideLink.click(),
+  ])
+  await guidePage.waitForLoadState('domcontentloaded')
+  await expect(guidePage).toHaveURL(
+    'http://localhost:3301/guides/create-client',
+  )
+  await expect(
+    guidePage.getByRole('heading', {
+      name: 'افزودن مشتری در سالونا',
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(guidePage.locator('article ol li')).toHaveCount(5)
+  await expect(guidePage.locator('article img')).toHaveCount(3)
+  assert.deepEqual(
+    await page.context().cookies('http://localhost:3301'),
+    [],
+    'Guide is read without a CMS or product login cookie',
+  )
+  await guidePage.screenshot({
+    path: resolve(output, 'guide-destination.png'),
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await guidePage.close()
+  await expect(page).toHaveURL('http://127.0.0.1:3304/clients')
   const debug = page.getByRole('button', {
     name: 'Open TanStack Devtools',
     exact: true,
@@ -168,14 +205,24 @@ try {
           'clients-screen.png',
           'client-form.png',
           'client-saved.png',
+          'guide-destination.png',
         ],
         createAndSearch: 'passed',
+        guideLink: {
+          label: 'راهنمای افزودن مشتری',
+          destination: 'http://localhost:3301/guides/create-client',
+          anonymous: true,
+          orderedSteps: 5,
+          screenshots: 3,
+        },
       },
       null,
       2,
     ),
   )
-  console.log('PASS isolated manager Client creation and screenshots')
+  console.log(
+    'PASS isolated manager guide link, anonymous destination, Client creation and search',
+  )
 } finally {
   await browser?.close()
   await server.close()
