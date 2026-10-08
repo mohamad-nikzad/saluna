@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-08 (BL-0087 implementation ongoing; BL-0092 through BL-0096, BL-0098 through BL-0100 and BL-0102 verified complete; BL-0097 and BL-0101 technical work verified, human trials pending)
+Last organized: 2026-10-09 (BL-0087 code and final review fixes verified; nine subtasks complete; BL-0097 and BL-0101 await human trials; BL-0103 technical runner verified, actual scheduled delivery pending)
 
 ## Now
 
@@ -16,7 +16,7 @@ Last organized: 2026-10-08 (BL-0087 implementation ongoing; BL-0092 through BL-0
   - [BL-0100 Publish Product Guides](done/BL-0100-publish-product-guides.md)
   - [BL-0101 Connect manager screens to Product Guides](ready/BL-0101-connect-manager-screens-to-product-guides.md) (ready-for-human; manager link verified, human guide trial pending)
   - [BL-0102 Prove one Grok drafting run](done/BL-0102-prove-one-grok-drafting-run.md)
-  - [BL-0103 Enable daily Grok drafting](ready/BL-0103-enable-daily-grok-drafting.md)
+  - [BL-0103 Enable daily Grok drafting](ready/BL-0103-enable-daily-grok-drafting.md) (technical checks passed; scheduled delivery and Studio reporting pending)
 
 ## Ready
 
