@@ -81,10 +81,20 @@ creation requires name and phone; its duplicate-phone 409 does not invoke the
 contact-import picker. The guide tells readers to close/search/open the existing
 record after that error. Three original launch articles remain drafts.
 
+The manager Clients screen links to this guide through **راهنمای افزودن مشتری**
+in its header. The link opens a new tab using the PWA's configured public web
+origin, so the manager can keep the Client form and search on the original
+screen. Guide reading requires no product or CMS login. The current screen's
+name/phone form, manual duplicate-phone error and create/search behavior were
+checked against the guide on 2026-10-08. Product staff must check this link,
+written steps and screenshots whenever the Clients screen changes; the content
+editor maintains the published guide through native revisions.
+
 The three checked-in screenshots show the actual current manager components
 with browser-network demo responses at a dedicated 3306 origin, not an operational
 Salon database. `scripts/capture-client-guide.mjs` starts an isolated PWA on 3304,
 creates/searches the demo Client, captures a valid enabled form and saved list,
+follows the manager guide link to the published Mac guide on 3301 without a login,
 omits the development debug trigger, and closes browser/server on exit. It
 refuses PWA env files and unexpected API origins/routes. Run in a checkout with
 no PWA `.env*` files; never reuse the unrelated service on 3000:
@@ -122,5 +132,10 @@ BASE_URL=http://localhost:3301 node scripts/smoke-web.mjs
 
 The full smoke command also requires its configured Salon API. Focused retained
 CMS checks use exported `checkGuideDiscovery` and `checkProductGuide` from
-`scripts/smoke-blog.mjs`. The technical journey is complete; the user's actual
-guide editing trial and manager-screen link follow in BL-0101 at the end.
+`scripts/smoke-blog.mjs`. The manager-screen link and automated technical journey
+are complete. BL-0101's intended user's actual guide editing trial remains
+pending at the end. It must cover Persian writing, screenshot upload/placement,
+external video/transcript, preview, publication, revision and withdrawal. Record
+the user's observations and resolve unacceptable English UI, RTL, screenshot
+or video-placement behavior before guide rollout; automated tests do not stand
+in for that trial.

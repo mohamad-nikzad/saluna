@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Crown, Phone, Plus, Sparkles } from 'lucide-react'
+import { BookOpen, Crown, Phone, Plus, Sparkles } from 'lucide-react'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { Card } from '@repo/ui/card'
@@ -29,6 +29,7 @@ import {
   tagTone,
 } from '#/components/clients/client-visuals'
 import { ClientsSkeleton } from '#/components/clients/clients-skeleton'
+import { env } from '#/env'
 
 type FilterId = 'all' | 'vip' | 'followup'
 
@@ -91,6 +92,12 @@ function ClientsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const devicePickerSupported = isDeviceContactPickerSupported()
+  const publicOrigin =
+    env.webUrl ||
+    (typeof window === 'undefined'
+      ? ''
+      : window.location.origin.replace(/\/\/app\./, '//'))
+  const clientGuideUrl = `${publicOrigin.replace(/\/+$/, '')}/guides/create-client`
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterId>('all')
@@ -205,6 +212,15 @@ function ClientsPage() {
               </span>{' '}
               مشتری فعال
             </p>
+            <a
+              href={clientGuideUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-4"
+            >
+              <BookOpen className="size-3.5" aria-hidden="true" />
+              راهنمای افزودن مشتری
+            </a>
           </div>
           <Button
             variant="outline"
