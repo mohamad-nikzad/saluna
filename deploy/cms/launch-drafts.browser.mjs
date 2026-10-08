@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { chromium, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { technicalSession } from './technical-session.mjs'
 import {
   cmsDraftClient,
   readPrivateJson,
@@ -38,59 +39,10 @@ assert.equal(
   3,
 )
 const statePath = resolve(directory, 'browser-state.json')
-const state = await readPrivateJson(statePath)
-const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
-})
-let session, authenticatorId, page
+let session, page
 try {
-  page = await (await browser.newContext({ baseURL: base })).newPage()
-  await page.goto('/_emdash/api/setup/status')
-  session = await page.context().newCDPSession(page)
-  await session.send('WebAuthn.enable')
-  ;({ authenticatorId } = await session.send(
-    'WebAuthn.addVirtualAuthenticator',
-    {
-      options: {
-        protocol: 'ctap2',
-        transport: 'internal',
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        automaticPresenceSimulation: true,
-      },
-    },
-  ))
-  for (const credential of state.editor)
-    await session.send('WebAuthn.addCredential', {
-      authenticatorId,
-      credential,
-    })
-  const options = await page.request.post(
-    `${base}/_emdash/api/auth/passkey/options`,
-    { data: {}, headers: { 'X-EmDash-Request': '1' } },
-  )
-  assert.equal(options.status(), 200)
-  const credential = await page.evaluate(
-    async (options) =>
-      (
-        await navigator.credentials.get({
-          publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(options),
-        })
-      ).toJSON(),
-    (await options.json()).data.options,
-  )
-  assert.equal(
-    (
-      await page.request.post(`${base}/_emdash/api/auth/passkey/verify`, {
-        data: { credential },
-        headers: { 'X-EmDash-Request': '1' },
-      })
-    ).status(),
-    200,
-  )
-  const me = await page.request.get(`${base}/_emdash/api/auth/me`)
-  assert.equal((await me.json()).data.role, 40)
+  session = await technicalSession(statePath, 'editor')
+  page = session.page
   const probes = {
     'staff-commission': [
       '۲۴۰٬۰۰۰',
@@ -227,11 +179,5 @@ try {
       .replace(/ec_[A-Za-z0-9_-]+/g, '[redacted]'),
   )
 } finally {
-  if (session && authenticatorId) {
-    state.editor = (
-      await session.send('WebAuthn.getCredentials', { authenticatorId })
-    ).credentials
-    await writePrivateJson(statePath, state)
-  }
-  await browser.close()
+  await session?.close()
 }
