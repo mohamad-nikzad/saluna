@@ -75,7 +75,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 
 - [x] Product Guides have their own content type and public template, with ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer.
 - [ ] An authorized nontechnical editor can draft, preview, publish, revise, and unpublish a Persian Product Guide without a code change or Saluna deployment, including a real-editor trial of screenshot upload and video placement.
-- [ ] Public `/guides/` index and individual pages use Saluna's Persian RTL design, appear in navigation and discoverable sitemaps, and have appropriate metadata. At least one manager PWA screen links to its relevant Product Guide.
+- [x] Public `/guides/` index and individual pages use Saluna's Persian RTL design, appear in navigation and discoverable sitemaps, and have appropriate metadata. At least one manager PWA screen links to its relevant Product Guide.
 
 ### Later Grok drafting workflow
 
@@ -115,6 +115,8 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
 
 ## Further Notes
+
+- On 2026-10-08, BL-0101 technical manager linking was independently verified at merge `65519f4d3516281111be1d8e28f63fe1c476dbec`, with complete lazy-image capture verification in `fe897b3ef04eacfdb13b7ca7ec81fb7bace4b26e`. The Clients screen opens the correct anonymous guide while creation and search remain usable. BL-0101 remains ready-for-human for the user's end-of-work guide trial; Grok implementation continues.
 
 - On 2026-10-08, BL-0100 was independently verified at merge `a4a17a45957e8ca3f74577ac3eeb8fcfe4a152ae`, with the Blog Article field-label correction `83f82960c9cab61a93099e8dfaac477988561908`. Separate native Product Guides, shared public rendering/privacy/metadata/discovery, and the published local Client guide passed. Its five ordered steps and three current-PWA demo screenshots match the source. Product staff maintenance is documented. Manager links and the user's guide trial remain BL-0101 work.
 
