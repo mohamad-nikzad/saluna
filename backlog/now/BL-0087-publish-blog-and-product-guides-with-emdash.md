@@ -7,7 +7,7 @@ triage: ready-for-agent
 priority: medium
 size: large
 created: 2026-09-29
-updated: 2026-10-08
+updated: 2026-10-09
 ---
 
 ## Problem Statement
@@ -182,3 +182,7 @@ Historical interview record. Its separate-review requirement and three-published
 4. **Later work, independently scheduled.** Product Guides depend on the CMS foundation. Daily Grok draft generation depends on the Blog Article model and a working agent connection, and does not depend on Product Guides or any prior article's publication. Article-to-signup attribution is a separate follow-up. Reconfirm version-specific Grok connection details and choose the routine's run time when enabling it.
 
 Daily automated publication, reviewer-policy enforcement, a mandatory cover-image generation service, and a separate blog deployment are outside this plan. No implementation has started from this interview. Split the agreed sequence into backlog subtasks after the final shared-understanding confirmation, preserving this parent feature and its deferred Product Guide scope.
+
+## Continuation, 2026-10-09
+
+BL-0103 technical implementation is merged and independently verified. The actual Grok schedule is enabled for 09:00 `Asia/Tehran`, but scheduled draft creation and actual Studio reporting still need confirmation, so its completion criteria remain open. Final two-axis code review is underway. The intended editor's Blog Article and Product Guide trials remain at the end, as requested by the user.
