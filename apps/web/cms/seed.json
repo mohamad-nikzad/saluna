@@ -47,7 +47,7 @@
         },
         {
           "slug": "body",
-          "label": "مراحل و تصویرهای راهنما",
+          "label": "متن مقاله",
           "type": "portableText"
         },
         {
