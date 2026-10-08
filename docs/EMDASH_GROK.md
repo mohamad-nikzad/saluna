@@ -6,6 +6,9 @@ on the Mac, and the account's current local-execution and automatic review
 settings apply.
 This is separate from the intended editor's physical CMS trial.
 
+The [daily runner](EMDASH_DAILY.md) adds durable original-date delivery,
+concurrency/crash recovery and separate Studio report acknowledgement.
+
 The writing contract is [.agents/skills/saluna-writing/SKILL.md](../.agents/skills/saluna-writing/SKILL.md).
 Register its Markdown instructions through Grok's built-in skill tool in the
 authorized account's private library. Do not publish it to a public registry.

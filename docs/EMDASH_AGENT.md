@@ -51,7 +51,8 @@ Store credentials, request/result JSON, signed preview links, and passkey state
 outside Git in a directory with mode 0700. Credential and JSON files must have
 mode 0600. Pass file paths to the CLI, rather than tokens or content in shell
 arguments. Disable shell tracing and avoid browser traces containing sessions.
-Use one process per credential file. The client refreshes access tokens through
+The client serializes processes using the same credential file and reloads
+persisted rotations inside that lock. It refreshes access tokens through
 the native `oauth/token/refresh` endpoint before expiry and atomically saves the
 returned credentials. Native refresh revokes the preceding access token.
 Refresh tokens expire after 90 days in this release; a new device approval is

@@ -10,8 +10,13 @@ import {
   writePrivateJson,
   DRAFT_SCOPES,
 } from './cms-draft-client.mjs'
+import {
+  dailyDraftStatus,
+  deliverDailyDraft,
+  acknowledgeDailyReport,
+} from './daily-draft-delivery.mjs'
 
-const [configFile, action, input] = process.argv.slice(2)
+const [configFile, action, input, extra] = process.argv.slice(2)
 async function exchangeFile(directory, name) {
   if (
     !name ||
@@ -61,7 +66,14 @@ try {
       'utf8',
     ),
   )
-  if (action === 'sources') {
+  if (action === 'daily-instructions') {
+    console.log(
+      await readFile(
+        resolve(config.repository, 'content/blog-writing/daily-routine.md'),
+        'utf8',
+      ),
+    )
+  } else if (action === 'sources') {
     if (!sources.subjects[input]) throw new Error('CMS UNKNOWN_SUBJECT')
     const files = await Promise.all(
       [...sources.common, ...sources.subjects[input]].map(async (path) => {
@@ -83,6 +95,37 @@ try {
         files,
       }),
     )
+  } else if (action.startsWith('daily')) {
+    let result
+    if (action === 'daily-status')
+      result = await dailyDraftStatus(config, input)
+    else if (action === 'daily') {
+      const request = extra
+        ? await readPrivateJson(await exchangeFile(config.exchange, extra))
+        : undefined
+      if (request?.media)
+        request.media.path = await exchangeFile(
+          config.exchange,
+          request.media.image,
+        )
+      result = await deliverDailyDraft(config, input, request)
+    } else if (action === 'daily-revise') {
+      const request = await readPrivateJson(
+        await exchangeFile(config.exchange, extra),
+      )
+      result = await deliverDailyDraft(config, input, { patch: request.data })
+    } else if (action === 'daily-ack') {
+      const request = await readPrivateJson(
+        await exchangeFile(config.exchange, extra),
+      )
+      result = await acknowledgeDailyReport(
+        config,
+        input,
+        request.eventId,
+        request.receipt,
+      )
+    } else throw new Error('CMS UNKNOWN_ACTION')
+    console.log(JSON.stringify(result))
   } else {
     const client = await cmsDraftClient(config.credentials)
     const discovery = await client.connect()
@@ -104,6 +147,10 @@ try {
             'upload',
             'media',
             'preview',
+            'daily-status',
+            'daily',
+            'daily-revise',
+            'daily-ack',
           ],
           items: items.map(({ id, slug, status, locale, data }) => ({
             id,
@@ -124,10 +171,14 @@ try {
           await exchangeFile(config.exchange, input),
         )
         result = savedDraft(
-          await client.createDraft({
-            slug: request.slug,
-            data: articleFields(request.data, true),
-          }),
+          await client.createDraft(
+            {
+              slug: request.slug,
+              data: articleFields(request.data, true),
+            },
+            (saved) =>
+              writePrivateJson(resolve(config.results, 'created.json'), saved),
+          ),
         )
         await writePrivateJson(resolve(config.results, 'created.json'), result)
         break
@@ -151,10 +202,15 @@ try {
         )
         const path = await exchangeFile(config.exchange, request.image)
         if (!request.alt?.trim()) throw new Error('CMS IMAGE_ALT_REQUIRED')
-        result = await client.uploadImage(path, {
-          alt: request.alt,
-          caption: request.caption,
-        })
+        result = await client.uploadImage(
+          path,
+          {
+            alt: request.alt,
+            caption: request.caption,
+          },
+          (saved) =>
+            writePrivateJson(resolve(config.results, 'uploaded.json'), saved),
+        )
         await writePrivateJson(resolve(config.results, 'uploaded.json'), result)
         break
       }
@@ -192,10 +248,25 @@ try {
     console.log(JSON.stringify(result))
   }
 } catch (error) {
-  console.error(
-    /^CMS [A-Z0-9_:-]+$/.test(error.message)
-      ? error.message
-      : 'CMS STUDIO_CLIENT_ERROR',
-  )
-  process.exitCode = 1
+  if (action?.startsWith('daily')) {
+    console.log(
+      JSON.stringify({
+        date: input,
+        status: 'blocked',
+        creation: 'unknown',
+        code: /^CMS [A-Z0-9_:-]+$/.test(error.message)
+          ? error.message.slice(4)
+          : 'DAILY_STORAGE_OR_TRANSPORT_ERROR',
+        retry: 'operator handoff; never create replacement',
+      }),
+    )
+    process.exitCode = 1
+  } else {
+    console.error(
+      /^CMS [A-Z0-9_:-]+$/.test(error.message)
+        ? error.message
+        : 'CMS STUDIO_CLIENT_ERROR',
+    )
+    process.exitCode = 1
+  }
 }

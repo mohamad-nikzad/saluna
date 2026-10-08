@@ -1,6 +1,15 @@
-import { chmod, open, readFile, rename, stat, unlink } from 'node:fs/promises'
-import { basename, extname, resolve } from 'node:path'
+import {
+  chmod,
+  open,
+  readFile,
+  realpath,
+  rename,
+  stat,
+  unlink,
+} from 'node:fs/promises'
+import { basename, dirname, extname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { withProcessLock } from './process-lock.mjs'
 
 export const DRAFT_SCOPES = [
   'content:read',
@@ -51,6 +60,12 @@ export async function writePrivateJson(path, value) {
     }
     await rename(temporary, path)
     await chmod(path, 0o600)
+    const directory = await open(dirname(path), 'r')
+    try {
+      await directory.sync()
+    } finally {
+      await directory.close()
+    }
   } finally {
     await unlink(temporary).catch(() => {})
   }
@@ -58,9 +73,11 @@ export async function writePrivateJson(path, value) {
 
 /** Stateless native MCP plus the supported preview REST adjunct. Writes are
  * explicit unscheduled drafts; native Author permissions remain unchanged.
- * One process owns this credential file. No content mutation is retried.
+ * Processes serialize this credential file, reloading each native rotation.
+ * No content mutation is retried inside the client.
  */
 export async function cmsDraftClient(credentialFile) {
+  credentialFile = await realpath(credentialFile)
   let credentials = await readPrivateJson(credentialFile)
   const base = cmsOrigin(credentials.baseURL)
   if (
@@ -179,7 +196,7 @@ export async function cmsDraftClient(credentialFile) {
       throw new Error('CMS LOCALE_CHANGED')
     return current
   }
-  return {
+  const operations = {
     async connect() {
       await rpc('initialize', {
         protocolVersion: '2025-03-26',
@@ -206,7 +223,7 @@ export async function cmsDraftClient(credentialFile) {
       } while (cursor)
       return items
     },
-    async createDraft({ slug, data }) {
+    async createDraft({ slug, data }, onSaved = async () => {}) {
       if (!slug || !data?.title?.trim())
         throw new Error('CMS DRAFT_TITLE_SLUG_REQUIRED')
       const created = await tool('content_create', {
@@ -216,6 +233,8 @@ export async function cmsDraftClient(credentialFile) {
         locale: credentials.locale,
         status: 'draft',
       })
+      // Receipts must reach durable storage before a later read can fail.
+      await onSaved(created)
       return ownDraft(await getArticle(created.item.id))
     },
     getArticle,
@@ -231,7 +250,7 @@ export async function cmsDraftClient(credentialFile) {
       })
       return ownDraft(await getArticle(current.item.id))
     },
-    async uploadImage(path, metadata = {}) {
+    async uploadImage(path, metadata = {}, onSaved = async () => {}) {
       const contentType = {
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
@@ -248,6 +267,7 @@ export async function cmsDraftClient(credentialFile) {
         alt: metadata.alt,
         caption: metadata.caption,
       })
+      await onSaved(uploaded)
       const saved = await tool('media_get', { id: uploaded.item.id })
       return { ...saved, item: { ...saved.item, url: uploaded.item.url } }
     },
@@ -272,4 +292,15 @@ export async function cmsDraftClient(credentialFile) {
       return { ...result.data, url: url.href }
     },
   }
+  return Object.fromEntries(
+    Object.entries(operations).map(([name, operation]) => [
+      name,
+      (...args) =>
+        withProcessLock(`${credentialFile}.lock`, async () => {
+          // Another process may have refreshed and rotated this native grant.
+          credentials = await readPrivateJson(credentialFile)
+          return operation(...args)
+        }),
+    ]),
+  )
 }

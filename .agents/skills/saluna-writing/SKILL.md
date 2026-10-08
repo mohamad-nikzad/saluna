@@ -72,7 +72,8 @@ The dedicated identity is native Author 30 with exactly `content:read`,
 `content:write`, `media:read`, `media:write`. Do not add profile/admin scopes,
 access Salon operational data, alter Grok security settings, expose localhost,
 contact another Bot/person, or configure a schedule during a manual run.
-Run local commands sequentially; only one process may use the OAuth file.
+Run local commands sequentially. The shared client lock coordinates native
+OAuth refresh and persisted rotation across manual and daily processes.
 
 Use `create` with explicit slug and article data. Read the saved ID and fields,
 then `revise` that same ID using the freshly returned `_rev`. The wrapper sends
@@ -80,7 +81,7 @@ explicit `status: draft` and the site's effective locale `en` for Persian text.
 Revision must still be this identity's own plain unscheduled draft with no live
 revision. Never publish, schedule, withdraw, override locks or overwrite an
 editor's changes. After an ambiguous write, reconcile its saved ID rather than
-creating another article. Daily retry identity is owned by the later daily runner.
+creating another article. Daily retry identity is owned by the daily runner.
 
 For the manual connection proof, create one complete distinct draft, revise the
 same saved ID, upload/read/attach a media item, obtain `preview ID`, and verify
@@ -95,3 +96,15 @@ Return only the intended signed preview link there, from its protected output,
 never credentials. State explicitly that the article is unpublished and
 unscheduled. No separate reviewer, publication or waiting for earlier drafts is
 required. Report actual failure stage/code and saved/unknown state honestly.
+
+## Scheduled daily delivery
+
+Use `content/blog-writing/daily-routine.md` through `daily-instructions`. The
+configured daily wrapper owns the original Asia/Tehran date, frozen payload and
+media, native saved ID, source hashes, private preview verification and separate
+report acknowledgement. Inspect `daily-status DATE` before writing. Retry an
+existing date with `daily DATE` and no regenerated input. Never use manual
+creation to replace it. Deliver the actual result into this Studio conversation,
+then acknowledge its event only with the message tool's returned saved ID.
+Missing/corrupt storage, human changes or ambiguous creation require operator
+handoff. Routine success cannot imply publication or human review.
