@@ -1,17 +1,16 @@
-import { and, asc, eq, isNotNull, isNull, ne } from 'drizzle-orm'
+import { and, asc, eq, isNotNull, isNull, ne, or } from 'drizzle-orm'
 import { getDb } from './client'
 import {
   member,
-  appointmentRequests,
   salonMember,
   staffProfiles,
+  staffProfileAccesses,
   staffSchedules,
   staffServices,
   user,
   organization,
   salonProfile,
 } from './schema'
-import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type SetupStaffScheduleInput = {
   dayOfWeek: number
@@ -272,37 +271,40 @@ export async function claimStaffProfile(input: {
     if (decision.status !== 'candidate') return decision
     const { profile, sourceProfile } = decision
 
+    const [activeAccess] = await tx
+      .select()
+      .from(staffProfileAccesses)
+      .where(
+        and(
+          isNull(staffProfileAccesses.revokedAt),
+          or(
+            eq(staffProfileAccesses.staffProfileId, profile.id),
+            and(
+              eq(staffProfileAccesses.salonId, profile.salonId),
+              eq(staffProfileAccesses.userId, input.userId),
+            ),
+          ),
+        ),
+      )
+      .for('update')
+    if (
+      activeAccess &&
+      (activeAccess.staffProfileId !== profile.id ||
+        activeAccess.userId !== input.userId)
+    ) {
+      return { status: 'rejected', reason: 'already_claimed' }
+    }
+
     if (sourceProfile) {
       await tx
-        .update(staffSchedules)
-        .set({ staffId: sourceProfile.id, updatedAt: new Date() })
+        .update(staffProfileAccesses)
+        .set({ revokedAt: new Date(), updatedAt: new Date() })
         .where(
           and(
-            eq(staffSchedules.salonId, sourceProfile.salonId),
-            eq(staffSchedules.staffId, input.userId),
-          ),
-        )
-      await tx
-        .update(staffServices)
-        .set({ staffUserId: sourceProfile.id })
-        .where(
-          and(
-            eq(staffServices.salonId, sourceProfile.salonId),
-            eq(staffServices.staffUserId, input.userId),
-          ),
-        )
-      await remapAppointmentAssignmentStaff(tx, {
-        salonId: sourceProfile.salonId,
-        fromStaffId: input.userId,
-        toStaffId: sourceProfile.id,
-      })
-      await tx
-        .update(appointmentRequests)
-        .set({ staffId: sourceProfile.id, updatedAt: new Date() })
-        .where(
-          and(
-            eq(appointmentRequests.salonId, sourceProfile.salonId),
-            eq(appointmentRequests.staffId, input.userId),
+            eq(staffProfileAccesses.salonId, sourceProfile.salonId),
+            eq(staffProfileAccesses.staffProfileId, sourceProfile.id),
+            eq(staffProfileAccesses.userId, input.userId),
+            isNull(staffProfileAccesses.revokedAt),
           ),
         )
       await tx
@@ -379,27 +381,14 @@ export async function claimStaffProfile(input: {
         },
       })
 
-    // Preserve compatibility with existing manager-created staff by switching
-    // operational references to the verified identity in the same transaction.
-    await Promise.all([
-      tx
-        .update(staffSchedules)
-        .set({ staffId: input.userId, updatedAt: new Date() })
-        .where(eq(staffSchedules.staffId, profile.id)),
-      tx
-        .update(staffServices)
-        .set({ staffUserId: input.userId })
-        .where(eq(staffServices.staffUserId, profile.id)),
-      remapAppointmentAssignmentStaff(tx, {
+    if (!activeAccess) {
+      await tx.insert(staffProfileAccesses).values({
         salonId: profile.salonId,
-        fromStaffId: profile.id,
-        toStaffId: input.userId,
-      }),
-      tx
-        .update(appointmentRequests)
-        .set({ staffId: input.userId, updatedAt: new Date() })
-        .where(eq(appointmentRequests.staffId, profile.id)),
-    ])
+        staffProfileId: profile.id,
+        userId: input.userId,
+        acceptedAt: new Date(),
+      })
+    }
 
     return {
       status: 'claimed',

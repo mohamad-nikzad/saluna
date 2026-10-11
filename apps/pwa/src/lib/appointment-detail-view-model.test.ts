@@ -235,7 +235,7 @@ describe('buildAppointmentDetailEditViewModel', () => {
     })
 
     expect(vm.editableServices).toEqual([inactive])
-    expect(vm.staffRoleOnly).toHaveLength(1)
+    expect(vm.schedulableStaff).toHaveLength(1)
   })
 })
 

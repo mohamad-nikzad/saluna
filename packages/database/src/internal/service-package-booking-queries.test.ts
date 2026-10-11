@@ -8,6 +8,7 @@ import {
   appointmentStaffAssignments,
   servicePackageBookings,
   servicePackageTasks,
+  staffProfiles,
 } from '../schema'
 import { createServicePackageBooking } from './service-package-booking-queries'
 
@@ -164,18 +165,23 @@ function setupDbMock() {
   mocks.getDb.mockReturnValue({
     transaction: mocks.transaction,
     select: () => ({
-      from: () => ({
-        where: () => ({
-          orderBy: async () =>
-            mocks.inserted
-              .filter((entry) => entry.table === appointmentStaffAssignments)
-              .flatMap((entry) =>
-                (entry.values as InsertValues).map((value, index) => ({
-                  id: `assignment-${value.appointmentId}-${index}`,
-                  ...value,
-                })),
-              ),
-        }),
+      from: (table: unknown) => ({
+        where: () =>
+          table === staffProfiles
+            ? mocks.getAllStaff()
+            : {
+                orderBy: async () =>
+                  mocks.inserted
+                    .filter(
+                      (entry) => entry.table === appointmentStaffAssignments,
+                    )
+                    .flatMap((entry) =>
+                      (entry.values as InsertValues).map((value, index) => ({
+                        id: `assignment-${value.appointmentId}-${index}`,
+                        ...value,
+                      })),
+                    ),
+              },
       }),
     }),
   })

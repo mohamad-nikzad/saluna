@@ -304,8 +304,7 @@ export async function getPublicAvailability(
     getAllStaff(salonId),
   ])
 
-  const activeStaff = allStaff.filter((member) => member.role === 'staff')
-  const eligibleStaff = eligibleStaffForService(activeStaff, service.id)
+  const eligibleStaff = eligibleStaffForService(allStaff, service.id)
   if (eligibleStaff.length === 0) {
     return emptyAvailability(
       params.mode,

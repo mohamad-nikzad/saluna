@@ -7,7 +7,6 @@ vi.mock('@repo/database/staff', () => ({
   cancelManagerStaffInvite: vi.fn(),
   resendManagerStaffInvite: vi.fn(),
   deactivateStaffMember: vi.fn(),
-  getUserById: vi.fn(),
   getUserWithServiceIds: vi.fn(),
   reactivateStaffProfile: vi.fn(),
   revokeStaffProfileAccess: vi.fn(),
@@ -335,7 +334,7 @@ describe('staff router', () => {
   })
 
   it('allows schedule config for pending invited Staff Profile', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'profile-1',
       salonId: 's1',
       role: 'staff',
@@ -367,7 +366,7 @@ describe('staff router', () => {
   })
 
   it('allows ServiceVariant capability config for pending invited Staff Profile', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValueOnce({
       id: 'profile-1',
       salonId: 's1',
       role: 'staff',
@@ -403,7 +402,7 @@ describe('staff router', () => {
   })
 
   it('200 on DELETE /:id soft deletes staff', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u2',
       salonId: 's1',
       role: 'staff',
@@ -419,7 +418,7 @@ describe('staff router', () => {
   })
 
   it('400 on DELETE current user', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u1',
       salonId: 's1',
       role: 'manager',
@@ -473,7 +472,7 @@ describe('staff router', () => {
   })
 
   it('404 on GET /:id/schedule when target not staff in salon', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue(undefined as never)
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue(undefined as never)
     const res = await app.request('/api/v1/staff/missing/schedule', {
       headers: authHeaders,
     })
@@ -482,7 +481,7 @@ describe('staff router', () => {
   })
 
   it('200 on GET /:id/schedule', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u2',
       salonId: 's1',
       role: 'staff',
@@ -504,7 +503,7 @@ describe('staff router', () => {
   })
 
   it('200 on PUT /:id/schedule', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u2',
       salonId: 's1',
       role: 'staff',
@@ -532,7 +531,7 @@ describe('staff router', () => {
   })
 
   it('404 on PATCH /:id/services missing user', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue(undefined as never)
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue(undefined as never)
     const res = await app.request('/api/v1/staff/missing/services', {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
@@ -542,8 +541,8 @@ describe('staff router', () => {
     expect(await res.json()).toEqual({ error: 'کاربر یافت نشد' })
   })
 
-  it('400 on PATCH /:id/services for manager target', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+  it('allows ServiceVariant capabilities for a manager Staff Profile', async () => {
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u3',
       salonId: 's1',
       role: 'manager',
@@ -553,14 +552,12 @@ describe('staff router', () => {
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ serviceIds: ['s1'] }),
     })
-    expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({
-      error: 'فقط برای اعضای با نقش «پرسنل» می‌توان خدمات تعیین کرد.',
-    })
+    expect(res.status).toBe(200)
+    expect(db.setStaffServiceIds).toHaveBeenCalledWith('u3', ['s1'], 's1')
   })
 
   it('400 on PATCH /:id/services with invalid service ids', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValue({
       id: 'u2',
       salonId: 's1',
       role: 'staff',
@@ -578,7 +575,7 @@ describe('staff router', () => {
   })
 
   it('200 on PATCH /:id/services', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValueOnce({
       id: 'u2',
       salonId: 's1',
       role: 'staff',
@@ -601,7 +598,7 @@ describe('staff router', () => {
   })
 
   it('200 on PATCH /:id/services with null clears assignments', async () => {
-    vi.mocked(db.getUserById).mockResolvedValue({
+    vi.mocked(db.getUserWithServiceIds).mockResolvedValueOnce({
       id: 'u2',
       salonId: 's1',
       role: 'staff',

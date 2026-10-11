@@ -601,7 +601,7 @@ export function ConvertDraftSheet({
   const today = salonTodayYmd()
   const remainingDates = draft.acceptableDates.filter((date) => date >= today)
   const capableStaff = eligibleStaffForService(
-    staff.filter((member) => member.role === 'staff'),
+    staff,
     draft.serviceId,
   )
   const bounds = TIME_PREFERENCE_BOUNDS[draft.timePreference]

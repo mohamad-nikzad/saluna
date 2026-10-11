@@ -37,6 +37,7 @@ export const staffUserSchema = z
   .object({
     id: z.string(),
     salonId: z.string(),
+    loginUserId: z.string().nullable().optional(),
     name: z.string(),
     fullName: z.string().optional(),
     nickname: z.string().nullable().optional(),

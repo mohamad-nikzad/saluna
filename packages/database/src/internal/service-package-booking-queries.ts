@@ -252,7 +252,6 @@ export async function createServicePackageBooking(
 
   const staffById = new Map(
     (await getAllStaff(input.salonId))
-      .filter((staff) => staff.role === 'staff')
       .map((staff) => [staff.id, staff]),
   )
 

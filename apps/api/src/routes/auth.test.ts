@@ -406,7 +406,7 @@ describe('auth /me shim', () => {
     expect(body.user.role).toBe('manager')
     expect(body.user.needsOnboarding).toBe(false)
     expect(body.user.onboardingCompleted).toBe(true)
-    expect(getUserWithServiceIds).toHaveBeenCalledWith('u1', 's1')
+    expect(getUserWithServiceIds).not.toHaveBeenCalled()
     expect(getManagerOnboardingFlags).toHaveBeenCalledWith('s1')
   })
 
@@ -494,7 +494,7 @@ describe('auth /me shim', () => {
         salonName: 'Salon A',
       },
     })
-    expect(getUserWithServiceIds).toHaveBeenCalledWith('u2', 'salon-a')
+    expect(getUserWithServiceIds).toHaveBeenCalledWith('profile-a', 'salon-a')
   })
 
   it('returns needs_salon_selection for multi-salon staff without a salon header', async () => {
@@ -583,7 +583,7 @@ describe('auth /me shim', () => {
         salonName: 'Salon B',
       },
     })
-    expect(getUserWithServiceIds).toHaveBeenCalledWith('u2', 'salon-b')
+    expect(getUserWithServiceIds).toHaveBeenCalledWith('profile-b', 'salon-b')
   })
 
   it('falls back to needs_salon_selection when the stored salon is no longer valid', async () => {
@@ -1178,6 +1178,13 @@ describe('OTP signup continuation routes', () => {
       slug: 'my-salon',
     } as never)
 
+    const db = getDb() as unknown as {
+      __setSelectResults: (rows: unknown[][]) => void
+    }
+    db.__setSelectResults([
+      [],
+      [{ phoneNumber: '09121234567', username: '09121234567' }],
+    ])
     const res = await app.request('/api/v1/auth/signup/workspace', {
       method: 'POST',
       headers: jsonHeaders(),

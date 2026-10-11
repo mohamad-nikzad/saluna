@@ -69,6 +69,20 @@ type NullablePreparedStaffRow = {
   [K in keyof PreparedStaffRow]: PreparedStaffRow[K] | null
 }
 
+/** Salon-owned identity used by operational records, including departed staff. */
+export function rowToStaffProfile(row: PreparedStaffRow): User {
+  return {
+    id: row.id,
+    salonId: row.salonId,
+    name: row.name,
+    fullName: row.name,
+    nickname: null,
+    phone: row.phone,
+    role: 'staff',
+    createdAt: row.createdAt,
+  }
+}
+
 export function rowToUser(row: StaffUserRow): User {
   const fullName = row.fullName.trim()
   const displayName = row.displayName?.trim() || null
@@ -224,16 +238,7 @@ export function attachAppointmentDetails(row: {
   const staff = row.staff?.salonId
     ? rowToUser(row.staff as StaffUserRow)
     : row.preparedStaff?.id
-      ? {
-          id: row.preparedStaff.id,
-          salonId: row.preparedStaff.salonId!,
-          name: row.preparedStaff.name!,
-          fullName: row.preparedStaff.name!,
-          nickname: null,
-          phone: row.preparedStaff.phone!,
-          role: 'staff' as const,
-          createdAt: row.preparedStaff.createdAt!,
-        }
+      ? rowToStaffProfile(row.preparedStaff as PreparedStaffRow)
       : null
   if (!staff) {
     throw new Error(`Appointment ${row.appointment.id} has no lead staff`)

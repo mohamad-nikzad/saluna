@@ -16,6 +16,7 @@ import {
   salonMember,
   salonProfile,
   staffProfileAccesses,
+  staffProfiles,
   user,
 } from '@repo/database/schema'
 import {
@@ -314,6 +315,19 @@ async function createWorkspaceSidecars(input: {
   managerName: string
 }) {
   await input.db.transaction(async (tx) => {
+    const [identity] = await tx
+      .select()
+      .from(user)
+      .where(eq(user.id, input.userId))
+      .limit(1)
+    if (!identity) throw new Error('workspace owner identity missing')
+    await tx.insert(staffProfiles).values({
+      salonId: input.orgId,
+      userId: input.userId,
+      name: input.managerName,
+      phone: identity.phoneNumber ?? identity.username ?? '',
+      claimedAt: new Date(),
+    })
     await tx.insert(salonProfile).values({ organizationId: input.orgId })
     await tx.insert(salonMember).values({
       userId: input.userId,
@@ -358,15 +372,17 @@ export const authRoute = new Hono<AppEnv>()
       (!requestedSalonId || requestedSalonId === manager.organizationId)
     ) {
       const role = mapRole(manager.role)
-      const userId = manager.userId
       const salonId = manager.organizationId
-      const user = await getUserWithServiceIds(userId, salonId)
-      if (!user) return error(c, 'وارد نشده‌اید', 401)
       const flags = await getManagerOnboardingFlags(salonId)
       return ok(c, {
         status: 'ready',
         user: {
-          ...user,
+          id: sessionUser.id,
+          salonId,
+          name: manager.name,
+          fullName: sessionUser.name,
+          phone: manager.username,
+          createdAt: sessionUser.createdAt,
           role,
           needsOnboarding: flags.needsOnboarding,
           onboardingCompleted: flags.onboardingCompleted,
@@ -448,12 +464,17 @@ export const authRoute = new Hono<AppEnv>()
           salons: salonOptions,
         })
       }
-      const user = await getUserWithServiceIds(sessionUser.id, selected.salonId)
+      const user = await getUserWithServiceIds(
+        selected.staffProfileId,
+        selected.salonId,
+      )
       if (!user) return error(c, 'وارد نشده‌اید', 401)
       return ok(c, {
         status: 'ready',
         user: {
           ...user,
+          id: sessionUser.id,
+          phone: sessionUser.phoneNumber ?? sessionUser.username ?? user.phone,
           role: 'staff' as const,
           salonName: selected.salonName,
           staffProfileId: selected.staffProfileId,
@@ -463,12 +484,14 @@ export const authRoute = new Hono<AppEnv>()
 
     // Sole accepted salon: enter directly even if the persisted header is stale.
     const sole = salonOptions[0]!
-    const user = await getUserWithServiceIds(sessionUser.id, sole.salonId)
+    const user = await getUserWithServiceIds(sole.staffProfileId, sole.salonId)
     if (!user) return error(c, 'وارد نشده‌اید', 401)
     return ok(c, {
       status: 'ready',
       user: {
         ...user,
+        id: sessionUser.id,
+        phone: sessionUser.phoneNumber ?? sessionUser.username ?? user.phone,
         role: 'staff' as const,
         salonName: sole.salonName,
         staffProfileId: sole.staffProfileId,
@@ -917,6 +940,13 @@ export const authRoute = new Hono<AppEnv>()
     }
 
     await db.transaction(async (tx) => {
+      await tx.insert(staffProfiles).values({
+        salonId: orgId,
+        userId,
+        name: managerName,
+        phone: managerPhone,
+        claimedAt: new Date(),
+      })
       await tx.insert(salonProfile).values({ organizationId: orgId })
       await tx.insert(salonMember).values({
         userId,

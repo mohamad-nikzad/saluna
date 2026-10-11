@@ -188,7 +188,7 @@ export function useAppointmentDetailDrawer({
     ],
   )
   const {
-    staffRoleOnly,
+    schedulableStaff,
     selectedEditService,
     addonOptions,
     previewDuration,
@@ -199,12 +199,12 @@ export function useAppointmentDetailDrawer({
   const serviceIdsWithStaff = useMemo(() => {
     const ids = new Set<string>()
     for (const service of editableServices) {
-      if (eligibleStaffForService(staffRoleOnly, service.id).length > 0) {
+      if (eligibleStaffForService(schedulableStaff, service.id).length > 0) {
         ids.add(service.id)
       }
     }
     return ids
-  }, [editableServices, staffRoleOnly])
+  }, [editableServices, schedulableStaff])
 
   useEffect(() => {
     setLocalClients(clients)
@@ -310,7 +310,7 @@ export function useAppointmentDetailDrawer({
     const next = resolveIntakeServiceChange({
       serviceId: id,
       staffId,
-      staffRoleOnly,
+      schedulableStaff,
       services,
     })
     setEditValue('serviceId', next.serviceId, {
@@ -370,7 +370,7 @@ export function useAppointmentDetailDrawer({
     const next = resolveIntakeStaffChange({
       staffId: id,
       serviceId,
-      staffRoleOnly,
+      schedulableStaff,
       services,
     })
     if (next.serviceId !== serviceId) {
@@ -451,7 +451,7 @@ export function useAppointmentDetailDrawer({
     const validationError = validateAppointmentIntakeSubmit({
       values,
       activeServices: editableServices,
-      staffRoleOnly,
+      schedulableStaff,
       serviceIdsWithStaff,
     })
     if (validationError) {
@@ -606,7 +606,7 @@ export function useAppointmentDetailDrawer({
     addonIds,
     finalPrice,
     priceEditable,
-    staffRoleOnly,
+    schedulableStaff,
     editableServices,
     selectedEditService,
     addonOptions,

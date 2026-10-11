@@ -23,7 +23,7 @@ export const STATUS_CHANGE_SEGMENTS = (
 ).map((key) => ({ key, label: APPOINTMENT_STATUS[key].label }))
 
 export function filterStaffRoleOnly(staff: User[]) {
-  return staff.filter((member) => member.role === 'staff')
+  return staff
 }
 
 export function historicalAddonsFromAppointment(
@@ -168,7 +168,7 @@ export function statusChangeFeedbackMessage({
 }
 
 export type AppointmentDetailEditViewModel = {
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   selectedEditService: Service | undefined
   addonOptions: ServiceAddon[]
   selectedAddons: ServiceAddon[]
@@ -194,7 +194,7 @@ export function buildAppointmentDetailEditViewModel({
   addonIds: string[]
   durationMinutes: number
 }): AppointmentDetailEditViewModel {
-  const staffRoleOnly = filterStaffRoleOnly(staff)
+  const schedulableStaff = filterStaffRoleOnly(staff)
   const selectedEditService = services.find(
     (service) => service.id === serviceId,
   )
@@ -215,7 +215,7 @@ export function buildAppointmentDetailEditViewModel({
   })
 
   return {
-    staffRoleOnly,
+    schedulableStaff,
     selectedEditService,
     addonOptions,
     selectedAddons,

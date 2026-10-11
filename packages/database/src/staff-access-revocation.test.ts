@@ -278,7 +278,7 @@ describe('Staff Access Revocation persistence', () => {
     seedActiveAccess()
   })
 
-  it('revoke keeps schedule, capabilities, appointments, and history; remaps future appointments to the Staff Profile', async () => {
+  it('revoke leaves operational references and history untouched', async () => {
     const result = await revokeStaffProfileAccess({
       salonId: 'salon-a',
       targetId: 'user-1',
@@ -304,19 +304,14 @@ describe('Staff Access Revocation persistence', () => {
     expect(opsFor('delete', appointments)).toHaveLength(0)
     expect(opsFor('delete', appointmentRequests)).toHaveLength(0)
 
-    // Operational refs move from login identity → Staff Profile id (not deleted).
-    expect(opsFor('update', staffSchedules)[0]?.set).toMatchObject({
-      staffId: 'profile-a',
-    })
-    expect(opsFor('update', staffServices)[0]?.set).toMatchObject({
-      staffUserId: 'profile-a',
-    })
-    expect(opsFor('update', appointmentStaffAssignments)[0]?.set).toMatchObject(
-      { staffId: 'profile-a' },
-    )
-    expect(opsFor('update', appointmentRequests)[0]?.set).toMatchObject({
-      staffId: 'profile-a',
-    })
+    for (const table of [
+      staffSchedules,
+      staffServices,
+      appointmentStaffAssignments,
+      appointmentRequests,
+    ]) {
+      expect(opsFor('update', table)).toHaveLength(0)
+    }
 
     // Membership is removed so the identity cannot re-enter the salon.
     expect(opsFor('delete', salonMember)).toHaveLength(1)
@@ -347,9 +342,7 @@ describe('Staff Access Revocation persistence', () => {
     expect(opsFor('delete', staffSchedules)).toHaveLength(0)
     expect(opsFor('delete', staffServices)).toHaveLength(0)
     expect(opsFor('delete', appointments)).toHaveLength(0)
-    expect(opsFor('update', appointmentStaffAssignments)[0]?.set).toMatchObject(
-      { staffId: 'profile-a' },
-    )
+    expect(opsFor('update', appointmentStaffAssignments)).toHaveLength(0)
   })
 
   it('deactivate sets access revokedAt while keeping profile, schedule, and capabilities', async () => {
@@ -381,11 +374,7 @@ describe('Staff Access Revocation persistence', () => {
     expect(opsFor('delete', staffProfiles)).toHaveLength(0)
     expect(opsFor('delete', staffSchedules)).toHaveLength(0)
     expect(opsFor('delete', staffServices)).toHaveLength(0)
-    expect(opsFor('update', staffSchedules)[0]?.set).toMatchObject({
-      staffId: 'profile-a',
-    })
-    expect(opsFor('update', staffServices)[0]?.set).toMatchObject({
-      staffUserId: 'profile-a',
-    })
+    expect(opsFor('update', staffSchedules)).toHaveLength(0)
+    expect(opsFor('update', staffServices)).toHaveLength(0)
   })
 })

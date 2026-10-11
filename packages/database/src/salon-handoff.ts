@@ -10,6 +10,7 @@ import {
   salonMember,
   salonOnboarding,
   salonProfile,
+  staffProfiles,
   salonPublicSettings,
   user,
 } from './schema'
@@ -268,6 +269,13 @@ export async function completeSalonHandoff(input: {
       active: true,
     })
     const now = new Date()
+    await tx.insert(staffProfiles).values({
+      salonId: claim.salonId,
+      userId: input.userId,
+      name: input.displayName,
+      phone: claim.userPhone ?? claim.username ?? '',
+      claimedAt: now,
+    })
     await tx
       .update(user)
       .set({ name: input.displayName, updatedAt: now })

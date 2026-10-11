@@ -44,7 +44,7 @@ function PriceForm({ priceEditable }: { priceEditable: boolean }) {
       addonIds={[]}
       finalPrice={125_000}
       priceEditable={priceEditable}
-      staffRoleOnly={[]}
+      schedulableStaff={[]}
       editableServices={[]}
       selectedEditService={undefined}
       addonOptions={[]}

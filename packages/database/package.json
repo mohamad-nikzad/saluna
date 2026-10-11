@@ -31,7 +31,8 @@
     "./auth-password": "./src/auth-password.ts",
     "./keys": "./src/keys.ts",
     "./seed/catalog-presets": "./src/seed/catalog-presets.ts",
-    "./schema": "./src/schema.ts"
+    "./schema": "./src/schema.ts",
+    "./staff-identity-repair": "./src/staff-identity-repair.ts"
   },
   "scripts": {
     "lint": "eslint .",

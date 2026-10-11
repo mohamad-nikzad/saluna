@@ -1,6 +1,6 @@
 {
   "name": "@repo/api",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "private": true,
   "main": "dist/index.cjs",
   "exports": {
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node ../../scripts/with-root-env.mjs tsx watch --include ../../packages/database/src --include ../../packages/notifications/src src/index.ts",
     "build": "tsc --project tsconfig.json --noEmit",
-    "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.cjs --sourcemap --log-level=warning && esbuild src/cli/migrate.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/migrate.cjs --sourcemap --log-level=warning && esbuild src/cli/seed-catalog-presets.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/seed-catalog-presets.cjs --sourcemap --log-level=warning",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.cjs --sourcemap --log-level=warning && esbuild src/cli/migrate.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/migrate.cjs --sourcemap --log-level=warning && esbuild src/cli/seed-catalog-presets.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/seed-catalog-presets.cjs --sourcemap --log-level=warning && esbuild src/cli/repair-staff-identities.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/repair-staff-identities.cjs --sourcemap --log-level=warning",
     "start": "node ../../scripts/with-root-env.mjs tsx src/index.ts",
     "start:prod": "NODE_ENV=production node dist/index.cjs",
     "lint": "eslint .",
@@ -20,7 +20,8 @@
     "boundaries": "eslint . --max-warnings=0",
     "expire-requests": "node ../../scripts/with-root-env.mjs tsx src/cli/expire-requests.ts",
     "sync-birthday-follow-ups": "node ../../scripts/with-root-env.mjs tsx src/cli/sync-birthday-follow-ups.ts",
-    "cli:messaging-set-webhook": "node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts"
+    "cli:messaging-set-webhook": "node ../../scripts/with-root-env.mjs tsx src/cli/messaging-set-webhook.ts",
+    "repair-staff-identities": "node ../../scripts/with-root-env.mjs tsx src/cli/repair-staff-identities.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

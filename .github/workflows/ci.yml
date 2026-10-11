@@ -55,6 +55,11 @@ jobs:
         env:
           RUN_DATABASE_INTEGRATION: '1'
 
+      - name: Staff identity API integration tests
+        run: pnpm --filter @repo/api exec vitest run src/routes/staff-appointment-identity.integration.test.ts
+        env:
+          RUN_DATABASE_INTEGRATION: '1'
+
   lint-typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 20

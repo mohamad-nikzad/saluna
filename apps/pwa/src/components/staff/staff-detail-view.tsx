@@ -47,13 +47,10 @@ export function StaffDetailView({
   onOpenServices,
   onDelete,
 }: StaffDetailViewProps) {
-  const isStaffRole = member.role === 'staff'
   const serviceCount = staffServiceCount(member, services)
-  const scheduleSummary = isStaffRole
-    ? getScheduleSummary(scheduleBundle.schedule, {
-        businessHours: scheduleBundle.businessHours,
-      })
-    : null
+  const scheduleSummary = getScheduleSummary(scheduleBundle.schedule, {
+    businessHours: scheduleBundle.businessHours,
+  })
   const workDaysCount = scheduleSummary?.workDaysCount ?? null
 
   return (
@@ -97,7 +94,7 @@ export function StaffDetailView({
             />
             <StaffReadonlyField
               label="شماره موبایل"
-              hint="برای ورود به اپ استفاده می‌شود"
+              hint="شماره تماس ثبت‌شده در این سالن"
               value={displayPhone(member.phone)}
               dir="ltr"
             />
@@ -107,21 +104,14 @@ export function StaffDetailView({
           </div>
         </StaffDetailSection>
 
-        {isStaffRole ? (
-          <>
-            <StaffSchedulePreview
-              member={member}
-              scheduleBundle={scheduleBundle}
-              services={services}
-              onOpenSchedule={() => onOpenSchedule(member)}
-              onOpenServices={() => onOpenServices(member)}
-            />
-            <ManagerStaffCommissionPanel
-              staffId={member.id}
-              services={services}
-            />
-          </>
-        ) : null}
+        <StaffSchedulePreview
+          member={member}
+          scheduleBundle={scheduleBundle}
+          services={services}
+          onOpenSchedule={() => onOpenSchedule(member)}
+          onOpenServices={() => onOpenServices(member)}
+        />
+        <ManagerStaffCommissionPanel staffId={member.id} services={services} />
 
         {!isSelf ? (
           <div className="px-[18px] pt-4">

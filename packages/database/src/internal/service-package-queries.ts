@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, ne, or } from 'drizzle-orm'
+import { and, asc, eq, inArray, ne } from 'drizzle-orm'
 import type {
   Service,
   ServicePackage,
@@ -11,8 +11,6 @@ import {
   servicePackageComponents,
   servicePackages,
   staffPackageCapabilities,
-  member,
-  salonMember,
   staffProfiles,
   services,
 } from '../schema'
@@ -464,44 +462,19 @@ export async function replaceServicePackageStaffCapabilities(
   if (!existing) throw new Error('service package not found')
 
   const db = getDb()
-  const memberRows =
-    staffIds.length === 0
-      ? []
-      : await db
-          .select({ id: member.userId })
-          .from(member)
-          .leftJoin(
-            salonMember,
-            and(
-              eq(salonMember.userId, member.userId),
-              eq(salonMember.organizationId, salonId),
-            ),
-          )
-          .where(
-            and(
-              eq(member.organizationId, salonId),
-              inArray(member.userId, staffIds),
-              or(isNull(salonMember.active), eq(salonMember.active, true)),
-            ),
-          )
-  const profileRows =
-    staffIds.length === 0
-      ? []
-      : await db
-          .select({ id: staffProfiles.id })
-          .from(staffProfiles)
-          .where(
-            and(
-              eq(staffProfiles.salonId, salonId),
-              inArray(staffProfiles.id, staffIds),
-              eq(staffProfiles.active, true),
-              isNull(staffProfiles.userId),
-            ),
-          )
-
+  const profiles = await db
+    .select({ id: staffProfiles.id })
+    .from(staffProfiles)
+    .where(
+      and(
+        eq(staffProfiles.salonId, salonId),
+        eq(staffProfiles.active, true),
+        inArray(staffProfiles.id, staffIds),
+      ),
+    )
   validatePackageStaffReplacement({
     staffIds,
-    foundStaffIds: [...memberRows, ...profileRows].map((row) => row.id),
+    foundStaffIds: profiles.map((row) => row.id),
   })
 
   await db.transaction(async (tx) => {

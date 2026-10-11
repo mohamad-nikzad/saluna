@@ -189,9 +189,7 @@ async function validateAssignedStaff(input: {
 
   const allStaff = await getAllStaff(input.salonId)
   const staffMembers = roster.map((row) =>
-    allStaff.find(
-      (candidate) => candidate.id === row.staffId && candidate.role === 'staff',
-    ),
+    allStaff.find((candidate) => candidate.id === row.staffId),
   )
   if (staffMembers.some((member) => !member)) {
     return fail(404, 'پرسنل یافت نشد')
@@ -279,7 +277,7 @@ async function validateReferences(input: {
   const staff = (await getAllStaff(input.salonId)).find(
     (candidate) => candidate.id === input.staffId,
   )
-  if (!staff || staff.salonId !== input.salonId || staff.role !== 'staff') {
+  if (!staff || staff.salonId !== input.salonId) {
     return fail(404, 'پرسنل یافت نشد')
   }
 

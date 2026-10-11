@@ -38,8 +38,7 @@ export function StaffListRowMenu({
   onCancelInvite,
   onDelete,
 }: StaffListRowMenuProps) {
-  const isSelf = member.id === currentUserId
-  const isStaffRole = member.role === 'staff'
+  const isSelf = (member.loginUserId ?? member.id) === currentUserId
   const isPendingInvite =
     member.inviteStatus === 'pending' || member.inviteStatus === 'expired'
 
@@ -68,28 +67,24 @@ export function StaffListRowMenu({
           ویرایش پروفایل
         </DropdownMenuItem>
 
-        {isStaffRole ? (
-          <>
-            <DropdownMenuItem
-              className="gap-2"
-              onSelect={() => {
-                onEditServices()
-              }}
-            >
-              <ListChecks className="h-4 w-4" />
-              خدمات قابل ارائه
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="gap-2"
-              onSelect={() => {
-                onEditSchedule()
-              }}
-            >
-              <Clock3 className="h-4 w-4" />
-              روزها و ساعات کاری
-            </DropdownMenuItem>
-          </>
-        ) : null}
+        <DropdownMenuItem
+          className="gap-2"
+          onSelect={() => {
+            onEditServices()
+          }}
+        >
+          <ListChecks className="h-4 w-4" />
+          خدمات قابل ارائه
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2"
+          onSelect={() => {
+            onEditSchedule()
+          }}
+        >
+          <Clock3 className="h-4 w-4" />
+          روزها و ساعات کاری
+        </DropdownMenuItem>
 
         {isPendingInvite && onResendInvite ? (
           <DropdownMenuItem

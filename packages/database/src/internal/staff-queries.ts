@@ -18,10 +18,9 @@ import {
   staffProfiles,
   staffSchedules,
   staffServices,
-  user,
 } from '../schema'
 import { deactivateStaffProfileWithAccessRevocation } from '../staff-access-revocation'
-import { rowToStaffSchedule, rowToUser, staffUserSelect } from './row-mappers'
+import { rowToStaffProfile, rowToStaffSchedule } from './row-mappers'
 import { getBusinessSettings } from './settings-queries'
 
 export type UpdateStaffInput = {
@@ -33,32 +32,23 @@ export type UpdateStaffInput = {
 
 export async function getAllStaff(salonId: string): Promise<User[]> {
   const db = getDb()
-  const joined = await db
-    .select(staffUserSelect)
-    .from(member)
-    .innerJoin(user, eq(member.userId, user.id))
+  const profiles = await db
+    .select({ profile: staffProfiles, memberRole: member.role })
+    .from(staffProfiles)
     .leftJoin(
-      salonMember,
+      member,
       and(
-        eq(salonMember.userId, user.id),
-        eq(salonMember.organizationId, salonId),
+        eq(member.userId, staffProfiles.userId),
+        eq(member.organizationId, salonId),
       ),
     )
     .where(
-      and(
-        eq(member.organizationId, salonId),
-        or(isNull(salonMember.active), eq(salonMember.active, true)),
-      ),
+      and(eq(staffProfiles.salonId, salonId), eq(staffProfiles.active, true)),
     )
-    .orderBy(asc(user.name))
-  const legacyRows = joined.map(rowToUser)
-  const preparedProfiles = (
-    await db
-      .select()
-      .from(staffProfiles)
-      .where(eq(staffProfiles.salonId, salonId))
-      .orderBy(asc(staffProfiles.name))
-  ).filter((row) => row.active && row.userId === null)
+    .orderBy(asc(staffProfiles.name))
+  const preparedProfiles = profiles
+    .filter(({ profile }) => profile.userId === null)
+    .map(({ profile }) => profile)
 
   const inviteStatuses = new Map(
     preparedProfiles.length === 0
@@ -90,20 +80,13 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
         ]),
   )
 
-  const preparedRows: User[] = preparedProfiles.map((row) => ({
-    id: row.id,
-    salonId: row.salonId,
-    name: row.name,
-    fullName: row.name,
-    nickname: null,
-    phone: row.phone,
-    role: 'staff' as const,
-    createdAt: row.createdAt,
-    inviteStatus: inviteStatuses.get(row.id) ?? null,
+  const rows: User[] = profiles.map(({ profile, memberRole }) => ({
+    ...rowToStaffProfile(profile),
+    loginUserId: profile.userId,
+    role:
+      memberRole === 'owner' || memberRole === 'admin' ? 'manager' : 'staff',
+    inviteStatus: inviteStatuses.get(profile.id) ?? null,
   }))
-  const rows = [...legacyRows, ...preparedRows].sort((a, b) =>
-    a.name.localeCompare(b.name, 'fa'),
-  )
   if (rows.length === 0) return []
 
   const ids = rows.map((r) => r.id)
@@ -137,115 +120,77 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
   })
 }
 
-function emailForUpdatedPhone(currentEmail: string, phone: string): string {
-  const domain = currentEmail.split('@')[1]?.trim()
-  return domain ? `${phone}@${domain}` : currentEmail
-}
-
 export async function updateStaffMember(
   salonId: string,
-  staffUserId: string,
+  staffId: string,
   input: UpdateStaffInput,
 ): Promise<User | undefined> {
   const db = getDb()
-  const rows = await db
-    .select({
-      userId: user.id,
-      email: user.email,
-      memberRole: member.role,
-    })
-    .from(member)
-    .innerJoin(user, eq(member.userId, user.id))
-    .where(
-      and(eq(member.organizationId, salonId), eq(member.userId, staffUserId)),
-    )
-    .limit(1)
-
-  const existing = rows[0]
+  const existing = await getUserWithServiceIds(staffId, salonId)
   if (!existing) return undefined
-
-  const nextRole =
-    input.role === 'manager'
-      ? existing.memberRole === 'owner'
-        ? 'owner'
-        : 'admin'
-      : 'member'
-  const displayName = input.nickname
-
+  if (input.role !== existing.role && !existing.loginUserId) return undefined
   await db.transaction(async (tx) => {
     await tx
-      .update(user)
+      .update(staffProfiles)
       .set({
-        name: input.name,
-        username: input.phone,
-        displayUsername: input.phone,
-        phoneNumber: input.phone,
-        phoneNumberVerified: true,
-        email: emailForUpdatedPhone(existing.email, input.phone),
+        name: input.nickname?.trim() || input.name,
+        phone: input.phone,
         updatedAt: new Date(),
       })
-      .where(eq(user.id, staffUserId))
-
-    await tx
-      .update(member)
-      .set({ role: nextRole })
       .where(
-        and(eq(member.organizationId, salonId), eq(member.userId, staffUserId)),
+        and(eq(staffProfiles.id, staffId), eq(staffProfiles.salonId, salonId)),
       )
-
-    await tx
-      .insert(salonMember)
-      .values({
-        userId: staffUserId,
-        organizationId: salonId,
-        displayName,
-        active: true,
-      })
-      .onConflictDoUpdate({
-        target: [salonMember.userId, salonMember.organizationId],
-        set: { displayName, active: true },
-      })
+    if (existing.loginUserId && input.role !== existing.role) {
+      await tx
+        .update(member)
+        .set({ role: input.role === 'manager' ? 'admin' : 'member' })
+        .where(
+          and(
+            eq(member.organizationId, salonId),
+            eq(member.userId, existing.loginUserId),
+          ),
+        )
+    }
   })
-
-  return getUserWithServiceIds(staffUserId, salonId)
+  return getUserWithServiceIds(staffId, salonId)
 }
 
 export async function deactivateStaffMember(
   salonId: string,
   staffUserId: string,
 ): Promise<boolean> {
+  const target = await getUserWithServiceIds(staffUserId, salonId)
+  if (!target) return false
+  if (target.role === 'manager' && target.loginUserId) {
+    await getDb().transaction(async (tx) => {
+      await tx
+        .update(staffProfiles)
+        .set({ active: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(staffProfiles.id, staffUserId),
+            eq(staffProfiles.salonId, salonId),
+          ),
+        )
+      await tx
+        .insert(salonMember)
+        .values({
+          userId: target.loginUserId!,
+          organizationId: salonId,
+          active: false,
+        })
+        .onConflictDoUpdate({
+          target: [salonMember.userId, salonMember.organizationId],
+          set: { active: false },
+        })
+    })
+    return true
+  }
   const result = await deactivateStaffProfileWithAccessRevocation({
     salonId,
     targetId: staffUserId,
   })
-  if (result.status === 'revoked') return true
-
-  // Legacy manager/owner members without a Staff Profile: soft-deactivate
-  // salon_member only (no Staff Profile Access to revoke).
-  const db = getDb()
-  const rows = await db
-    .select({ userId: member.userId })
-    .from(member)
-    .where(
-      and(eq(member.organizationId, salonId), eq(member.userId, staffUserId)),
-    )
-    .limit(1)
-
-  if (!rows[0]) return false
-
-  await db
-    .insert(salonMember)
-    .values({
-      userId: staffUserId,
-      organizationId: salonId,
-      active: false,
-    })
-    .onConflictDoUpdate({
-      target: [salonMember.userId, salonMember.organizationId],
-      set: { active: false },
-    })
-
-  return true
+  return result.status === 'revoked'
 }
 
 export async function countManagers(salonId: string): Promise<number> {
@@ -482,8 +427,7 @@ export async function getStaffBookingAvailabilityForSlot(
   startTime: string,
   endTime: string,
 ): Promise<Array<{ staffId: string; available: boolean; reason?: string }>> {
-  const everyone = await getAllStaff(salonId)
-  const staffMembers = everyone.filter((u) => u.role === 'staff')
+  const staffMembers = await getAllStaff(salonId)
   return Promise.all(
     staffMembers.map(async (u) => {
       const r = await checkStaffAvailabilityForAppointment(

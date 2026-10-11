@@ -50,7 +50,7 @@ export type AppointmentStatusActionState = {
 } | null
 
 export type AppointmentCreateViewModel = {
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   activeServices: Service[]
   selectedStaff: User | undefined
   selectedService: Service | undefined
@@ -83,12 +83,12 @@ export function calculatedAppointmentPrice(
 
 /** Service ids that have at least one eligible staff member. */
 export function serviceIdsWithStaffSet(
-  staffRoleOnly: User[],
+  schedulableStaff: User[],
   services: Service[],
 ): Set<string> {
   const ids = new Set<string>()
   for (const service of services) {
-    if (eligibleStaffForService(staffRoleOnly, service.id).length > 0) {
+    if (eligibleStaffForService(schedulableStaff, service.id).length > 0) {
       ids.add(service.id)
     }
   }
@@ -157,8 +157,8 @@ export function buildAppointmentCreateViewModel({
   staffSlotOk: Record<string, boolean>
 }): AppointmentCreateViewModel {
   const activeServices = services.filter((service) => service.active)
-  const staffRoleOnly = staff.filter((member) => member.role === 'staff')
-  const selectedStaff = staffRoleOnly.find((member) => member.id === staffId)
+  const schedulableStaff = staff
+  const selectedStaff = schedulableStaff.find((member) => member.id === staffId)
   const selectedService = activeServices.find(
     (service) => service.id === serviceId,
   )
@@ -174,7 +174,7 @@ export function buildAppointmentCreateViewModel({
   )
 
   const serviceIdsWithStaff = serviceIdsWithStaffSet(
-    staffRoleOnly,
+    schedulableStaff,
     activeServices,
   )
 
@@ -187,7 +187,7 @@ export function buildAppointmentCreateViewModel({
     : new Set<string>()
 
   const staffServiceCounts = new Map<string, number>()
-  for (const member of staffRoleOnly) {
+  for (const member of schedulableStaff) {
     staffServiceCounts.set(
       member.id,
       eligibleServicesForStaff(member, activeServices).length,
@@ -196,7 +196,7 @@ export function buildAppointmentCreateViewModel({
 
   const serviceIdsWithAvailableStaff = new Set<string>()
   for (const service of activeServices) {
-    const eligible = eligibleStaffForService(staffRoleOnly, service.id)
+    const eligible = eligibleStaffForService(schedulableStaff, service.id)
     if (eligible.some((member) => staffSlotOk[member.id] !== false)) {
       serviceIdsWithAvailableStaff.add(service.id)
     }
@@ -231,7 +231,7 @@ export function buildAppointmentCreateViewModel({
   }
 
   return {
-    staffRoleOnly,
+    schedulableStaff,
     activeServices,
     selectedStaff,
     selectedService,
@@ -298,16 +298,16 @@ export type IntakeServiceChangeResult = {
 export function resolveIntakeServiceChange({
   serviceId,
   staffId,
-  staffRoleOnly,
+  schedulableStaff,
   services,
 }: {
   serviceId: string
   staffId: string
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   services: Service[]
 }): IntakeServiceChangeResult {
   const svc = services.find((service) => service.id === serviceId)
-  const eligibleStaffMembers = eligibleStaffForService(staffRoleOnly, serviceId)
+  const eligibleStaffMembers = eligibleStaffForService(schedulableStaff, serviceId)
   const currentStillEligible =
     !!staffId && eligibleStaffMembers.some((member) => member.id === staffId)
 
@@ -336,15 +336,15 @@ export type IntakeStaffChangeResult = {
 export function resolveIntakeStaffChange({
   staffId,
   serviceId,
-  staffRoleOnly,
+  schedulableStaff,
   services,
 }: {
   staffId: string
   serviceId: string
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   services: Service[]
 }): IntakeStaffChangeResult {
-  const member = staffRoleOnly.find((item) => item.id === staffId)
+  const member = schedulableStaff.find((item) => item.id === staffId)
   if (!member) return { staffId, serviceId }
 
   const eligible = eligibleServicesForStaff(member, services)
@@ -460,7 +460,7 @@ export type AppointmentIntakeValidationError =
 export function validateAppointmentIntakeSubmit({
   values,
   activeServices,
-  staffRoleOnly,
+  schedulableStaff,
   serviceIdsWithStaff,
 }: {
   values: Pick<
@@ -473,13 +473,13 @@ export function validateAppointmentIntakeSubmit({
     | 'endTime'
   >
   activeServices: Service[]
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   serviceIdsWithStaff: Set<string>
 }): AppointmentIntakeValidationError | null {
   const currentService = activeServices.find(
     (service) => service.id === values.serviceId,
   )
-  const currentStaff = staffRoleOnly.find(
+  const currentStaff = schedulableStaff.find(
     (member) => member.id === values.staffId,
   )
 

@@ -9,7 +9,6 @@ import {
   deactivateStaffMember,
   getStaffBookingAvailabilityForSlot,
   getStaffSchedules,
-  getUserById,
   getUserWithServiceIds,
   reactivateStaffProfile,
   resendManagerStaffInvite,
@@ -229,11 +228,11 @@ export const staff = new Hono<AppEnv>()
       const { salonId, userId } = c.var.tenant
       const { id } = c.req.valid('param')
       const values = c.req.valid('json')
-      const target = await getUserById(id)
+      const target = await getUserWithServiceIds(id, salonId)
       if (!target || target.salonId !== salonId) {
         return error(c, 'کاربر یافت نشد', 404)
       }
-      if (id === userId && values.role === 'staff') {
+      if ((target.loginUserId ?? id) === userId && values.role === 'staff') {
         return error(
           c,
           'نقش حساب فعلی خودتان را نمی‌توانید به پرسنل تغییر دهید.',
@@ -266,7 +265,15 @@ export const staff = new Hono<AppEnv>()
     async (c) => {
       const { salonId, userId } = c.var.tenant
       const { id } = c.req.valid('param')
-      if (id === userId) {
+      const target = await getUserWithServiceIds(id, salonId)
+      if (!target) return error(c, 'پرسنل یافت نشد', 404)
+      if (target.role === 'manager')
+        return error(
+          c,
+          'دسترسی مدیر را نمی‌توان از طریق دعوت پرسنل لغو کرد',
+          400,
+        )
+      if ((target.loginUserId ?? id) === userId) {
         return error(c, 'دسترسی حساب فعلی خودتان را نمی‌توانید لغو کنید.', 400)
       }
 
@@ -339,11 +346,11 @@ export const staff = new Hono<AppEnv>()
     async (c) => {
       const { salonId, userId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const target = await getUserById(id)
+      const target = await getUserWithServiceIds(id, salonId)
       if (!target || target.salonId !== salonId) {
         return error(c, 'کاربر یافت نشد', 404)
       }
-      if (id === userId) {
+      if ((target.loginUserId ?? id) === userId) {
         return error(c, 'حساب فعلی خودتان را نمی‌توانید حذف کنید.', 400)
       }
       if (target.role === 'manager') {
@@ -387,8 +394,8 @@ export const staff = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const target = await getUserById(id)
-      if (!target || target.salonId !== salonId || target.role !== 'staff') {
+      const target = await getUserWithServiceIds(id, salonId)
+      if (!target || target.salonId !== salonId) {
         return error(c, 'پرسنل یافت نشد', 404)
       }
       const [schedule, businessHours] = await Promise.all([
@@ -406,8 +413,8 @@ export const staff = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id } = c.req.valid('param')
-      const target = await getUserById(id)
-      if (!target || target.salonId !== salonId || target.role !== 'staff') {
+      const target = await getUserWithServiceIds(id, salonId)
+      if (!target || target.salonId !== salonId) {
         return error(c, 'پرسنل یافت نشد', 404)
       }
       const { schedule } = c.req.valid('json')
@@ -423,16 +430,9 @@ export const staff = new Hono<AppEnv>()
     async (c) => {
       const { salonId } = c.var.tenant
       const { id: staffId } = c.req.valid('param')
-      const target = await getUserById(staffId)
+      const target = await getUserWithServiceIds(staffId, salonId)
       if (!target || target.salonId !== salonId) {
         return error(c, 'کاربر یافت نشد', 404)
-      }
-      if (target.role !== 'staff') {
-        return error(
-          c,
-          'فقط برای اعضای با نقش «پرسنل» می‌توان خدمات تعیین کرد.',
-          400,
-        )
       }
       const { serviceIds: normalized } = c.req.valid('json')
       if (normalized !== null) {

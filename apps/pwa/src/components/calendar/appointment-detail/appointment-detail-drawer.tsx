@@ -100,7 +100,7 @@ export function AppointmentDetailDrawer({
             addonIds={drawer.addonIds}
             finalPrice={drawer.finalPrice}
             priceEditable={drawer.priceEditable}
-            staffRoleOnly={drawer.staffRoleOnly}
+            schedulableStaff={drawer.schedulableStaff}
             editableServices={drawer.editableServices}
             selectedEditService={drawer.selectedEditService}
             addonOptions={drawer.addonOptions}

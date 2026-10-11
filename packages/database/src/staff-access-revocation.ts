@@ -7,15 +7,11 @@
 import { and, eq, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
-  appointmentRequests,
   member,
   salonMember,
   staffProfileAccesses,
   staffProfiles,
-  staffSchedules,
-  staffServices,
 } from './schema'
-import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type StaffAccessRevocationRejectionReason =
   | 'access_not_found'
@@ -182,8 +178,7 @@ async function loadProfileAndAccess(
 }
 
 /**
- * Detach login access from a Staff Profile and move operational refs back onto
- * the profile id. Does not delete schedule, capabilities, or appointments.
+ * Detach login access without changing the Staff Profile or its operational history.
  */
 async function detachAccessFromProfile(
   tx: DbTx,
@@ -231,41 +226,6 @@ async function detachAccessFromProfile(
   if (!updatedProfile) throw new Error('staff profile detach failed')
 
   if (linkedUserId) {
-    await Promise.all([
-      tx
-        .update(staffSchedules)
-        .set({ staffId: profile.id, updatedAt: now })
-        .where(
-          and(
-            eq(staffSchedules.salonId, profile.salonId),
-            eq(staffSchedules.staffId, linkedUserId),
-          ),
-        ),
-      tx
-        .update(staffServices)
-        .set({ staffUserId: profile.id })
-        .where(
-          and(
-            eq(staffServices.salonId, profile.salonId),
-            eq(staffServices.staffUserId, linkedUserId),
-          ),
-        ),
-      remapAppointmentAssignmentStaff(tx, {
-        salonId: profile.salonId,
-        fromStaffId: linkedUserId,
-        toStaffId: profile.id,
-      }),
-      tx
-        .update(appointmentRequests)
-        .set({ staffId: profile.id, updatedAt: now })
-        .where(
-          and(
-            eq(appointmentRequests.salonId, profile.salonId),
-            eq(appointmentRequests.staffId, linkedUserId),
-          ),
-        ),
-    ])
-
     await tx
       .delete(salonMember)
       .where(
@@ -283,8 +243,6 @@ async function detachAccessFromProfile(
           eq(member.role, 'member'),
         ),
       )
-  } else if (deactivate && profile.active) {
-    // Pending / unclaimed profile: deactivate without access detach side effects.
   }
 
   return { access: updatedAccess, profile: updatedProfile }

@@ -53,9 +53,7 @@ export async function getTodayData(
 ): Promise<TodayData> {
   const useLiveClock = date === salonTodayYmd()
   const staffFilterIds =
-    typeof staffIdFilter === 'string'
-      ? [staffIdFilter]
-      : (staffIdFilter ?? [])
+    typeof staffIdFilter === 'string' ? [staffIdFilter] : (staffIdFilter ?? [])
 
   const appointmentsForDay = await getAppointmentsWithDetailsByDateRange(
     salonId,
@@ -182,8 +180,7 @@ export async function getTodayData(
   const staffLoad = staff
     .filter(
       (member) =>
-        member.role === 'staff' &&
-        (staffFilterIds.length === 0 || staffFilterIds.includes(member.id)),
+        staffFilterIds.length === 0 || staffFilterIds.includes(member.id),
     )
     .map((member) => {
       const rows = appointmentsForDay.filter(

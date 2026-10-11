@@ -1,8 +1,10 @@
 # Backlog Index
 
-Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 complete; BL-0106 remains ready)
+Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 complete; BL-0106 remains ready; urgent production fix BL-0107 in progress)
 
 ## Now
+
+- [BL-0107 Fix staff Appointment visibility and repair identity mismatches](now/BL-0107-fix-staff-appointment-identity-mismatch.md) (high priority; confirmed production incident)
 
 ## Ready
 

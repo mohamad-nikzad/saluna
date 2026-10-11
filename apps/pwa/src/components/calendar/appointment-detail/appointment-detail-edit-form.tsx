@@ -64,7 +64,7 @@ interface AppointmentDetailEditFormProps {
   addonIds: string[]
   finalPrice: string | number | undefined
   priceEditable: boolean
-  staffRoleOnly: User[]
+  schedulableStaff: User[]
   editableServices: Service[]
   selectedEditService: Service | undefined
   addonOptions: ServiceAddon[]
@@ -109,7 +109,7 @@ export function AppointmentDetailEditForm({
   addonIds,
   finalPrice,
   priceEditable,
-  staffRoleOnly,
+  schedulableStaff,
   editableServices,
   selectedEditService,
   addonOptions,
@@ -191,7 +191,7 @@ export function AppointmentDetailEditForm({
             <Field>
               <FieldLabel>پرسنل</FieldLabel>
               <StaffPicker
-                staff={staffRoleOnly}
+                staff={schedulableStaff}
                 value={staffId || undefined}
                 onChange={onEditStaffChange}
                 onClear={onClearEditStaff}
@@ -218,7 +218,7 @@ export function AppointmentDetailEditForm({
             {status !== 'completed' ? (
               <AdditionalStaffFields
                 service={selectedEditService}
-                staff={staffRoleOnly}
+                staff={schedulableStaff}
                 leadStaffId={staffId}
                 additionalStaffIds={additionalStaffIds}
                 workAllocations={workAllocations}

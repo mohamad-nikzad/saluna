@@ -3038,6 +3038,10 @@
           "salonId": {
             "type": "string"
           },
+          "loginUserId": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string"
           },

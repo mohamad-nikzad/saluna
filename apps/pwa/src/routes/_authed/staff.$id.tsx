@@ -59,10 +59,9 @@ function StaffDetailPage() {
     [id, staff],
   )
 
-  const isStaffRole = member?.role === 'staff'
   const scheduleQuery = useQuery({
     ...staffScheduleBundleQueryOptions(member?.id ?? ''),
-    enabled: Boolean(member && isStaffRole),
+    enabled: Boolean(member),
   })
 
   if (staffQuery.isPending || servicesQuery.isPending) {
@@ -117,7 +116,7 @@ function StaffDetailContent({
       member={member}
       services={services}
       scheduleBundle={scheduleBundle}
-      isSelf={member.id === user!.id}
+      isSelf={(member.loginUserId ?? member.id) === user!.id}
       onOpenProfile={actions.openEditProfile}
       onOpenSchedule={actions.openSchedule}
       onOpenServices={actions.openServices}

@@ -6,18 +6,14 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { getDb } from './client'
 import {
-  appointmentRequests,
   member,
   organization,
   salonMember,
   staffInvites,
   staffProfileAccesses,
   staffProfiles,
-  staffSchedules,
-  staffServices,
   user,
 } from './schema'
-import { remapAppointmentAssignmentStaff } from './internal/appointment-roster-queries'
 
 export type StaffInviteAcceptanceRejectionReason =
   | 'phone_mismatch'
@@ -452,41 +448,6 @@ export async function acceptStaffInvite(input: {
           active: profile.active,
         },
       })
-
-    await Promise.all([
-      tx
-        .update(staffSchedules)
-        .set({ staffId: input.userId, updatedAt: now })
-        .where(
-          and(
-            eq(staffSchedules.salonId, invite.salonId),
-            eq(staffSchedules.staffId, profile.id),
-          ),
-        ),
-      tx
-        .update(staffServices)
-        .set({ staffUserId: input.userId })
-        .where(
-          and(
-            eq(staffServices.salonId, invite.salonId),
-            eq(staffServices.staffUserId, profile.id),
-          ),
-        ),
-      remapAppointmentAssignmentStaff(tx, {
-        salonId: invite.salonId,
-        fromStaffId: profile.id,
-        toStaffId: input.userId,
-      }),
-      tx
-        .update(appointmentRequests)
-        .set({ staffId: input.userId, updatedAt: now })
-        .where(
-          and(
-            eq(appointmentRequests.salonId, invite.salonId),
-            eq(appointmentRequests.staffId, profile.id),
-          ),
-        ),
-    ])
 
     return {
       status: 'accepted',

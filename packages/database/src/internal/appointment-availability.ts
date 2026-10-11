@@ -114,7 +114,7 @@ export async function getManagerAppointmentAvailability(
     return fail(404, 'خدمت یافت نشد')
   }
 
-  const activeStaff = allStaff.filter((member) => member.role === 'staff')
+  const activeStaff = allStaff
 
   if (params.staffId) {
     const selectedStaff = activeStaff.find(

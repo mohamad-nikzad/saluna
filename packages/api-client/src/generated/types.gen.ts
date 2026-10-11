@@ -798,6 +798,7 @@ export type StaffListResponse = {
 export type StaffUser = {
     id: string;
     salonId: string;
+    loginUserId?: string | null;
     name: string;
     fullName?: string;
     nickname?: string | null;

@@ -7,8 +7,12 @@ import {
   type AppointmentStaffAssignmentInput,
 } from '@repo/salon-core/appointment-roster'
 import { getDb } from '../client'
-import { appointmentStaffAssignments, appointments } from '../schema'
-import { getAllStaff } from './staff-queries'
+import {
+  appointmentStaffAssignments,
+  appointments,
+  staffProfiles,
+} from '../schema'
+import { rowToStaffProfile } from './row-mappers'
 
 type Db = ReturnType<typeof getDb>
 type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -59,7 +63,12 @@ export async function loadAppointmentRosters(
       asc(appointmentStaffAssignments.createdAt),
     )
 
-  const staff = await getAllStaff(salonId)
+  const staff = (
+    await db
+      .select()
+      .from(staffProfiles)
+      .where(eq(staffProfiles.salonId, salonId))
+  ).map(rowToStaffProfile)
   const staffById = new Map(staff.map((member) => [member.id, member]))
 
   for (const row of rows) {
@@ -157,28 +166,6 @@ export async function insertAppointmentRoster(
       allocationBasisPoints: assignment.allocationBasisPoints,
     })),
   )
-}
-
-export async function remapAppointmentAssignmentStaff(
-  tx: DbTransaction,
-  input: {
-    salonId: string
-    fromStaffId: string
-    toStaffId: string
-  },
-): Promise<number> {
-  if (input.fromStaffId === input.toStaffId) return 0
-  const updated = await tx
-    .update(appointmentStaffAssignments)
-    .set({ staffId: input.toStaffId, updatedAt: new Date() })
-    .where(
-      and(
-        eq(appointmentStaffAssignments.salonId, input.salonId),
-        eq(appointmentStaffAssignments.staffId, input.fromStaffId),
-      ),
-    )
-    .returning({ id: appointmentStaffAssignments.id })
-  return updated.length
 }
 
 export async function assertAppointmentRosterPresent(

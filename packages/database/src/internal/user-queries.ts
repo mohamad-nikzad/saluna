@@ -8,13 +8,13 @@ import {
   staffProfiles,
   user,
 } from '../schema'
-import { rowToUser, staffUserSelect } from './row-mappers'
+import { rowToUser, rowToStaffProfile, staffUserSelect } from './row-mappers'
 
 /**
  * Resolve a user by id into the legacy `User` shape, joining the user's single
  * membership (role + salon) and the optional `salon_member` display name.
  * Inactive members (`salon_member.active = false`) are excluded.
- * Also resolves active unclaimed Staff Profiles (including pending invites).
+ * Also resolves active Staff Profiles, independently of their login access.
  */
 export async function getUserById(id: string): Promise<User | undefined> {
   const db = getDb()
@@ -45,7 +45,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
     .where(and(eq(staffProfiles.id, id), eq(staffProfiles.active, true)))
     .limit(1)
   const profile = profiles[0]
-  if (!profile || profile.userId !== null) return undefined
+  if (!profile) return undefined
 
   const pending = await db
     .select({ status: staffInvites.status, expiresAt: staffInvites.expiresAt })
@@ -60,14 +60,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
     .limit(1)
 
   return {
-    id: profile.id,
-    salonId: profile.salonId,
-    name: profile.name,
-    fullName: profile.name,
-    nickname: null,
-    phone: profile.phone,
-    role: 'staff',
-    createdAt: profile.createdAt,
+    ...rowToStaffProfile(profile),
     inviteStatus: pending[0]
       ? pending[0].status === 'expired' ||
         pending[0].expiresAt.getTime() <= Date.now()

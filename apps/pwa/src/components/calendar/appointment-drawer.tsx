@@ -218,7 +218,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
     ],
   )
   const {
-    staffRoleOnly,
+    schedulableStaff,
     activeServices,
     selectedService,
     previewDuration,
@@ -322,7 +322,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
     const next = resolveIntakeServiceChange({
       serviceId: id,
       staffId: staffId ?? '',
-      staffRoleOnly,
+      schedulableStaff,
       services,
     })
     setValue('serviceId', next.serviceId, {
@@ -390,7 +390,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
     const next = resolveIntakeStaffChange({
       staffId: id,
       serviceId: serviceId ?? '',
-      staffRoleOnly,
+      schedulableStaff,
       services,
     })
     if (next.serviceId !== serviceId) {
@@ -435,7 +435,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
     const validationError = validateAppointmentIntakeSubmit({
       values,
       activeServices,
-      staffRoleOnly,
+      schedulableStaff,
       serviceIdsWithStaff,
     })
     if (validationError) {
@@ -631,7 +631,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                   <Field>
                     <FieldLabel>پرسنل</FieldLabel>
                     <StaffPicker
-                      staff={staffRoleOnly}
+                      staff={schedulableStaff}
                       value={staffId || undefined}
                       onChange={handleStaffChange}
                       onClear={clearStaff}
@@ -643,7 +643,7 @@ const AppointmentDrawerForm = memo(function AppointmentDrawerForm({
                   </Field>
                   <AdditionalStaffFields
                     service={selectedService}
-                    staff={staffRoleOnly}
+                    staff={schedulableStaff}
                     leadStaffId={staffId ?? ''}
                     additionalStaffIds={additionalStaffIds}
                     workAllocations={workAllocations}

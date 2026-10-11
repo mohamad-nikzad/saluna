@@ -161,8 +161,8 @@ export function AvailabilityDrawer({
   const [nearestResponse, setNearestResponse] =
     useState<NearestAvailabilityResponse | null>(null)
 
-  const staffRoleOnly = useMemo(
-    () => staff.filter((member) => member.role === 'staff'),
+  const schedulableStaff = useMemo(
+    () => staff,
     [staff],
   )
   const activeServices = useMemo(
@@ -170,8 +170,8 @@ export function AvailabilityDrawer({
     [services],
   )
   const eligibleStaff = useMemo(
-    () => (serviceId ? eligibleStaffForService(staffRoleOnly, serviceId) : []),
-    [serviceId, staffRoleOnly],
+    () => (serviceId ? eligibleStaffForService(schedulableStaff, serviceId) : []),
+    [serviceId, schedulableStaff],
   )
   const groupedSlots = useMemo(
     () =>
@@ -313,7 +313,7 @@ export function AvailabilityDrawer({
   const handleServiceChange = (nextServiceId: string) => {
     setValue('serviceId', nextServiceId, { shouldValidate: false })
     const nextEligibleStaff = eligibleStaffForService(
-      staffRoleOnly,
+      schedulableStaff,
       nextServiceId,
     )
     if (

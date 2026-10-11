@@ -153,7 +153,7 @@ describe('resolveIntakeServiceChange', () => {
       resolveIntakeServiceChange({
         serviceId: 'svc1',
         staffId: 'missing',
-        staffRoleOnly: [staffMember],
+        schedulableStaff: [staffMember],
         services: [service],
       }),
     ).toEqual({
@@ -172,7 +172,7 @@ describe('resolveIntakeStaffChange', () => {
       resolveIntakeStaffChange({
         staffId: 's1',
         serviceId: '',
-        staffRoleOnly: [staffMember],
+        schedulableStaff: [staffMember],
         services: [service],
       }),
     ).toEqual({
@@ -248,7 +248,7 @@ describe('validateAppointmentIntakeSubmit', () => {
           endTime: '10:45',
         },
         activeServices: [service, { ...service, id: 'other', active: true }],
-        staffRoleOnly: [mismatchStaff],
+        schedulableStaff: [mismatchStaff],
         serviceIdsWithStaff: new Set(['svc1', 'other']),
       }),
     ).toEqual({
@@ -267,7 +267,7 @@ describe('validateAppointmentIntakeSubmit', () => {
           endTime: '09:00',
         },
         activeServices: [service],
-        staffRoleOnly: [{ ...staffMember, serviceIds: ['svc1'] }],
+        schedulableStaff: [{ ...staffMember, serviceIds: ['svc1'] }],
         serviceIdsWithStaff: new Set(['svc1']),
       }),
     ).toMatchObject({ field: 'root' })

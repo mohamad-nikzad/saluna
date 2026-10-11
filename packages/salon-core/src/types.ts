@@ -7,6 +7,8 @@ export type StaffInviteListStatus = 'pending' | 'expired'
 export interface User {
   id: string
   salonId: string
+  /** Staff directory only: the linked login identity, never an operational staff ID. */
+  loginUserId?: string | null
   /** Active Staff Profile Access in this salon; distinct from the login identity. */
   staffProfileId?: string
   /** Display name of the active salon when known (staff multi-salon context). */
