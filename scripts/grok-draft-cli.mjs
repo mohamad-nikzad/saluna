@@ -15,6 +15,7 @@ import {
   deliverDailyDraft,
   acknowledgeDailyReport,
 } from './daily-draft-delivery.mjs'
+import { productionDraftClient } from './cms-drafts-mcp.mjs'
 
 const [configFile, action, input, extra] = process.argv.slice(2)
 async function exchangeFile(directory, name) {
@@ -127,7 +128,9 @@ try {
     } else throw new Error('CMS UNKNOWN_ACTION')
     console.log(JSON.stringify(result))
   } else {
-    const client = await cmsDraftClient(config.credentials)
+    const client = await (
+      config.target === 'production' ? productionDraftClient : cmsDraftClient
+    )(config.credentials)
     const discovery = await client.connect()
     let result
     switch (action) {

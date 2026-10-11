@@ -1,155 +1,132 @@
-# Daily unpublished Studio drafts
+# Daily production Blog Article drafts
 
-BL-0087 was completed under revised scope on 2026-10-11. The user removed the remaining human editor trials and scheduled-drafting proof requirements; these checks are not claimed as completed. The archived tasks preserve their technical evidence. Earlier rollout notes below are historical where they describe these checks as blockers. See [the completion record](../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+The active Codex automation, `Saluna daily unpublished blog draft`, targets
+the real CMS at `https://saluna.ir`, at 12:00 Asia/Tehran. The user requested this
+switch on 2026-10-11 after the first scheduled run failed against the retired local
+CMS. The former Grok routine remains paused. Publication is a later editorial
+action; daily runs create only unpublished, unscheduled drafts.
 
-The active local Codex automation runs the account-private Saluna Writing skill
-through the protected native drafting connection. The former Grok Studio routine
-is paused.
-The intended regular schedule is **12:00 Asia/Tehran**, selected under the user's
-delegated time choice. Publication remains an explicit later editorial action.
-The native Author role can publish its own content; the narrow runner exposes
-only explicit unscheduled draft operations. It adds no custom CMS permission
-or publication engine.
+## Production connection
 
-The reusable [routine instructions](../content/blog-writing/daily-routine.md)
-are available through `daily-instructions`. Actual execution must be proved by
-its native CMS record and private journal, not an enabled schedule or a model's
-success claim. Codex run output is not a saved Studio message receipt, so report
-events remain pending.
+The protected configuration is
+`/Users/mohamad/.codex/private/saluna-cms-bl0087/production-mcp/daily-connection.json`.
+It contains paths, `target: production`, and `scheduledTime: 12:00`. Credentials
+remain in the existing mode-0600 production MCP credential file. The runner uses
+the same `draftMcpOperations` boundary as `saluna_emdash_prod`, rather than
+unrestricted native tools. All creates, revisions, and media writes pass through
+that boundary. Native Author permissions are unchanged.
 
-## Private setup and commands
+Production has its own mode-0700 journal and exchange/results directories under
+the same protected production-mcp directory. The former local journal remains
+intact as historical evidence. Never point production at that old journal or
+change the endpoint of an existing registered run. A local payload can be
+explicitly transferred only after confirming no create was started and no ID
+was saved, checking production overlap, assigning a descriptive Persian slug,
+and correcting local links. An ambiguous or saved local create needs operator
+reconciliation instead.
 
-Extend the existing protected connection with absolute `journal` and
-`sessionState` paths, plus optional `scheduledTime` for a documented rehearsal.
-The regular value is `12:00`. `sessionState` holds the retained technical Author
-passkey fixture for real session-backed browser verification; it is separate
-from the intended editor's physical-passkey invitation. All private files are
-0600, directories 0700, outside Git. The local wrapper supplies these paths and
-the installed Chromium executable; the model must never read OAuth or passkey
-file contents.
-
-An operator initializes a NEW journal once:
+Use the existing CLI, whose historical filename does not imply Grok execution:
 
 ```sh
-node scripts/daily-draft-cli.mjs /absolute/private/connection.json init
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json daily-instructions
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json daily-status YYYY-MM-DD
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json inventory
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json sources client-records
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json daily YYYY-MM-DD REQUEST.json
+# Retry the original frozen article, without new input:
+node scripts/grok-draft-cli.mjs /absolute/private/daily-connection.json daily YYYY-MM-DD
 ```
 
-Initialization refuses an existing directory. Studio has no reset or initialize
-action. Its existing local command adds:
+The [routine contract](../content/blog-writing/daily-routine.md) defines the date,
+topic, source, article, privacy, and reporting checks. The manual run date is
+explicit; scheduled runs use the occurrence date or the 12:00–12:30 Tehran fallback.
 
-| Action               | Arguments                                             | Meaning                                                        |
-| -------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| `daily-instructions` | None                                                  | Current checked-in routine contract                            |
-| `daily-status`       | Original ISO date                                     | Read registered state; `new` requires initial input            |
-| `daily`              | Original date, optional exchange JSON filename        | First delivery or retry of its frozen record                   |
-| `daily-revise`       | Original date, exchange patch JSON filename           | Authorized correction to the same owned draft                  |
-| `daily-ack`          | Original date, exchange acknowledgement JSON filename | Confirm a particular report after actual saved Studio delivery |
+## Editorial overlap review
 
-Initial input is `{ "subject": "…", "data": { … } }`, using one subject from
-the current source map and complete title, summary, Portable Text body,
-revisioned search title/description and `search_excluded: false`. The runner
-reserves `saluna-daily-YYYY-MM-DD`, effective locale `en`, and empty public-author
-selection for Team credit. Optional `media` has an exchange `image` filename
-and truthful Persian alt/caption. Revisions accept only presentation `data`.
-Acknowledgements contain `eventId` and the message tool's actual returned
-saved-message `receipt`. Paths cannot escape the exchange directory.
+The daily writer now considers 14 source subjects and both salon-owner and
+customer audiences. Follow `content/blog-writing/editorial-plan.md` for topic
+selection and the documented future audience categories and topic tags. Those
+taxonomy fields are editorial metadata only until a later CMS/site change.
+For each new date, compare at least three questions across different families,
+including a customer candidate. Prefer uncovered subjects to expanding existing
+posts. Customer articles use an appropriate next step, not a manager signup pitch.
 
-## Retry and reporting behavior
+Read access already includes past published articles, pending drafts, and
+scheduled entries. Before selecting a new daily topic, the automation must use
+production EmDash MCP to read the full body of every current entry and record
+its covered reader questions, outcomes, and sections. The detailed novelty rule
+is in [public content rules](agents/public-content.md#topic-overlap).
 
-The immutable identity is `blog-daily/Asia-Tehran/YYYY-MM-DD`. Capture the
-original scheduled date once; a retry after midnight keeps it. The journal
-registers that date, freezes payload/media/source commit and hashes, and records
-`create_started` before sending a native mutation. Atomic replacements sync
-both file and parent directory. Real process locks serialize complete attempts
-and coordinate the shared rotating OAuth file across daily/manual commands.
-Kernel descriptor cleanup releases a crashed process's lock; lock files are
-never removed or stolen by a timer. Node and installed Python 3 are required.
+New wording, extra examples, or expanding one already-covered section does not
+justify another article. A distinct new reader task or decision is required.
+If corpus reads fail, stop before creation. If no supported distinct topic can
+be found, report `skipped_no_distinct_topic` without registering delivery.
+Save the coverage and novelty decision in the private exchange as
+`novelty-YYYY-MM-DD.json` and reference it in the run report. This is an editorial
+check; the runner's technical `verified` status alone does not establish novelty.
 
-Native create ID/revision and upload ID/URL receipts are saved before follow-on
-reads. A known ID is always reread. A genuinely lost create response is adopted
-only when original slug, ownership, locale and frozen payload conclusively
-match. A renamed/deleted unknown create remains ambiguous and stops. No
-replacement is created. Human revision changes, including native UI-staged
-slugs hidden by normal content reads, cause a handoff. Published, scheduled,
-removed or edited content is never overwritten, withdrawn or unscheduled.
-Deletion remains a tombstone. Missing/corrupt registered storage also stops.
+The 2026-10-11 acquisition-source draft technically passed delivery checks but
+overlaps advice in the published Client records article. The user identified
+this overlap after the manual run. It stays unpublished; future topic selection
+must treat this advice as already covered. Its saved delivery journal remains
+intact, and retries must not create a replacement article.
 
-`creation_failed` with `creation: absent` is not saved delivery. `create_unknown`
-is an operator handoff. `saved_needs_read` and `saved_needs_preview` retain their
-ID and retry verification. `verified` requires saved plain-draft state,
-authenticated private/no-store/noindex preview, default Team credit, copied-link
-denial and anonymous detail/index/sitemap exclusion. Preview renewal uses the
-saved ID. Native/public requests are bounded; a stalled check cannot hold the
-shared locks indefinitely.
+## Delivery and retry guarantees
 
-Saving and reporting are separate. The protected report file contains the
-intended signed URL; stdout contains only safe state/context and its file path.
-Reports remain pending until Studio sends an intermediate result to THIS
-conversation, receives the actual saved message ID, then acknowledges that
-event. A failed send or interrupted acknowledgement stays pending. Renewal or
-a changed verified revision creates a new pending event; unchanged retries keep
-their acknowledgement. Message receipts prove saved delivery, not human review.
-Later dates continue even while older drafts remain unreviewed or unpublished.
+The date identity remains `blog-daily/Asia-Tehran/YYYY-MM-DD` within its production
+journal. Initial input includes `subject`, a descriptive Persian `slug`, and
+complete revisioned article `data`. The runner freezes payload, sources, hashes,
+and endpoint. Use `https://app.saluna.ir/signup`, never localhost. The English
+date-based slug convention belongs only to the former local rehearsal.
 
-The Mac must be awake, its existing Docker/CMS running, the native OAuth grant
-valid, and Chromium available. Automatic review still applies under the user's
-existing Mac execution choice. Offline/blocked execution must report observed
-failure and original run context; it cannot claim success or change security
-settings to work around it.
+Process locks serialize each attempt and shared credential operations. Atomic
+mode-0600 writes sync the file and parent directory. The runner saves a native
+create ID before a follow-on read can fail. Retries retain that ID. A lost create
+response is adopted only after slug, ownership, locale, and frozen fields match;
+otherwise the run stays ambiguous. A retry never creates a replacement after
+creation started. Human edits, renames, publication, scheduling, or removal cause
+handoff rather than overwriting content.
 
-## Backup and verification
+`creation_failed` with `creation: absent` means no create was sent.
+`saved_needs_read` and `saved_needs_preview` retain the saved ID.
+`create_unknown` requires operator handoff.
+`verified` means native saved draft and anonymous privacy checks passed.
+Production verification checks signed-preview denial, public detail 404, and
+index/sitemap exclusion. It does not use a local test passkey.
+`verification.authenticatedPreview: false` explicitly records that an
+authenticated visual preview has not been checked. Opening the signed link
+requires a real permitted CMS session. Mobile layout remains a separate
+editorial check, never a claimed unattended result.
 
-Retain the manifest, date records/tombstones, frozen media and report receipts.
-Never delete older records merely because their draft is published or removed.
-Take a matching protected backup of journal, rotating OAuth/technical passkey
-state, database, media, image version and encryption key. Serialize backup with
-the same journal and credential locks, or pause this native Studio routine and
-wait for its current attempt to finish before taking the existing CMS backup
-and private-file copy. Restore matching state, not a new empty journal. After
-an older CMS restore, missing saved IDs require operator reconciliation rather
-than automatic replacement.
+Protected reports hold the signed URL and expiry. Stdout contains safe run
+context, status, IDs, error code/failure stage, and report-file path. Codex run
+output is not a Studio saved-message receipt, so do not call `daily-ack`.
+Pending reports and earlier unreviewed drafts do not block a later daily draft.
 
-The focused real-native suite uses the retained isolated CMS on localhost3301:
+The Mac must be awake, Node and Python installed, production reachable, and the
+PAT valid. Docker, a local CMS, and local test passkeys are unnecessary. PAT
+renewal follows [the production connection guide](EMDASH_AGENT.md).
+
+## Verification
+
+Focused tests cover production origin and Persian slugs, receipt persistence
+before failed reads, privacy-check retries, collision refusal, editor handoff,
+and stable IDs across retries through the real adapter policy:
 
 ```sh
-CMS_DAILY_TEST_PRIVATE_DIR=/absolute/private/cms-directory \
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/absolute/installed/chromium \
-node --test --test-concurrency=1 deploy/cms/daily-delivery.test.mjs
+node --test deploy/cms/production-daily.test.mjs deploy/cms/drafts-mcp.test.mjs deploy/cms/draft-title.test.mjs
 ```
 
-Its faults occur at an external loopback HTTP proxy, forwarding saved mutations
-to the real native CMS. It verifies actual IDs, lifecycle, conflicts, receipts,
-media, browser privacy and pending reports. Test acknowledgements use an
-explicit isolated sink; they are not Studio receipts. Teardown uses the native
-Operator API only for owned `daily-fixture-*`/`daily-receipt-*` articles and
-their tiny fixture media. Interrupted runs can be cleaned with
-`node deploy/cms/daily-fixture-cleanup.mjs /absolute/private/cms-directory`.
-Original launch/Studio/guide/recovery content is preserved.
+These are offline behavior checks. Only a successful real production run proves
+delivery. The former local scheduled run on 2026-10-11 saved no article; its
+original journal/report remains protected. Earlier Grok rehearsal evidence is
+in [the archived task](../backlog/archive/BL-0103-enable-daily-grok-drafting.md).
 
-## Scheduled rollout evidence
-
-On October 8 the runner's 14 native tests, 5 native-client checks and 3 Studio
-wrapper checks passed. The same account-private Writing skill was updated and
-visibly verified. The current native Author role (30), four scopes and
-profile/admin denial were confirmed. This Mac's user-selected Always allow,
-Auto-review on, empty custom rules, other-computer Never allow and routing off
-were observed; no setting changed.
-
-Native routine `saluna-daily-unpublished-article` was saved for an October 8
-17:30 Tehran rehearsal. Its native status later showed a failed run at 18:34:07,
-without a failure reason; no journal or Studio result existed. The same routine
-was updated for October 9 at 02:10, preserving the original October 8 identity.
-At 02:14 its native status still had no new run, and no journal or Studio result
-had appeared. This second slot was overdue, without an observed failure result.
-
-The native guide explicitly supports the `CRON_TZ=<IANA zone>` prefix, and
-status retained `CRON_TZ=Asia/Tehran`; no separate resolved execution timestamp
-was exposed. The temporary fault proxy, environment and preload were removed.
-The former Grok routine used the 09:00 schedule and is now paused. Its Codex local
-automation replacement uses the current contract at 12:00 Asia/Tehran.
-Enabled configuration is not execution proof: **actual scheduled draft creation
-and failure reporting remain unverified**. Codex runs do not produce the saved
-Studio message receipt needed to acknowledge report events.
-The local operator evidence records the saved configuration and observed
-status. This technical work does not claim the intended editor's physical CMS
-trial or a successful daily delivery.
+On 2026-10-11 a manual production recovery used the connected
+`saluna_emdash_prod` tools directly. The journal recorded create intent before
+`draft_create` and saved its native receipt immediately afterward. `draft_get`
+confirmed draft state with no live revision or schedule, and `draft_preview`
+returned a private signed link. The daily runner then reconciled that same ID
+and passed its anonymous privacy checks. Authenticated/mobile preview was not
+checked. The original local record and the earlier failed production connection
+attempt remain preserved; neither created an article.

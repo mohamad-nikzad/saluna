@@ -10,6 +10,10 @@ import {
 } from './cms-draft-client.mjs'
 import { withProcessLock } from './process-lock.mjs'
 import { technicalSession } from '../deploy/cms/technical-session.mjs'
+import {
+  productionDraftClient,
+  validatePersianSlug,
+} from './cms-drafts-mcp.mjs'
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
 function canonical(value) {
@@ -89,6 +93,12 @@ function revision(data) {
   return data
 }
 function diagnostic(error) {
+  if (error.cause?.code === 'ECONNREFUSED') return 'CMS_CONNECTION_REFUSED'
+  if (
+    error.name === 'TimeoutError' ||
+    error.cause?.code === 'UND_ERR_CONNECT_TIMEOUT'
+  )
+    return 'CMS_REQUEST_TIMEOUT'
   return /^CMS [A-Z0-9_:-]+$/.test(error.message)
     ? error.message.slice(4)
     : 'TRANSPORT_OR_STORAGE_ERROR'
@@ -177,6 +187,14 @@ export async function initializeDailyJournal(config) {
 async function freeze(config, date, input) {
   if (!input) throw new Error('CMS DAILY_INPUT_REQUIRED')
   const data = article(input.data)
+  const credentials = await readPrivateJson(config.credentials)
+  const production = config.target === 'production'
+  if (
+    credentials.baseURL !==
+    (production ? 'https://saluna.ir' : 'http://localhost:3301')
+  )
+    throw new Error('CMS DAILY_ENDPOINT_CHANGED')
+  if (production) validatePersianSlug(input.slug)
   const map = JSON.parse(
     await readFile(
       resolve(config.repository, 'content/blog-writing/sources.json'),
@@ -196,7 +214,7 @@ async function freeze(config, date, input) {
     runId: `blog-daily/Asia-Tehran/${date}`,
     timezone: 'Asia/Tehran',
     scheduledTime: config.scheduledTime || '09:00',
-    endpoint: 'http://localhost:3301',
+    endpoint: credentials.baseURL,
     locale: 'en',
     state: 'prepared',
     reports: [],
@@ -208,7 +226,12 @@ async function freeze(config, date, input) {
       }).trim(),
       files: sources,
     },
-    payload: { slug: `${config.slugPrefix || 'saluna-daily'}-${date}`, data },
+    payload: {
+      slug: production
+        ? input.slug
+        : `${config.slugPrefix || 'saluna-daily'}-${date}`,
+      data,
+    },
   }
   if (input.media) {
     if (!input.media.alt?.trim()) throw new Error('CMS IMAGE_ALT_REQUIRED')
@@ -256,6 +279,7 @@ async function report(config, value, code) {
     slug: value.currentSlug || value.payload.slug,
     creation: value.id ? 'saved' : value.createStarted ? 'unknown' : 'absent',
     code: event.code,
+    failureStage: value.failureStage,
     eventId: id,
     reported: event.status === 'acknowledged',
     reportFile,
@@ -266,6 +290,7 @@ async function report(config, value, code) {
         ? 'operator handoff; never create replacement'
         : 'retry this original date',
     previewExpiry: value.preview?.expiresAt,
+    verification: value.verification,
   }
   await writePrivateJson(reportFile, {
     ...result,
@@ -274,6 +299,36 @@ async function report(config, value, code) {
   return result
 }
 async function verifyPreview(config, value, credentials) {
+  if (config.target === 'production') {
+    // Production has no test passkey. Verify saved delivery and anonymous
+    // exclusion; an authenticated visual preview remains an editorial check.
+    const request = (url) => fetch(url, { signal: AbortSignal.timeout(15_000) })
+    if (
+      (await request(value.preview.url)).status !== 403 ||
+      (
+        await request(
+          `${credentials.baseURL}/blog/${encodeURIComponent(value.currentSlug)}/`,
+        )
+      ).status !== 404
+    )
+      throw new Error('CMS DRAFT_PUBLICLY_VISIBLE')
+    for (const path of ['/blog/', '/blog-sitemap.xml']) {
+      const response = await request(`${credentials.baseURL}${path}`)
+      const html = await response.text()
+      if (
+        response.status !== 200 ||
+        html.includes(value.currentSlug) ||
+        html.includes(encodeURIComponent(value.currentSlug))
+      )
+        throw new Error('CMS DRAFT_DISCOVERABLE')
+    }
+    value.verification = {
+      savedDraft: true,
+      anonymousPrivacy: true,
+      authenticatedPreview: false,
+    }
+    return
+  }
   const session = await technicalSession(config.sessionState, 'author')
   try {
     if ((await session.api('auth/me')).id !== credentials.userId)
@@ -362,7 +417,11 @@ export async function deliverDailyDraft(config, date, input) {
           credentials.locale !== value.locale
         )
           throw new Error('CMS DAILY_ENDPOINT_CHANGED')
-        const client = await cmsDraftClient(credentialFile)
+        const client = await (
+          config.target === 'production'
+            ? productionDraftClient
+            : cmsDraftClient
+        )(credentialFile)
         await client.connect()
         if (input?.patch) {
           if (!value.snapshot || !value.id)
@@ -377,7 +436,10 @@ export async function deliverDailyDraft(config, date, input) {
           }
           await store(config, value)
         }
-        if (!value.overlap) {
+        if (
+          !value.overlap ||
+          (config.target === 'production' && !value.createStarted)
+        ) {
           value.overlap = {
             readAt: new Date().toISOString(),
             items: (await client.listArticles()).map(
@@ -392,6 +454,12 @@ export async function deliverDailyDraft(config, date, input) {
           }
           await store(config, value)
         }
+        if (
+          !value.createStarted &&
+          config.target === 'production' &&
+          value.overlap.items.some((item) => item.slug === value.payload.slug)
+        )
+          throw new Error('CMS DRAFT_SLUG_COLLISION')
         if (value.media && !value.createStarted) {
           stage = 'media'
           if (!value.media.id) {
@@ -532,8 +600,10 @@ export async function deliverDailyDraft(config, date, input) {
           value.preview.verified = true
         }
         value.state = 'verified'
+        delete value.failureStage
         return report(config, value)
       } catch (error) {
+        value.failureStage = stage
         value.state = value.id
           ? stage === 'preview'
             ? 'saved_needs_preview'

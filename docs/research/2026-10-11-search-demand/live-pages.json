@@ -1,0 +1,30 @@
+[
+  {
+    "url": "https://saluna.ir/",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/features/online-appointment-requests",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/features/staff-commission",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/features/salon-clients",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/blog",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/guides",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "url": "https://saluna.ir/services",
+    "error": "<urlopen error timed out>"
+  }
+]

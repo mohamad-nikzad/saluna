@@ -1,6 +1,7 @@
 {
   "common": [
     "docs/agents/public-content.md",
+    "content/blog-writing/editorial-plan.md",
     "GLOSSARY.md",
     "apps/web/cms/seed.json",
     "apps/web/src/content/landing.ts"
@@ -27,6 +28,62 @@
       "packages/salon-core/src/appointment-request-timing.ts",
       "docs/adr/0001-appointment-request-as-distinct-aggregate.md",
       "docs/adr/0014-appointment-request-supports-customer-and-manager-origins.md"
+    ],
+    "service-catalog": [
+      "packages/salon-core/src/service-catalog.ts",
+      "packages/salon-core/src/forms/service.ts",
+      "apps/pwa/src/components/services/service-catalog-manager.tsx",
+      "docs/adr/0010-simplify-service-catalog-to-category-service.md"
+    ],
+    "service-packages": [
+      "apps/pwa/src/components/services/service-package-manager.tsx",
+      "apps/api/src/routes/service-packages.ts",
+      "docs/adr/0013-manager-service-package-scheduling.md"
+    ],
+    "salon-presence": [
+      "apps/pwa/src/components/public-page/presence-form.tsx",
+      "apps/pwa/src/components/public-page/public-page-basics.tsx",
+      "packages/salon-core/src/forms/presence.ts",
+      "packages/salon-core/src/presence-links.ts"
+    ],
+    "customer-experience": [
+      "packages/salon-core/src/service-catalog.ts",
+      "apps/web/src/lib/public-api.ts",
+      "packages/salon-core/src/appointment-request-timing.ts"
+    ],
+    "customer-visit-planning": [
+      "apps/api/src/routes/public.ts",
+      "apps/web/src/lib/public-api.ts",
+      "apps/web/src/lib/request-status.ts",
+      "docs/adr/0001-appointment-request-as-distinct-aggregate.md"
+    ],
+    "salon-marketing": [
+      "apps/pwa/src/components/public-page/public-url.ts",
+      "apps/pwa/src/components/public-page/publication-card.tsx",
+      "packages/salon-core/src/presence-links.ts"
+    ],
+    "client-followups": [
+      "packages/database/src/internal/client-followup-queries.ts",
+      "packages/salon-core/src/client-birthday.ts",
+      "docs/adr/0017-birthday-follow-up-is-a-yearly-occurrence.md"
+    ],
+    "salon-reporting": [
+      "apps/pwa/src/components/reports/salon-reports-page.tsx",
+      "apps/api/src/routes/reports.ts",
+      "packages/salon-core/src/reporting-period.ts",
+      "docs/adr/0023-salons-receive-client-payments-directly.md"
+    ],
+    "team-onboarding": [
+      "apps/pwa/src/routes/staff-invites.tsx",
+      "apps/api/src/routes/staff-invite-links.ts",
+      "packages/salon-core/src/forms/staff.ts",
+      "docs/adr/0006-separate-staff-profiles-from-login-identities.md"
+    ],
+    "salon-setup": [
+      "apps/pwa/src/routes/_authed/onboarding/-steps.ts",
+      "apps/pwa/src/routes/_authed/onboarding/services.tsx",
+      "apps/pwa/src/routes/_authed/onboarding/public.tsx",
+      "packages/salon-core/src/forms/settings.ts"
     ],
     "client-records": [
       "apps/pwa/src/components/clients/client-drawer.tsx",

@@ -73,9 +73,13 @@ also cover foreign ownership and expired PAT behavior. Protected receipts and
 the report live beside the credential, and a matching production recovery point
 is recorded in [deployment notes](EMDASH_DEPLOYMENT.md).
 
-This production connection does not move the daily Grok routine from its
-retained local CMS. Use it when the user requests production drafting; preserve
-the daily runner's existing origin, credentials, and retry journal.
+On 2026-10-11 the user requested that the active daily Codex automation target
+this real production CMS and that a manual run verify delivery. Its production
+connection uses the same adapter policy through `productionDraftClient`;
+all writes pass through `draftMcpOperations`. The production daily journal is
+separate from the failed local rehearsal journal. The local CMS containers and
+volumes have been removed. Do not restore or use the local CMS for daily drafts.
+See [daily production setup](EMDASH_DAILY.md).
 
 ## Local OAuth connection
 

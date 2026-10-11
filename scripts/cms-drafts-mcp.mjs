@@ -1,12 +1,24 @@
 import { createInterface } from 'node:readline'
 import { pathToFileURL } from 'node:url'
-import { cmsDraftClient } from './cms-draft-client.mjs'
+import { cmsDraftClient, readPrivateJson } from './cms-draft-client.mjs'
 
 const collectionSchema = {
   type: 'string',
   enum: ['blog_articles', 'product_guides'],
 }
 const dataSchema = { type: 'object', additionalProperties: true }
+
+export function validatePersianSlug(slug) {
+  if (
+    typeof slug !== 'string' ||
+    slug !== slug.normalize('NFC') ||
+    !/^[\u0621-\u063A\u0641-\u064A\u067E\u0686\u0698\u06A9\u06AF\u06CC0-9]+(?:-[\u0621-\u063A\u0641-\u064A\u067E\u0686\u0698\u06A9\u06AF\u06CC0-9]+)*$/.test(
+      slug,
+    ) ||
+    /[يك]/.test(slug)
+  )
+    throw new Error('CMS PERSIAN_SLUG_REQUIRED')
+}
 const tools = [
   [
     'drafts_list',
@@ -98,7 +110,7 @@ export function draftMcpOperations(clients) {
   }
   return {
     tools,
-    async call(name, args = {}) {
+    async call(name, args = {}, onSaved) {
       const definition = tools.find((tool) => tool.name === name)
       if (!definition) throw new Error('CMS DRAFT_TOOL_NOT_ALLOWED')
       if (
@@ -131,16 +143,11 @@ export function draftMcpOperations(clients) {
         case 'draft_get':
           return client.getArticle(args.id)
         case 'draft_create':
-          if (
-            typeof args.slug !== 'string' ||
-            args.slug !== args.slug.normalize('NFC') ||
-            !/^[\u0621-\u063A\u0641-\u064A\u067E\u0686\u0698\u06A9\u06AF\u06CC0-9]+(?:-[\u0621-\u063A\u0641-\u064A\u067E\u0686\u0698\u06A9\u06AF\u06CC0-9]+)*$/.test(
-              args.slug,
-            ) ||
-            /[يك]/.test(args.slug)
+          validatePersianSlug(args.slug)
+          return client.createDraft(
+            { slug: args.slug, data: args.data },
+            onSaved,
           )
-            throw new Error('CMS PERSIAN_SLUG_REQUIRED')
-          return client.createDraft({ slug: args.slug, data: args.data })
         case 'draft_revise': {
           const current = ownDraft(await client.getArticle(args.id))
           if (current._rev !== args._rev)
@@ -152,15 +159,41 @@ export function draftMcpOperations(clients) {
         case 'media_upload':
           if (!args.path?.startsWith('/'))
             throw new Error('CMS ABSOLUTE_PATH_REQUIRED')
-          return client.uploadImage(args.path, {
-            alt: args.alt,
-            caption: args.caption,
-          })
+          return client.uploadImage(
+            args.path,
+            { alt: args.alt, caption: args.caption },
+            onSaved,
+          )
         case 'draft_preview':
           ownDraft(await client.getArticle(args.id))
           return client.preview(args.id)
       }
     },
+  }
+}
+
+/** Daily delivery uses the same policy boundary as saluna_emdash_prod.
+ * Receipt callbacks are internal, never MCP arguments, and save native IDs
+ * before follow-on reads. No production caller gets an unrestricted client. */
+export async function productionDraftClient(credentialFile) {
+  const metadata = await readPrivateJson(credentialFile)
+  if (metadata.baseURL !== 'https://saluna.ir')
+    throw new Error('CMS PRODUCTION_ORIGIN_REQUIRED')
+  const client = await cmsDraftClient(credentialFile)
+  const operations = draftMcpOperations({ blog_articles: client })
+  const call = (name, args = {}, receipt) =>
+    operations.call(name, { collection: 'blog_articles', ...args }, receipt)
+  return {
+    connect: () => client.connect(),
+    listArticles: () => call('drafts_list'),
+    getArticle: (id) => call('draft_get', { id }),
+    createDraft: (payload, receipt) => call('draft_create', payload, receipt),
+    reviseDraft: (current, data) =>
+      call('draft_revise', { id: current.item.id, _rev: current._rev, data }),
+    preview: (id) => call('draft_preview', { id }),
+    getMedia: (id) => operations.call('media_get', { id }),
+    uploadImage: (path, metadata, receipt) =>
+      operations.call('media_upload', { path, ...metadata }, receipt),
   }
 }
 

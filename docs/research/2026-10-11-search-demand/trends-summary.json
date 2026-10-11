@@ -1,0 +1,83 @@
+[
+  {
+    "file": "trends-core-12-months.csv",
+    "series": [
+      {
+        "term": "نرم افزار آرایشگاه: (Iran)",
+        "weeks": 54,
+        "nonzero_weeks": 2,
+        "mean_relative_interest": 1.222
+      },
+      {
+        "term": "نرم افزار مدیریت سالن زیبایی: (Iran)",
+        "weeks": 54,
+        "nonzero_weeks": 2,
+        "mean_relative_interest": 0.296
+      },
+      {
+        "term": "نوبت دهی آرایشگاه: (Iran)",
+        "weeks": 54,
+        "nonzero_weeks": 3,
+        "mean_relative_interest": 3.463
+      }
+    ]
+  },
+  {
+    "file": "trends-core-5-years.csv",
+    "series": [
+      {
+        "term": "نرم افزار آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 3,
+        "mean_relative_interest": 0.443
+      },
+      {
+        "term": "نرم افزار مدیریت سالن زیبایی: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 2,
+        "mean_relative_interest": 0.05
+      },
+      {
+        "term": "نوبت دهی آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 8,
+        "mean_relative_interest": 2.069
+      }
+    ]
+  },
+  {
+    "file": "trends-expanded-5-years.csv",
+    "series": [
+      {
+        "term": "نرم افزار آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 3,
+        "mean_relative_interest": 0.435
+      },
+      {
+        "term": "نرم افزار مدیریت سالن زیبایی: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 2,
+        "mean_relative_interest": 0.046
+      },
+      {
+        "term": "نوبت دهی آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 8,
+        "mean_relative_interest": 2.027
+      },
+      {
+        "term": "اپلیکیشن نوبت دهی آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 2,
+        "mean_relative_interest": 0.634
+      },
+      {
+        "term": "نرم افزار حسابداری آرایشگاه: (Iran)",
+        "weeks": 262,
+        "nonzero_weeks": 1,
+        "mean_relative_interest": 0.027
+      }
+    ]
+  }
+]
