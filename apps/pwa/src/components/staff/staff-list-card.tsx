@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, Scissors } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@repo/ui/avatar'
 import { Badge } from '@repo/ui/badge'
+import { Button } from '@repo/ui/button'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import type { User } from '@repo/salon-core/types'
 import { StaffListRowMenu } from '#/components/staff/staff-list-row-menu'
@@ -33,15 +34,15 @@ export function StaffListCard({
   const navigate = useNavigate()
   const cancelInvite = useCancelStaffInviteMutation()
   const resendInvite = useResendStaffInviteMutation()
+  const openProfile = () =>
+    navigate({ to: '/staff/$id', params: { id: member.id } })
 
   return (
     <div className="flex items-center gap-1.5 rounded-[18px] border border-line-soft bg-card p-3.5">
       <button
         type="button"
         className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-start transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        onClick={() =>
-          navigate({ to: '/staff/$id', params: { id: member.id } })
-        }
+        onClick={openProfile}
       >
         <Avatar className="size-12 shrink-0">
           <AvatarFallback
@@ -88,9 +89,7 @@ export function StaffListCard({
       <StaffListRowMenu
         member={member}
         currentUserId={currentUserId}
-        onEditProfile={() =>
-          navigate({ to: '/staff/$id', params: { id: member.id } })
-        }
+        onEditProfile={openProfile}
         onEditServices={onEditServices}
         onEditSchedule={onEditSchedule}
         onResendInvite={
@@ -110,11 +109,16 @@ export function StaffListCard({
         onDelete={onDelete}
       />
 
-      <ChevronLeft
-        className="size-[18px] shrink-0 text-muted-foreground"
-        strokeWidth={2}
-        aria-hidden
-      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-11 rounded-xl touch-manipulation"
+        aria-label={`مشاهده پروفایل ${member.name}`}
+        onClick={openProfile}
+      >
+        <ChevronLeft data-icon="inline-end" strokeWidth={2} aria-hidden />
+      </Button>
     </div>
   )
 }
