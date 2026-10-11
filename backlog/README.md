@@ -19,7 +19,7 @@ Move an item by changing its `status` frontmatter and moving the file to the mat
 - Update `updated` whenever changing status, priority, size, or acceptance criteria.
 - Prefer adding notes over deleting historical context.
 - Use project language from `GLOSSARY.md`, especially `Appointment`, `AppointmentRequest`, `Client`, `Salon Presence`, and `ServiceVariant`.
-- Do not move more than one item into `now` unless the user explicitly asks.
+- Move active work into `now`. Independent, unblocked tickets may be active concurrently.
 
 ## Parent Features and Subtasks
 
@@ -30,7 +30,7 @@ Large features may be split into independently executable subtasks. Every parent
 - A ready subtask uses `type: task` and `triage: ready-for-agent` when an agent can implement it without more context.
 - The parent links its children under a `## Subtasks` section.
 - `backlog/INDEX.md` nests subtask links beneath the parent instead of listing them as unrelated top-level work.
-- A subtask may start when every ID in `blocked_by` is `done`. Work the unblocked frontier one ticket at a time.
+- A subtask may start when every ID in `blocked_by` is `done`. Work independent tickets across the unblocked frontier concurrently.
 
 ## Item Template
 

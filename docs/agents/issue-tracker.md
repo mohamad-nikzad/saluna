@@ -33,5 +33,6 @@ must not create a `.scratch/` tracker, shared `tickets.md`, or remote labels.
 - `code-review`: resolve `BL-NNNN` references in commit messages to local
   backlog files; read their specs and acceptance criteria directly.
 
-Keep at most one item in `now` unless the user authorizes more. Preserve
-historical notes when recording progress or completion.
+Independent tasks whose blockers are `done` may run concurrently. Keep each
+active item's status and index entry current. Preserve historical notes when
+recording progress or completion.

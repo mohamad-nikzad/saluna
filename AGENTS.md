@@ -1,5 +1,11 @@
 ## Agent skills
 
+Matt Pocock skills in `.agents/skills/` follow upstream. See
+`.agents/skills/README.md` for their source and revision. Keep project-specific
+configuration in `docs/agents/`; it overrides generic skill instructions and
+setup templates. Independent subtasks with completed blockers may run in
+parallel.
+
 ### Issue tracker
 
 Specs and tickets live only in local Markdown under `backlog/`. Read

@@ -6,11 +6,7 @@ disable-model-invocation: true
 
 This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know.
 
-Read `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and
-`docs/agents/domain.md` before starting. Saluna publishes specs only to its
-local `backlog/`, using `GLOSSARY.md` vocabulary. Keep the backlog frontmatter
-and add the sections below plus observable acceptance criteria; update the
-index. Create remote issues or PRs only when the user explicitly requests them.
+The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
 ## Process
 
@@ -34,7 +30,7 @@ The solution to the problem, from the user's perspective.
 
 ## User Stories
 
-A numbered list covering the agreed user needs. Each user story should be in the format of:
+A LONG, numbered list of user stories. Each user story should be in the format of:
 
 1. As an <actor>, I want a <feature>, so that <benefit>
 
@@ -42,7 +38,7 @@ A numbered list covering the agreed user needs. Each user story should be in the
 1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
 </user-story-example>
 
-Cover the agreed scope without repeating stories or inventing requirements.
+This list of user stories should be extremely extensive and cover all aspects of the feature.
 
 ## Implementation Decisions
 

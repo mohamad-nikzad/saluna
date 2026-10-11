@@ -1,11 +1,14 @@
 # Backlog Index
 
-Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived)
+Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; staff tickets BL-0104 through BL-0106 remain ready)
 
 ## Now
 
 ## Ready
 
+- [BL-0104 Remove Staff Profile colors](ready/BL-0104-remove-staff-profile-colors.md)
+- [BL-0105 Fix staff list arrow navigation](ready/BL-0105-fix-staff-list-arrow-navigation.md)
+- [BL-0106 Add search and bulk selection to staff services](ready/BL-0106-search-and-bulk-select-staff-services.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)

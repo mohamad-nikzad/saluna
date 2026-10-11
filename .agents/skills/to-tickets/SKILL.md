@@ -1,6 +1,6 @@
 ---
 name: to-tickets
-description: Break a plan, spec, or conversation into complete, small tasks in Saluna's local backlog, each with its blocking IDs.
+description: Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker (edges as text in one file per ticket locally, or native blocking links on a real tracker).
 disable-model-invocation: true
 ---
 
@@ -8,10 +8,7 @@ disable-model-invocation: true
 
 Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
-Read `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and
-`docs/agents/domain.md`. Saluna's configured tracker is `backlog/`; use its
-frontmatter and `BL-NNNN` IDs. Create remote issues or PRs only when the user
-explicitly requests them.
+The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
 ## Process
 
@@ -31,7 +28,7 @@ Break the work into **tracer bullet** tickets.
 
 <vertical-slice-rules>
 
-- Each slice delivers one complete behavior through the necessary layers and tests
+- Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests): vertical, NOT a horizontal slice of one layer
 - A completed slice is demoable or verifiable on its own
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first
@@ -58,20 +55,51 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Publish to the local backlog
+### 5. Publish the tickets to the configured tracker
 
-Use the template and next unused IDs from `backlog/README.md`. Create one
-approved task per file in `backlog/ready/`, in dependency order, with
-`type: task`, `triage: ready-for-agent`, `parent`, and `blocked_by` IDs.
-Describe the delivered behavior and observable acceptance criteria.
+Publish the approved tickets. **How** depends on the tracker `/setup-matt-pocock-skills` configured; the tickets are the same either way, only the shape of the blocking edges changes:
 
-If the source has no backlog parent, save the agreed spec or plan as a parent
-item first. Link tasks in its `Subtasks` section and nest them in
-`backlog/INDEX.md`; preserve an existing parent's scope and status.
+- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. If the source was an existing issue, make each ticket its sub-issue (tracker doc's operation). Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
 
-The frontier contains tasks whose blockers are all `done`. Keep specs and
-tasks in this tracker, using one file per item.
+Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
-Avoid specific implementation paths or code snippets that can become stale.
-Keep a prototype snippet only when it expresses a decision more precisely
-than prose, and retain only the parts needed to understand that decision.
+Do NOT close or modify any parent issue.
+
+<local-ticket-template>
+
+# <NN>: <Ticket title>
+
+**What to build:** the end-to-end behaviour this ticket makes work, from the user's perspective, not a layer-by-layer implementation list.
+
+**Blocked by:** the numbers/titles of the tickets that gate this one, or "None (can start immediately)".
+
+**Status:** ready-for-agent
+
+- [ ] Acceptance criterion 1
+- [ ] Acceptance criterion 2
+
+</local-ticket-template>
+
+<issue-template>
+
+## Parent
+
+A reference to the parent issue on the tracker (if the source was an existing issue, otherwise omit this section).
+
+## What to build
+
+The end-to-end behaviour this ticket makes work, from the user's perspective, not layer-by-layer implementation.
+
+## Acceptance criteria
+
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Blocked by
+
+- A reference to each blocking ticket, or "None (can start immediately)". Omit this section when blockers were set as native edges.
+
+</issue-template>
+
+In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
