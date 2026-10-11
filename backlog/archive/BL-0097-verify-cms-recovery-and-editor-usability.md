@@ -1,16 +1,20 @@
 ---
 id: BL-0097
 title: Verify CMS recovery and editor usability
-status: ready
+status: archive
 type: task
-triage: ready-for-human
+triage: wontfix
 priority: medium
 size: medium
 parent: BL-0087
 blocked_by: [BL-0096]
 created: 2026-10-06
-updated: 2026-10-07
+updated: 2026-10-11
 ---
+
+## Removed from scope, 2026-10-11
+
+The user removed this task because its remaining requirements are no longer needed. It is archived, not marked complete. Implemented technical work and the original evidence below are preserved. Its outstanding checks no longer block BL-0087; this change does not alter running services or automation.
 
 ## Problem
 
@@ -32,7 +36,7 @@ Complete and record the first blog release's staging usability and recovery chec
 
 ## Notes
 
-- The release checks are required by [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
+- The release checks are required by [BL-0087](../done/BL-0087-publish-blog-and-product-guides-with-emdash.md) and [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
 - Coordinate the editor trial when implementing this task; do not invent an editor or claim completion without their participation. Staging access is also a rollout input.
 - Production publishing waits for these checks. Preparing private drafts does not wait for this task. Three launch drafts, Product Guides, and Grok drafting have their own subtasks.
 

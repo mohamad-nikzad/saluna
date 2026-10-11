@@ -43,6 +43,12 @@ duration without a current source that proves it.
 
 ## Article contract
 
+Read [the public content writing rules](../../../docs/agents/public-content.md).
+Keep the visible title within 50 Unicode characters and aim for two lines at a
+390px viewport. The summary should add one concise sentence beyond the title.
+The manual and daily draft commands reject overlong title submissions with
+`CMS DRAFT_TITLE_TOO_LONG`; shorten the title before submitting again.
+
 Prepare a complete Persian title, stable explicit slug, useful summary and full
 Portable Text `body` with headings and paragraphs. Fill revisioned `seo_title`
 and `seo_description`; leave `search_excluded` false. Do not write native legacy

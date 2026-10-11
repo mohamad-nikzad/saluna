@@ -32,7 +32,7 @@ Add a separate Product Guide content type and public RTL templates in the same C
 
 ## Notes
 
-- This is a later phase of [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md), following [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
+- This is a later phase of [BL-0087](../done/BL-0087-publish-blog-and-product-guides-with-emdash.md), following [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md).
 - Product staff own accuracy after the corresponding UI changes. Record this maintenance responsibility with the guide workflow.
 - Manager-screen links and the guide editor's actual staging trial follow in BL-0101. Initial article publication and daily Grok drafting do not block this task.
 

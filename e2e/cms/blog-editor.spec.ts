@@ -95,6 +95,19 @@ test('editor saves, reopens, and revises a Persian Blog Article draft', async ()
   expect(revised.status).toBe('draft')
   expect(revised.slug).toBe(original.slug)
   expect(revised.authorId).toBe((await cms(editor, 'auth/me')).id)
+  await editor.goto('/_emdash/admin/content/blog_articles')
+  const savedTitle = editor.getByRole('link', {
+    name: 'محاسبه دقیق کمیسیون کارکنان سالن',
+    exact: true,
+  })
+  await expect(savedTitle).toHaveAttribute(
+    'href',
+    `/_emdash/admin/content/blog_articles/${id}?locale=en`,
+  )
+  await savedTitle.click()
+  await expect(editor.getByLabel('عنوان', { exact: true })).toHaveValue(
+    'محاسبه دقیق کمیسیون کارکنان سالن',
+  )
   const credentials = await cms(operator, 'admin/api-tokens', {
     name: 'Second configuration run',
     scopes: ['admin'],
@@ -199,6 +212,18 @@ test('Author publishes own content; Editor manages another author without CMS ad
   expect(pending.item.status).toBe('published')
   expect(pending.item.liveRevisionId).toBe(published.item.liveRevisionId)
   expect(pending.item.draftRevisionId).not.toBe(pending.item.liveRevisionId)
+  const listing = await cms(author, 'content/blog_articles')
+  expect(
+    listing.items.find((item: { id: string }) => item.id === id).data.title,
+  ).toBe('ویرایش پیش‌نویس پس از انتشار')
+  expect(
+    listing.items.find((item: { id: string }) => item.id === id).status,
+  ).toBe('published')
+  const publicHtml = await (
+    await author.request.get('/blog/author-publishing')
+  ).text()
+  expect(publicHtml).toContain('انتشار توسط نویسنده')
+  expect(publicHtml).not.toContain('ویرایش پیش‌نویس پس از انتشار')
   // Author cannot edit or publish another owner's article.
   const other = await cms(editor, 'content/blog_articles', {
     slug: 'editor-publishing',
@@ -501,6 +526,33 @@ test('a signed preview requires a real content session and never leaks into anon
   const contributor = await invitedAccount(browser, operator, 'contributor', 20)
   const subscriber = await invitedAccount(browser, operator, 'subscriber', 10)
   try {
+    const listed = await cms(operator, 'content/blog_articles', {
+      slug: 'draft-title-visibility',
+      status: 'draft',
+      data: { title: 'عنوان منتشرشده در فهرست' },
+    })
+    await cms(operator, `content/blog_articles/${listed.item.id}/publish`, {})
+    await cms(
+      operator,
+      `content/blog_articles/${listed.item.id}`,
+      { data: { title: 'عنوان خصوصی تازه در فهرست' } },
+      'PUT',
+    )
+    const subscriberList = await cms(subscriber, 'content/blog_articles')
+    expect(
+      subscriberList.items.find(
+        (item: { id: string }) => item.id === listed.item.id,
+      ).data.title,
+    ).toBe('عنوان منتشرشده در فهرست')
+    expect(JSON.stringify(subscriberList)).not.toContain(
+      'عنوان خصوصی تازه در فهرست',
+    )
+    const contributorList = await cms(contributor, 'content/blog_articles')
+    expect(
+      contributorList.items.find(
+        (item: { id: string }) => item.id === listed.item.id,
+      ).data.title,
+    ).toBe('عنوان خصوصی تازه در فهرست')
     const draft = await cms(contributor, 'content/blog_articles', {
       slug: 'private-draft-preview',
       status: 'draft',

@@ -26,11 +26,11 @@ The script performs public GET requests and overwrites its evidence snapshot. It
 
 Independent Check-host probes returned the following homepage responses. [Public probe report](https://check-host.net/check-report/4e98b37ckab1), [saved results](./regional-results.json), and [API documentation](https://check-host.net/about/api).
 
-| Probe location | Status | Probe response time |
-| --- | --- | --- |
-| Tehran, Iran | 200 | 0.23 seconds |
-| Nuremberg, Germany | 200 | 0.46 seconds |
-| Los Angeles, United States | 200 | 1.25 seconds |
+| Probe location             | Status | Probe response time |
+| -------------------------- | ------ | ------------------- |
+| Tehran, Iran               | 200    | 0.23 seconds        |
+| Nuremberg, Germany         | 200    | 0.46 seconds        |
+| Los Angeles, United States | 200    | 1.25 seconds        |
 
 These are successful observations at one time, not an uptime history or browser loading measurements. Some initial local DNS attempts failed and later retries succeeded. Failure through one research tool does not demonstrate a global outage.
 
@@ -53,17 +53,17 @@ The tested crawl prerequisites are sound. Further investigation should use Searc
 
 The order considers search growth, user value, and repair cost. It does not imply that every finding currently causes a ranking loss.
 
-| Order | Finding | Practical change | Completion evidence |
-| --- | --- | --- | --- |
-| 1 | One broad landing page covers several different buyer needs | Publish the first three product pages in the query map below, with real screenshots and accurate workflows | Each page answers its target need, returns readable HTML, has a unique title/canonical, receives homepage links, and appears in the sitemap |
-| 2 | Homepage has no links to other main-site content pages | Add a small footer for services, about, contact, terms, privacy, and product pages; add contextual links from feature sections | Follow ordinary HTML links from the homepage to every important public page |
-| 3 | Homepage sharing image repeatedly returns 500 | Fix `/og/landing.png`; prefer a static generated image or bundle its font as the working salon image endpoint does | Public GET returns 200 and a valid image after a production build; inspect an actual sharing preview |
-| 4 | Brand result uses a generic globe despite reachable icon files | Use a stable, explicit primary icon larger than 48 pixels, reusing the existing square 180-pixel image if suitable; verify real crawler access | Rendered homepage declares the intended icon; URL returns a valid image; request homepage recrawl once and observe later results |
-| 5 | Salon structured data has a currency mismatch | Normalize the price unit at the schema boundary | A visible 550,000 تومان price becomes 5,500,000 IRR in JSON-LD after confirming the storage unit |
-| 6 | Small header mark transfers 648,352 bytes | Serve an appropriately sized compressed asset or existing vector, with explicit dimensions | Inspect mobile network transfer and layout; aim for under 10 KB for this particular small mark |
-| 7 | Domain/slash variants remain separately accessible | Redirect www to apex; align each route's links, canonical, redirects, and sitemap slash policy | Each alternate URL redirects to the chosen URL and preserves path/query |
-| 8 | FAQ metadata describes old copy; salon HTML duplicates hidden and visible headings | Remove obsolete FAQ schema or derive it from the visible FAQ; consolidate salon HTML into one semantic structure | Compare deployed JSON-LD with visible copy; inspect salon accessibility and heading structure |
-| 9 | Some published salon names look like internal test data | Review ownership and purpose; exclude confirmed internal/demo pages from indexing and sitemaps | Owner confirms classification; actual public salons retain their intended publication behavior |
+| Order | Finding                                                                            | Practical change                                                                                                                               | Completion evidence                                                                                                                         |
+| ----- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | One broad landing page covers several different buyer needs                        | Publish the first three product pages in the query map below, with real screenshots and accurate workflows                                     | Each page answers its target need, returns readable HTML, has a unique title/canonical, receives homepage links, and appears in the sitemap |
+| 2     | Homepage has no links to other main-site content pages                             | Add a small footer for services, about, contact, terms, privacy, and product pages; add contextual links from feature sections                 | Follow ordinary HTML links from the homepage to every important public page                                                                 |
+| 3     | Homepage sharing image repeatedly returns 500                                      | Fix `/og/landing.png`; prefer a static generated image or bundle its font as the working salon image endpoint does                             | Public GET returns 200 and a valid image after a production build; inspect an actual sharing preview                                        |
+| 4     | Brand result uses a generic globe despite reachable icon files                     | Use a stable, explicit primary icon larger than 48 pixels, reusing the existing square 180-pixel image if suitable; verify real crawler access | Rendered homepage declares the intended icon; URL returns a valid image; request homepage recrawl once and observe later results            |
+| 5     | Salon structured data has a currency mismatch                                      | Normalize the price unit at the schema boundary                                                                                                | A visible 550,000 تومان price becomes 5,500,000 IRR in JSON-LD after confirming the storage unit                                            |
+| 6     | Small header mark transfers 648,352 bytes                                          | Serve an appropriately sized compressed asset or existing vector, with explicit dimensions                                                     | Inspect mobile network transfer and layout; aim for under 10 KB for this particular small mark                                              |
+| 7     | Domain/slash variants remain separately accessible                                 | Redirect www to apex; align each route's links, canonical, redirects, and sitemap slash policy                                                 | Each alternate URL redirects to the chosen URL and preserves path/query                                                                     |
+| 8     | FAQ metadata describes old copy; salon HTML duplicates hidden and visible headings | Remove obsolete FAQ schema or derive it from the visible FAQ; consolidate salon HTML into one semantic structure                               | Compare deployed JSON-LD with visible copy; inspect salon accessibility and heading structure                                               |
+| 9     | Some published salon names look like internal test data                            | Review ownership and purpose; exclude confirmed internal/demo pages from indexing and sitemaps                                                 | Owner confirms classification; actual public salons retain their intended publication behavior                                              |
 
 ### Content and navigation
 
@@ -107,21 +107,21 @@ For ongoing reachability, monitor the homepage from an Iranian and an internatio
 
 These are suggested query families based on product fit and observed search intent. Search volume and difficulty have not been measured. Avoid creating several pages for spelling variants of the same need. Write natural Persian and cover related wording in one useful page.
 
-| Publish order | Suggested page | Persian query family | What makes it useful |
-| --- | --- | --- | --- |
-| First | `/features/online-appointment-requests/` | نوبت دهی آنلاین سالن زیبایی، رزرو آنلاین آرایشگاه | Show the public salon page, customer request, manager review, staff selection, and confirmed appointment. Explain that a request needs manager approval |
-| First | `/features/salon-clients/` | نرم افزار مدیریت مشتریان سالن زیبایی، پیگیری مشتریان سالن | Show client notes, tags, appointment history, and actual follow-up workflows. Separate shipped behavior from planned automation |
-| First | `/features/staff-commission/` | محاسبه پورسانت پرسنل سالن زیبایی، نرم افزار پورسانت آرایشگاه | Explain agreements, service overrides, completed work, and reporting with an example. Do not call retained appointment value collected cash or profit |
-| Next | `/features/staff-scheduling/` | برنامه ریزی پرسنل سالن زیبایی، تقویم نوبت دهی آرایشگاه | Demonstrate working hours, staff capabilities, conflicts, personal schedules, and Jalali operation |
-| Next | `/guides/approve-appointment-request/` | آموزش ثبت و تایید نوبت سالن، مدیریت نوبت در بله | Maintain actual steps, screenshots, an optional short video and transcript, and a last-reviewed date |
-| Next | `/blog/calculate-salon-staff-commission/` | نحوه محاسبه پورسانت آرایشگاه، درصد پورسانت پرسنل سالن | Answer the business question with worked examples and link naturally to the product page |
-| Later | `/solutions/nail-salons/` | نرم افزار مدیریت سالن ناخن | Publish only if there are distinct nail-salon workflows, examples, and evidence beyond swapping the industry name |
+| Publish order | Suggested page                            | Persian query family                                         | What makes it useful                                                                                                                                    |
+| ------------- | ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First         | `/features/online-appointment-requests/`  | نوبت دهی آنلاین سالن زیبایی، رزرو آنلاین آرایشگاه            | Show the public salon page, customer request, manager review, staff selection, and confirmed appointment. Explain that a request needs manager approval |
+| First         | `/features/salon-clients/`                | نرم افزار مدیریت مشتریان سالن زیبایی، پیگیری مشتریان سالن    | Show client notes, tags, appointment history, and actual follow-up workflows. Separate shipped behavior from planned automation                         |
+| First         | `/features/staff-commission/`             | محاسبه پورسانت پرسنل سالن زیبایی، نرم افزار پورسانت آرایشگاه | Explain agreements, service overrides, completed work, and reporting with an example. Do not call retained appointment value collected cash or profit   |
+| Next          | `/features/staff-scheduling/`             | برنامه ریزی پرسنل سالن زیبایی، تقویم نوبت دهی آرایشگاه       | Demonstrate working hours, staff capabilities, conflicts, personal schedules, and Jalali operation                                                      |
+| Next          | `/guides/approve-appointment-request/`    | آموزش ثبت و تایید نوبت سالن، مدیریت نوبت در بله              | Maintain actual steps, screenshots, an optional short video and transcript, and a last-reviewed date                                                    |
+| Next          | `/blog/calculate-salon-staff-commission/` | نحوه محاسبه پورسانت آرایشگاه، درصد پورسانت پرسنل سالن        | Answer the business question with worked examples and link naturally to the product page                                                                |
+| Later         | `/solutions/nail-salons/`                 | نرم افزار مدیریت سالن ناخن                                   | Publish only if there are distinct nail-salon workflows, examples, and evidence beyond swapping the industry name                                       |
 
 Homepage category focus should remain salon management software. The query I checked also brought up full accounting software. Saluna's appointment and commission reporting should be described accurately, rather than marketed as full accounting/POS functionality to chase that adjacent traffic.
 
 Each first-wave page should include the problem, who it serves, a real screenshot, the actual sequence of work, limitations, a realistic example, visible FAQs, a relevant guide link, and a clear trial/demo action. One complete page is preferable to many generic AI-written articles. Google's [helpful-content guidance](https://developers.google.com/search/docs/fundamentals/creating-helpful-content) supports original information and answering users' needs; it does not set a required word count.
 
-Editorial content already has an agreed implementation in [ADR-0040](../../adr/0040-emdash-for-public-content.md), tracked by [BL-0087](../../../backlog/now/BL-0087-publish-blog-and-product-guides-with-emdash.md). Use EmDash within the existing Astro site for Blog Articles and Product Guides. Both live indexes currently return 404 because that work has not shipped. A few maintained product pages can use existing Astro routes while editorial publishing is built, without introducing a second CMS or blog domain.
+Editorial content already has an agreed implementation in [ADR-0040](../../adr/0040-emdash-for-public-content.md), tracked by [BL-0087](../../../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md). Use EmDash within the existing Astro site for Blog Articles and Product Guides. Both live indexes currently return 404 because that work has not shipped. A few maintained product pages can use existing Astro routes while editorial publishing is built, without introducing a second CMS or blog domain.
 
 Keep commercial copy consistent with the offer actually available to visitors. The live landing currently says free testing with plans coming later; domain documents describe a future subscription/trial model. Confirm launch status before adding a pricing page or promising a specific trial duration. A transparent current offer is useful; an invented future price is not.
 
@@ -144,12 +144,12 @@ Several common shortcuts do not fit this project:
 
 ## Delivery and measurement plan
 
-| Period | Deliverable | Measure |
-| --- | --- | --- |
-| Days 1 to 7 | Repair OG and price schema, reduce header image, declare larger stable icon, connect existing public pages, decide redirect policy | Live response/image checks, deployed schema comparison, navigation crawl, browser transfer size |
-| Days 8 to 21 | Publish the three first-wave product pages, clarify visible homepage category, record one accurate product demo | Crawlable/indexable pages, sitemap inclusion, useful content review, successful signup/demo path |
-| Days 22 to 45 | Publish first reviewed guide/article using the agreed content workflow, add a real case study or relevant editorial mention | Relevant non-brand impressions, clicks, landing pages, signup/demo conversions |
-| After enough data accumulates | Compare equivalent 28-day periods and improve pages with meaningful query impressions | Separate branded/non-branded performance; assess Iran traffic and mobile traffic separately |
+| Period                        | Deliverable                                                                                                                        | Measure                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Days 1 to 7                   | Repair OG and price schema, reduce header image, declare larger stable icon, connect existing public pages, decide redirect policy | Live response/image checks, deployed schema comparison, navigation crawl, browser transfer size  |
+| Days 8 to 21                  | Publish the three first-wave product pages, clarify visible homepage category, record one accurate product demo                    | Crawlable/indexable pages, sitemap inclusion, useful content review, successful signup/demo path |
+| Days 22 to 45                 | Publish first reviewed guide/article using the agreed content workflow, add a real case study or relevant editorial mention        | Relevant non-brand impressions, clicks, landing pages, signup/demo conversions                   |
+| After enough data accumulates | Compare equivalent 28-day periods and improve pages with meaningful query impressions                                              | Separate branded/non-branded performance; assess Iran traffic and mobile traffic separately      |
 
 In Search Console, submit the sitemap index once, inspect the homepage and each new important page, and review Google's chosen canonical and rendered content. Request indexing after publication or substantial repairs, then use the reports to diagnose actual exclusions. A submitted sitemap is a discovery aid, not a ranking instruction. See [Search Console workflow](https://developers.google.com/search/docs/monitor-debug/search-console-start).
 
@@ -159,16 +159,16 @@ Do not judge the work solely by favicon appearance or a broad keyword's first-pa
 
 ## Source locations for implementation
 
-| Concern | Repository files |
-| --- | --- |
-| Visible landing/navigation/FAQ/image markup | `apps/web/src/components/landing/prototype/LandingPrototype.astro` |
-| Homepage metadata and old FAQ dataset | `apps/web/src/pages/index.astro`, `apps/web/src/content/landing.ts` |
-| Icon declarations and font preloads | `apps/web/src/layouts/Base.astro` |
-| Homepage OG runtime font dependency | `apps/web/src/pages/og/landing.png.ts`, `apps/web/Dockerfile` |
-| Working bundled-font example | `apps/web/src/pages/og/[slug].png.ts` |
-| Currency serialization and visible formatting | `apps/web/src/lib/seo.ts`, `apps/web/src/lib/format.ts` |
-| Duplicate salon shell | `apps/web/src/components/SalonShell.astro`, `apps/web/src/pages/salons/[slug]/index.astro` |
-| Sitemap/slash/domain behavior | `apps/web/astro.config.mjs`, `apps/web/src/pages/salons-sitemap.xml.ts`, `deploy/nginx/templates/saluna.conf.template` |
-| Product/commercial boundaries | `GLOSSARY.md`, `docs/adr/0019-salon-funded-saas.md`, `docs/adr/0035-read-only-salons-keep-public-presence-without-intake.md`, `docs/adr/0040-emdash-for-public-content.md` |
+| Concern                                       | Repository files                                                                                                                                                           |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visible landing/navigation/FAQ/image markup   | `apps/web/src/components/landing/prototype/LandingPrototype.astro`                                                                                                         |
+| Homepage metadata and old FAQ dataset         | `apps/web/src/pages/index.astro`, `apps/web/src/content/landing.ts`                                                                                                        |
+| Icon declarations and font preloads           | `apps/web/src/layouts/Base.astro`                                                                                                                                          |
+| Homepage OG runtime font dependency           | `apps/web/src/pages/og/landing.png.ts`, `apps/web/Dockerfile`                                                                                                              |
+| Working bundled-font example                  | `apps/web/src/pages/og/[slug].png.ts`                                                                                                                                      |
+| Currency serialization and visible formatting | `apps/web/src/lib/seo.ts`, `apps/web/src/lib/format.ts`                                                                                                                    |
+| Duplicate salon shell                         | `apps/web/src/components/SalonShell.astro`, `apps/web/src/pages/salons/[slug]/index.astro`                                                                                 |
+| Sitemap/slash/domain behavior                 | `apps/web/astro.config.mjs`, `apps/web/src/pages/salons-sitemap.xml.ts`, `deploy/nginx/templates/saluna.conf.template`                                                     |
+| Product/commercial boundaries                 | `GLOSSARY.md`, `docs/adr/0019-salon-funded-saas.md`, `docs/adr/0035-read-only-salons-keep-public-presence-without-intake.md`, `docs/adr/0040-emdash-for-public-content.md` |
 
 Production behavior and its saved evidence take precedence over assumptions from source files.

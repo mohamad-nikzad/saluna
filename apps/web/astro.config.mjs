@@ -1,6 +1,11 @@
 // @ts-check
 import fs from 'node:fs/promises'
-import { defineConfig, envField, fontProviders } from 'astro/config'
+import {
+  defineConfig,
+  envField,
+  fontProviders,
+  sessionDrivers,
+} from 'astro/config'
 import node from '@astrojs/node'
 import react from '@astrojs/react'
 import sitemap from '@astrojs/sitemap'
@@ -49,6 +54,11 @@ export default defineConfig({
   // CMS content slash variants must reach the CMS before deciding redirect or 404.
   trailingSlash: 'ignore',
   adapter: node({ mode: 'standalone' }),
+  // Keep sessions at the runtime app directory when a build moves between hosts.
+  // The adapter's default otherwise embeds the build machine's absolute path.
+  session: {
+    driver: sessionDrivers.fsLite({ base: './node_modules/.astro/sessions' }),
+  },
   integrations: [
     react(),
     {

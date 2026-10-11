@@ -1,7 +1,6 @@
 ---
 import PublicInfoLayout from './PublicInfoLayout.astro'
 import PublicRichText from '../components/PublicRichText.astro'
-import { displayClass } from '../content/landing'
 import { buildGuideMetadata } from '../lib/seo'
 import type { ProductGuide } from '../lib/public-content'
 import { Image } from 'emdash/ui'
@@ -16,7 +15,10 @@ const reviewed = guide.reviewed_at ? new Date(guide.reviewed_at) : null
 const video = guideVideo(guide.video_url)
 ---
 
-<PublicInfoLayout {...buildGuideMetadata(guide, publicOrigin, preview)}>
+<PublicInfoLayout
+  {...buildGuideMetadata(guide, publicOrigin, preview)}
+  editorial
+>
   {
     preview && (
       <div
@@ -27,52 +29,56 @@ const video = guideVideo(guide.video_url)
       </div>
     )
   }
-  <article class="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-20">
-    <header class="max-w-3xl">
-      <a
-        href="/guides"
-        class="text-sm text-[#7a2a40] underline underline-offset-4"
-        >راهنماهای سالونا</a
-      >
-      <h1 class={`${displayClass} mt-7 text-4xl leading-tight sm:text-6xl`}>
+  <article class="editorial-article editorial-guide">
+    <header class="editorial-header">
+      <a href="/guides" class="editorial-back">راهنماهای سالونا</a>
+      <h1 class="editorial-title">
         {guide.title}
       </h1>
-      <p class="mt-6 text-lg leading-9 text-[#6b4955]">{guide.summary}</p>
-      <p class="mt-6 text-sm leading-7 text-[#6b4955]">
-        آخرین بازبینی: {
-          reviewed && (
-            <time datetime={reviewed.toISOString()}>
-              {new Intl.DateTimeFormat('fa-IR', {
-                dateStyle: 'long',
-                timeZone: 'Asia/Tehran',
-              }).format(reviewed)}
-            </time>
-          )
-        }
-        {guide.reviewer_name && <span>، {guide.reviewer_name}</span>}
-      </p>
+      {guide.summary && <p class="editorial-summary">{guide.summary}</p>}
+      {
+        (reviewed || guide.reviewer_name) && (
+          <p class="editorial-meta">
+            آخرین بازبینی:{' '}
+            {reviewed && (
+              <time datetime={reviewed.toISOString()}>
+                {new Intl.DateTimeFormat('fa-IR', {
+                  dateStyle: 'long',
+                  timeZone: 'Asia/Tehran',
+                }).format(reviewed)}
+              </time>
+            )}
+            {guide.reviewer_name && <span>{guide.reviewer_name}</span>}
+          </p>
+        )
+      }
     </header>
     {
       guide.cover && (
-        <figure class="mt-10 overflow-hidden rounded-2xl">
+        <figure class="editorial-cover guide-screenshot">
           <Image
             image={guide.cover}
             priority
             placeholder={false}
             class="h-auto w-full"
           />
+          <button
+            type="button"
+            class="screenshot-expand"
+            aria-haspopup="dialog"
+            hidden
+          >
+            بزرگ‌نمایی تصویر
+          </button>
         </figure>
       )
     }
-    <div class="mx-auto mt-10 max-w-[40rem]">
-      <PublicRichText value={guide.body} />
+    <div class="editorial-body">
+      <PublicRichText value={guide.body} guide />
       {
         (video || guide.video_transcript) && (
-          <section
-            class="mt-12 border-t border-[#f3d5dd] pt-8"
-            aria-label="ویدئو و متن همراه"
-          >
-            <h2 class={`${displayClass} text-3xl`}>ویدئو و متن همراه</h2>
+          <section class="editorial-supplement" aria-label="ویدئو و متن همراه">
+            <h2>ویدئو و متن همراه</h2>
             {video?.embed && (
               <iframe
                 src={video.embed}
@@ -102,24 +108,19 @@ const video = guideVideo(guide.video_url)
               </a>
             )}
             {guide.video_transcript && (
-              <div class="mt-6">
-                <h3 class="font-bold">متن همراه ویدئو</h3>
-                <p class="mt-3 whitespace-pre-line leading-9">
-                  {guide.video_transcript}
-                </p>
-              </div>
+              <details class="editorial-transcript">
+                <summary>متن همراه ویدئو</summary>
+                <p class="whitespace-pre-line">{guide.video_transcript}</p>
+              </details>
             )}
           </section>
         )
       }
       {
         guide.relatedGuides.length > 0 && (
-          <nav
-            class="mt-12 border-t border-[#f3d5dd] pt-8"
-            aria-label="راهنماهای مرتبط"
-          >
+          <nav class="editorial-supplement" aria-label="راهنماهای مرتبط">
             <>
-              <h2 class={`${displayClass} text-3xl`}>راهنماهای مرتبط</h2>
+              <h2>راهنماهای مرتبط</h2>
               <ul class="mt-5 space-y-3">
                 {guide.relatedGuides.map((related) => (
                   <li>

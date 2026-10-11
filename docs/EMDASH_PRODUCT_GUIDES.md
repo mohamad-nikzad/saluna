@@ -1,5 +1,7 @@
 # Product Guide editing and maintenance
 
+BL-0087 was completed under revised scope on 2026-10-11. The user removed the remaining human editor trials and scheduled-drafting proof requirements; these checks are not claimed as completed. The archived tasks preserve their technical evidence. Earlier rollout notes below are historical where they describe these checks as blockers. See [the completion record](../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+
 Product Guides live in native EmDash `product_guides`, separate from Blog
 Articles. They share the site's public reader, rich-text rendering, metadata,
 media providers and publication policy. `/guides` and `/guides/{slug}` are

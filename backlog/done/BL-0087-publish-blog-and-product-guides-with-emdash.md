@@ -1,13 +1,13 @@
 ---
 id: BL-0087
 title: Publish Blog Articles and Product Guides with EmDash
-status: now
+status: done
 type: feature
 triage: ready-for-agent
 priority: medium
 size: large
 created: 2026-09-29
-updated: 2026-10-09
+updated: 2026-10-11
 ---
 
 ## Problem Statement
@@ -18,7 +18,7 @@ Saluna has no self-service publishing path for a nontechnical content editor. Pr
 
 Integrate EmDash into the existing Astro public site on `saluna.ir`, following [ADR-0040](../../docs/adr/0040-emdash-for-public-content.md). Start with Persian Blog Articles at `/blog`, using Saluna's RTL design. Editors can save private drafts and publish their own or another editor's content without a code change or deployment. A different reviewer is not required. Public credit defaults to `تیم سالونا`, with named authors supported independently of the writing account. Articles support optional cover and inline images, a branded social-preview fallback, and a relevant signup link.
 
-Prepare three first-batch drafts on Staff Commission calculations, organizing AppointmentRequests, and useful Client records. This content milestone is complete when all three exist as drafts and have preview links. Publication is an optional later action by an authorized editor and is not a prerequisite for completing this batch. Product Guides at `/guides` and links from relevant manager PWA screens follow later. Daily Grok drafting is another later phase and does not wait for Product Guides or earlier drafts to be published.
+Prepare three first-batch drafts on Staff Commission calculations, organizing AppointmentRequests, and useful Client records. This content milestone is complete when all three exist as drafts and have preview links. Publication is an optional later action by an authorized editor and is not a prerequisite for completing this batch. Product Guides at `/guides` and links from relevant manager PWA screens are included. Agent drafting includes the launch batch, a verified manual Grok run, and reusable writing instructions. Recurring drafting and additional human editor trials were removed from completion scope on 2026-10-11.
 
 ## User Stories
 
@@ -28,7 +28,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 4. As a visitor, I want readable RTL articles with a clear byline and working links, so that I can read and share them on the public site.
 5. As an operator, I want persistent CMS content and media with a rehearsed recovery procedure, so that container replacement and upgrades do not lose the publishing work.
 6. As a salon manager, I want public Product Guides linked from relevant product screens, so that I can follow accurate steps for a Saluna task.
-7. As the person responsible for content, I want a later Grok routine to create one new draft each day without publishing it or waiting for earlier drafts, so that I have a continuing supply of articles to use when ready.
+7. As the person responsible for content, I want an agent to prepare private Persian drafts from current product sources, so that I can choose when to publish them.
 
 ## Implementation Decisions
 
@@ -37,30 +37,28 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 - Select and pin an EmDash release, then check its runtime and Astro requirements. The current web image and declared engine minimum use Node 22.12.0. The current [existing-project guide](https://docs.emdashcms.com/existing-project/) requires Node 22.16 or later and Astro 6 or later. Raise the web runtime and relevant declarations to satisfy the selected release and test the production image, rather than treating development startup as deployment proof.
 - Enable revisions so saving changes stages a draft separately from the live revision. Public templates read published revisions at request time. Authenticated previews read the draft, carry a noindex policy, and do not share cached responses with anonymous visitors. Publishing and withdrawal must affect the next public request, including list and sitemap discovery.
 - Use EmDash's supported content roles for authorized editors. The same editor may draft and publish an article; no separate reviewer identity or approval is required. The [role guide](https://docs.emdashcms.com/guides/authentication/) permits Authors to publish their own content and Editors to manage other users' content. Grant only the access needed for the editor's work and keep CMS administration and Salon operational access separate.
-- The agent connection uses the installed release's supported MCP or remote CLI with a dedicated identity and the minimum supported content/media access needed to complete drafting. Explicitly keep create/update operations as drafts. The first-batch drafting job and daily Grok routine do not publish or schedule publication. The [MCP reference](https://docs.emdashcms.com/reference/mcp-server/) checks scopes and roles separately; verify successful draft creation, revision, preview, and required image operations with the chosen identity. No mandatory approval workflow or custom publication-denial layer is required.
+- The agent connection uses the installed release's supported MCP or remote CLI with a dedicated identity and the minimum supported content/media access needed to complete drafting. Explicitly keep create/update operations as drafts. Agent drafting operations do not publish or schedule publication. The [MCP reference](https://docs.emdashcms.com/reference/mcp-server/) checks scopes and roles separately; verify successful draft creation, revision, preview, and required image operations with the chosen identity. No mandatory approval workflow or custom publication-denial layer is required.
 - Blog Articles have a title, stable slug, summary, rich text body, reusable public byline, optional cover and inline images, and page-specific SEO fields. Default credit is `تیم سالونا`. The editor's login does not automatically determine public authorship.
 - Extend the existing public layouts, navigation, and shared metadata rendering for article output. Use one canonical and metadata path, article structured data, and a branded social image when no cover exists. Discover published CMS URLs through a runtime sitemap advertised to crawlers, while preserving existing static and public Salon sitemaps. Follow the site's existing canonical convention without a trailing slash; slash variants permanently redirect to the canonical URL.
 - Ordinary title or body edits preserve the slug. An explicitly published slug change permanently redirects the former URL to the new canonical URL. Unknown, unpublished, and deleted content returns 404, including access through former URLs. Draft slug changes do not change live routing before publication. Sitemaps list only current published canonical URLs.
 - An agent prepares the three agreed launch articles from current product behavior and glossary terms. The Staff Commission article includes worked examples consistent with Eligible Commission Basis and Commission Agreement behavior. Deliver all three as drafts with preview links. An authorized editor may later publish them, including their own drafts; batch completion does not depend on review or publication. Signup links are included, while article-to-signup attribution remains separate work.
-- Product Guides are a later, separate content type and template within the same CMS. They contain ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer. Product staff own accuracy after UI changes. The guide phase includes at least one relevant manager PWA link and its own real-editor trial.
-- Later Grok drafting uses a Saluna writing skill specifying prospective Salon Owners as the audience, allowed salon-management subjects, current product sources, required article fields, public credit, optional images, and draft-only delivery. Subjects include Staff Commission, AppointmentRequest handling, Client records, and staff scheduling. Check overlap with existing content without waiting for review. Key retries to the same daily run to avoid duplicate drafts, report failed creation, and choose the `Asia/Tehran` run time when enabling the routine. Publishing is a later explicit action outside the drafting routine, with no mandatory second reviewer.
+- Product Guides are a later, separate content type and template within the same CMS. They contain ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer. Product staff own accuracy after UI changes. The guide phase includes at least one relevant manager PWA link. Additional human editor trials are outside the revised completion scope.
+- Agent drafting uses a Saluna writing skill specifying prospective Salon Owners as the audience, allowed salon-management subjects, current product sources, required article fields, public credit, optional images, and draft-only delivery. Check overlap with existing content without waiting for review. A manual Grok drafting run is verified; recurring execution is outside the revised completion scope.
 
 ## Testing Decisions
 
 - Test what users and visitors can do and read. Assert visible editor actions, supported agent responses, rendered HTML, status codes, and discovery output. Avoid tests of internal CMS tables, private helpers, or calls made between modules.
 - Use one primary end-to-end publishing journey against the real Astro/EmDash application and CMS persistence. A writer creates a Persian draft, uploads an image, previews it, and revises it. The same authorized editor can publish it, anonymous visitors read it, a subsequent draft edit leaves live content unchanged, and republishing then unpublishing changes public output without a build or deployment.
-- Verify that an authorized editor can publish their own draft and that an editor with the appropriate content role can publish another user's draft. Check successful draft creation, revision, preview, and required image operations through the supported agent interface. Verify that first-batch and daily drafting jobs leave their output as drafts and never request publication or schedule it. Content editor accounts do not gain CMS administration or Salon operational access.
+- Verify that an authorized editor can publish their own draft and that an editor with the appropriate content role can publish another user's draft. Check successful draft creation, revision, preview, and required image operations through the supported agent interface. Verify that first-batch and manual agent drafting operations leave their output as drafts and never request publication or schedule it. Content editor accounts do not gain CMS administration or Salon operational access.
 - Extend the existing public-web HTTP smoke checks for the Blog Article index, detail pages, metadata, structured data, social image responses, sitemap discovery, preview privacy, canonical redirects, renamed URLs, and 404 after withdrawal. Use real publication state changes for the lifecycle checks. Keep the existing landing page and public Salon checks as regression coverage.
 - Reuse the existing web Vitest/Astro rendered-layout and sitemap response tests for focused metadata cases, missing optional images, default and named bylines, and published-only discovery. Prior art is the shared Head rendering tests, public Salon SEO tests, runtime Salon sitemap tests, and the complete local-search journey in BL-0075.
 - Reuse Playwright's role-based user interactions and failure artifacts for the editor journey. Its current startup targets the manager PWA, so provide a CMS/web test target with an isolated CMS fixture rather than assuming the existing server setup runs EmDash. The later guide phase also verifies a manager-screen link to the correct public guide.
-- Automated checks do not replace the intended editor's staging trial. Have that editor write Persian text, upload an image, preview, publish, revise, and unpublish with the appropriate accounts. Record and resolve unacceptable untranslated UI or RTL formatting. Separately rehearse media survival across container replacement, upgrade, and a content/media/key restore on staging. Production smoke checks must detect unavailable CMS content and editing dependencies.
-- When enabled later, test Grok draft creation, repeated execution of the same daily run without duplicates, independent progress despite unreviewed drafts, and failure reporting. Verify the selected connection's permissions again at that point.
+- Rehearse media survival across container replacement, upgrade, and a content/media/key restore on staging. Production smoke checks must detect unavailable CMS content and editing dependencies. Additional human trials and scheduled-drafting proof are no longer completion requirements.
 
 ## Acceptance Criteria
 
 ### First Blog Article release
 
-- [ ] An authorized nontechnical editor can draft, preview, publish, revise, and unpublish a Persian Blog Article without a code change or Saluna deployment. Draft changes to an existing article remain separate from its live version.
 - [x] An authorized editor can create, preview, revise, and publish their own article without a separate reviewer. An editor with the appropriate role can also publish another editor's article. Verify content operations through the admin and draft creation, revision, preview access, and required image operations through the supported agent interface, without granting CMS administration or Salon operational access.
 - [x] Blog Articles support a title, stable slug, summary, rich text body, public byline, optional cover image and inline images, and page-specific SEO metadata. Public credit defaults to `تیم سالونا` and can be changed to a named author independently of the writing account.
 - [x] The public `/blog/` index and individual pages use Saluna's Persian RTL design and are reachable through site navigation. Articles include a relevant signup link. An article without a cover image uses a Saluna-branded social preview.
@@ -68,25 +66,22 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 - [x] Publishing, republishing, or unpublishing takes effect on the next public request without rebuilding or replacing the web image. Ordinary edits preserve the slug. An explicitly renamed published URL permanently redirects to its replacement; unpublished, deleted, and unknown pages return 404, including requests through any old redirect.
 - [x] CMS data uses a dedicated Postgres database or schema and role; media persists across container replacement. Runtime secrets, migrations, backups, and recovery are documented. Staging rehearsals cover container replacement, an EmDash upgrade, and restoring content, media, and required encryption keys from backup.
 - [x] The web runtime uses an EmDash-supported Node version. Production smoke checks exercise CMS content and editing dependencies, not only the static landing page.
-- [ ] The intended editor completes an end-to-end Persian RTL trial, including image upload and preview; any unacceptable untranslated UI or formatting behavior is resolved before launch.
 - [x] An agent prepares three Blog Article drafts on Staff Commission calculations, organizing AppointmentRequests, and useful Client records, and delivers their preview links. All three remain unpublished on delivery. This first-batch milestone is complete with the three drafts; neither review by another person or agent nor publication is required.
 
-### Later Product Guides
+### Product Guides
 
 - [x] Product Guides have their own content type and public template, with ordered steps, screenshots, an optional externally hosted video and transcript, related guides, and a last-reviewed date or reviewer.
-- [ ] An authorized nontechnical editor can draft, preview, publish, revise, and unpublish a Persian Product Guide without a code change or Saluna deployment, including a real-editor trial of screenshot upload and video placement.
 - [x] Public `/guides/` index and individual pages use Saluna's Persian RTL design, appear in navigation and discoverable sitemaps, and have appropriate metadata. At least one manager PWA screen links to its relevant Product Guide.
 
-### Later Grok drafting workflow
+### Agent drafting
 
-- [ ] A separately enabled Grok routine creates one new Persian Blog Article draft per day within the agreed salon-management subjects, independently of earlier drafts' review or publication status.
-- [ ] The writing bot uses a dedicated identity with the minimum supported access needed to create and revise drafts and perform required media operations. Use the installed EmDash release's MCP or remote CLI after testing authentication and permissions. Create/update operations explicitly keep content as draft; the routine does not publish or schedule publication.
 - [x] A Saluna writing skill records the audience, allowed subject areas, current product sources, article fields, default byline, optional-image behavior, and the draft-only deliverable. Writers check existing content for overlap but do not wait for earlier drafts to be reviewed or published.
-- [ ] Routine retries avoid duplicate drafts for the same daily run, and failed draft creation is reported. Choose the run time in `Asia/Tehran` when enabling the routine. Review is optional, and publication is a later explicit action outside the drafting routine.
+
+- [x] A manual Grok run creates, revises, illustrates, and returns an authenticated preview of a private Persian Blog Article using the dedicated native Author connection, as verified in BL-0102.
 
 ## Out of Scope
 
-- Product Guides and daily Grok drafting in the first Blog Article release. Both remain later phases of this parent feature.
+- Additional human Blog Article and Product Guide editor trials, and recurring drafting execution/reporting proof. The user removed these requirements and the three remaining tasks on 2026-10-11. Existing technical work and automation configuration are retained.
 - Automatic publication of the first batch or daily drafts, mandatory approval by a different person or agent, review criteria, subject-specific approval policies, and a reviewer queue or publication cadence.
 - Article-to-signup conversion attribution, which is a separate follow-up rather than a launch prerequisite.
 - A mandatory cover image, mandatory image-generation service, or large video hosting in the CMS/web container.
@@ -95,7 +90,7 @@ Prepare three first-batch drafts on Staff Commission calculations, organizing Ap
 
 ## Subtasks
 
-The user approved this smaller breakdown on 2026-10-06. Each task owns checks for the behavior it delivers. The tasks are listed in dependency order; only BL-0092 is initially unblocked.
+The user approved the original breakdown on 2026-10-06. The nine retained tasks are complete. BL-0097, BL-0101, and BL-0103 were removed from completion scope on 2026-10-11 and archived with their technical evidence.
 
 | Task                                                                                                                              | Blocked by |
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------- |
@@ -104,17 +99,32 @@ The user approved this smaller breakdown on 2026-10-06. Each task owns checks fo
 | [BL-0094 Render blog pages and private previews](../done/BL-0094-render-blog-pages-and-private-previews.md)                       | BL-0093    |
 | [BL-0095 Complete blog publishing and URL lifecycle](../done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)               | BL-0094    |
 | [BL-0096 Add Blog Article SEO and discovery](../done/BL-0096-add-blog-article-seo-and-discovery.md)                               | BL-0095    |
-| [BL-0097 Verify CMS recovery and editor usability](../ready/BL-0097-verify-cms-recovery-and-editor-usability.md)                  | BL-0096    |
 | [BL-0098 Enable agent Blog Article drafting](../done/BL-0098-enable-agent-blog-article-drafting.md)                               | BL-0094    |
 | [BL-0099 Deliver three initial Blog Article drafts](../done/BL-0099-deliver-three-initial-blog-article-drafts.md)                 | BL-0098    |
 | [BL-0100 Publish Product Guides](../done/BL-0100-publish-product-guides.md)                                                       | BL-0096    |
-| [BL-0101 Connect manager screens to Product Guides](../ready/BL-0101-connect-manager-screens-to-product-guides.md)                | BL-0100    |
 | [BL-0102 Prove one Grok drafting run](../done/BL-0102-prove-one-grok-drafting-run.md)                                             | BL-0098    |
-| [BL-0103 Enable daily Grok drafting](../ready/BL-0103-enable-daily-grok-drafting.md)                                              | BL-0102    |
 
-BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and BL-0099 complete the first-batch draft delivery. Production publishing requires the staging checks in BL-0097; private drafting can proceed once its own blockers are done. Product Guides and Grok drafting remain later phases. Neither depends on the initial articles being reviewed or published, and Grok does not depend on Product Guides. The parent retains its full scope and remains open until all acceptance criteria, including the later phases, are satisfied.
+BL-0092 through BL-0096 establish the publishing release. BL-0098 and BL-0099 complete the launch drafts, BL-0100 delivers Product Guides, and BL-0102 proves manual agent drafting. Recovery rehearsals and the manager guide link from the archived tasks remain implemented and verified.
+
+Removed tasks, with historical evidence preserved:
+
+- [BL-0097 Verify CMS recovery and editor usability](../archive/BL-0097-verify-cms-recovery-and-editor-usability.md)
+- [BL-0101 Connect manager screens to Product Guides](../archive/BL-0101-connect-manager-screens-to-product-guides.md)
+- [BL-0103 Enable daily Grok drafting](../archive/BL-0103-enable-daily-grok-drafting.md)
+
+## Completion, 2026-10-11
+
+The user removed the three remaining tasks and their outstanding requirements. The full human editor trials and actual scheduled draft/report delivery are no longer prerequisites; they are not recorded as completed. The nine retained subtasks and revised acceptance criteria are satisfied. Production publishing, Persian URLs, discovery, recovery snapshots, and the production draft-only MCP connection are verified. BL-0087 is done under this revised scope.
+
+The current local Codex automation uses 12:00 `Asia/Tehran`; the former Grok routine is paused. Actual scheduled delivery and Studio receipt reporting remain unverified and outside this completed feature. Removing backlog tasks does not disable existing automation or remove implemented CMS, recovery, manager links, or drafting code. Email and Google provider setup remain separate pending operational work.
+
+Final verification for the scoped completion passed 31 web tests, 12 draft permission/title checks, all 18 production CMS browser journeys, web lint/typecheck, formatting, helper syntax, and moved-ticket link/status checks. The two-axis review found no unresolved standards or spec findings. Unrelated skill refresh and staff tickets are excluded from the completion commit.
+
+The dated notes below preserve the original rollout and superseded requirements.
 
 ## Further Notes
+
+- On 2026-10-11, the user reported reviewing the Blog Articles and Product Guides and finding the rendered pages acceptable. This records content/layout review, not a claim that they completed every admin editing and publishing trial step. They authorized production preparation using the existing ArvanCloud key. Three CDN cache exclusions and an initial-setup/OAuth guard are active, and the origin gateway denies direct setup/OAuth requests outside Arvan's networks. The VPS has a fresh isolated CMS database and private runtime secrets. Provisioning is repeatable, with protected credential and empty-database backups off the VPS. The production CMS image has not been deployed; no first production administrator or content has been created. The user chose email and Google login but has no provider account or OAuth application yet. Provider configuration and the pinned Node OAuth credential-loading issue remain pending before activation. See `docs/EMDASH_DEPLOYMENT.md` for the preparation and bootstrap procedure.
 
 - On 2026-10-08, BL-0102 was independently verified at merge `b1c00c805c8a8b4c37ee4d8e0a7f4732dafedb32`. The actual logged-in Saluna Content Studio registered the private writing skill and created, revised, illustrated and returned an authenticated preview of one distinct Persian staff-scheduling draft. Native Author/four-scope permissions, real operational denials, saved source accuracy and anonymous exclusion passed. The original three drafts are preserved. The user's personally selected Grok Mac execution setting is Always allow; agents left security settings unchanged. No daily routine exists yet; BL-0103 is next.
 
@@ -130,7 +140,7 @@ BL-0092 through BL-0097 establish and verify the publishing release. BL-0098 and
 
 - On 2026-10-07, the user identified themselves as the intended editor, chose a test copy on this Mac, and requested the hands-on trial at the end after implementation. Prepare the full local test environment and keep actual trial criteria pending until they participate. Automated checks and coding continue first.
 
-- Implementation resumed on 2026-10-07 on the existing integration branch `codex/bl-0087-emdash-blog-and-guides`. The fixed review base for the remaining tasks is `4dd5a8ecb882593f949fa19587230136decd1b7f`, the verified BL-0092 completion. Work proceeds one ticket at a time in separate implementer worktrees.
+- Implementation resumed on 2026-10-07 on the existing integration branch `codex/bl-0087-emdash-blog-and-guides`. The fixed review base for the remaining tasks is `4dd5a8ecb882593f949fa19587230136decd1b7f`, the verified BL-0092 completion. Implementer worktrees were used for the remaining tickets.
 
 - On 2026-10-07, the user authorized using their currently logged-in Grok account and delegated the daily run-time choice. Selected 09:00 `Asia/Tehran`. The local Grok Bot application has an existing Saluna Content Studio bot; its connection and actual CMS access still require BL-0102 verification before BL-0103 enables a routine. No daily blog routine has been enabled.
 
@@ -186,3 +196,49 @@ Daily automated publication, reviewer-policy enforcement, a mandatory cover-imag
 ## Continuation, 2026-10-09
 
 BL-0103 technical implementation is merged and independently verified. The actual Grok schedule is enabled for 09:00 `Asia/Tehran`, but scheduled draft creation and actual Studio reporting still need confirmation, so its completion criteria remain open. Final two-axis review found one URL lifecycle defect and two small duplication findings; all three were fixed and independently verified in merge `581ac545`. Production CMS checks passed 8/8, sitemap checks 4/4, and all three retained launch-draft browser journeys passed. The final local image is healthy, preview links are renewed, and a matching content/media/key/authentication/daily-journal backup is saved outside Git. The intended editor's Blog Article and Product Guide trials are now ready, as requested, after implementation and review.
+
+## Deployment attempt, 2026-10-11
+
+The user authorized production deployment after reviewing the blog and guide
+presentation. The production image and sanitized content transfer are prepared
+and passed an isolated production-origin rehearsal. The transfer preserves four
+blog drafts and one published guide, without local authentication accounts or
+test content. The user disabled the VPN, restoring VPS access, and the web release was then
+applied. Live Arvan checks passed for public content/media, editor setup assets,
+draft privacy and cache bypass; API and manager health passed. A protected
+off-VPS database/media/key/image snapshot is saved. First-admin passkey
+enrollment under the IP-restricted setup guard and actual Blog Article
+publication remain human steps. Email and Google provider setup remain pending.
+See `docs/EMDASH_DEPLOYMENT.md` for the deployment evidence and handoff.
+
+## Administrator and publication confirmation, 2026-10-11
+
+The intended operator completed physical-passkey enrollment and published all
+four Blog Articles. Production setup is complete, the articles return 200, and
+the temporary bootstrap guard is released. A new off-VPS recovery point includes
+the human account and publication revisions. The operator then disabled search
+exclusion and republished all four articles. Live pages omit `noindex`, and the
+blog sitemap includes all four canonical URLs. A fresh off-VPS recovery point
+captures these revisions. Email and Google provider setup and any remaining
+editor/scheduled-writing trials remain open.
+
+The user also authorized descriptive Persian slugs for all four live Blog
+Articles and the Product Guide. Native draft saves and publication preserved
+their content and publication dates. The English URLs redirect with 301; the
+Persian pages, canonical metadata, indexes and sitemaps passed live checks.
+The rehearsal found missing redirect singleton rows in the sanitized transfer;
+restoring the pinned migration defaults fixed native URL publication. A new
+off-VPS recovery point includes the rename revisions and redirect state. Future
+writer rules, including normalization, stable slugs, daily draft retry identity
+and publication permissions, are documented in `docs/agents/public-content.md`.
+
+The user requested production MCP access and chose create/edit drafts only.
+The project now registers `saluna_emdash_prod`, a local stdio adapter backed by
+a separate native production Author and four-scope PAT. The adapter enforces
+draft-only edits; native Author policy still permits own publication. Live
+create/revise tests passed in Blog Articles and Product Guides, with stale
+revisions, public entries and forbidden operations refused. Anonymous drafts
+and previews remained private. Temporary test entries were moved to Trash,
+12 relevant unit checks passed, and a fresh off-VPS recovery point includes
+the new authentication state. Access, renewal and writer guidance are in
+`docs/EMDASH_AGENT.md`. The production connection is separate from the local drafting automation.

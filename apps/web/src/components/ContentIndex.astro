@@ -1,0 +1,91 @@
+---
+import { Image } from 'emdash/ui'
+import type { BlogArticle } from '../lib/public-content'
+
+interface Props {
+  section: 'blog' | 'guides'
+  entries: BlogArticle[]
+}
+
+const { section, entries } = Astro.props
+const isGuide = section === 'guides'
+const title = isGuide ? 'راهنماهای سالونا' : 'وبلاگ سالونا'
+const description = isGuide
+  ? 'آموزش کار با سالونا، قدم به قدم.'
+  : 'درباره نوبت‌ها، مشتریان و اداره سالن زیبایی.'
+const dateFormat = new Intl.DateTimeFormat('fa-IR', {
+  dateStyle: 'long',
+  timeZone: 'Asia/Tehran',
+})
+---
+
+<section class="editorial-index" aria-labelledby="content-index-title">
+  <header class="editorial-index-header">
+    <h1 id="content-index-title" class="editorial-title">{title}</h1>
+    <p class="editorial-summary">{description}</p>
+    <nav class="editorial-sections" aria-label="مطالب سالونا">
+      <a href="/blog" aria-current={!isGuide ? 'page' : undefined}>وبلاگ</a>
+      <a href="/guides" aria-current={isGuide ? 'page' : undefined}>راهنماها</a>
+    </nav>
+  </header>
+  <div class="content-entries">
+    {
+      entries.map((entry) => (
+        <article class="content-entry">
+          <a
+            href={`/${section}/${encodeURIComponent(entry.slug)}`}
+            class:list={['content-entry-link', { 'has-cover': !!entry.cover }]}
+          >
+            {entry.cover && (
+              <div
+                class:list={[
+                  'content-entry-cover',
+                  { 'guide-thumbnail': isGuide },
+                ]}
+              >
+                <Image image={entry.cover} placeholder={false} alt="" />
+              </div>
+            )}
+            <div class="content-entry-copy">
+              <h2>{entry.title}</h2>
+              {entry.summary && (
+                <p class="content-entry-summary">{entry.summary}</p>
+              )}
+              {!isGuide && (
+                <div class="editorial-meta">
+                  <span>{entry.bylines.join('، ')}</span>
+                  {entry.publishedAt && (
+                    <time datetime={entry.publishedAt}>
+                      {dateFormat.format(new Date(entry.publishedAt))}
+                    </time>
+                  )}
+                </div>
+              )}
+            </div>
+            <svg
+              class="content-entry-chevron"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="m14 6-6 6 6 6" />
+            </svg>
+          </a>
+        </article>
+      ))
+    }
+    {
+      entries.length === 0 && (
+        <p class="editorial-empty">
+          {isGuide
+            ? 'هنوز راهنمایی منتشر نشده است.'
+            : 'هنوز مقاله‌ای منتشر نشده است.'}
+        </p>
+      )
+    }
+  </div>
+</section>

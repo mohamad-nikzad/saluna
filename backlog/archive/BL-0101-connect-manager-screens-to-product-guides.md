@@ -1,16 +1,20 @@
 ---
 id: BL-0101
 title: Connect manager screens to Product Guides
-status: ready
+status: archive
 type: task
-triage: ready-for-human
+triage: wontfix
 priority: medium
 size: small
 parent: BL-0087
 blocked_by: [BL-0100]
 created: 2026-10-06
-updated: 2026-10-08
+updated: 2026-10-11
 ---
+
+## Removed from scope, 2026-10-11
+
+The user removed this task because its remaining requirements are no longer needed. It is archived, not marked complete. Implemented technical work and the original evidence below are preserved. Its outstanding checks no longer block BL-0087; this change does not alter running services or automation.
 
 ## Problem
 
@@ -31,7 +35,7 @@ Link at least one relevant manager PWA screen to its accurate public Product Gui
 
 ## Notes
 
-- This completes the manager-link and real-editor guide criteria in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- This completes the manager-link and real-editor guide criteria in [BL-0087](../done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - Coordinate the intended editor and staging access during implementation. Automated tests do not substitute for the required hands-on trial.
 
 ## Technical verification and pending human trial

@@ -32,7 +32,7 @@ Render a Persian RTL blog index and individual articles using the existing publi
 
 ## Notes
 
-- Parent design and privacy requirements are in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+- Parent design and privacy requirements are in [BL-0087](../done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
 - Publication transitions and renamed URLs follow in BL-0095. Search metadata, sitemap discovery, and branded social-image fallback follow in BL-0096.
 
 ## Implementation and verification

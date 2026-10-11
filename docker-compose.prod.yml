@@ -20,13 +20,14 @@ services:
       API_DOMAIN: ${API_DOMAIN:-api.saluna.ir}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.saluna.ir}
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
     volumes:
       - ./deploy/nginx/templates:/etc/nginx/templates:ro
       - ./deploy/nginx/certs:/etc/nginx/certs:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      test:
+        ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz || exit 1']
       interval: 10s
       timeout: 5s
       retries: 6
@@ -41,18 +42,18 @@ services:
       - ${SALUNA_ENV_FILE:-.env.production}
     environment:
       NODE_ENV: production
-      PORT: "3002"
+      PORT: '3002'
     depends_on:
       postgres:
         condition: service_healthy
     expose:
-      - "3002"
+      - '3002'
     healthcheck:
       test:
         [
-          "CMD",
-          "node",
-          "-e",
+          'CMD',
+          'node',
+          '-e',
           "fetch('http://127.0.0.1:3002/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 10s
@@ -68,25 +69,27 @@ services:
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
-      PORT: "3001"
+      PORT: '3001'
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://saluna.ir}
       PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api.saluna.ir}
       EMDASH_SITE_URL: ${PUBLIC_APP_URL:-https://saluna.ir}
       CMS_DATABASE_URL: ${CMS_DATABASE_URL:?Set CMS_DATABASE_URL in .env.production}
       EMDASH_ENCRYPTION_KEY: ${EMDASH_ENCRYPTION_KEY:?Set EMDASH_ENCRYPTION_KEY in .env.production}
+      EMDASH_OAUTH_GOOGLE_CLIENT_ID: ${EMDASH_OAUTH_GOOGLE_CLIENT_ID:-}
+      EMDASH_OAUTH_GOOGLE_CLIENT_SECRET: ${EMDASH_OAUTH_GOOGLE_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - cms_media:/app/apps/web/.emdash/uploads
     expose:
-      - "3001"
+      - '3001'
     healthcheck:
       test:
         [
-          "CMD",
-          "node",
-          "-e",
+          'CMD',
+          'node',
+          '-e',
           "Promise.all(['/', '/_emdash/api/setup/status'].map(p=>fetch('http://127.0.0.1:3001'+p))).then(rs=>process.exit(rs.every(r=>r.ok)?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 10s
@@ -100,9 +103,10 @@ services:
     container_name: saluna-pwa
     restart: unless-stopped
     expose:
-      - "80"
+      - '80'
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      test:
+        ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz || exit 1']
       interval: 10s
       timeout: 5s
       retries: 6
@@ -114,9 +118,10 @@ services:
     container_name: saluna-admin
     restart: unless-stopped
     expose:
-      - "80"
+      - '80'
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      test:
+        ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz || exit 1']
       interval: 10s
       timeout: 5s
       retries: 6
@@ -134,7 +139,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      test:
+        ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -148,7 +154,7 @@ services:
     profiles:
       - registry
     ports:
-      - "127.0.0.1:${REGISTRY_PORT:-5000}:5000"
+      - '127.0.0.1:${REGISTRY_PORT:-5000}:5000'
     volumes:
       - registry_data:/var/lib/registry
     networks:

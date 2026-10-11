@@ -4,11 +4,13 @@ import Footer from '@/components/landing/Footer.astro'
 import { displayClass } from '@/content/landing'
 import { publicNavLinks } from '@/content/public-site'
 import { brand } from '@repo/brand'
+import '../styles/editorial.css'
 
 import type { PageMetadata } from '../lib/seo'
 interface Props extends PageMetadata {
   description: string
   canonical: string
+  editorial?: boolean
 }
 
 const {
@@ -22,7 +24,9 @@ const {
   ogImageHeight,
   ogImage = new URL('/og/landing.png', canonical).toString(),
   ogImageAlt = 'سالونا، نرم‌افزار مدیریت سالن زیبایی',
+  editorial = false,
 } = Astro.props
+const currentSection = new URL(canonical, Astro.url).pathname.split('/')[1]
 ---
 
 <Base
@@ -38,7 +42,13 @@ const {
   ogImageHeight={ogImageHeight}
   preloadLalezar={true}
 >
-  <main dir="rtl" class="min-h-dvh bg-[#fdf5f8] text-[#3f2730]">
+  <main
+    dir="rtl"
+    class:list={[
+      'min-h-dvh bg-[#fdf5f8] text-[#3f2730]',
+      { 'editorial-site': editorial },
+    ]}
+  >
     <header class="border-b border-[#f3d5dd] bg-white/80 px-5 py-4 sm:px-8">
       <div
         class="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -65,11 +75,22 @@ const {
           class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#6b4955]"
         >
           {
-            publicNavLinks.map((link) => (
-              <a href={link.href} class="transition hover:text-[#7a2a40]">
-                {link.label}
-              </a>
-            ))
+            publicNavLinks
+              .filter(
+                (link) =>
+                  !editorial || !['/privacy', '/terms'].includes(link.href),
+              )
+              .map((link) => (
+                <a
+                  href={link.href}
+                  aria-current={
+                    link.href === `/${currentSection}` ? 'page' : undefined
+                  }
+                  class="transition hover:text-[#7a2a40]"
+                >
+                  {link.label}
+                </a>
+              ))
           }
         </nav>
       </div>

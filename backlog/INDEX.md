@@ -1,22 +1,8 @@
 # Backlog Index
 
-Last organized: 2026-10-09 (BL-0087 code and final review fixes verified; nine subtasks complete; BL-0097 and BL-0101 await human trials; BL-0103 technical runner verified, actual scheduled delivery pending)
+Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived)
 
 ## Now
-
-- [BL-0087 Publish Blog Articles and Product Guides with EmDash](now/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
-  - [BL-0092 Run EmDash with persistent storage](done/BL-0092-run-emdash-with-persistent-storage.md)
-  - [BL-0093 Configure Blog Article drafting and editor access](done/BL-0093-configure-blog-article-drafting-and-editor-access.md)
-  - [BL-0094 Render blog pages and private previews](done/BL-0094-render-blog-pages-and-private-previews.md)
-  - [BL-0095 Complete blog publishing and URL lifecycle](done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)
-  - [BL-0096 Add Blog Article SEO and discovery](done/BL-0096-add-blog-article-seo-and-discovery.md)
-  - [BL-0097 Verify CMS recovery and editor usability](ready/BL-0097-verify-cms-recovery-and-editor-usability.md) (ready-for-human; technical checks passed)
-  - [BL-0098 Enable agent Blog Article drafting](done/BL-0098-enable-agent-blog-article-drafting.md)
-  - [BL-0099 Deliver three initial Blog Article drafts](done/BL-0099-deliver-three-initial-blog-article-drafts.md)
-  - [BL-0100 Publish Product Guides](done/BL-0100-publish-product-guides.md)
-  - [BL-0101 Connect manager screens to Product Guides](ready/BL-0101-connect-manager-screens-to-product-guides.md) (ready-for-human; manager link verified, human guide trial pending)
-  - [BL-0102 Prove one Grok drafting run](done/BL-0102-prove-one-grok-drafting-run.md)
-  - [BL-0103 Enable daily Grok drafting](ready/BL-0103-enable-daily-grok-drafting.md) (technical checks passed; scheduled delivery and Studio reporting pending)
 
 ## Ready
 
@@ -41,6 +27,17 @@ Last organized: 2026-10-09 (BL-0087 code and final review fixes verified; nine s
   - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
+
+- [BL-0087 Publish Blog Articles and Product Guides with EmDash](done/BL-0087-publish-blog-and-product-guides-with-emdash.md) (ADR-0040)
+  - [BL-0092 Run EmDash with persistent storage](done/BL-0092-run-emdash-with-persistent-storage.md)
+  - [BL-0093 Configure Blog Article drafting and editor access](done/BL-0093-configure-blog-article-drafting-and-editor-access.md)
+  - [BL-0094 Render blog pages and private previews](done/BL-0094-render-blog-pages-and-private-previews.md)
+  - [BL-0095 Complete blog publishing and URL lifecycle](done/BL-0095-complete-blog-publishing-and-url-lifecycle.md)
+  - [BL-0096 Add Blog Article SEO and discovery](done/BL-0096-add-blog-article-seo-and-discovery.md)
+  - [BL-0098 Enable agent Blog Article drafting](done/BL-0098-enable-agent-blog-article-drafting.md)
+  - [BL-0099 Deliver three initial Blog Article drafts](done/BL-0099-deliver-three-initial-blog-article-drafts.md)
+  - [BL-0100 Publish Product Guides](done/BL-0100-publish-product-guides.md)
+  - [BL-0102 Prove one Grok drafting run](done/BL-0102-prove-one-grok-drafting-run.md)
 
 - [BL-0090 Make first-time staff login clear](done/BL-0090-make-first-time-staff-login-clear.md)
 
@@ -126,4 +123,6 @@ Last organized: 2026-10-09 (BL-0087 code and final review fixes verified; nine s
 
 ## Archive
 
-No archived backlog items yet.
+- [BL-0097 Verify CMS recovery and editor usability](archive/BL-0097-verify-cms-recovery-and-editor-usability.md) (removed by user; remaining requirements no longer needed)
+- [BL-0101 Connect manager screens to Product Guides](archive/BL-0101-connect-manager-screens-to-product-guides.md) (removed by user; remaining requirements no longer needed)
+- [BL-0103 Enable daily Grok drafting](archive/BL-0103-enable-daily-grok-drafting.md) (removed by user; remaining requirements no longer needed)

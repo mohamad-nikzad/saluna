@@ -1,5 +1,7 @@
 # Blog Article editor
 
+BL-0087 was completed under revised scope on 2026-10-11. The user removed the remaining human editor trials and scheduled-drafting proof requirements; these checks are not claimed as completed. The archived tasks preserve their technical evidence. Earlier rollout notes below are historical where they describe these checks as blockers. See [the completion record](../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+
 [Product Guide editing and maintenance](EMDASH_PRODUCT_GUIDES.md) uses the same
 CMS with its own collection and public pages.
 
@@ -8,6 +10,13 @@ EmDash 1.1.0 stores Blog Articles in `blog_articles`. Saluna's model is in
 alongside the title, summary, Portable Text body, and optional cover image.
 The public URL pattern is `/blog/{slug}`. Saving a title change preserves the
 existing slug. Published articles appear at `/blog` and `/blog/{slug}`.
+
+The authenticated Blog Article and Product Guide lists show the current saved
+draft title for accounts with draft-read permission, matching the editor. A
+pending title change does not publish the article or alter its public title.
+This projects revision titles through Saluna's middleware to correct EmDash
+1.1.0's base-record list display. Native search, sorting and pagination still
+use the underlying content records.
 
 ## Configure a new or existing CMS
 
@@ -135,6 +144,13 @@ canonical URL has no trailing slash. A preview link generated before a
 published rename is obsolete; reopen Preview for the current signed link.
 Obsolete preview addresses return a private, nonindexable error instead of
 following the public redirect.
+
+Use a short descriptive Persian slug for new Blog Articles and Product Guides,
+for example `محاسبه-کمیسیون-پرسنل-سالن` or `افزودن-مشتری-در-سالونا`. Separate
+words with ASCII hyphens, including where the title uses a half-space. Enter
+readable Persian text in Slug, not URL-encoded text. Follow
+`docs/agents/public-content.md` for normalization and agent permissions. Daily
+drafts initially use a reserved retry slug; replace it before first publication.
 
 For REST saves that change a slug, send a `data` object with the `slug`, even
 when no body fields changed. An empty `data: {}` uses the same draft-staging

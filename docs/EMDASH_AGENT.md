@@ -1,4 +1,4 @@
-# Agent Blog Article drafting
+# Agent content drafting
 
 Saluna uses EmDash 1.1.0's native MCP endpoint, `/_emdash/api/mcp`, for
 draft content and media. Signed preview links come from the native REST
@@ -6,7 +6,78 @@ draft content and media. Signed preview links come from the native REST
 no preview-link tool in this release. The standalone client uses Node built-ins
 and runs on Node 20 or newer; the Saluna server retains its own Node requirement.
 
-## Dedicated connection
+## Production MCP connection
+
+The user authorized production access on 2026-10-11 with permission to create
+and edit drafts only. Codex loads `saluna_emdash_prod` from this trusted
+repository's ignored `.codex/config.toml`. It starts
+`scripts/cms-drafts-mcp.mjs` locally and calls the native production MCP at
+`https://saluna.ir/_emdash/api/mcp`. This connection serves both `blog_articles`
+and `product_guides`; it uses the site's effective locale `en` for Persian text.
+
+| Tool            | Use                                                             |
+| --------------- | --------------------------------------------------------------- |
+| `drafts_list`   | Read permitted entries for topic and slug overlap.              |
+| `draft_get`     | Read an entry and its current `_rev`.                           |
+| `draft_create`  | Create an unpublished, unscheduled entry with a Persian slug.   |
+| `draft_revise`  | Edit this connection's own plain draft using a fresh `_rev`.    |
+| `media_get`     | Read a CMS media record.                                        |
+| `media_upload`  | Upload a user-authorized local image with truthful alt text.    |
+| `draft_preview` | Obtain a private preview for this connection's own plain draft. |
+
+Content tools take `collection: "blog_articles"` or `"product_guides"`.
+Creation takes `slug` and `data`; revision takes `id`, `_rev`, and `data`.
+Read [public content rules](agents/public-content.md) first, then list entries,
+create once, read back, and revise the saved ID. Use the native revisioned fields
+in `apps/web/cms/seed.json`. Keep the preview private; opening it requires an
+authenticated EmDash browser session. After an uncertain write, inspect saved
+entries before retrying creation.
+
+The adapter exposes no publish, schedule, delete, user, settings, or schema
+tools. It rejects caller-selected statuses, stale revisions, other writers'
+drafts, scheduled entries, and anything with a live revision. Publication and
+public URL changes stay with an authorized human operator. This adapter enforces
+the draft-only policy. Native EmDash 1.1.0 has no separate publish scope, and
+its minimum editing role, Author 30, also permits publication of its own content.
+Do not bypass the adapter or register the raw production HTTP endpoint as an
+unrestricted writer connection.
+
+The dedicated native identity is `saluna-production-drafts@agents.invalid`,
+named `Saluna production drafting agent`. It has Author 30 and exactly
+`content:read content:write media:read media:write`. The account has no passkey
+or human sign-in setup. Its PAT belongs to this identity, not to the human
+Administrator. The server stores the token hash in `_emdash_api_tokens` in the
+existing `saluna_cms` database. No additional database or public proxy is needed.
+
+The raw credential lives only at
+`/Users/mohamad/.codex/private/saluna-cms-bl0087/production-mcp/credentials.json`,
+mode 0600 inside a mode 0700 directory. The config contains the path, not the
+token. Never print, paste, commit, upload, or read credential contents into an
+agent transcript. The current PAT expires on 2027-01-09. It does not refresh
+through OAuth; the client returns `CMS TOKEN_EXPIRED` after expiry.
+
+An authorized operator renews it under the same dedicated identity through the
+pinned native `handleApiTokenCreate` handler, keeping the four scopes and a
+90-day expiry. Save the replacement directly to the private file using an
+atomic mode-0600 write, verify the stdio handshake and reads, then revoke the
+previous grant with `handleApiTokenRevoke(db, tokenId, userId)`. The credential
+file retains the IDs needed for renewal and revocation. To retire access, revoke
+that native PAT and remove the project MCP config entry. A backup contains the
+raw token too, so revoke it server-side even if a local file has been removed.
+
+Production verification proved creation and revision in both collections,
+revision conflict rejection, published-entry rejection, and the forbidden-tool
+checks. Anonymous draft pages returned 404 and signed previews returned 403.
+The two temporary verification drafts were moved to native Trash. Unit checks
+also cover foreign ownership and expired PAT behavior. Protected receipts and
+the report live beside the credential, and a matching production recovery point
+is recorded in [deployment notes](EMDASH_DEPLOYMENT.md).
+
+This production connection does not move the daily Grok routine from its
+retained local CMS. Use it when the user requests production drafting; preserve
+the daily runner's existing origin, credentials, and retry journal.
+
+## Local OAuth connection
 
 An Administrator invites a separate Author account. The invitee registers its
 own passkey and approves a native OAuth device request while signed in as that

@@ -18,6 +18,14 @@ export const DRAFT_SCOPES = [
   'media:write',
 ]
 
+// Visible article headings have a mobile reading budget. SEO titles are separate.
+export function validateDraftTitle(title) {
+  if (typeof title !== 'string' || !title.trim())
+    throw new Error('CMS DRAFT_TITLE_REQUIRED')
+  if (Array.from(title.trim().normalize('NFC')).length > 50)
+    throw new Error('CMS DRAFT_TITLE_TOO_LONG')
+}
+
 export function cmsOrigin(value) {
   const url = new URL(value)
   if (
@@ -76,7 +84,12 @@ export async function writePrivateJson(path, value) {
  * Processes serialize this credential file, reloading each native rotation.
  * No content mutation is retried inside the client.
  */
-export async function cmsDraftClient(credentialFile) {
+export async function cmsDraftClient(
+  credentialFile,
+  { collection = 'blog_articles' } = {},
+) {
+  if (!['blog_articles', 'product_guides'].includes(collection))
+    throw new Error('CMS INVALID_DRAFT_COLLECTION')
   credentialFile = await realpath(credentialFile)
   let credentials = await readPrivateJson(credentialFile)
   const base = cmsOrigin(credentials.baseURL)
@@ -121,6 +134,7 @@ export async function cmsDraftClient(credentialFile) {
     if (!Number.isFinite(credentials.expiresAt))
       throw new Error('CMS TOKEN_EXPIRY_REQUIRED')
     if (credentials.expiresAt <= Date.now() + 30_000) {
+      if (credentials.tokenType === 'pat') throw new Error('CMS TOKEN_EXPIRED')
       refreshing ??= refresh().finally(() => {
         refreshing = undefined
       })
@@ -177,7 +191,7 @@ export async function cmsDraftClient(credentialFile) {
   }
   const getArticle = (id) =>
     tool('content_get', {
-      collection: 'blog_articles',
+      collection,
       id,
       locale: credentials.locale,
     })
@@ -211,7 +225,7 @@ export async function cmsDraftClient(credentialFile) {
       let cursor
       do {
         const page = await tool('content_list', {
-          collection: 'blog_articles',
+          collection,
           locale: credentials.locale,
           limit: 100,
           ...(cursor ? { cursor } : {}),
@@ -224,10 +238,10 @@ export async function cmsDraftClient(credentialFile) {
       return items
     },
     async createDraft({ slug, data }, onSaved = async () => {}) {
-      if (!slug || !data?.title?.trim())
-        throw new Error('CMS DRAFT_TITLE_SLUG_REQUIRED')
+      if (!slug) throw new Error('CMS DRAFT_TITLE_SLUG_REQUIRED')
+      validateDraftTitle(data?.title)
       const created = await tool('content_create', {
-        collection: 'blog_articles',
+        collection,
         slug,
         data,
         locale: credentials.locale,
@@ -240,8 +254,9 @@ export async function cmsDraftClient(credentialFile) {
     getArticle,
     async reviseDraft(current, data) {
       ownDraft(current)
+      if (Object.hasOwn(data, 'title')) validateDraftTitle(data.title)
       await tool('content_update', {
-        collection: 'blog_articles',
+        collection,
         id: current.item.id,
         data,
         locale: credentials.locale,
@@ -273,8 +288,9 @@ export async function cmsDraftClient(credentialFile) {
     },
     getMedia: (id) => tool('media_get', { id }),
     async preview(id) {
+      ownDraft(await getArticle(id))
       const response = await request(
-        `/_emdash/api/content/blog_articles/${encodeURIComponent(id)}/preview-url`,
+        `/_emdash/api/content/${collection}/${encodeURIComponent(id)}/preview-url`,
         {
           method: 'POST',
           headers: {

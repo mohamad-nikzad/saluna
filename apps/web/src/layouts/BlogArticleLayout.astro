@@ -11,7 +11,10 @@ interface Props {
 const { article, publicOrigin, preview = false } = Astro.props
 ---
 
-<PublicInfoLayout {...buildBlogMetadata(article, publicOrigin, preview)}>
+<PublicInfoLayout
+  {...buildBlogMetadata(article, publicOrigin, preview)}
+  editorial
+>
   {
     preview && (
       <div

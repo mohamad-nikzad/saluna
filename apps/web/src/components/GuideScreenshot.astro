@@ -1,0 +1,12 @@
+---
+import { PTImage } from 'emdash/ui'
+import type { ComponentProps } from 'astro/types'
+type Props = ComponentProps<typeof PTImage>
+---
+
+<div class="guide-screenshot">
+  <PTImage {...Astro.props} placeholder={false} />
+  <button type="button" class="screenshot-expand" aria-haspopup="dialog" hidden>
+    بزرگ‌نمایی تصویر
+  </button>
+</div>

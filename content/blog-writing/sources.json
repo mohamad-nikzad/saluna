@@ -1,5 +1,6 @@
 {
   "common": [
+    "docs/agents/public-content.md",
     "GLOSSARY.md",
     "apps/web/cms/seed.json",
     "apps/web/src/content/landing.ts"

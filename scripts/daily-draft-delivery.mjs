@@ -6,6 +6,7 @@ import {
   cmsDraftClient,
   readPrivateJson,
   writePrivateJson,
+  validateDraftTitle,
 } from './cms-draft-client.mjs'
 import { withProcessLock } from './process-lock.mjs'
 import { technicalSession } from '../deploy/cms/technical-session.mjs'
@@ -65,6 +66,7 @@ function article(data) {
     data.search_excluded !== false
   )
     throw new Error('CMS COMPLETE_DAILY_ARTICLE_REQUIRED')
+  validateDraftTitle(data.title)
   return data
 }
 function revision(data) {
@@ -83,6 +85,7 @@ function revision(data) {
     ('search_excluded' in data && data.search_excluded !== false)
   )
     throw new Error('CMS DAILY_REVISION_FIELDS_REQUIRED')
+  if (Object.hasOwn(data, 'title')) validateDraftTitle(data.title)
   return data
 }
 function diagnostic(error) {

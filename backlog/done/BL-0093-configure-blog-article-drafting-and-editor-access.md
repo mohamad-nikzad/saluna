@@ -31,7 +31,7 @@ Configure Blog Articles and supported editor roles. An authorized editor can cre
 
 ## Notes
 
-- Follow the current scope in [BL-0087](../now/BL-0087-publish-blog-and-product-guides-with-emdash.md). Its historical separate-review requirement has been superseded.
+- Follow the current scope in [BL-0087](../done/BL-0087-publish-blog-and-product-guides-with-emdash.md). Its historical separate-review requirement has been superseded.
 - Saluna page previews follow in BL-0094. Full public revision and publication behavior follows in BL-0095. The intended editor's staging trial follows in BL-0097.
 
 ## Completion

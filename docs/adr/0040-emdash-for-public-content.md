@@ -15,4 +15,4 @@ Saluna will use EmDash in the existing Astro `apps/web` application to let nonte
 - Preserve Saluna's Persian design and existing canonical, Open Graph, and sitemap behavior when adding CMS pages. The editor's Persian RTL interface must pass a hands-on trial: Persian is enabled upstream, but the translation catalog was incomplete on 2026-09-29.
 - Blog Articles and Product Guides are separate content types in one CMS. Guide videos are referenced from a video host/CDN rather than stored as large uploads in the web container. Product staff review guides when the corresponding user flow changes.
 
-Implementation evidence and open checks are in [the public content CMS research note](../research/2026-09-29-public-content-cms.md). The implementation is tracked by [BL-0087](../../backlog/now/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+Implementation evidence and open checks are in [the public content CMS research note](../research/2026-09-29-public-content-cms.md). The implementation is tracked by [BL-0087](../../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md).

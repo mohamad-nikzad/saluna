@@ -1,27 +1,32 @@
 # Daily unpublished Studio drafts
 
-The existing private Saluna Content Studio conversation runs the account-private
-Saluna Writing skill through the [native drafting connection](EMDASH_GROK.md).
-The intended regular schedule is **09:00 Asia/Tehran**, selected under the user's
+BL-0087 was completed under revised scope on 2026-10-11. The user removed the remaining human editor trials and scheduled-drafting proof requirements; these checks are not claimed as completed. The archived tasks preserve their technical evidence. Earlier rollout notes below are historical where they describe these checks as blockers. See [the completion record](../backlog/done/BL-0087-publish-blog-and-product-guides-with-emdash.md).
+
+The active local Codex automation runs the account-private Saluna Writing skill
+through the protected native drafting connection. The former Grok Studio routine
+is paused.
+The intended regular schedule is **12:00 Asia/Tehran**, selected under the user's
 delegated time choice. Publication remains an explicit later editorial action.
 The native Author role can publish its own content; the narrow runner exposes
 only explicit unscheduled draft operations. It adds no custom CMS permission
 or publication engine.
 
 The reusable [routine instructions](../content/blog-writing/daily-routine.md)
-are available to Studio through `daily-instructions`. Actual routine execution
-must be proved by its native CMS record, private journal and saved Studio
-message, not an enabled schedule or a model's success claim.
+are available through `daily-instructions`. Actual execution must be proved by
+its native CMS record and private journal, not an enabled schedule or a model's
+success claim. Codex run output is not a saved Studio message receipt, so report
+events remain pending.
 
 ## Private setup and commands
 
 Extend the existing protected connection with absolute `journal` and
 `sessionState` paths, plus optional `scheduledTime` for a documented rehearsal.
-The regular value is `09:00`. `sessionState` holds the retained technical Author
+The regular value is `12:00`. `sessionState` holds the retained technical Author
 passkey fixture for real session-backed browser verification; it is separate
 from the intended editor's physical-passkey invitation. All private files are
-0600, directories 0700, outside Git. The wrapper supplies these paths and the
-installed Chromium executable; Studio never reads OAuth or passkey files.
+0600, directories 0700, outside Git. The local wrapper supplies these paths and
+the installed Chromium executable; the model must never read OAuth or passkey
+file contents.
 
 An operator initializes a NEW journal once:
 
@@ -140,9 +145,11 @@ had appeared. This second slot was overdue, without an observed failure result.
 The native guide explicitly supports the `CRON_TZ=<IANA zone>` prefix, and
 status retained `CRON_TZ=Asia/Tehran`; no separate resolved execution timestamp
 was exposed. The temporary fault proxy, environment and preload were removed.
-The final routine uses the current contract and the intended 09:00 schedule.
-Enabled configuration is not execution proof: **actual scheduled draft creation,
-failure reporting and Studio receipt acknowledgement remain unverified**.
+The former Grok routine used the 09:00 schedule and is now paused. Its Codex local
+automation replacement uses the current contract at 12:00 Asia/Tehran.
+Enabled configuration is not execution proof: **actual scheduled draft creation
+and failure reporting remain unverified**. Codex runs do not produce the saved
+Studio message receipt needed to acknowledge report events.
 The local operator evidence records the saved configuration and observed
 status. This technical work does not claim the intended editor's physical CMS
 trial or a successful daily delivery.
