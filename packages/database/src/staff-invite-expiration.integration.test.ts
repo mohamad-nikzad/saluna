@@ -42,7 +42,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
       process.env.DATABASE_URL = url
       await sql`insert into "user" (id,name,email,phone_number,phone_number_verified) values (${userId},'Staff','staff@example.test','09121234567',true)`
       await sql`insert into organization (id,name,slug) values (${salonId},'Test salon',${salonId})`
-      await sql`insert into staff_profiles (id,salon_id,name,phone,color) values (${profileId},${salonId},'Staff','09121234567','pink')`
+      await sql`insert into staff_profiles (id,salon_id,name,phone) values (${profileId},${salonId},'Staff','09121234567')`
       await sql`insert into staff_invites (id,salon_id,staff_profile_id,phone,status,token_hash,invited_by_user_id,expires_at) values (${inviteId},${salonId},${profileId},'09121234567','pending','old-token',${userId},now() - interval '1 day')`
     }, 30000)
 

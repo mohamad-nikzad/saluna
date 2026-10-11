@@ -46,7 +46,6 @@ describe('appointment service category', () => {
           salonId: 'salon-1',
           name: 'Staff',
           phone: '09120000001',
-          color: 'rose',
           createdAt,
         },
         service: {

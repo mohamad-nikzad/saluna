@@ -9,7 +9,6 @@
     "./colors": "./src/colors.ts",
     "./radius": "./src/radius.ts",
     "./fonts": "./src/fonts.ts",
-    "./staff-colors": "./src/staff-colors.ts",
     "./calendar-colors": "./src/calendar-colors.ts",
     "./appointment-status": "./src/appointment-status.ts",
     "./generated/*": "./generated/*"

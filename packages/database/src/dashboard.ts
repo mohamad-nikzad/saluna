@@ -1,8 +1,6 @@
 import { and, count, eq, gte, lt, lte, ne, or, isNull, sql } from 'drizzle-orm'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { reportingPeriodRange } from '@repo/salon-core/reporting-period'
 import { salonLocalInclusiveRangeInstants } from '@repo/salon-core/salon-local-time'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 import {
   appointmentStaffAssignments,
   appointments,
@@ -14,8 +12,6 @@ import {
 import { getDb } from './client'
 import { getSalonMoneyReport } from './internal/salon-money-report-queries'
 import { getTodayData } from './internal/today-queries'
-
-const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
 
 export async function getDashboardData(salonId: string) {
   const db = getDb()
@@ -146,7 +142,6 @@ export async function getDashboardData(salonId: string) {
       .select({
         staffId: appointmentStaffAssignments.staffId,
         staffName: user.name,
-        staffColor: salonMember.color,
         count: count(),
       })
       .from(appointments)
@@ -173,11 +168,7 @@ export async function getDashboardData(salonId: string) {
           ne(appointments.status, 'cancelled'),
         ),
       )
-      .groupBy(
-        appointmentStaffAssignments.staffId,
-        user.name,
-        salonMember.color,
-      )
+      .groupBy(appointmentStaffAssignments.staffId, user.name)
       .orderBy(sql`count(*) desc`),
 
     getSalonMoneyReport({
@@ -218,17 +209,15 @@ export async function getDashboardData(salonId: string) {
     })),
     staffLoad: staffLoad.map((row) => ({
       name: row.staffName,
-      color: row.staffColor ?? DEFAULT_STAFF_COLOR,
+      id: row.staffId,
       count: row.count,
     })),
-    monthRevenue:
-      monthFinancialSummary.ok
-        ? monthFinancialSummary.report.summary.bookedTotal
-        : 0,
-    monthSalonRetainedAmount:
-      monthFinancialSummary.ok
-        ? monthFinancialSummary.report.summary.salonRetainedAmount
-        : 0,
+    monthRevenue: monthFinancialSummary.ok
+      ? monthFinancialSummary.report.summary.bookedTotal
+      : 0,
+    monthSalonRetainedAmount: monthFinancialSummary.ok
+      ? monthFinancialSummary.report.summary.salonRetainedAmount
+      : 0,
     newClientsThisMonth: newClientsThisMonth[0]?.value ?? 0,
   }
 }

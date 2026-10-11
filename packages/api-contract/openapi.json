@@ -781,9 +781,6 @@
             "type": "string",
             "pattern": "^09\\d{9}$"
           },
-          "color": {
-            "type": "string"
-          },
           "active": {
             "type": "boolean"
           },
@@ -833,7 +830,6 @@
         "required": [
           "name",
           "phone",
-          "color",
           "active",
           "serviceIds",
           "schedule"
@@ -3055,9 +3051,6 @@
           "role": {
             "$ref": "#/components/schemas/StaffRole"
           },
-          "color": {
-            "type": "string"
-          },
           "phone": {
             "type": "string"
           },
@@ -3094,7 +3087,6 @@
           "salonId",
           "name",
           "role",
-          "color",
           "phone",
           "createdAt"
         ],
@@ -3215,10 +3207,6 @@
                 "example": "staff"
               }
             ]
-          },
-          "color": {
-            "type": "string",
-            "example": "plum"
           }
         },
         "required": [
@@ -6983,7 +6971,7 @@
           "name": {
             "type": "string"
           },
-          "color": {
+          "id": {
             "type": "string"
           },
           "count": {
@@ -6992,7 +6980,7 @@
         },
         "required": [
           "name",
-          "color",
+          "id",
           "count"
         ]
       },

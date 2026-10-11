@@ -11,7 +11,6 @@ import type {
   AppointmentWithDetails,
   TodayAttentionItem,
   TodayData,
-  User,
 } from '@repo/salon-core/types'
 
 import { getNextOpenSlot } from './next-open-slot'
@@ -47,7 +46,6 @@ export type TeamRow = {
   staffName: string
   appointmentCount: number
   bookedMinutes: number
-  color?: string | null
 }
 
 export function greetingForHour(hour: number) {
@@ -159,10 +157,8 @@ export type ManagerTodayViewModel = {
 
 export function buildManagerTodayViewModel({
   data,
-  staff,
 }: {
   data?: TodayData
-  staff: User[]
 }): ManagerTodayViewModel {
   if (!data) {
     return {
@@ -190,11 +186,7 @@ export function buildManagerTodayViewModel({
 
   const attentionItems = groupAttentionItems(data.attentionItems).slice(0, 5)
 
-  const colorById = new Map(staff.map((member) => [member.id, member.color]))
-  const teamRows: TeamRow[] = data.staffLoad.map((row) => ({
-    ...row,
-    color: colorById.get(row.staffId),
-  }))
+  const teamRows: TeamRow[] = data.staffLoad
 
   const totalAppointments = Object.values(data.counts).reduce(
     (sum, count) => sum + count,

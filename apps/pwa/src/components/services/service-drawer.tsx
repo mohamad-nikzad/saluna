@@ -24,7 +24,7 @@ import {
 } from '@repo/ui/select'
 import { Spinner } from '@repo/ui/spinner'
 import { Switch } from '@repo/ui/switch'
-import { STAFF_COLORS } from '@repo/salon-core/types'
+import { CALENDAR_COLOR_IDS } from '@repo/salon-core/types'
 import type { Service, ServiceCategory } from '@repo/salon-core/types'
 import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { calendarColorOptions } from '@repo/brand-tokens/calendar-colors'
@@ -49,7 +49,7 @@ function emptyValues(defaultCategoryId?: string | null): ServiceFormInput {
     category: 'hair',
     duration: 45,
     price: 0,
-    color: STAFF_COLORS[0],
+    color: CALENDAR_COLOR_IDS[0],
     active: true,
     allowMultipleStaff: false,
     description: '',

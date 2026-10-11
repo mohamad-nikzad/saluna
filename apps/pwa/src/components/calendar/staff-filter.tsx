@@ -21,7 +21,11 @@ export function StaffFilter({
         id: member.id,
         label: member.name,
         marker: personInitials(member.name),
-        colorVar: staffAccentVar(member.color),
+        colorVar: staffAccentVar(member.id),
+        markerStyle: {
+          backgroundColor: `color-mix(in oklab, ${staffAccentVar(member.id)} 20%, transparent)`,
+          color: 'var(--foreground)',
+        },
         searchText: member.name,
       })),
     [staff],

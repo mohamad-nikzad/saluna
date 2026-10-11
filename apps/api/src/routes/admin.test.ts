@@ -737,7 +737,6 @@ describe('admin runtime data source', () => {
       userId: null,
       name: 'سارا',
       phone: '09121234567',
-      color: 'mint',
       active: true,
     } as never)
     vi.mocked(listSetupStaffProfiles).mockResolvedValue([
@@ -747,7 +746,6 @@ describe('admin runtime data source', () => {
     const body = {
       name: 'سارا',
       phone: '09121234567',
-      color: 'mint',
       active: true,
       serviceIds: ['66666666-6666-4666-8666-666666666666'],
       schedule: [

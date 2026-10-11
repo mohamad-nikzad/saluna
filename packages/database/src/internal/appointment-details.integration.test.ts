@@ -48,7 +48,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
       await testSql`insert into organization (id, name, slug) values (${ids.salon}, 'Salon', ${databaseName})`
       await testSql`insert into "user" (id, name, email, email_verified, phone_number) values (${ids.acceptedStaff}, 'Accepted staff', 'accepted@example.test', true, '09120000002')`
       await testSql`insert into member (id, organization_id, user_id, role) values (${randomUUID()}, ${ids.salon}, ${ids.acceptedStaff}, 'member')`
-      await testSql`insert into staff_profiles (id, salon_id, name, phone, color) values (${ids.pendingStaff}, ${ids.salon}, 'Invited staff', '09120000001', 'rose')`
+      await testSql`insert into staff_profiles (id, salon_id, name, phone) values (${ids.pendingStaff}, ${ids.salon}, 'Invited staff', '09120000001')`
       await testSql`insert into service_categories (id, salon_id, name) values (${ids.category}, ${ids.salon}, 'مو'), (${ids.nailsCategory}, ${ids.salon}, 'ناخن')`
       await testSql`insert into services (id, salon_id, category_id, name, duration, price, color) values (${ids.service}, ${ids.salon}, ${ids.category}, 'Service', 30, 100, 'rose')`
       await testSql`insert into services (id, salon_id, category_id, name, duration, price, color) values (${ids.nailsService}, ${ids.salon}, ${ids.nailsCategory}, 'ترمیم ناخن', 30, 100, 'rose')`

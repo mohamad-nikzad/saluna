@@ -354,7 +354,6 @@ export const salonMember = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: 'cascade' }),
     displayName: text('display_name'),
-    color: text('color'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -385,7 +384,6 @@ export const staffProfiles = pgTable(
     userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     phone: text('phone').notNull(),
-    color: text('color').notNull(),
     active: boolean('active').notNull().default(true),
     claimedAt: timestamp('claimed_at', { withTimezone: true }),
     accessDetachedAt: timestamp('access_detached_at', { withTimezone: true }),

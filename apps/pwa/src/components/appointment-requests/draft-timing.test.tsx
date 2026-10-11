@@ -34,7 +34,6 @@ describe('ConvertDraftSheet', () => {
         name: 'مینا',
         role: 'staff',
         serviceIds: ['service-1'],
-        color: 'rose',
         phone: '',
         createdAt: new Date(),
       },

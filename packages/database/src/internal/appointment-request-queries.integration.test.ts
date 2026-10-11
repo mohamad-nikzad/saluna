@@ -100,7 +100,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
       process.env.DATABASE_URL_DIRECT = databaseUrl
       await testSql`insert into organization (id, name, slug) values (${ids.salon}, 'Salon', ${databaseName})`
       await testSql`insert into "user" (id, name, email, email_verified) values (${ids.manager}, 'Manager', 'manager@example.test', true)`
-      await testSql`insert into staff_profiles (id, salon_id, name, phone, color) values (${ids.staff}, ${ids.salon}, 'Staff', '09120000001', 'rose')`
+      await testSql`insert into staff_profiles (id, salon_id, name, phone) values (${ids.staff}, ${ids.salon}, 'Staff', '09120000001')`
       await testSql`insert into service_categories (id, salon_id, name) values (${ids.category}, ${ids.salon}, 'Hair')`
       await testSql`insert into services (id, salon_id, category_id, name, duration, price, color) values (${ids.service}, ${ids.salon}, ${ids.category}, 'Current service', 90, 900000, 'rose')`
       await testSql`insert into staff_services (salon_id, staff_user_id, service_id) values (${ids.salon}, ${ids.staff}, ${ids.service})`

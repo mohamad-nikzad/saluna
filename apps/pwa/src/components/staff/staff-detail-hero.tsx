@@ -19,7 +19,7 @@ export function StaffDetailHero({
   serviceCount,
   workDaysCount,
 }: StaffDetailHeroProps) {
-  const accent = staffAccentVar(member.color)
+  const accent = staffAccentVar(member.id)
 
   return (
     <div
@@ -37,7 +37,9 @@ export function StaffDetailHero({
         <Avatar className="size-[66px] shrink-0">
           <AvatarFallback
             className="text-lg font-bold text-foreground"
-            style={{ backgroundColor: accent }}
+            style={{
+              backgroundColor: `color-mix(in oklab, ${accent} 20%, var(--card))`,
+            }}
           >
             {personInitials(member.name)}
           </AvatarFallback>

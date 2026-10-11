@@ -268,7 +268,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
                 id: assignment.staffId,
                 name: assignment.staffId,
               })
-        const staffVar = staffAccentVar(assignee.color)
+        const staffVar = staffAccentVar(assignee.id)
         return {
           id: `${apt.id}:${assignment.staffId}`,
           title: `${clientLabel} — ${appointmentServiceLabel(apt, view)}`,
@@ -289,7 +289,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
             isDone,
             isCancelled,
           },
-          backgroundColor: `color-mix(in oklch, ${staffVar} 55%, var(--card))`,
+          backgroundColor: `color-mix(in oklab, ${staffVar} 55%, var(--card))`,
           borderColor: staffVar,
           classNames,
         }
@@ -330,12 +330,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
       const dotColors: string[] = []
       for (const c of cluster) {
         for (const assignment of c.staffAssignments) {
-          const assignee =
-            assignment.staff ??
-            (assignment.isLead || assignment.staffId === c.staff.id
-              ? c.staff
-              : c.staff)
-          const v = staffAccentVar(assignee.color)
+          const v = staffAccentVar(assignment.staffId)
           if (!dotColors.includes(v)) dotColors.push(v)
         }
       }
@@ -596,7 +591,7 @@ export const SalonFullCalendar = memo(function SalonFullCalendar({
             isCancelled: boolean
           }
           if (viewType.startsWith('list')) {
-            const avatarStyle = `background:color-mix(in oklch, ${p.staffColorVar} 16%, transparent);color:${p.staffColorVar}`
+            const avatarStyle = `background:color-mix(in oklab, ${p.staffColorVar} 16%, transparent);color:var(--foreground)`
             return {
               html: `<div class="fc-apt-row">
                 <span class="fc-apt-row-time">

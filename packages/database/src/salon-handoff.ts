@@ -177,7 +177,6 @@ export async function completeSalonHandoff(input: {
   token: string
   userId: string
   displayName: string
-  color: string
 }): Promise<CompleteSalonHandoffResult> {
   const db = getDb()
   return db.transaction(async (tx) => {
@@ -266,7 +265,6 @@ export async function completeSalonHandoff(input: {
       organizationId: claim.salonId,
       userId: input.userId,
       displayName: input.displayName,
-      color: input.color,
       active: true,
     })
     const now = new Date()

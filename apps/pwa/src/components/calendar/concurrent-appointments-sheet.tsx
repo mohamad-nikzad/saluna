@@ -257,7 +257,7 @@ export function ConcurrentAppointmentsSheet({
               {/* lanes */}
               <div className="flex flex-col gap-1.5">
                 {lanes.map((lane) => {
-                  const color = staffAccentVar(lane.staff.color)
+                  const color = staffAccentVar(lane.staff.id)
                   return (
                     <div
                       key={lane.staff.id}
@@ -277,8 +277,8 @@ export function ConcurrentAppointmentsSheet({
                               onClick={() => onSelectAppointment(apt)}
                               title={`${apt.client.name} · ${apt.bookedServiceName}`}
                               className={cn(
-                                'absolute inset-y-0.5 flex items-center justify-center overflow-hidden rounded-md px-1.5 text-[10px] font-bold text-white transition-opacity active:opacity-80',
-                                isCancelled && 'opacity-60',
+                                'absolute inset-y-0.5 flex items-center justify-center overflow-hidden rounded-md px-1.5 text-[10px] font-bold text-foreground transition-opacity active:opacity-80',
+                                isCancelled && 'text-white opacity-60',
                               )}
                               style={{
                                 insetInlineStart: `${((start - winStart) / winDur) * 100}%`,
@@ -286,7 +286,7 @@ export function ConcurrentAppointmentsSheet({
                                 minWidth: 24,
                                 backgroundColor: isCancelled
                                   ? 'var(--destructive)'
-                                  : color,
+                                  : `color-mix(in oklab, ${color} 28%, var(--card))`,
                               }}
                             >
                               <span className="truncate">
@@ -320,7 +320,7 @@ export function ConcurrentAppointmentsSheet({
             </div>
             <div className="overflow-hidden rounded-[18px] border border-border/60 bg-card">
               {sorted.map((apt, index) => {
-                const color = staffAccentVar(apt.staff.color)
+                const color = staffAccentVar(apt.staff.id)
                 const duration =
                   timeToMinutes(apt.endTime) - timeToMinutes(apt.startTime)
                 const isCancelled =
@@ -353,7 +353,7 @@ export function ConcurrentAppointmentsSheet({
                     <span
                       className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
                       style={{
-                        backgroundColor: `color-mix(in oklch, ${color} 18%, transparent)`,
+                        backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)`,
                         color,
                       }}
                     >

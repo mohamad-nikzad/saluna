@@ -1,7 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { and, desc, eq, inArray, or, isNull } from 'drizzle-orm'
-import { STAFF_COLORS } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { getDb } from './client'
 import {
   member,
@@ -153,20 +151,12 @@ export async function createManagerStaffInvite(
 
     let profile = existingProfile
     if (decision.status === 'create_profile') {
-      const existingCount = (
-        await tx
-          .select({ id: staffProfiles.id })
-          .from(staffProfiles)
-          .where(eq(staffProfiles.salonId, input.salonId))
-      ).length
-      const colorIndex = existingCount % STAFF_COLORS.length
       const [created] = await tx
         .insert(staffProfiles)
         .values({
           salonId: input.salonId,
           name: input.name,
           phone: input.phone,
-          color: normalizeCalendarColorId(STAFF_COLORS[colorIndex]),
           active: true,
         })
         .returning()

@@ -1,12 +1,11 @@
 # Backlog Index
 
-Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 and BL-0106 remain ready)
+Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 complete; BL-0106 remains ready)
 
 ## Now
 
 ## Ready
 
-- [BL-0104 Remove Staff Profile colors](ready/BL-0104-remove-staff-profile-colors.md)
 - [BL-0106 Add search and bulk selection to staff services](ready/BL-0106-search-and-bulk-select-staff-services.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
@@ -29,6 +28,8 @@ Last organized: 2026-10-11 (BL-0087 complete under revised scope; nine retained 
   - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
+
+- [BL-0104 Remove Staff Profile colors](done/BL-0104-remove-staff-profile-colors.md)
 
 - [BL-0105 Fix staff list arrow navigation](done/BL-0105-fix-staff-list-arrow-navigation.md)
 

@@ -13,8 +13,6 @@ import type {
   StaffSchedule,
   User,
 } from '@repo/salon-core/types'
-import { STAFF_COLORS } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import {
   appointments,
   appointmentAddonLines,
@@ -30,12 +28,10 @@ import {
   user,
 } from '../schema'
 
-const DEFAULT_STAFF_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
-
 /**
  * Drizzle select shape that reconstructs the legacy `User` from the Better Auth
  * model. Use it after joining `user` (the staff), `member` (role + org), and a
- * LEFT join on `salonMember` (color sidecar). Appointment reads use nullable
+ * LEFT join on `salonMember` (display name and activity). Appointment reads use nullable
  * joins here because a prepared Staff Profile has no user or member yet.
  */
 export const staffUserSelect = {
@@ -46,7 +42,6 @@ export const staffUserSelect = {
   phone: user.phoneNumber,
   fallbackPhone: user.username,
   role: member.role,
-  color: salonMember.color,
   createdAt: user.createdAt,
 }
 
@@ -58,7 +53,6 @@ export type StaffUserRow = {
   phone: string | null
   fallbackPhone: string | null
   role: string
-  color: string | null
   createdAt: Date
 }
 
@@ -68,7 +62,7 @@ type NullableStaffUserRow = {
 
 type PreparedStaffRow = Pick<
   typeof staffProfiles.$inferSelect,
-  'id' | 'salonId' | 'name' | 'phone' | 'color' | 'createdAt'
+  'id' | 'salonId' | 'name' | 'phone' | 'createdAt'
 >
 
 type NullablePreparedStaffRow = {
@@ -87,7 +81,6 @@ export function rowToUser(row: StaffUserRow): User {
     nickname,
     phone: row.phone ?? row.fallbackPhone ?? '',
     role: row.role === 'owner' || row.role === 'admin' ? 'manager' : 'staff',
-    color: row.color ?? DEFAULT_STAFF_COLOR,
     createdAt: row.createdAt,
   }
 }
@@ -239,7 +232,6 @@ export function attachAppointmentDetails(row: {
           nickname: null,
           phone: row.preparedStaff.phone!,
           role: 'staff' as const,
-          color: row.preparedStaff.color!,
           createdAt: row.preparedStaff.createdAt!,
         }
       : null

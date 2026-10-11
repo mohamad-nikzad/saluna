@@ -443,14 +443,12 @@ export async function acceptStaffInvite(input: {
         organizationId: invite.salonId,
         userId: input.userId,
         displayName: profile.name,
-        color: profile.color,
         active: profile.active,
       })
       .onConflictDoUpdate({
         target: [salonMember.userId, salonMember.organizationId],
         set: {
           displayName: profile.name,
-          color: profile.color,
           active: profile.active,
         },
       })

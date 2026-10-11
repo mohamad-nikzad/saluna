@@ -91,7 +91,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
       const profileId = randomUUID()
       await sql`insert into "user" (id,name,email,phone_number,phone_number_verified) values (${userId},'Staff',${`${phone}@example.test`},${phone},true)`
       const inviteId = randomUUID()
-      await sql`insert into staff_profiles (id,salon_id,name,phone,color) values (${profileId},${salonId},'هستی',${phone},'rose')`
+      await sql`insert into staff_profiles (id,salon_id,name,phone) values (${profileId},${salonId},'هستی',${phone})`
       await sql`insert into staff_invites (id,salon_id,staff_profile_id,phone,status,token_hash,invited_by_user_id,expires_at) values (${inviteId},${salonId},${profileId},${phone},'pending',${randomUUID()},${ownerId},${new Date(Date.now() + 86400000).toISOString()})`
       const { acceptStaffInvite } = await import('@repo/database/staff')
       expect(await acceptStaffInvite({ userId, inviteId })).toMatchObject({

@@ -5,7 +5,6 @@ import type {
   User,
   UserRole,
 } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import {
   dayOfWeekFromDate,
   validateStaffAvailability,
@@ -30,7 +29,6 @@ export type UpdateStaffInput = {
   nickname: string | null
   phone: string
   role: UserRole
-  color: string
 }
 
 export async function getAllStaff(salonId: string): Promise<User[]> {
@@ -100,7 +98,6 @@ export async function getAllStaff(salonId: string): Promise<User[]> {
     nickname: null,
     phone: row.phone,
     role: 'staff' as const,
-    color: row.color,
     createdAt: row.createdAt,
     inviteStatus: inviteStatuses.get(row.id) ?? null,
   }))
@@ -174,7 +171,6 @@ export async function updateStaffMember(
         : 'admin'
       : 'member'
   const displayName = input.nickname
-  const color = normalizeCalendarColorId(input.color)
 
   await db.transaction(async (tx) => {
     await tx
@@ -203,12 +199,11 @@ export async function updateStaffMember(
         userId: staffUserId,
         organizationId: salonId,
         displayName,
-        color,
         active: true,
       })
       .onConflictDoUpdate({
         target: [salonMember.userId, salonMember.organizationId],
-        set: { displayName, color, active: true },
+        set: { displayName, active: true },
       })
   })
 

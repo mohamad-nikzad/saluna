@@ -110,7 +110,6 @@ describe('appointment intake placeholder rules', () => {
         salonId: 'salon-1',
         role: 'staff',
         name: 'پرسنل',
-        color: 'bg-staff-1',
         phone: '09120000000',
         createdAt: new Date(),
       },
@@ -121,7 +120,6 @@ describe('appointment intake placeholder rules', () => {
       salonId: 'salon-1',
       role: 'staff',
       name: 'پرسنل',
-      color: 'bg-staff-1',
       phone: '09120000000',
       createdAt: new Date(),
     })

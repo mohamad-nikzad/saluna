@@ -3,9 +3,7 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '@repo/database/client'
 import { businessSettings, salons, users } from '@repo/database/schema'
 import { normalizePhone } from '@repo/salon-core/phone'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import type { User } from '@repo/salon-core/types'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
@@ -68,7 +66,6 @@ function rowToSignupUser(row: typeof users.$inferSelect): User {
     name: row.name,
     phone: row.phone,
     role: row.role,
-    color: row.color,
     createdAt: row.createdAt,
   }
 }
@@ -172,7 +169,6 @@ export async function createSalonWorkspace(
           phone: parsed.normalizedPhone,
           passwordHash,
           role: 'manager',
-          color: normalizeCalendarColorId(STAFF_COLORS[0]),
           active: true,
         })
         .returning()

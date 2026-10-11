@@ -200,7 +200,6 @@ export type AdminSetupStaffCreateResponse = {
 export type AdminSetupStaffCreateRequest = {
     name: string;
     phone: string;
-    color: string;
     active: boolean;
     serviceIds: Array<string> | null;
     schedule: Array<{
@@ -803,7 +802,6 @@ export type StaffUser = {
     fullName?: string;
     nickname?: string | null;
     role: StaffRole;
-    color: string;
     phone: string;
     createdAt: string | string;
     serviceIds?: Array<string> | null;
@@ -842,7 +840,6 @@ export type StaffUpdateRequest = {
     nickname?: string | null;
     phone: string;
     role: StaffRole & unknown;
-    color?: string;
 };
 
 export type SuccessResponse = {
@@ -1810,7 +1807,7 @@ export type PopularServiceCount = {
 
 export type StaffLoadItem = {
     name: string;
-    color: string;
+    id: string;
     count: number;
 };
 

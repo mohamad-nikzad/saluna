@@ -304,7 +304,6 @@ export const adminSetupStaffCreateBodySchema = z
   .object({
     name: z.string().min(1).max(120),
     phone: z.string().regex(/^09\d{9}$/),
-    color: z.string(),
     active: z.boolean(),
     serviceIds: z.array(z.string()).nullable(),
     schedule: z.array(adminSetupStaffScheduleSchema).max(7),

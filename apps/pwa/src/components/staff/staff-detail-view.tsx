@@ -1,7 +1,5 @@
 import { Trash2, User as UserIcon } from 'lucide-react'
 import { PageHeaderBackButton } from '#/components/page-header-back-button'
-import { STAFF_COLORS } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { displayPhone } from '@repo/salon-core/phone'
 import type {
   BusinessHours,
@@ -9,7 +7,6 @@ import type {
   StaffSchedule,
   User,
 } from '@repo/salon-core/types'
-import { cn } from '@repo/ui/utils'
 
 import { StaffDetailHero } from '#/components/staff/staff-detail-hero'
 import {
@@ -23,7 +20,6 @@ import {
   staffRoleLabel,
   staffServiceCount,
 } from '#/components/staff/staff-utils'
-import { staffAccentVar } from '#/lib/roster-visuals'
 import { ManagerStaffCommissionPanel } from '#/components/commissions/manager-staff-commission-panel'
 
 export interface StaffDetailViewProps {
@@ -108,35 +104,6 @@ export function StaffDetailView({
             {member.nickname?.trim() ? (
               <StaffReadonlyField label="نام نمایشی" value={member.nickname} />
             ) : null}
-            <StaffReadonlyField
-              label="رنگ در تقویم"
-              value={
-                <div className="flex flex-wrap gap-2 pt-0.5">
-                  {STAFF_COLORS.map((color) => {
-                    const normalized = normalizeCalendarColorId(color)
-                    const selected =
-                      normalizeCalendarColorId(member.color) === normalized
-                    return (
-                      <div
-                        key={color}
-                        className={cn(
-                          'flex size-9 items-center justify-center rounded-xl',
-                          selected &&
-                            'ring-2 ring-card ring-offset-2 ring-offset-paper',
-                        )}
-                        style={{
-                          backgroundColor: staffAccentVar(color),
-                          boxShadow: selected
-                            ? undefined
-                            : 'inset 0 0 0 1px rgba(0,0,0,0.06)',
-                        }}
-                        aria-label={selected ? 'رنگ فعال' : undefined}
-                      />
-                    )
-                  })}
-                </div>
-              }
-            />
           </div>
         </StaffDetailSection>
 

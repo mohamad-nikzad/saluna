@@ -35,3 +35,12 @@ export function resolveCalendarColor(
 ): CalendarColorId {
   return normalizeCalendarColorId(value)
 }
+
+/** Stable across profile edits and roster changes; no color is stored on staff. */
+export function resolveStaffCalendarColor(staffId: string): CalendarColorId {
+  let hash = 2166136261
+  for (let index = 0; index < staffId.length; index += 1) {
+    hash = Math.imul(hash ^ staffId.charCodeAt(index), 16777619)
+  }
+  return CALENDAR_COLOR_IDS[(hash >>> 0) % CALENDAR_COLOR_IDS.length]
+}

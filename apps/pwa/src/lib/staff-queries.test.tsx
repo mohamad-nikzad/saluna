@@ -10,15 +10,18 @@ import {
   useCancelStaffInviteMutation,
   useCreateStaffMutation,
   useResendStaffInviteMutation,
+  useUpdateStaffMutation,
 } from '#/lib/staff-queries'
 
 const getApiV1Staff = vi.fn()
 const postApiV1Staff = vi.fn()
+const patchApiV1StaffById = vi.fn()
 const postApiV1StaffByIdInviteCancel = vi.fn()
 const postApiV1StaffByIdInviteResend = vi.fn()
 vi.mock('@repo/api-client/sdk', () => ({
   getApiV1Staff: (...args: unknown[]) => getApiV1Staff(...args),
   postApiV1Staff: (...args: unknown[]) => postApiV1Staff(...args),
+  patchApiV1StaffById: (...args: unknown[]) => patchApiV1StaffById(...args),
   postApiV1StaffByIdInviteCancel: (...args: unknown[]) =>
     postApiV1StaffByIdInviteCancel(...args),
   postApiV1StaffByIdInviteResend: (...args: unknown[]) =>
@@ -39,6 +42,7 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   getApiV1Staff.mockReset()
   postApiV1Staff.mockReset()
+  patchApiV1StaffById.mockReset()
   postApiV1StaffByIdInviteCancel.mockReset()
   postApiV1StaffByIdInviteResend.mockReset()
 })
@@ -78,6 +82,33 @@ describe('staff-queries', () => {
     })
 
     expect(created.id).toBe('staff-2')
+    expect(postApiV1Staff.mock.calls[0][0].body).toEqual({
+      name: 'Neda',
+      phone: '09120000000',
+      role: 'staff',
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+  })
+
+  it('edits existing staff without sending a color setting', async () => {
+    patchApiV1StaffById.mockResolvedValue({
+      data: { staff: { id: 'staff-2', name: 'Neda' } },
+    })
+    const { result } = renderHook(() => useUpdateStaffMutation('staff-2'), {
+      wrapper,
+    })
+    const payload = {
+      name: 'Neda',
+      nickname: 'N',
+      phone: '09120000000',
+      role: 'staff' as const,
+    }
+    const updated = await result.current.mutateAsync(payload)
+
+    expect(updated.id).toBe('staff-2')
+    expect(patchApiV1StaffById.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ path: { id: 'staff-2' }, body: payload }),
+    )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
   })
 

@@ -12,7 +12,6 @@ const baseUser = (over: Partial<User>): User => ({
   salonId: 'salon-1',
   name: 'Test',
   role: 'staff',
-  color: 'bg-staff-1',
   phone: '09120000000',
   createdAt: new Date(),
   ...over,

@@ -101,7 +101,7 @@ export function DaySummarySheet({
           {sorted.length > 0 ? (
             <div className="flex flex-col gap-2.5">
               {sorted.map((appointment) => {
-                const color = staffAccentVar(appointment.staff.color)
+                const color = staffAccentVar(appointment.staff.id)
                 const isInactive =
                   appointment.status === 'cancelled' ||
                   appointment.status === 'no-show'

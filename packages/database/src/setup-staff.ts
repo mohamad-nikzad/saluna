@@ -24,7 +24,6 @@ export type CreateSetupStaffProfileInput = {
   salonId: string
   name: string
   phone: string
-  color: string
   active: boolean
   schedule: SetupStaffScheduleInput[]
   serviceIds: string[] | null
@@ -75,7 +74,6 @@ export async function createSetupStaffProfile(
         salonId: input.salonId,
         name: input.name,
         phone: input.phone,
-        color: input.color,
         active: input.active,
       })
       .returning()
@@ -246,7 +244,6 @@ export async function claimStaffProfile(input: {
         userId: staffProfiles.userId,
         name: staffProfiles.name,
         phone: staffProfiles.phone,
-        color: staffProfiles.color,
         active: staffProfiles.active,
         claimedAt: staffProfiles.claimedAt,
         accessDetachedAt: staffProfiles.accessDetachedAt,
@@ -372,14 +369,12 @@ export async function claimStaffProfile(input: {
         organizationId: profile.salonId,
         userId: input.userId,
         displayName: profile.name,
-        color: profile.color,
         active: profile.active,
       })
       .onConflictDoUpdate({
         target: [salonMember.userId, salonMember.organizationId],
         set: {
           displayName: profile.name,
-          color: profile.color,
           active: profile.active,
         },
       })

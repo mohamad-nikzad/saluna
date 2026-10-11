@@ -832,7 +832,6 @@ export async function listAdminSalonStaff(
       email: user.email,
       phoneNumber: user.phoneNumber,
       displayName: salonMember.displayName,
-      color: salonMember.color,
       active: salonMember.active,
       createdAt: salonMember.createdAt,
     })

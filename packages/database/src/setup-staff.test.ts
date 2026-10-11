@@ -9,7 +9,6 @@ const profile = {
   userId: null,
   name: 'Sara',
   phone: '09121234567',
-  color: 'mint',
   active: true,
   claimedAt: null,
   accessDetachedAt: null,

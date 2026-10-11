@@ -236,7 +236,6 @@ const appointmentDetailSelect = {
     salonId: staffProfiles.salonId,
     name: staffProfiles.name,
     phone: staffProfiles.phone,
-    color: staffProfiles.color,
     createdAt: staffProfiles.createdAt,
   },
   service: services,

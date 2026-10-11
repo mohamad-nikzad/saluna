@@ -185,7 +185,7 @@ export function ManagerToday({ userName }: { userName: string }) {
     doneCount,
     droppedCount,
     defaultCreateTime,
-  } = useMemo(() => buildManagerTodayViewModel({ data, staff }), [data, staff])
+  } = useMemo(() => buildManagerTodayViewModel({ data }), [data])
 
   const handleRetry = () => {
     mutateToday()
@@ -420,7 +420,7 @@ export function ManagerToday({ userName }: { userName: string }) {
                   <TeamRow
                     key={row.staffId}
                     staffName={row.staffName}
-                    color={row.color}
+                    staffId={row.staffId}
                     appointmentCount={row.appointmentCount}
                     bookedMinutes={row.bookedMinutes}
                     isFirst={index === 0}

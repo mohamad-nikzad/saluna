@@ -21,7 +21,7 @@ export const popularServiceCountSchema = z
 export const staffLoadItemSchema = z
   .object({
     name: z.string(),
-    color: z.string(),
+    id: z.string(),
     count: z.number(),
   })
   .openapi('StaffLoadItem')

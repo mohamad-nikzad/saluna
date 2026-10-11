@@ -6,7 +6,6 @@ import {
   getApiV1AdminSalonsByIdSetupStaffQueryKey,
   postApiV1AdminSalonsByIdSetupStaffMutation,
 } from '@repo/api-client/query'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 
 import { Panel } from '#/components/admin/panel'
 import { Button } from '#/components/ui/button'
@@ -69,7 +68,6 @@ export function SalonSetupStaff({
   )
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [color, setColor] = useState<string>(STAFF_COLORS[0])
   const [active, setActive] = useState(true)
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [schedule, setSchedule] = useState(defaultSchedule)
@@ -111,7 +109,6 @@ export function SalonSetupStaff({
               body: {
                 name,
                 phone,
-                color,
                 active,
                 serviceIds,
                 schedule,
@@ -146,21 +143,6 @@ export function SalonSetupStaff({
                   placeholder="09121234567"
                   required
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="setup-staff-color">رنگ تقویم</Label>
-                <select
-                  id="setup-staff-color"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                >
-                  {STAFF_COLORS.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
               </div>
               <label className="flex items-center gap-3 self-end rounded-lg border px-3 py-2">
                 <Checkbox

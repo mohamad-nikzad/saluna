@@ -56,10 +56,10 @@ async function seed(sql: Sql) {
     values (${ids.staffUser}, 'Staff Identity', 'commission-staff@example.test', true, now(), now())
   `
   await sql`
-    insert into staff_profiles (id, salon_id, name, phone, color)
+    insert into staff_profiles (id, salon_id, name, phone)
     values
-      (${ids.profileA}, ${ids.salon}, 'Mina', '09120000001', 'rose'),
-      (${ids.profileB}, ${ids.salon}, 'Sara', '09120000002', 'mint')
+      (${ids.profileA}, ${ids.salon}, 'Mina', '09120000001'),
+      (${ids.profileB}, ${ids.salon}, 'Sara', '09120000002')
   `
   await sql`
     insert into service_categories (id, salon_id, name)

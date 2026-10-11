@@ -54,7 +54,6 @@ function completedComboAppointment() {
       salonId: 'salon-1',
       name: 'سارا',
       role: 'staff' as const,
-      color: 'rose',
       phone: '09121111111',
       createdAt: new Date('2026-01-01T08:00:00Z'),
     },

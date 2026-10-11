@@ -41,7 +41,6 @@ export const staffUserSchema = z
     fullName: z.string().optional(),
     nickname: z.string().nullable().optional(),
     role: staffRoleSchema,
-    color: z.string(),
     phone: z.string(),
     createdAt: isoDateTimeSchema,
     serviceIds: z.array(z.string()).nullable().optional(),
@@ -67,7 +66,6 @@ export const staffUpdateBodySchema = bodyFromCoreSchema(
     nickname: z.string().nullable().optional().openapi({ example: 'نرگس' }),
     phone: z.string().openapi({ example: '09121234567' }),
     role: staffRoleSchema.openapi({ example: 'staff' }),
-    color: z.string().optional().openapi({ example: 'plum' }),
   },
   staffUpdateSchema,
 )

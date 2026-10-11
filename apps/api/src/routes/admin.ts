@@ -90,7 +90,6 @@ import {
 } from '@repo/salon-core/forms/service'
 import type { Service } from '@repo/salon-core/types'
 import { phoneSchema } from '@repo/salon-core/forms/primitives'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { businessSettingsSchema } from '@repo/salon-core/forms/settings'
 import { presencePatchSchema } from '@repo/salon-core/forms/presence'
 import type { AppEnv } from '../factory'
@@ -157,7 +156,6 @@ const setupStaffScheduleSchema = z.object({
 const setupStaffCreateBodySchema = z.object({
   name: z.string().trim().min(1).max(120),
   phone: phoneSchema,
-  color: z.string().trim().min(1).max(40),
   active: z.boolean().default(true),
   serviceIds: z.array(z.string().uuid()).nullable(),
   schedule: z.array(setupStaffScheduleSchema).max(7),
@@ -771,7 +769,6 @@ export const adminRoute = new Hono<AppEnv>()
           salonId: id,
           name: body.name,
           phone: body.phone,
-          color: normalizeCalendarColorId(body.color),
           active: body.active,
           schedule: body.schedule,
           serviceIds: body.serviceIds,

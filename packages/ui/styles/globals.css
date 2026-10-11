@@ -494,6 +494,7 @@
 }
 
 .salon-fullcalendar .fc-apt-time {
+  color: var(--foreground);
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: -0.01em;

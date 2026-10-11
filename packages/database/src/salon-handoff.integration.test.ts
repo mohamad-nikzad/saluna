@@ -154,7 +154,6 @@ describe.skipIf(!runIntegration)('Salon Handoff Postgres integration', () => {
       token: handoff.token,
       userId: ids.eligibleOwner,
       displayName: 'Eligible Owner',
-      color: 'rose',
     }
 
     expect(await queries.completeSalonHandoff(input)).toEqual({
@@ -188,7 +187,6 @@ describe.skipIf(!runIntegration)('Salon Handoff Postgres integration', () => {
         token: handoff.token,
         userId: ids.publishedOwner,
         displayName: 'Published Owner',
-        color: 'rose',
       }),
     ).toEqual({
       status: 'completed',
@@ -227,7 +225,6 @@ describe.skipIf(!runIntegration)('Salon Handoff Postgres integration', () => {
         token: conflict.token,
         userId: ids.conflictingOwner,
         displayName: 'Conflict Owner',
-        color: 'rose',
       }),
     ).toMatchObject({
       status: 'identity_conflict',
@@ -238,7 +235,6 @@ describe.skipIf(!runIntegration)('Salon Handoff Postgres integration', () => {
         token: stale.token,
         userId: ids.eligibleOwner,
         displayName: 'Eligible Owner',
-        color: 'rose',
       }),
     ).toEqual({ status: 'invalid' })
 

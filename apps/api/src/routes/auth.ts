@@ -18,8 +18,6 @@ import {
   staffProfileAccesses,
   user,
 } from '@repo/database/schema'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 import {
   preWorkspaceAccountSchema,
   preWorkspaceSchema,
@@ -52,7 +50,6 @@ import { zValidator } from '../lib/validate'
 import { brand } from '@repo/brand'
 import { error, ok } from '../lib/responses'
 
-const OWNER_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
 const phoneStatusSchema = z.object({ phone: phoneSchema })
 const phoneOtpRequestSchema = z.object({ phoneNumber: phoneSchema })
 const verifyPasswordResetOtpSchema = z.object({
@@ -322,7 +319,6 @@ async function createWorkspaceSidecars(input: {
       userId: input.userId,
       organizationId: input.orgId,
       displayName: input.managerName,
-      color: OWNER_COLOR,
       active: true,
     })
     await tx.insert(businessSettings).values({
@@ -926,7 +922,6 @@ export const authRoute = new Hono<AppEnv>()
         userId,
         organizationId: orgId,
         displayName: managerName,
-        color: OWNER_COLOR,
         active: true,
       })
       await tx.insert(businessSettings).values({

@@ -1,4 +1,4 @@
-import type { CalendarColorId } from './calendar-colors'
+export { CALENDAR_COLOR_IDS } from './calendar-colors'
 
 export type UserRole = 'manager' | 'staff'
 
@@ -18,7 +18,6 @@ export interface User {
   /** Optional salon nickname shown in dense operational UI. */
   nickname?: string | null
   role: UserRole
-  color: string
   phone: string
   createdAt: Date
   /**
@@ -416,14 +415,6 @@ export const SERVICE_CATEGORIES = {
   skincare: { label: 'پوست', color: 'bg-staff-3' },
   spa: { label: 'اسپا', color: 'bg-staff-4' },
 } as const
-
-export const STAFF_COLORS = [
-  'rose',
-  'violet',
-  'mint',
-  'gold',
-  'coral',
-] as const satisfies readonly CalendarColorId[]
 
 export const APPOINTMENT_STATUS = {
   scheduled: { label: 'در انتظار', color: 'bg-muted text-muted-foreground' },

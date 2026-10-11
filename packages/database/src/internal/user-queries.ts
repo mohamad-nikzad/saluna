@@ -12,7 +12,7 @@ import { rowToUser, staffUserSelect } from './row-mappers'
 
 /**
  * Resolve a user by id into the legacy `User` shape, joining the user's single
- * membership (role + salon) and the optional `salon_member` color sidecar.
+ * membership (role + salon) and the optional `salon_member` display name.
  * Inactive members (`salon_member.active = false`) are excluded.
  * Also resolves active unclaimed Staff Profiles (including pending invites).
  */
@@ -67,7 +67,6 @@ export async function getUserById(id: string): Promise<User | undefined> {
     nickname: null,
     phone: profile.phone,
     role: 'staff',
-    color: profile.color,
     createdAt: profile.createdAt,
     inviteStatus: pending[0]
       ? pending[0].status === 'expired' ||

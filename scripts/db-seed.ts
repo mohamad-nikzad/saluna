@@ -51,7 +51,6 @@ type SeedStaff = {
   phone: string
   name: string
   role: UserRole
-  color: string | null
   active: boolean
 }
 
@@ -178,26 +177,24 @@ async function ensureOrgMember(
   await auth.api.addMember({ body: { userId, role, organizationId } })
 }
 
-/** Upsert the salon_member sidecar (color / displayName / active per user-org). */
+/** Upsert the salon_member sidecar (displayName / active per user-org). */
 async function ensureSalonMember({
   userId,
   organizationId,
   displayName,
-  color,
   active,
 }: {
   userId: string
   organizationId: string
   displayName: string
-  color: string
   active: boolean
 }): Promise<void> {
   await db
     .insert(salonMember)
-    .values({ userId, organizationId, displayName, color, active })
+    .values({ userId, organizationId, displayName, active })
     .onConflictDoUpdate({
       target: [salonMember.userId, salonMember.organizationId],
-      set: { displayName, color, active },
+      set: { displayName, active },
     })
 }
 
@@ -207,13 +204,11 @@ async function ensureStaffProfileAccess({
   organizationId,
   name,
   phone,
-  color,
 }: {
   userId: string
   organizationId: string
   name: string
   phone: string
-  color: string
 }): Promise<void> {
   await db
     .insert(staffProfiles)
@@ -223,12 +218,11 @@ async function ensureStaffProfileAccess({
       userId,
       name,
       phone,
-      color,
       claimedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: staffProfiles.id,
-      set: { name, phone, color, active: true, accessDetachedAt: null },
+      set: { name, phone, active: true, accessDetachedAt: null },
     })
 
   const [existingAccess] = await db
@@ -263,7 +257,6 @@ async function getSalonStaff(organizationId: string): Promise<SeedStaff[]> {
       username: user.username,
       name: user.name,
       role: member.role,
-      color: salonMember.color,
       active: salonMember.active,
     })
     .from(member)
@@ -282,7 +275,6 @@ async function getSalonStaff(organizationId: string): Promise<SeedStaff[]> {
     phone: row.phoneNumber ?? row.username ?? '',
     name: row.name,
     role: mapRole(row.role),
-    color: row.color,
     active: row.active ?? true,
   }))
 }
@@ -1574,17 +1566,16 @@ async function seedRetentionAndFeaturesDemo(salonId: string) {
 }
 
 /** Owner + staff identities for the primary salon. */
-const PRIMARY_OWNER = { phone: '09120000000', name: 'مدیر سالن', color: 'gold' }
+const PRIMARY_OWNER = { phone: '09120000000', name: 'مدیر سالن' }
 const PRIMARY_STAFF = [
-  { phone: '09120000001', name: 'نیلوفر کاظمی', color: 'coral' },
-  { phone: '09120000002', name: 'مریم احمدی', color: 'rose' },
-  { phone: '09120000003', name: 'سارا محمودی', color: 'violet' },
-  { phone: '09120000004', name: 'الهام رضایی', color: 'mint' },
+  { phone: '09120000001', name: 'نیلوفر کاظمی' },
+  { phone: '09120000002', name: 'مریم احمدی' },
+  { phone: '09120000003', name: 'سارا محمودی' },
+  { phone: '09120000004', name: 'الهام رضایی' },
 ] as const
 const SECOND_OWNER = {
   phone: '09130000000',
   name: 'مدیر نیلوفر',
-  color: 'gold',
 }
 
 async function main() {
@@ -1602,7 +1593,6 @@ async function main() {
     userId: primaryOwnerId,
     organizationId: primarySalon.id,
     displayName: PRIMARY_OWNER.name,
-    color: PRIMARY_OWNER.color,
     active: true,
   })
 
@@ -1614,7 +1604,6 @@ async function main() {
       userId: staffId,
       organizationId: primarySalon.id,
       displayName: s.name,
-      color: s.color,
       active: true,
     })
     await ensureStaffProfileAccess({
@@ -1622,7 +1611,6 @@ async function main() {
       organizationId: primarySalon.id,
       name: s.name,
       phone: s.phone,
-      color: s.color,
     })
   }
 
@@ -1640,7 +1628,6 @@ async function main() {
     userId: secondOwnerId,
     organizationId: secondSalon.id,
     displayName: SECOND_OWNER.name,
-    color: SECOND_OWNER.color,
     active: true,
   })
 

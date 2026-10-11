@@ -243,7 +243,7 @@ describe('firstNameOf / personInitials', () => {
 
 describe('buildManagerTodayViewModel', () => {
   it('returns empty defaults when there is no data', () => {
-    const vm = buildManagerTodayViewModel({ data: undefined, staff: [] })
+    const vm = buildManagerTodayViewModel({ data: undefined })
     expect(vm.queue).toEqual([])
     expect(vm.totalAppointments).toBe(0)
     expect(vm.defaultCreateTime).toBe('09:00')
@@ -316,9 +316,7 @@ describe('buildManagerTodayViewModel', () => {
         },
       ],
     })
-    const staff: User[] = [{ id: 's1', name: 'الف', color: 'rose' } as User]
-
-    const vm = buildManagerTodayViewModel({ data, staff })
+    const vm = buildManagerTodayViewModel({ data })
 
     // cancelled and no-show are excluded; remaining are sorted by start time.
     expect(vm.queue.map((a) => a.id)).toEqual(['active', 'done'])
@@ -327,8 +325,7 @@ describe('buildManagerTodayViewModel', () => {
     expect(vm.doneCount).toBe(1)
     expect(vm.droppedCount).toBe(2)
     expect(vm.attentionItems).toHaveLength(1)
-    expect(vm.teamRows[0].color).toBe('rose')
-    expect(vm.teamRows[1].color).toBeUndefined()
+    expect(vm.teamRows).toEqual(data.staffLoad)
     // earliest open-slot start time across all staff.
     expect(vm.defaultCreateTime).toBe('10:00')
   })
@@ -339,9 +336,7 @@ describe('buildManagerTodayViewModel', () => {
         attention({ id: `a${i}`, type: 'soon', priority: i }),
       ),
     })
-    expect(
-      buildManagerTodayViewModel({ data, staff: [] }).attentionItems,
-    ).toHaveLength(5)
+    expect(buildManagerTodayViewModel({ data }).attentionItems).toHaveLength(5)
   })
 })
 

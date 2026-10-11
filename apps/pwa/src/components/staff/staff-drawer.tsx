@@ -15,20 +15,17 @@ import { handleFormFocusScroll } from '#/lib/scroll-focused-input-into-view'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@repo/ui/field'
-import { Badge } from '@repo/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
+  SelectGroup,
   SelectTrigger,
   SelectValue,
 } from '@repo/ui/select'
 import { Spinner } from '@repo/ui/spinner'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 import type { User } from '@repo/salon-core/types'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { displayPhone, normalizePhone } from '@repo/salon-core/phone'
-import { staffAccentVar } from '#/lib/roster-visuals'
 import {
   staffCreateSchema,
   staffUpdateSchema,
@@ -41,7 +38,6 @@ import {
   useCreateStaffMutation,
   useUpdateStaffMutation,
 } from '#/lib/staff-queries'
-import { cn } from '@repo/ui/utils'
 
 interface StaffDrawerProps {
   open: boolean
@@ -59,7 +55,6 @@ function emptyValues(roleLocked?: 'staff' | 'manager'): StaffFormValues {
     nickname: '',
     phone: '',
     role: roleLocked ?? 'staff',
-    color: STAFF_COLORS[0],
   }
 }
 
@@ -72,7 +67,6 @@ function valuesForStaff(
     nickname: staff.nickname ?? '',
     phone: staff.phone,
     role: roleLocked ?? staff.role,
-    color: normalizeCalendarColorId(staff.color),
   }
 }
 
@@ -106,7 +100,6 @@ export function StaffDrawer({
 
   const nameValue = watch('name')
   const phoneValue = watch('phone')
-  const colorValue = normalizeCalendarColorId(watch('color'))
 
   const { requestClose, confirmDialog } = useDismissGuard({
     isDirty: isDirty && !isSubmitting,
@@ -132,7 +125,6 @@ export function StaffDrawer({
           nickname: values.nickname ?? null,
           phone: values.phone,
           role: roleLocked ?? values.role,
-          color: normalizeCalendarColorId(values.color),
         })
       } else {
         await createStaff.mutateAsync({
@@ -240,56 +232,16 @@ export function StaffDrawer({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="staff">پرسنل</SelectItem>
-                            <SelectItem value="manager">مدیر</SelectItem>
+                            <SelectGroup>
+                              <SelectItem value="staff">پرسنل</SelectItem>
+                              <SelectItem value="manager">مدیر</SelectItem>
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       )}
                     />
                   </Field>
                 )}
-
-                <Field>
-                  <FieldLabel>رنگ تقویم</FieldLabel>
-                  <Controller
-                    control={control}
-                    name="color"
-                    render={({ field }) => (
-                      <div className="flex flex-wrap gap-2">
-                        {STAFF_COLORS.map((color) => {
-                          const normalized = normalizeCalendarColorId(color)
-                          const selected = colorValue === normalized
-                          const colorVar = staffAccentVar(color)
-                          return (
-                            <button
-                              key={color}
-                              type="button"
-                              aria-pressed={selected}
-                              onClick={() => field.onChange(normalized)}
-                              className={cn(
-                                'flex h-10 items-center gap-2 rounded-full border px-2.5 text-xs font-medium transition-colors',
-                                selected
-                                  ? 'border-foreground bg-muted'
-                                  : 'border-border bg-background',
-                              )}
-                            >
-                              <span
-                                className="size-5 rounded-full"
-                                style={{ backgroundColor: colorVar }}
-                              />
-                              {selected ? (
-                                <Badge variant="secondary">فعال</Badge>
-                              ) : null}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-                  />
-                  {errors.color && (
-                    <FieldError>{errors.color.message}</FieldError>
-                  )}
-                </Field>
               </>
             ) : null}
           </FieldGroup>

@@ -267,7 +267,6 @@ const stubStaffUser = {
   fullName: 'stub',
   nickname: null,
   role: 'staff' as const,
-  color: 'plum',
   phone: '09120000000',
   createdAt: new Date().toISOString(),
   serviceIds: null,
@@ -1096,7 +1095,7 @@ const stubDashboardData = {
     count: number
   }>,
   popularServices: [] as Array<{ name: string; count: number }>,
-  staffLoad: [] as Array<{ name: string; color: string; count: number }>,
+  staffLoad: [] as Array<{ id: string; name: string; count: number }>,
   monthRevenue: 0,
   monthSalonRetainedAmount: 0,
   newClientsThisMonth: 0,

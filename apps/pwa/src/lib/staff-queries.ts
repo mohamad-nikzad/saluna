@@ -119,7 +119,6 @@ function toUpdateBody(values: StaffUpdateFormPayload) {
     nickname: values.nickname,
     phone: values.phone,
     role: values.role,
-    color: values.color,
   }
 }
 

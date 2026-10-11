@@ -47,7 +47,9 @@ export function StaffListCard({
         <Avatar className="size-12 shrink-0">
           <AvatarFallback
             className="text-sm font-semibold text-foreground"
-            style={{ backgroundColor: staffAccentVar(member.color) }}
+            style={{
+              backgroundColor: `color-mix(in oklab, ${staffAccentVar(member.id)} 20%, var(--card))`,
+            }}
           >
             {personInitials(member.name)}
           </AvatarFallback>
@@ -60,7 +62,7 @@ export function StaffListCard({
             </p>
             <span
               className="size-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: staffAccentVar(member.color) }}
+              style={{ backgroundColor: staffAccentVar(member.id) }}
               aria-hidden
             />
             {member.inviteStatus === 'pending' ||

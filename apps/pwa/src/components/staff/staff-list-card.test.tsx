@@ -26,7 +26,6 @@ const member: User = {
   salonId: 'salon-a',
   name: 'سارا احمدی',
   role: 'staff',
-  color: 'rose',
   phone: '09120000000',
   createdAt: new Date('2026-10-11'),
   inviteStatus: 'pending',

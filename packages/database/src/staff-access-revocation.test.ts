@@ -147,7 +147,6 @@ function seedActiveAccess() {
     userId: 'user-1',
     name: 'Sara',
     phone: '09121234567',
-    color: 'mint',
     active: true,
     claimedAt: now,
     accessDetachedAt: null,

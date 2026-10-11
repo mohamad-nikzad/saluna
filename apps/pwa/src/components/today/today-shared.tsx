@@ -102,23 +102,22 @@ export function HeroSep() {
 
 export function Avatar({
   name,
-  color,
+  staffId,
   size = 36,
 }: {
   name: string
-  color?: string | null
+  staffId: string
   size?: number
 }) {
-  const cssVar = staffAccentVar(color)
+  const cssVar = staffAccentVar(staffId)
   return (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full font-bold"
+      className="flex shrink-0 items-center justify-center rounded-full font-bold text-foreground"
       style={{
         width: size,
         height: size,
         fontSize: Math.round(size * 0.32),
-        background: `color-mix(in oklch, ${cssVar} 20%, transparent)`,
-        color: cssVar,
+        background: `color-mix(in oklab, ${cssVar} 20%, transparent)`,
       }}
     >
       {personInitials(name)}
@@ -210,7 +209,7 @@ export function QueueRow({
       <div className="h-9 w-px bg-line-soft" />
       <Avatar
         name={appointment.staff.name}
-        color={appointment.staff.color}
+        staffId={appointment.staff.id}
         size={36}
       />
       <div className="min-w-0 flex-1">
@@ -234,13 +233,13 @@ export function QueueRow({
 
 export function TeamRow({
   staffName,
-  color,
+  staffId,
   appointmentCount,
   bookedMinutes,
   isFirst,
 }: {
   staffName: string
-  color?: string | null
+  staffId: string
   appointmentCount: number
   bookedMinutes: number
   isFirst: boolean
@@ -249,7 +248,7 @@ export function TeamRow({
     100,
     Math.round((bookedMinutes / DAY_WORK_MINUTES) * 100),
   )
-  const cssVar = staffAccentVar(color)
+  const cssVar = staffAccentVar(staffId)
   return (
     <div
       className={cn(
@@ -257,7 +256,7 @@ export function TeamRow({
         !isFirst && 'border-t border-line-soft',
       )}
     >
-      <Avatar name={staffName} color={color} size={34} />
+      <Avatar name={staffName} staffId={staffId} size={34} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-[13px] font-semibold text-foreground">

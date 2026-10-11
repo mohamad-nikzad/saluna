@@ -5,7 +5,7 @@
 import { z } from 'zod'
 
 import { normalizeCalendarColorId } from '../calendar-colors'
-import { SERVICE_CATEGORIES, STAFF_COLORS } from '../types'
+import { SERVICE_CATEGORIES, CALENDAR_COLOR_IDS } from '../types'
 import { formMessages } from './messages'
 import {
   durationMinutesSchema,
@@ -75,7 +75,7 @@ export const serviceFormSchema = z.object({
   category: serviceCategorySchema.default('hair'),
   duration: durationMinutesSchema,
   price: nonNegativeMoneySchema,
-  color: calendarColorIdSchema.default(STAFF_COLORS[0]),
+  color: calendarColorIdSchema.default(CALENDAR_COLOR_IDS[0]),
   active: z.boolean().default(true),
   allowMultipleStaff: z.boolean().default(false),
   description: z.string().trim().optional(),

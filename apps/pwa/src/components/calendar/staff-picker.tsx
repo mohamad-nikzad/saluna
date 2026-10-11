@@ -13,7 +13,7 @@ import {
 import { cn } from '@repo/ui/utils'
 import type { User } from '@repo/salon-core/types'
 import { ResponsivePicker } from '#/components/responsive-picker'
-import { personInitials } from '#/lib/roster-visuals'
+import { personInitials, staffAccentVar } from '#/lib/roster-visuals'
 
 export type StaffPickerStatus = {
   disabled?: boolean
@@ -33,22 +33,26 @@ interface StaffPickerProps {
 
 function StaffAvatar({
   name,
+  staffId,
   selected,
   size = 28,
 }: {
   name: string
+  staffId: string
   selected?: boolean
   size?: number
 }) {
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
-        selected
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-secondary text-plum-deep',
+        'flex shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-foreground',
+        selected && 'ring-2 ring-primary/50',
       )}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: `color-mix(in oklab, ${staffAccentVar(staffId)} 20%, transparent)`,
+      }}
     >
       {personInitials(name)}
     </span>
@@ -84,7 +88,7 @@ export function StaffPicker({
       <span className="flex min-w-0 flex-1 items-center gap-2">
         {selected ? (
           <>
-            <StaffAvatar name={selected.name} />
+            <StaffAvatar name={selected.name} staffId={selected.id} />
             <span className="min-w-0 flex-1 truncate text-start">
               {selected.name}
             </span>
@@ -149,7 +153,11 @@ export function StaffPicker({
                           isSelected ? 'opacity-100' : 'opacity-0',
                         )}
                       />
-                      <StaffAvatar name={member.name} selected={isSelected} />
+                      <StaffAvatar
+                        name={member.name}
+                        staffId={member.id}
+                        selected={isSelected}
+                      />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         {member.name}
                       </span>

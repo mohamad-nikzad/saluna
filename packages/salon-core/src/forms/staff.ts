@@ -4,8 +4,6 @@
  */
 import { z } from 'zod'
 
-import { normalizeCalendarColorId } from '../calendar-colors'
-import { STAFF_COLORS } from '../types'
 import { formMessages } from './messages'
 import {
   phoneSchema,
@@ -48,12 +46,6 @@ export const staffUpdateSchema = z.object({
     }),
   phone: phoneSchema,
   role: staffRoleSchema,
-  color: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .transform((value) => normalizeCalendarColorId(value ?? STAFF_COLORS[0])),
 })
 
 export type StaffUpdateFormInput = z.input<typeof staffUpdateSchema>

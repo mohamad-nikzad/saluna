@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ComponentType } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { Check, Search, X } from 'lucide-react'
 import {
@@ -20,6 +20,7 @@ export interface CalendarFilterOption {
   subtitle?: string
   marker: string
   colorVar?: string
+  markerStyle?: CSSProperties
   searchText?: string
 }
 
@@ -212,6 +213,7 @@ export function CalendarDrawerFilter({
                           ? colorVar
                           : `color-mix(in oklch, ${colorVar} 18%, transparent)`,
                         color: isSelected ? '#fff' : colorVar,
+                        ...option.markerStyle,
                       }}
                     >
                       {option.marker}

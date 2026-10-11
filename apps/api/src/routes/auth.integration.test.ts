@@ -106,7 +106,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
         [secondSalonId, secondProfileId],
       ] as const) {
         const inviteId = randomUUID()
-        await sql`insert into staff_profiles (id,salon_id,name,phone,color) values (${profileId},${acceptedSalonId},'هستی',${phone},'rose')`
+        await sql`insert into staff_profiles (id,salon_id,name,phone) values (${profileId},${acceptedSalonId},'هستی',${phone})`
         await sql`insert into staff_invites (id,salon_id,staff_profile_id,phone,status,token_hash,invited_by_user_id,expires_at) values (${inviteId},${acceptedSalonId},${profileId},${phone},'pending',${randomUUID()},${ownerId},${new Date(Date.now() + 86400000).toISOString()})`
         const accepted = await acceptStaffInvite({ userId, inviteId })
         if (accepted.status !== 'accepted')
@@ -184,7 +184,7 @@ describe.skipIf(process.env.RUN_DATABASE_INTEGRATION !== '1')(
         const inviteId = randomUUID()
         if (kind !== 'new')
           await sql`insert into "user" (id,name,email,phone_number,phone_number_verified) values (${existingId},'Staff',${`${phone}@example.test`},${phone},${kind === 'accepted'})`
-        await sql`insert into staff_profiles (id,salon_id,name,phone,color) values (${profileId},${salonId},'هستی',${phone},'rose')`
+        await sql`insert into staff_profiles (id,salon_id,name,phone) values (${profileId},${salonId},'هستی',${phone})`
         await sql`insert into staff_invites (id,salon_id,staff_profile_id,phone,status,token_hash,invited_by_user_id,expires_at) values (${inviteId},${salonId},${profileId},${phone},'pending',${randomUUID()},${ownerId},${new Date(Date.now() + (kind === 'expired' ? -86400000 : 86400000)).toISOString()})`
         if (kind === 'accepted') {
           const { acceptStaffInvite } = await import('@repo/database/staff')

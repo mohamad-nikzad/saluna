@@ -48,7 +48,7 @@ import type {
   ServicePackage,
   User,
 } from '@repo/salon-core/types'
-import { STAFF_COLORS } from '@repo/salon-core/types'
+import { CALENDAR_COLOR_IDS } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
 import { ServicePicker } from './service-picker'
 
@@ -66,7 +66,7 @@ function emptyPackageValues(sortOrder: number): ServicePackageCreateInput {
     name: '',
     categoryId: '',
     description: '',
-    color: STAFF_COLORS[0],
+    color: CALENDAR_COLOR_IDS[0],
     active: true,
     priceOverride: null,
     sortOrder,
@@ -78,7 +78,7 @@ function packageToValues(pkg: ServicePackage): ServicePackageCreateInput {
     name: pkg.name,
     categoryId: pkg.categoryId ?? '',
     description: pkg.description ?? '',
-    color: pkg.color ?? STAFF_COLORS[0],
+    color: pkg.color ?? CALENDAR_COLOR_IDS[0],
     active: pkg.active,
     priceOverride: pkg.priceOverride,
     sortOrder: pkg.sortOrder,

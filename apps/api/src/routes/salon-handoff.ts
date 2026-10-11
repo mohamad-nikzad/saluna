@@ -8,9 +8,7 @@ import {
   getSalonIdentityConflictForPhone,
   hasCredentialPassword,
 } from '@repo/database/salon-handoff'
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
 import { newPasswordSchema } from '@repo/salon-core/forms/auth'
-import { STAFF_COLORS } from '@repo/salon-core/types'
 
 import type { AppEnv } from '../factory'
 import { error, ok } from '../lib/responses'
@@ -22,8 +20,6 @@ const completeSchema = z.object({
   displayName: z.string().trim().min(1).max(120),
   password: newPasswordSchema.optional(),
 })
-const OWNER_COLOR = normalizeCalendarColorId(STAFF_COLORS[0])
-
 function maskedPhone(phone: string) {
   return `${phone.slice(0, 4)}•••${phone.slice(-4)}`
 }
@@ -129,7 +125,6 @@ export const salonHandoffRoute = new Hono<AppEnv>()
           token: c.req.valid('param').token,
           userId: session.user.id,
           displayName: c.req.valid('json').displayName,
-          color: OWNER_COLOR,
         })
         if (retryResult.status === 'completed') {
           return ok(c, {
@@ -187,7 +182,6 @@ export const salonHandoffRoute = new Hono<AppEnv>()
         token: c.req.valid('param').token,
         userId: session.user.id,
         displayName: body.displayName,
-        color: OWNER_COLOR,
       })
       if (result.status === 'invalid') {
         return error(

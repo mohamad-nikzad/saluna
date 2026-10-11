@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { Service } from '@repo/salon-core/types'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
-import { staffAccentVar } from '#/lib/roster-visuals'
+import { calendarAccentVar } from '#/lib/roster-visuals'
 import { Scissors } from 'lucide-react'
 import { CalendarDrawerFilter } from './calendar-drawer-filter'
 
@@ -27,7 +27,7 @@ export function ServiceFilter({
         label: service.name,
         subtitle: `${toPersianDigits(service.duration)} دقیقه`,
         marker: serviceMarker(service.name),
-        colorVar: staffAccentVar(service.color),
+        colorVar: calendarAccentVar(service.color),
         searchText: [
           service.name,
           service.categoryName,

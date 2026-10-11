@@ -1,4 +1,7 @@
-import { normalizeCalendarColorId } from '@repo/salon-core/calendar-colors'
+import {
+  normalizeCalendarColorId,
+  resolveStaffCalendarColor,
+} from '@repo/salon-core/calendar-colors'
 
 export function personInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -7,6 +10,10 @@ export function personInitials(name: string): string {
   return `${parts[0][0]}${parts[1][0]}`
 }
 
-export function staffAccentVar(color?: string | null): string {
+export function calendarAccentVar(color?: string | null): string {
   return `var(--calendar-${normalizeCalendarColorId(color)})`
+}
+
+export function staffAccentVar(staffId: string): string {
+  return `var(--calendar-${resolveStaffCalendarColor(staffId)})`
 }

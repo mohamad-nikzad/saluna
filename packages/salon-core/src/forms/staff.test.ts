@@ -7,6 +7,7 @@ import {
   staffScheduleRequestSchema,
   staffScheduleSchema,
   staffServiceIdsSchema,
+  staffUpdateSchema,
 } from './staff'
 
 describe('staffCreateSchema', () => {
@@ -141,6 +142,19 @@ describe('staffCreateRequestSchema', () => {
 })
 
 describe('staff server schemas', () => {
+  it('updates an existing profile without assigning or retaining a color', () => {
+    const profile = {
+      name: 'نرگس',
+      nickname: 'نرگس جان',
+      phone: '09123456789',
+      role: 'staff',
+    }
+    expect(staffUpdateSchema.parse(profile)).toEqual(profile)
+    expect(staffUpdateSchema.parse({ ...profile, color: 'mint' })).toEqual(
+      profile,
+    )
+  })
+
   it('requires a non-empty schedule request', () => {
     expect(staffScheduleRequestSchema.safeParse({ schedule: [] }).success).toBe(
       false,
