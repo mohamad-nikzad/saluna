@@ -67,6 +67,7 @@ The app uses PostgreSQL through `drizzle-orm` and `postgres`. Runtime reads `DAT
 
 ## Documentation
 
+- [Cloud development and pre-merge review](docs/agents/cloud-development.md)
 - [Backlog](backlog/INDEX.md) and [workflow](backlog/README.md)
 - [Domain language](GLOSSARY.md) and [architecture decisions](docs/adr/)
 - [Production deployments](docs/DEPLOYMENTS.md) and [tarball fallback](docs/VPS_AIRGAPPED_DEPLOYMENT.md)

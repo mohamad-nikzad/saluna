@@ -1,6 +1,6 @@
 # Backlog Index
 
-Last organized: 2026-10-12 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 complete; BL-0106 remains ready; BL-0107 deployed and repaired)
+Last organized: 2026-10-12 (BL-0087 complete under revised scope; nine retained subtasks done; BL-0097, BL-0101, and BL-0103 removed and archived; BL-0105 complete; BL-0104 complete; BL-0106 complete; BL-0107 deployed and repaired)
 
 ## Now
 
@@ -8,7 +8,6 @@ No active items.
 
 ## Ready
 
-- [BL-0106 Add search and bulk selection to staff services](ready/BL-0106-search-and-bulk-select-staff-services.md)
 - [BL-0006 Request appointment via OTP](ready/BL-0006-request-appointment-via-otp.md)
 - [BL-0007 Payment in public appointment requests](ready/BL-0007-payment-in-public-appointment-requests.md)
 - [BL-0009 Desktop-friendly UI](ready/BL-0009-desktop-friendly-ui.md)
@@ -30,6 +29,8 @@ No active items.
   - [BL-0086 Untangle PWA create helpers from Appointment Intake](inbox/BL-0086-untangle-pwa-appointment-intake-naming.md)
 
 ## Done
+
+- [BL-0106 Add search and bulk selection to staff services](done/BL-0106-search-and-bulk-select-staff-services.md)
 
 - [BL-0107 Fix staff Appointment visibility and repair identity mismatches](done/BL-0107-fix-staff-appointment-identity-mismatch.md) (deployed through GitHub Actions; live repair verified)
 

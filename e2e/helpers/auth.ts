@@ -13,7 +13,7 @@ export async function login(
 ) {
   await page.goto('/auth')
   await expect(
-    page.getByRole('heading', { name: /سالونا|آراویرا/ }),
+    page.getByRole('heading', { name: /سالونا|آراویرا/, level: 1 }),
   ).toBeVisible()
   const phoneBox = page.getByRole('textbox', { name: 'شماره موبایل' })
   await phoneBox.click()

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -14,10 +14,12 @@ import { FormRootError } from '@repo/ui/form'
 import { Checkbox } from '@repo/ui/checkbox'
 import { Switch } from '@repo/ui/switch'
 import { Spinner } from '@repo/ui/spinner'
+import { SearchInput } from '@repo/ui/search-input'
 import type { User, Service } from '@repo/salon-core/types'
 import { staffServiceIdsSchema } from '@repo/salon-core/forms/staff'
 import type { StaffServiceIdsInput } from '@repo/salon-core/forms/staff'
 import { toPersianDigits } from '@repo/salon-core/persian-digits'
+import { normalizePersianSearch } from '@repo/salon-core/iran-locations'
 import { cn } from '@repo/ui/utils'
 import { serviceCategoryName } from '@repo/salon-core/service-catalog'
 import { useUpdateStaffServicesMutation } from '#/lib/staff-queries'
@@ -75,6 +77,8 @@ export function StaffServicesDrawer({
     handleSubmit,
     reset,
     setError,
+    clearErrors,
+    getValues,
     setValue,
     watch,
     formState: { errors, isSubmitting, isDirty },
@@ -85,23 +89,37 @@ export function StaffServicesDrawer({
   const serviceIds = watch('serviceIds')
   const selected = useMemo(() => new Set(serviceIds ?? []), [serviceIds])
   const unrestricted = serviceIds == null
+  const [search, setSearch] = useState('')
+  const query = normalizePersianSearch(search)
 
   const activeServices = useMemo(
     () => services.filter((s) => s.active),
     [services],
   )
 
+  const matchingServices = useMemo(
+    () =>
+      activeServices.filter(
+        (service) =>
+          normalizePersianSearch(service.name).includes(query) ||
+          normalizePersianSearch(serviceCategoryName(service)).includes(query),
+      ),
+    [activeServices, query],
+  )
+
   const serviceGroups = useMemo(
-    () => groupStaffServicesByCategory(activeServices),
-    [activeServices],
+    () => groupStaffServicesByCategory(matchingServices),
+    [matchingServices],
   )
 
   useEffect(() => {
     if (!open || !staff) return
     reset({ serviceIds: staff.serviceIds ?? null })
+    setSearch('')
   }, [open, reset, staff])
 
   const toggleService = (serviceId: string, checked: boolean) => {
+    clearErrors('root')
     const next = new Set(selected)
     if (checked) next.add(serviceId)
     else next.delete(serviceId)
@@ -111,7 +129,21 @@ export function StaffServicesDrawer({
     })
   }
 
+  const toggleServices = (scope: Service[], checked: boolean) => {
+    const next = new Set(selected)
+    for (const service of scope) {
+      if (checked) next.add(service.id)
+      else next.delete(service.id)
+    }
+    clearErrors('root')
+    setValue('serviceIds', [...next], {
+      shouldDirty: true,
+      shouldValidate: false,
+    })
+  }
+
   const handleUnrestrictedChange = (checked: boolean) => {
+    clearErrors('root')
     if (checked) {
       setValue('serviceIds', null, { shouldDirty: true })
       return
@@ -128,9 +160,11 @@ export function StaffServicesDrawer({
 
   const saveServices = useUpdateStaffServicesMutation()
 
-  const handleSave = handleSubmit(async (values) => {
-    if (!staff) return
-    if (values.serviceIds != null && values.serviceIds.length === 0) {
+  const handleSave = () => {
+    // The shared payload schema normalizes [] to null. Validate the draft
+    // before parsing so deselect-all cannot grant unrestricted access.
+    const draftIds = getValues('serviceIds')
+    if (draftIds != null && draftIds.length === 0) {
       setError('root', {
         message:
           'حداقل یک خدمت انتخاب کنید، یا حالت «همه خدمات» را فعال بگذارید.',
@@ -138,16 +172,19 @@ export function StaffServicesDrawer({
       return
     }
 
-    try {
-      await saveServices.mutateAsync({
-        staffId: staff.id,
-        serviceIds: values.serviceIds ?? null,
-      })
-      onSuccess()
-    } catch {
-      // Toast handled by mutation cache.
-    }
-  })
+    return handleSubmit(async (values) => {
+      if (!staff) return
+      try {
+        await saveServices.mutateAsync({
+          staffId: staff.id,
+          serviceIds: values.serviceIds ?? null,
+        })
+        onSuccess()
+      } catch {
+        // Toast handled by mutation cache.
+      }
+    })()
+  }
 
   const { requestClose, confirmDialog } = useDismissGuard({
     isDirty: isDirty && !isSubmitting,
@@ -168,121 +205,182 @@ export function StaffServicesDrawer({
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent className="box-border flex min-h-0 max-h-[80dvh] w-full flex-col overflow-hidden">
-        <DrawerHeader className="shrink-0 text-start md:text-start">
+        <DrawerHeader className="shrink-0 px-4 pb-3 text-start md:text-start">
           <DrawerTitle className="text-start">خدمات مجاز</DrawerTitle>
-          <DrawerDescription className="text-start text-pretty leading-relaxed">
-            {staff ? (
-              <>
-                <span className="font-medium text-foreground">
-                  {staff.name}
-                </span>
-                {' — '}
-                مشخص کنید این پرسنل کدام خدمات را انجام می‌دهد. اگر محدودیتی
-                نباشد، همه خدمات فعال برایشان در نوبت‌گیری در نظر گرفته می‌شود.
-              </>
-            ) : (
-              'یک پرسنل را انتخاب کنید.'
-            )}
+          <DrawerDescription className="text-start">
+            {staff?.name ?? 'یک پرسنل را انتخاب کنید.'}
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-4">
-          <div className="flex w-full min-w-0 max-w-full flex-col gap-4">
-            {/*
-              Always stack (no side-by-side row): RTL + Switch dir="ltr" in a flex row
-              causes min-width bugs and horizontal overflow on mobile.
-            */}
-            <div className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-border bg-card p-4">
-              <div className="flex w-full min-w-0 max-w-full flex-col gap-3">
-                <div className="w-full min-w-0 max-w-full space-y-1.5">
-                  <p
-                    className="text-sm font-medium leading-snug break-words"
-                    id="staff-svc-unrestricted-label"
-                  >
-                    همه خدمات فعال
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 px-4 py-3">
+          <label
+            htmlFor="staff-svc-unrestricted"
+            className="grid min-h-11 cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3"
+          >
+            <span className="min-w-0">
+              <span
+                id="staff-svc-unrestricted-label"
+                className="block text-sm font-medium"
+              >
+                همه خدمات فعال
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                شامل خدمات جدید
+              </span>
+            </span>
+            <span dir="ltr" className="inline-flex shrink-0">
+              <Switch
+                id="staff-svc-unrestricted"
+                aria-labelledby="staff-svc-unrestricted-label"
+                checked={unrestricted}
+                onCheckedChange={handleUnrestrictedChange}
+                disabled={!staff || isSubmitting}
+              />
+            </span>
+          </label>
+
+          {!unrestricted && (
+            <>
+              <SearchInput
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="جستجوی خدمت یا دسته‌بندی"
+                aria-label="جستجوی نام خدمت یا دسته‌بندی"
+                clearable
+                disabled={isSubmitting}
+              />
+              <div className="space-y-2">
+                <div className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <p role="status">
+                    {toPersianDigits(selected.size)} خدمت انتخاب شده
                   </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed break-words">
-                    اگر این گزینه روشن باشد، پرسنل می‌تواند هر خدمت فعال را
-                    انجام دهد. اگر خاموش باشد، فقط خدمات تیک‌خورده مجاز است.
-                  </p>
+                  <p>{query ? 'نتایج جستجو' : 'همه خدمات فعال'}</p>
                 </div>
-                <div
-                  className="flex w-full min-w-0 justify-start pt-1"
-                  dir="rtl"
-                >
-                  <div dir="ltr" className="inline-flex shrink-0">
-                    <Switch
-                      id="staff-svc-unrestricted"
-                      aria-labelledby="staff-svc-unrestricted-label"
-                      checked={unrestricted}
-                      onCheckedChange={handleUnrestrictedChange}
-                      disabled={!staff}
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-0 px-2"
+                    aria-label={
+                      query ? 'انتخاب همه نتایج جستجو' : 'انتخاب همه خدمات فعال'
+                    }
+                    onClick={() => toggleServices(matchingServices, true)}
+                    disabled={
+                      matchingServices.length === 0 || isSubmitting || !staff
+                    }
+                  >
+                    انتخاب همه
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-0 px-2"
+                    aria-label={
+                      query
+                        ? 'لغو انتخاب نتایج جستجو'
+                        : 'لغو انتخاب همه خدمات فعال'
+                    }
+                    onClick={() => toggleServices(matchingServices, false)}
+                    disabled={
+                      matchingServices.length === 0 || isSubmitting || !staff
+                    }
+                  >
+                    لغو انتخاب همه
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {!unrestricted && (
-              <div className="flex w-full min-w-0 max-w-full flex-col gap-4 overflow-hidden rounded-lg border border-border bg-card p-3">
-                {serviceGroups.map((category) => (
-                  <div key={category.categoryId} className="min-w-0">
-                    <p className="mb-2 text-xs font-semibold text-foreground">
-                      {category.categoryName}
-                    </p>
-                    <div className="flex flex-col gap-2">
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden">
+                {matchingServices.length === 0 && (
+                  <p className="py-3 text-sm text-muted-foreground">
+                    {query
+                      ? 'خدمتی با این جستجو پیدا نشد.'
+                      : 'هیچ خدمت فعالی وجود ندارد.'}
+                  </p>
+                )}
+                {serviceGroups.map((category) => {
+                  const selectedCount = category.services.filter((service) =>
+                    selected.has(service.id),
+                  ).length
+                  const groupChecked =
+                    selectedCount === category.services.length
+                      ? true
+                      : selectedCount > 0
+                        ? 'indeterminate'
+                        : false
+                  return (
+                    <div key={category.categoryId} className="min-w-0">
+                      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-b border-border/60 px-1 text-xs font-semibold text-muted-foreground">
+                        <Checkbox
+                          className="shrink-0"
+                          aria-label={
+                            query
+                              ? `خدمات نتایج جستجوی دسته ${category.categoryName}`
+                              : `همه خدمات دسته ${category.categoryName}`
+                          }
+                          checked={groupChecked}
+                          disabled={isSubmitting || !staff}
+                          onCheckedChange={(value) =>
+                            toggleServices(category.services, value === true)
+                          }
+                        />
+                        <span className="min-w-0 flex-1">
+                          {category.categoryName}
+                        </span>
+                      </label>
                       {category.services.map((svc) => (
                         <label
                           key={svc.id}
                           className={cn(
-                            'flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-md px-2 py-2.5 text-sm transition-colors',
+                            'flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-3 rounded-md px-1 py-2 text-sm transition-colors',
                             'hover:bg-accent/40',
                           )}
                         >
-                          <span className="min-w-0 flex-1 leading-snug">
-                            {svc.name}
-                            <span className="text-muted-foreground text-xs">
-                              {' '}
-                              · {toPersianDigits(svc.duration)} دقیقه
-                            </span>
-                          </span>
                           <Checkbox
-                            className="mt-0.5 shrink-0"
+                            className="shrink-0"
+                            aria-label={svc.name}
                             checked={selected.has(svc.id)}
+                            disabled={isSubmitting || !staff}
                             onCheckedChange={(v) =>
                               toggleService(svc.id, v === true)
                             }
                           />
+                          <span className="min-w-0 flex-1 leading-snug">
+                            {svc.name}
+                          </span>
                         </label>
                       ))}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-            )}
-
-            <FormRootError message={errors.root?.message} />
-          </div>
+            </>
+          )}
         </div>
 
-        <DrawerFooter className="shrink-0 border-t border-border/60 bg-background">
-          <Button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={isSubmitting || !staff}
-            className="touch-manipulation"
-          >
-            {isSubmitting && <Spinner className="ms-2" />}
-            {isSubmitting ? 'در حال ذخیره…' : 'ذخیره'}
-          </Button>
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => requestClose(false)}
-            disabled={isSubmitting}
-          >
-            انصراف
-          </Button>
+        <DrawerFooter className="shrink-0 border-t border-border/60 bg-background px-4">
+          <FormRootError message={errors.root?.message} role="alert" />
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => void handleSave()}
+              disabled={isSubmitting || !staff}
+              className="min-w-0 touch-manipulation"
+            >
+              {isSubmitting && <Spinner />}
+              {isSubmitting ? 'در حال ذخیره…' : 'ذخیره'}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              type="button"
+              className="min-w-0"
+              onClick={() => requestClose(false)}
+              disabled={isSubmitting}
+            >
+              انصراف
+            </Button>
+          </div>
         </DrawerFooter>
       </DrawerContent>
       {confirmDialog}
