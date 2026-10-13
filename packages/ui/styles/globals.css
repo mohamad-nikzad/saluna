@@ -317,6 +317,17 @@
   border-color: var(--border);
 }
 
+/* FullCalendar owns these scrollers; hide native bars where users swipe. */
+@media (pointer: coarse) {
+  .salon-fullcalendar .fc-scroller {
+    scrollbar-width: none;
+  }
+
+  .salon-fullcalendar .fc-scroller::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .salon-fullcalendar .fc-timegrid-slot {
   height: 2.75rem;
 }
