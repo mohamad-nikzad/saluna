@@ -498,6 +498,34 @@ describe('appointment intake placeholder rules', () => {
     })
   })
 
+  it('forwards empty add-ons when changing service with no previous add-ons', async () => {
+    mocks.getServiceById.mockResolvedValue({
+      id: 'service-2',
+      name: 'رنگ',
+      active: true,
+      duration: 90,
+      price: 200,
+    })
+
+    const result = await validateUpdateAppointmentIntake({
+      salonId: 'salon-1',
+      appointmentId: 'appointment-1',
+      existing: existingAppointment(),
+      body: {
+        serviceId: 'service-2',
+        addonIds: [],
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      patch: {
+        serviceId: 'service-2',
+        addonIds: [],
+      },
+    })
+  })
+
   it('persists explicit start/end times when service and add-ons are unchanged', async () => {
     const result = await validateUpdateAppointmentIntake({
       salonId: 'salon-1',

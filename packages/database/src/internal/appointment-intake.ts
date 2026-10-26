@@ -627,7 +627,10 @@ export async function validateUpdateAppointmentIntake(input: {
   if (body.clientId !== undefined) patch.clientId = body.clientId as string
   if (rosterChanged) patch.staffAssignments = orderedRoster(roster)
   if (serviceChanged) patch.serviceId = body.serviceId as string
-  if (addonIdsChanged) patch.addonIds = addonIds ?? []
+  // Service changes always need addonIds on the patch (including []), even when
+  // the list matches the previous empty selection — otherwise updateAppointment
+  // throws and the API returns 500.
+  if (serviceChanged || addonIdsChanged) patch.addonIds = addonIds ?? []
   if (body.date !== undefined) patch.date = body.date as string
   if (typeof body.startTime === 'string') patch.startTime = body.startTime
   if (body.status !== undefined)
