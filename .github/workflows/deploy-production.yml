@@ -248,6 +248,17 @@ jobs:
           apps_csv="$(IFS=,; echo "${apps[*]}")"
           echo "apps=$apps_csv" >> "$GITHUB_OUTPUT"
 
+      # Each deploy pulls new multi-GB images and nothing removed the old ones,
+      # which filled the VPS disk (40 GB of images, 98% full in 2026-11).
+      # Prune only removes images not used by any container (running or
+      # stopped) and older than 7 days; rollbacks re-pull from the registry.
+      - name: Prune old Docker images
+        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          docker image prune --all --force --filter until=168h
+          df -h /
+
       - name: Publish release announcement
         if: inputs.announce_release == true
         env:
